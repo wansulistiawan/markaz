@@ -16,6 +16,30 @@
     
     <!-- Custom Styles -->
     <style>
+
+
+
+
+/* Tambahkan ini di dalam tag <style> Anda */
+
+/* Kelas ini akan ditambahkan oleh JS untuk menampilkan sidebar di mobile */
+#filter-sidebar.show {
+    transform: translateX(0);
+}
+
+/* Cetak: Sembunyikan sidebar dan tombolnya saat mencetak */
+@media print {
+    #page-wrapper {
+        display: block; /* Kembalikan ke layout normal saat print */
+    }
+    #filter-sidebar, #open-filter-btn {
+        display: none !important;
+    }
+    #main-content {
+        padding: 0;
+        margin: 0;
+    }
+}
         body { 
             font-family: 'Inter', sans-serif; 
         }
@@ -27,12 +51,33 @@
             gap: 4px;
         }
 
-        .time-slot, .day-header {
-            font-weight: 600;
-            text-align: center;
-            padding: 8px 4px;
-        }
+.time-slot {
+    font-weight: 600;
+    text-align: center;
+    padding: 8px 4px;
+    /* Membuat kolom waktu menempel di kiri */
+    position: sticky;
+    left: 0;
+    z-index: 15; /* Z-index lebih tinggi dari header hari */
+    background-color: #f1f5f9; /* Pastikan ada background */
+}
 
+.day-header {
+    font-weight: 600;
+    text-align: center;
+    padding: 8px 4px;
+    /* Membuat header hari menempel di atas */
+    position: sticky;
+    top: 0;
+    z-index: 10; /* Z-index agar di atas sel jadwal */
+    background-color: #f1f5f9; /* Pastikan ada background, misal bg-slate-100 */
+}
+
+/* Ini untuk menargetkan sel pojok kiri atas (persimpangan header dan waktu) */
+.schedule-grid > .day-header:first-child {
+    left: 0; /* Menempel juga di kiri */
+    z-index: 20; /* Z-index paling tinggi agar di atas segalanya */
+}
         .schedule-cell {
             border: 1px solid #e2e8f0;
             border-radius: 8px;
@@ -196,122 +241,131 @@
 </head>
 <body class="bg-slate-50 text-slate-800">
 
-    <div class="container mx-auto p-4 md:p-6">
-        <header class="text-center mb-6">
-            <h1 class="text-3xl md:text-4xl font-bold text-teal-800">Roster KBM Dinamis</h1>
-            <h2 class="text-3xl md:text-4xl font-bold text-teal-800">Markaz Qur'an Al-Maa'un</h2>
-            <p class="text-slate-600 mt-2">Semester Ganjil</p>
-        </header>
+    <div id="page-wrapper" class="relative min-h-screen lg:flex">
 
-        <!-- Filter Section -->
-<div class="bg-white p-2 rounded-xl shadow-lg mb-6 sticky top-0 z-20">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 items-center">
-        
-        <div>
-            <label for="filter-group" class="sr-only">Filter berdasarkan Kelompok</label>
-            <select id="filter-group" class="filter-select block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md">
-                <option value="all">Filter Kelompok</option>
-                <option value="KF">Kelas Fondasi</option>
-                <option value="KG">Kelas Gabungan</option>
-            </select>
-        </div>
-        
-        <div>
-            <label for="filter-cluster" class="sr-only">Filter berdasarkan Klaster</label>
-            <select id="filter-cluster" class="filter-select block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md" disabled>
-                <option value="all">Filter Klaster</option>
-                <option value="LKS">Literasi & Kreatif Syariah</option>
-                <option value="STT">Sains & Teknologi Terapan</option>
-            </select>
-        </div>
-        
-        <div>
-            <label for="filter-teacher" class="sr-only">Filter berdasarkan Guru</label>
-            <select id="filter-teacher" class="filter-select block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md">
-                <option value="all">Filter Guru</option>
-                </select>
-        </div>
-
-        <div>
-            <label for="filter-room" class="sr-only">Filter berdasarkan Ruang</label>
-            <select id="filter-room" class="filter-select block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md">
-                <option value="all">Filter Ruang</option>
-                <option value="Kelas Mekah">Kelas Mekah</option>
-                <option value="Kelas Madinah">Kelas Madinah</option>
-                <option value="RBM">RBM</option>
-            </select>
-        </div>
-        
-        <div>
-            <button id="reset-filters" class="w-full bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition">
-                Reset
-            </button>
-        </div>
-    </div>
-</div>
-
-        <!-- Schedule Container -->
-        <div id="schedule-container" class="overflow-x-auto bg-white p-2 rounded-xl shadow-lg">
-            <!-- Schedule grid will be rendered here by JS -->
-        </div>
-        
-        <!-- Teacher Data Table -->
-        <div id="teacher-data-container" class="mt-8 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+        <aside id="filter-sidebar" class="bg-white lg:bg-transparent w-72 lg:w-80 p-4 border-r border-slate-200 fixed lg:sticky top-0 h-full lg:h-screen overflow-y-auto z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold text-teal-800">Data Guru</h3>
-                <button id="add-teacher-row" class="bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                    Tambah Guru
+                <h3 class="text-xl font-bold text-teal-800">Filter Jadwal</h3>
+                <button id="close-filter-btn" class="lg:hidden text-slate-500 hover:text-slate-800">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <div class="overflow-x-auto">
-                <table id="teacher-table" class="min-w-full divide-y divide-slate-200">
-                    <thead class="bg-slate-100">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-16">No</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Nama Guru</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Bidang / Jurusan</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Hari</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jadwal (Slot Waktu)</th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-slate-200">
-                        <!-- Teacher rows will be rendered here by JS -->
-                    </tbody>
-                </table>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="filter-group" class="block text-sm font-medium text-slate-700">Kelompok</label>
+                    <select id="filter-group" class="filter-select mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md">
+                        <option value="all">Semua Kelompok</option>
+                        <option value="KF">Kelas Fondasi</option>
+                        <option value="KG">Kelas Gabungan</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="filter-cluster" class="block text-sm font-medium text-slate-700">Klaster</label>
+                    <select id="filter-cluster" class="filter-select mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md" disabled>
+                        <option value="all">Semua Klaster</option>
+                        <option value="LKS">Literasi & Kreatif Syariah</option>
+                        <option value="STT">Sains & Teknologi Terapan</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="filter-teacher" class="block text-sm font-medium text-slate-700">Guru</label>
+                    <select id="filter-teacher" class="filter-select mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md">
+                        <option value="all">Semua Guru</option>
+                        </select>
+                </div>
+                <div>
+                    <label for="filter-room" class="block text-sm font-medium text-slate-700">Ruang</label>
+                    <select id="filter-room" class="filter-select mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md">
+                        <option value="all">Semua Ruang</option>
+                        <option value="Kelas Mekah">Kelas Mekah</option>
+                        <option value="Kelas Madinah">Kelas Madinah</option>
+                        <option value="RBM">RBM</option>
+                    </select>
+                </div>
+                <div>
+                    <button id="reset-filters" class="w-full bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition">
+                        Reset Filter
+                    </button>
+                </div>
             </div>
-        </div>
-        
-        <!-- Module Data Table -->
-        <div id="module-data-container" class="mt-8 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold text-teal-800">Data Modul</h3>
-                <button id="add-module-row" class="bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                    Tambah Modul
-                </button>
+        </aside>
+
+        <div id="filter-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden lg:hidden"></div>
+
+        <main id="main-content" class="flex-1 p-4 md:p-6">
+            <header class="text-center mb-6">
+                 <div class="lg:hidden mb-4">
+                    <button id="open-filter-btn" class="w-full flex items-center justify-center gap-2 bg-white p-3 rounded-lg shadow font-semibold text-teal-700">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+                        </svg>
+                        Buka Filter
+                    </button>
+                </div>
+
+                <h1 class="text-3xl md:text-4xl font-bold text-teal-800">Roster KBM Dinamis</h1>
+                <h2 class="text-3xl md:text-4xl font-bold text-teal-800">Markaz Qur'an Al-Maa'un</h2>
+                <p class="text-slate-600 mt-2">Semester Ganjil</p>
+            </header>
+
+            <div id="schedule-container" class="bg-white p-2 rounded-xl shadow-lg overflow-auto max-h-[80vh]">
+                </div>
+            
+            <div id="teacher-data-container" class="mt-8 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold text-teal-800">Data Guru</h3>
+                    <button id="add-teacher-row" class="bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        Tambah Guru
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table id="teacher-table" class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-16">No</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Nama Guru</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Bidang / Jurusan</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Hari</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jadwal (Slot Waktu)</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+                            </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="overflow-x-auto">
-                <table id="module-table" class="min-w-full divide-y divide-slate-200">
-                    <thead class="bg-slate-100">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-16">No</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jurusan</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Mapel Induk</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kode Modul</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Modul</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">SKS</th>
-                            <th scope="col" class="relative px-6 py-3 w-20"><span class="sr-only">Aksi</span></th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-slate-200">
-                        <!-- Module rows will be rendered here by JS -->
-                    </tbody>
-                </table>
+            
+            <div id="module-data-container" class="mt-8 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold text-teal-800">Data Modul</h3>
+                    <button id="add-module-row" class="bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        Tambah Modul
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table id="module-table" class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-16">No</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jurusan</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Mapel Induk</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kode Modul</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Modul</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">SKS</th>
+                                <th scope="col" class="relative px-6 py-3 w-20"><span class="sr-only">Aksi</span></th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+                            </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    </div>
+
+        </main>
 
     <!-- Floating Action Buttons -->
     <div id="floating-action-buttons">
@@ -354,6 +408,30 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+
+// ===== KODE BARU UNTUK SIDEBAR =====
+    const sidebar = document.getElementById('filter-sidebar');
+    const overlay = document.getElementById('filter-overlay');
+    const openBtn = document.getElementById('open-filter-btn');
+    const closeBtn = document.getElementById('close-filter-btn');
+
+    const toggleSidebar = () => {
+        sidebar.classList.toggle('show');
+        overlay.classList.toggle('hidden');
+    };
+
+    if (openBtn) {
+        openBtn.addEventListener('click', toggleSidebar);
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener('click', toggleSidebar);
+    }
+    if (overlay) {
+        overlay.addEventListener('click', toggleSidebar);
+    }
+    // ===== AKHIR KODE BARU =====
+
+
         // --- DATA ---
         const initialScheduleData = [
             // Senin
