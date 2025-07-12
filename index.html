@@ -844,32 +844,48 @@
 
         document.getElementById('print-schedule').addEventListener('click', () => window.print());
 
-        document.getElementById('download-jpg').addEventListener('click', function() {
-            const downloadBtn = this;
-            const label = downloadBtn.querySelector('.fab-label');
-            const originalText = label.textContent;
+// Kode BARU yang sudah diperbaiki
+document.getElementById('download-jpg').addEventListener('click', function() {
+    const downloadBtn = this;
+    const label = downloadBtn.querySelector('.fab-label');
+    const originalText = label.textContent;
+    const scheduleContainer = document.getElementById('schedule-container'); // Pastikan elemen ini ada
 
-            label.textContent = 'Mengunduh...';
-            downloadBtn.disabled = true;
+    label.textContent = 'Menyiapkan...';
+    downloadBtn.disabled = true;
 
-            html2canvas(scheduleContainer, { scale: 2, useCORS: true }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = 'jadwal-kbm.jpg';
-                link.href = canvas.toDataURL('image/jpeg', 0.9);
-                link.click();
-                
-                label.textContent = originalText;
-                downloadBtn.disabled = false;
-            }).catch(err => {
-                console.error("Error generating JPG:", err);
-                label.textContent = "Gagal Unduh";
-                setTimeout(() => {
-                    label.textContent = originalText;
-                    downloadBtn.disabled = false;
-                }, 3000);
-            });
-        });
+    // Opsi untuk html2canvas
+    const options = {
+        scale: 2,
+        useCORS: true,
+        // PENTING: Gunakan onclone untuk memanipulasi DOM sebelum screenshot
+        onclone: (documentClone) => {
+            const container = documentClone.getElementById('schedule-container');
+            if (container) {
+                // Hapus batasan tinggi dan overflow HANYA pada DOM kloningan
+                container.style.maxHeight = 'none';
+                container.style.overflow = 'visible';
+            }
+        }
+    };
 
+    html2canvas(scheduleContainer, options).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'jadwal-kbm-keseluruhan.jpg';
+        link.href = canvas.toDataURL('image/jpeg', 0.9);
+        link.click();
+        
+        label.textContent = originalText;
+        downloadBtn.disabled = false;
+    }).catch(err => {
+        console.error("Gagal membuat gambar jadwal:", err);
+        label.textContent = "Gagal Unduh";
+        setTimeout(() => {
+            label.textContent = originalText;
+            downloadBtn.disabled = false;
+        }, 3000);
+    });
+});
         // Data Table Listeners
         addTeacherBtn.addEventListener('click', () => {
             const newRowNumber = teacherTableBody.rows.length + 1;
