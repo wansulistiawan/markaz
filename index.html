@@ -608,6 +608,36 @@ const modulesByTeacher = defaultModules.reduce((acc, module) => {
         const modalMessage = document.getElementById('modal-message');
 
         // --- UTILITY & HELPER FUNCTIONS ---
+
+
+const getGroupNameFromCode = (code) => {
+    // Jika kode tidak valid, kembalikan grup default
+    if (!code || !code.includes('-') || code.split('-')[1].length !== 3) {
+        return "Modul Lain-lain";
+    }
+
+    const numStr = code.split('-')[1]; // Ambil bagian angka, misal "101"
+    const bagian = numStr.charAt(0);     // Ambil digit pertama untuk "Bagian"
+    const sesi = numStr.charAt(2);      // Ambil digit ketiga untuk "Sesi"
+
+    // Mapping angka bulan ke teks
+    const sesiMap = {
+        '1': 'Sesi Pertama',
+        '2': 'Sesi Kedua',
+        '3': 'Sesi Ketiga',
+        '4': 'Sesi Keempat',
+        '5': 'Sesi Kelima',
+        '6': 'Sesi Keenam',
+    };
+
+    const sesiText = sesiMap[sesi] || `Sesi ke-${sesi}`;
+
+    return `Materi Bagian ${bagian} - ${sesiText}`;
+};
+
+
+
+	    
         const showConfirmation = (message) => {
             return new Promise((resolve) => {
                 modalMessage.textContent = message;
@@ -935,15 +965,43 @@ sortedTeachers.forEach(teacherName => {
     detailsCell.className = "p-0";
 
     // Kontainer untuk daftar modul di dalam sel
-    const modulesContainer = document.createElement('div');
-    modulesContainer.className = "bg-white divide-y divide-slate-100";
+// 1. Urutkan modul berdasarkan kodenya terlebih dahulu untuk memastikan urutan kronologis
+modules.sort((a, b) => a.code.localeCompare(b.code));
+
+// 2. Kelompokkan modul-modul yang sudah urut ini ke dalam sub-grup
+const groupsWithinTeacher = modules.reduce((acc, mod) => {
+    const groupName = getGroupNameFromCode(mod.code);
+    if (!acc[groupName]) {
+        acc[groupName] = [];
+    }
+    acc[groupName].push(mod);
+    return acc;
+}, {});
+
+// 3. Kontainer utama untuk semua sub-grup
+const modulesContainer = document.createElement('div');
+modulesContainer.className = "bg-white";
+
+// 4. Loop melalui sub-grup yang baru (Materi Bagian 1, dst.)
+Object.keys(groupsWithinTeacher).forEach(groupName => {
+    // Membuat sub-header untuk setiap grup materi
+    const groupHeader = document.createElement('div');
+    groupHeader.className = 'px-4 pt-4 pb-2 text-base font-bold text-teal-800 bg-teal-50 border-t border-b border-teal-100';
+    groupHeader.textContent = groupName;
+    modulesContainer.appendChild(groupHeader);
     
-    // Loop untuk setiap modul dari guru ini dan buat tampilannya
-    modules.forEach(mod => {
+    // Wadah untuk modul di dalam grup ini
+    const singleGroupContainer = document.createElement('div');
+    singleGroupContainer.className = 'divide-y divide-slate-100';
+    
+    // Ambil semua modul yang ada di dalam grup ini
+    const modulesInGroup = groupsWithinTeacher[groupName];
+
+    // Loop modul-modul tersebut dan buat tampilannya
+    modulesInGroup.forEach(mod => {
         const moduleItem = document.createElement('div');
-        moduleItem.className = 'grid grid-cols-7 gap-4 p-4 items-center text-sm';
+        moduleItem.className = 'grid grid-cols-7 gap-4 p-4 items-center text-sm hover:bg-slate-50 transition';
         
-        // Buat HTML untuk setiap modul
         moduleItem.innerHTML = `
             <div class="px-2 text-slate-500 font-medium">${mod.no}</div>
             <div class="col-span-1 px-2 text-slate-800 font-semibold">${mod.parent_subject}</div>
@@ -963,10 +1021,13 @@ sortedTeachers.forEach(teacherName => {
                 }
             </div>
         `;
-        modulesContainer.appendChild(moduleItem);
+        singleGroupContainer.appendChild(moduleItem);
     });
+    
+    modulesContainer.appendChild(singleGroupContainer);
+});
 
-    detailsCell.appendChild(modulesContainer);
+detailsCell.appendChild(modulesContainer);
     detailsRow.appendChild(detailsCell);
     moduleTableBody.appendChild(detailsRow);
 
