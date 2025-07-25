@@ -16,70 +16,38 @@
     
     <!-- Custom Styles -->
     <style>
-
-.arrow-icon.rotate-90 {
-    transform: rotate(90deg);
-}
-
-
-/* Tambahkan ini di dalam tag <style> Anda */
-
-/* Kelas ini akan ditambahkan oleh JS untuk menampilkan sidebar di mobile */
-#filter-sidebar.show {
-    transform: translateX(0);
-}
-
-/* Cetak: Sembunyikan sidebar dan tombolnya saat mencetak */
-@media print {
-    #page-wrapper {
-        display: block; /* Kembalikan ke layout normal saat print */
-    }
-    #filter-sidebar, #open-filter-btn {
-        display: none !important;
-    }
-    #main-content {
-        padding: 0;
-        margin: 0;
-    }
-}
         body { 
             font-family: 'Inter', sans-serif; 
         }
 
-        /* Grid Layout for Schedule */
+        /* --- Layout & Sticky Elements --- */
         .schedule-grid {
             display: grid;
             grid-template-columns: 90px repeat(6, 1fr);
             gap: 4px;
         }
-
-.time-slot {
-    font-weight: 600;
-    text-align: center;
-    padding: 8px 4px;
-    /* Membuat kolom waktu menempel di kiri */
-    position: sticky;
-    left: 0;
-    z-index: 15; /* Z-index lebih tinggi dari header hari */
-    background-color: #f1f5f9; /* Pastikan ada background */
-}
-
-.day-header {
-    font-weight: 600;
-    text-align: center;
-    padding: 8px 4px;
-    /* Membuat header hari menempel di atas */
-    position: sticky;
-    top: 0;
-    z-index: 10; /* Z-index agar di atas sel jadwal */
-    background-color: #f1f5f9; /* Pastikan ada background, misal bg-slate-100 */
-}
-
-/* Ini untuk menargetkan sel pojok kiri atas (persimpangan header dan waktu) */
-.schedule-grid > .day-header:first-child {
-    left: 0; /* Menempel juga di kiri */
-    z-index: 20; /* Z-index paling tinggi agar di atas segalanya */
-}
+        .time-slot {
+            font-weight: 600;
+            text-align: center;
+            padding: 8px 4px;
+            position: sticky;
+            left: 0;
+            z-index: 15;
+            background-color: #f1f5f9;
+        }
+        .day-header {
+            font-weight: 600;
+            text-align: center;
+            padding: 8px 4px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #f1f5f9;
+        }
+        .schedule-grid > .day-header:first-child {
+            left: 0;
+            z-index: 20;
+        }
         .schedule-cell {
             border: 1px solid #e2e8f0;
             border-radius: 8px;
@@ -90,8 +58,16 @@
             display: flex;
             flex-direction: column;
         }
+        .subject {
+            flex-grow: 1;
+        }
 
-        /* Highlighting and Effects */
+        /* --- Sidebar & Overlay --- */
+        #filter-sidebar.show {
+            transform: translateX(0);
+        }
+
+        /* --- Highlighting & Effects --- */
         .highlight {
             background-color: #f0fdfa; /* teal-50 */
             border-color: #14b8a6; /* teal-500 */
@@ -100,19 +76,17 @@
             position: relative;
             animation: glow-animation 2s ease-in-out infinite;
         }
-
         .dimmed {
             opacity: 0.3;
             filter: grayscale(80%);
         }
-
         @keyframes glow-animation {
             0% { box-shadow: 0 0 5px rgba(20, 184, 166, 0.5); }
             50% { box-shadow: 0 0 20px 5px rgba(20, 184, 166, 0.8); }
             100% { box-shadow: 0 0 5px rgba(20, 184, 166, 0.5); }
         }
 
-        /* Room Specific Styles */
+        /* --- Room Specific Styles --- */
         .room-rbm {
             background-color: #fff7ed; /* orange-50 */
             border-color: #fb923c;   /* orange-400 */
@@ -123,19 +97,33 @@
             color: #c2410c; /* orange-700 */
         }
         .room-madinah {
-            background-color: rgba(59, 130, 246, 0.1); /* blue-500 with 10% opacity */
+            background-color: rgba(59, 130, 246, 0.1);
             border-color: #60a5fa; /* blue-400 */
         }
         .room-mekah {
-            background-color: rgba(132, 204, 22, 0.1); /* lime-500 with 10% opacity */
+            background-color: rgba(132, 204, 22, 0.1);
             border-color: #a3e635; /* lime-400 */
         }
 
-        .subject {
-            flex-grow: 1;
+        /* --- Accordion Arrow --- */
+        .arrow-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+        .arrow-icon.rotate-90 {
+            transform: rotate(90deg);
+        }
+        
+        /* --- Tab Styles --- */
+        .tab-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .tab-btn.active {
+            background-color: #0d9488; /* teal-600 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
-        /* Custom Select Arrow */
+        /* --- Form & Buttons --- */
         .filter-select {
             -webkit-appearance: none;
             -moz-appearance: none;
@@ -146,21 +134,6 @@
             background-size: 1em;
             padding-right: 2.5rem;
         }
-
-        /* Editable Cell Styles */
-        .editable-cell {
-            background-color: #f0fdfa;
-            padding: 8px 12px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-            cursor: text;
-        }
-        .editable-cell:focus {
-            background-color: #ccfbf1;
-            outline: 2px solid #14b8a6;
-        }
-
-        /* Floating Action Buttons (FAB) */
         #floating-action-buttons {
             position: fixed;
             bottom: 24px;
@@ -179,7 +152,7 @@
             position: absolute;
             right: 100%;
             margin-right: 16px;
-            background-color: #1f2937; /* bg-gray-800 */
+            background-color: #1f2937;
             color: white;
             padding: 4px 12px;
             border-radius: 6px;
@@ -196,28 +169,29 @@
             transform: translateX(0);
         }
 
-        /* Print Styles */
+        /* --- Print Styles --- */
         @media print {
             @page {
                 size: landscape;
-                margin: 2cm;
+                margin: 1.5cm;
             }
             body {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-            header, .sticky.top-0, #floating-action-buttons, #teacher-data-container, #module-data-container {
+            #filter-sidebar, #open-filter-btn, #floating-action-buttons, #teacher-data-container, #module-data-container, header, #tabs-container {
                 display: none !important;
             }
+            #main-content {
+                padding: 0;
+                margin: 0;
+            }
             #schedule-container {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
                 box-shadow: none;
                 border: none;
                 padding: 0;
                 overflow: visible;
+                max-height: none;
             }
             .schedule-grid {
                 font-size: 8pt;
@@ -228,9 +202,6 @@
                 min-height: auto;
                 padding: 4px;
                 border: 1px solid #eee;
-            }
-            .schedule-cell .room, .schedule-cell .teacher {
-                font-size: 12pt;
             }
             .highlight, .dimmed {
                 transform: none;
@@ -245,6 +216,7 @@
 
     <div id="page-wrapper" class="relative min-h-screen lg:flex">
 
+        <!-- Sidebar -->
         <aside id="filter-sidebar" class="bg-white lg:bg-transparent w-72 lg:w-80 p-4 border-r border-slate-200 fixed lg:sticky top-0 h-full lg:h-screen overflow-y-auto z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold text-teal-800">Filter Jadwal</h3>
@@ -252,7 +224,6 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-
             <div class="space-y-4">
                 <div>
                     <label for="filter-group" class="block text-sm font-medium text-slate-700">Kelompok</label>
@@ -274,7 +245,7 @@
                     <label for="filter-teacher" class="block text-sm font-medium text-slate-700">Guru</label>
                     <select id="filter-teacher" class="filter-select mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md">
                         <option value="all">Semua Guru</option>
-                        </select>
+                    </select>
                 </div>
                 <div>
                     <label for="filter-room" class="block text-sm font-medium text-slate-700">Ruang</label>
@@ -295,6 +266,7 @@
 
         <div id="filter-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden lg:hidden"></div>
 
+        <!-- Main Content -->
         <main id="main-content" class="flex-1 p-4 md:p-6">
             <header class="text-center mb-6">
                  <div class="lg:hidden mb-4">
@@ -305,22 +277,24 @@
                         Buka Filter
                     </button>
                 </div>
-
                 <h1 class="text-3xl md:text-4xl font-bold text-teal-800">Roster KBM Dinamis</h1>
-                <h2 class="text-3xl md:text-4xl font-bold text-teal-800">Markaz Qur'an Al-Maa'un</h2>
+                <h2 class="text-xl md:text-2xl font-semibold text-teal-700">Markaz Qur'an Al-Maa'un</h2>
                 <p class="text-slate-600 mt-2">Semester Ganjil</p>
             </header>
 
+            <!-- Tabs Container -->
+            <div id="tabs-container" class="mb-4 bg-slate-200 p-1 rounded-lg flex space-x-1">
+                <button id="tab-bulan1" class="tab-btn flex-1 p-2 rounded-md font-semibold active">Bulan I</button>
+                <button id="tab-bulan2" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan II</button>
+            </div>
+
             <div id="schedule-container" class="bg-white p-2 rounded-xl shadow-lg overflow-auto max-h-[80vh]">
-                </div>
+                <!-- Jadwal akan dirender di sini oleh JavaScript -->
+            </div>
             
             <div id="teacher-data-container" class="mt-8 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-2xl font-bold text-teal-800">Data Guru</h3>
-                    <button id="add-teacher-row" class="bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                        Tambah Guru
-                    </button>
                 </div>
                 <div class="overflow-x-auto">
                     <table id="teacher-table" class="min-w-full divide-y divide-slate-200">
@@ -331,80 +305,69 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Bidang / Jurusan</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Hari</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jadwal (Slot Waktu)</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-slate-200">
-                            </tbody>
+                            <!-- Data Guru akan dirender di sini -->
+                        </tbody>
                     </table>
                 </div>
             </div>
             
             <div id="module-data-container" class="mt-8 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-2xl font-bold text-teal-800">Data Modul</h3>
-                    <button id="add-module-row" class="bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                        Tambah Modul
-                    </button>
+                    <h3 class="text-2xl font-bold text-teal-800">Perpustakaan Modul</h3>
                 </div>
                 <div class="overflow-x-auto">
-                    <table id="module-table" class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-slate-100">
+                    <table id="module-table" class="min-w-full">
+                         <thead class="bg-slate-100">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-16">No</th>
-                                <th scope="col" id="sort-by-guru" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-200 transition">
-    <span>Guru</span>
-    <span id="sort-guru-indicator"></span> </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Mapel Induk</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kode Modul</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Modul</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">SKS</th>
-                                <th scope="col" class="relative px-6 py-3 w-20"><span class="sr-only">Aksi</span></th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider" colspan="7">Guru & Modul</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-slate-200">
-                            </tbody>
+                        <tbody class="bg-white">
+                           <!-- Data Modul akan dirender di sini dengan format akordeon -->
+                        </tbody>
                     </table>
                 </div>
             </div>
-
         </main>
 
-    <!-- Floating Action Buttons -->
-    <div id="floating-action-buttons">
-        <button id="reset-schedule" title="Reset Jadwal ke Awal" class="bg-red-600 text-white rounded-full p-3 shadow-lg hover:bg-red-700">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
-            <span class="fab-label">Reset Jadwal</span>
-        </button>
-        <button id="print-schedule" title="Cetak Jadwal" class="bg-blue-600 text-white rounded-full p-3 shadow-lg hover:bg-blue-700">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v3a2 2 0 002 2h6a2 2 0 002-2v-3h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" /></svg>
-            <span class="fab-label">Cetak</span>
-        </button>
-        <button id="download-jpg" title="Unduh sebagai JPG" class="bg-green-600 text-white rounded-full p-3 shadow-lg hover:bg-green-700">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-            <span class="fab-label">Unduh Jadwal</span>
-        </button>
-    </div>
+        <!-- Floating Action Buttons -->
+        <div id="floating-action-buttons">
+            <button id="reset-schedule" title="Reset Jadwal ke Awal" class="bg-red-600 text-white rounded-full p-3 shadow-lg hover:bg-red-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
+                <span class="fab-label">Reset Jadwal</span>
+            </button>
+            <button id="print-schedule" title="Cetak Jadwal" class="bg-blue-600 text-white rounded-full p-3 shadow-lg hover:bg-blue-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v3a2 2 0 002 2h6a2 2 0 002-2v-3h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" /></svg>
+                <span class="fab-label">Cetak</span>
+            </button>
+            <button id="download-jpg" title="Unduh sebagai JPG" class="bg-green-600 text-white rounded-full p-3 shadow-lg hover:bg-green-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                <span class="fab-label">Unduh Jadwal</span>
+            </button>
+        </div>
 
-    <!-- Custom Modal for Confirmation -->
-    <div id="confirmation-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
-                    <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                </div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-2" id="modal-title">Konfirmasi</h3>
-                <div class="mt-2 px-7 py-3">
-                    <p class="text-sm text-gray-500" id="modal-message">Apakah Anda yakin?</p>
-                </div>
-                <div class="items-center px-4 py-3">
-                    <button id="modal-confirm-btn" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
-                        Ya, Lanjutkan
-                    </button>
-                    <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto ml-2 shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                        Batal
-                    </button>
+        <!-- Custom Modal for Confirmation -->
+        <div id="confirmation-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+                        <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mt-2" id="modal-title">Konfirmasi</h3>
+                    <div class="mt-2 px-7 py-3">
+                        <p class="text-sm text-gray-500" id="modal-message">Apakah Anda yakin?</p>
+                    </div>
+                    <div class="items-center px-4 py-3">
+                        <button id="modal-confirm-btn" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                            Ya, Lanjutkan
+                        </button>
+                        <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto ml-2 shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                            Batal
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -413,109 +376,102 @@
     <script>
     document.addEventListener('DOMContentLoaded', function() {
 
-// ===== KODE BARU UNTUK SIDEBAR =====
-    const sidebar = document.getElementById('filter-sidebar');
-    const overlay = document.getElementById('filter-overlay');
-    const openBtn = document.getElementById('open-filter-btn');
-    const closeBtn = document.getElementById('close-filter-btn');
-
-    const toggleSidebar = () => {
-        sidebar.classList.toggle('show');
-        overlay.classList.toggle('hidden');
-    };
-
-    if (openBtn) {
-        openBtn.addEventListener('click', toggleSidebar);
-    }
-    if (closeBtn) {
-        closeBtn.addEventListener('click', toggleSidebar);
-    }
-    if (overlay) {
-        overlay.addEventListener('click', toggleSidebar);
-    }
-    // ===== AKHIR KODE BARU =====
-
-
         // --- DATA ---
-const initialScheduleData = [
-    // Senin
-    { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "MAT-101: Operasi Bilangan Bulat & KPK/FPB", teacher: "Sulistiawan, S.Kom", downloadLink: "https://url-penyimpanan-anda.com/modul/MAT-101.pdf" },
-    { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "MAT-101: Operasi Bilangan Bulat & KPK/FPB", teacher: "Sulistiawan, S.Kom", downloadLink: "https://url-penyimpanan-anda.com/modul/MAT-101.pdf" },
-    { day: "Senin", time: "08:00-09:30", sks: 2, room: "RBM", group: "kelompok", cluster: "klaster", subject: "Kosong", teacher: "Kosong", downloadLink: "" },
-    { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "IND-101: Menyimak Efektif: Adab & Teknik", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/1PAGwVSmVj3_JFW6mekxZGK7xZh54XlDH/view?usp=drive_link" },
-    { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-201: Pengantar Thibbun Nabawi", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1ZjmZkzVknCL8sNPz4nWwaARTN62AN1qG/view" },
-    { day: "Senin", time: "10:00-11:30", sks: 2, room: "RBM", group: "KG", cluster: "LKS", subject: "Tugas : MAT-101", teacher: "", downloadLink: "https://drive.google.com/file/d/1Ha8FKCC0fJCUJR5NRo75RYAF-e5QeqhK/view?usp=drive_link" },
-    { day: "Senin", time: "11:30-12:15", sks: 1, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ISTIRAHAT TIDUR SIANG", teacher: "", downloadLink: "" },
-    { day: "Senin", time: "11:30-12:15", sks: 1, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "ISTIRAHAT TIDUR SIANG", teacher: "", downloadLink: "" },
-    { day: "Senin", time: "11:30-12:15", sks: 1, room: "RBM", group: "KG", cluster: "LKS", subject: "ISTIRAHAT TIDUR SIANG", teacher: "", downloadLink: "" },
-    { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-101: Greetings & Introductions", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/1LYRMv43xr0ei9aHJ4Rm8VVGEZv2LMoJT/view?usp=drive_link" },
-    { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-201: Riset Pasar & Analisis Kompetitor", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1ibVSjYmLhxxAhmAm_EGJ-qowFDPy3aZ_/view?usp=drive_link" },
-    { day: "Senin", time: "13:00-14:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "Tugas: MAT-101", teacher: "", downloadLink: "https://drive.google.com/file/d/1Ha8FKCC0fJCUJR5NRo75RYAF-e5QeqhK/view?usp=drive_link" },
+        const scheduleDataBulan1 = [
+            // Senin
+            { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "MAT-101: Operasi Bilangan Bulat & KPK/FPB", teacher: "Sulistiawan, S.Kom", downloadLink: "https://url-penyimpanan-anda.com/modul/MAT-101.pdf" },
+            { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "MAT-101: Operasi Bilangan Bulat & KPK/FPB", teacher: "Sulistiawan, S.Kom", downloadLink: "https://url-penyimpanan-anda.com/modul/MAT-101.pdf" },
+            { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "IND-101: Menyimak Efektif: Adab & Teknik", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/1PAGwVSmVj3_JFW6mekxZGK7xZh54XlDH/view?usp=drive_link" },
+            { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-201: Pengantar Thibbun Nabawi", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1ZjmZkzVknCL8sNPz4nWwaARTN62AN1qG/view" },
+            { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-101: Greetings & Introductions", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/1LYRMv43xr0ei9aHJ4Rm8VVGEZv2LMoJT/view?usp=drive_link" },
+            { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-201: Riset Pasar & Analisis Kompetitor", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1ibVSjYmLhxxAhmAm_EGJ-qowFDPy3aZ_/view?usp=drive_link" },
+            // Selasa
+            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-101: ABY Jilid 1A Unit 1-2 (Perkenalan & Keluarga)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1KNuZMEsYPEznGzEcyhTR5GDb5J3gUwM5/view?usp=drive_link" },
+            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "PANC-201: Implementasi nilai-nilai Pancasila Dalam Kehidupan", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1V0ZYiN9sYr5ZYXR3yfk5p80uLFNlbv9g/view?usp=drive_link" },
+            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-201: ABY Jilid 1B Unit 7-8 (Pendidikan & Pekerjaan)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/19dfcrahHUBSjFQx0bNvcGDxm2gJw35Tt/view?usp=drive_link" },
+            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KTR-101: Pertolongan Pertama Pada Kecelakaan (P3K)", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1X7OG1Z2rdwVPn4B8VqZM--wV7zDddOFw/view?usp=drive_link" },
+            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-101: Makna & Konsekuensi 2 Kalimat Syahadat", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/11yClAXt_5YcDrzyZ9-Ee4fJOSIwGQWcK/view?usp=drive_link" },
+            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-201: Gerak Lurus dan Gaya", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/170mKM_vLYEeO0tIUOP063-k1wMW1a1jD/view?usp=drive_link" },
+            // Rabu
+            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-201: Pengantar Ilmu Hadits (Definisi & Sejarah)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1b839aBuE0qPkPX5TISgiloV3qGljV2EF/view?usp=drive_link" },
+            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KWU-101: Pengantar Mindset Wirausaha Muslim", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1OY6JWCfKPjxgKECTDUoWadrY_eoMMdCj/view?usp=drive_link" },
+            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-201: Pengenalan Alat-Alat Servis", teacher: "Aria Atmaja", downloadLink: "https://drive.google.com/file/d/1tgiZzRH8P-WWtoNdtRWkJW8qGDBcrU8b/view?usp=drive_link" },
+            { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "IPS-101: Aku & Lingkungan Sekitarku", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/1FlPhTpeWb9ARmQRa8g-dV74_tabkmwFI/view?usp=drive_link" },
+            { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "PAI-201: Public Speaking 1: Struktur Pidato & Mengatasi Gugup", teacher: "SupraSojo, S.Pd.I., M.Pd.", downloadLink: "https://drive.google.com/file/d/1HlMC_lIGb7L9rDr2MocXm3VCMP6uqyeg/view?usp=drive_link" },
+            { day: "Rabu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ENG-201: Hobbies & Free Time", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/15-9a1S4ogBTjKjG6i2_268-tLqrquC4P/view?usp=drive_link" },
+            { day: "Rabu", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "HAD-101: Hadits Arba'in 1 (Hafalan & Makna Hadits #1-5)", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1pND30uoMlg5Dqyzm5C4_Yl27_H5LXHh9/view?usp=drive_link" },
+            // Kamis
+            { day: "Kamis", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "TIK-101: Pengenalan Perangkat Keras & Lunak Komputer", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1JTJjRA_rWZ-62_W82aBKL23b2K0244bL/view?usp=drive_link" },
+            { day: "Kamis", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "TAU-201: Studi Kitab Tauhid 1", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1WoluRi1U0edST8BBaqPkLNiEIZLCPwvt/view?usp=drive_link" },
+            { day: "Kamis", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "STT", subject: "TIK-201: Pengolah Kata (Word) Lanjutan", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/1KzWoTzH_VqgVjd-0Sc3z9Xmwz7Z19TSX/view?usp=drive_link" },
+            { day: "Kamis", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "IPS-201: Masuk dan Berkembangnya Islam di Nusantara", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1X0S3XBjJEdEkKCGAUjcDze8Kfh2MWjuG/view?usp=drive_link" },
+            { day: "Kamis", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "IPA-101: Ciri Makhluk Hidup & Klasifikasi Sederhana", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/1x-u8VWwCD2KJW16-wG0z_ZBrmbAb4Lpf/view?usp=drive_link" },
+            { day: "Kamis", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "ULQ-201: Sejarah Penulisan & Pengumpulan Al-Qur'an", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1b_WMo_1KKAWPXKzilPSKsFzNzUmdW4V8/view?usp=drive_link" },
+            // Jumat
+            { day: "Jumat", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "FIQ-101: Wudhu & Tayammum", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1ZLRZNGtttzsv0KQ7E9S2vezp3ma5vfwE/view?usp=drive_link" },
+            { day: "Jumat", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "NAH-201: Tanda-tanda I'rab untuk Isim", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "https://drive.google.com/file/d/1WX-53Q4hY5gvzAVbKsEjLHKACWgKo1K1/view?usp=drive_link" },
+            { day: "Jumat", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "AGB-201: Pengantar Agribisnis & Fikih Pertanian", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
+            { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "SIR-101: Kondisi Dunia Sebelum Kenabian & Masa Kecil Nabi", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1uULQr6lFC2YylJ4ZdcktlUXbgKEPzdp-/view?usp=drive_link" },
+            { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-101: Pengantar Ilmu Balaghah", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "https://drive.google.com/file/d/1UyC0-W-l-Xfli8SSvpMcihgiuFc1zYS0/view?usp=drive_link" },
+            { day: "Jumat", time: "10:00-11:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "IPS-201: Masuk dan Berkembangnya Islam di Nusantara", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
+            { day: "Jumat", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "Akh-201: Peristiwa Boikot & Wafatnya Khadijah dan Abu Thalib", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1vJCQq48tCQNX_S5X8NF3DqTE9weOhGse/view?usp=drive_link" },
+            { day: "Jumat", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "NAH-101: Pengenalan Kalimat (Jumlah Mufidah) & Jenis Kata", teacher: "Mahadi Sentosa, S.Sos", downloadLink: "https://drive.google.com/file/d/1kbTKODSzvge5WUbkRA5wpf3SJl8WVXci/view?usp=drive_link" },
+            // Sabtu
+            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-201: Tafsir & Tadabbur Surat Al-Maa'un & Al-Kafirun", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1uy5pOjhibrZbLUOUfRJHNKtqV4AT6obY/view?usp=drive_link" },
+            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-101: Adab Kepada Allah", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://url-penyimpanan-anda.com/modul/AKH-101.pdf" },
+            { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAF-101: Tafsir & Tadabbur Surat Al-Fatihah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1XyXIN1bsnIKVeGX3_H9MkaGlgrB2dhCu/view?usp=drive_link" },
+            { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-201: Membaca 3 (Membedakan Fakta & Opini dalam Teks)", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/12D_Sk1hB2q5e3BdNX1-Iw8kIjTrm6UId/view?usp=drive_link" },
+            { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-201: Peristiwa Boikot & Wafatnya Khadijah dan Abu Thalib", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1vJCQq48tCQNX_S5X8NF3DqTE9weOhGse/view?usp=drive_link" },
+            { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "NAH-101: Pengenalan Kalimat (Jumlah Mufidah) & Jenis Kata", teacher: "Mahadi Sentosa, S.Sos", downloadLink: "https://drive.google.com/file/d/1kbTKODSzvge5WUbkRA5wpf3SJl8WVXci/view?usp=drive_link" },
+        ];
 
-    // Selasa
-    { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-101: ABY Jilid 1A Unit 1-2 (Perkenalan & Keluarga)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1KNuZMEsYPEznGzEcyhTR5GDb5J3gUwM5/view?usp=drive_link" },
-    { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "PANC-201: Implementasi nilai-nilai Pancasila Dalam Kehidupan", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1V0ZYiN9sYr5ZYXR3yfk5p80uLFNlbv9g/view?usp=drive_link" },
-    { day: "Selasa", time: "08:00-09:30", sks: 2, room: "RBM", group: "", cluster: "", subject: "", teacher: "", downloadLink: "" },
-    { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-201: ABY Jilid 1B Unit 7-8 (Pendidikan & Pekerjaan)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/19dfcrahHUBSjFQx0bNvcGDxm2gJw35Tt/view?usp=drive_link" },
-    { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KTR-101: Pertolongan Pertama Pada Kecelakaan (P3K)", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1X7OG1Z2rdwVPn4B8VqZM--wV7zDddOFw/view?usp=drive_link" },
-    { day: "Selasa", time: "10:00-11:30", sks: 2, room: "RBM", group: "", cluster: "", subject: "", teacher: "", downloadLink: "" },
-    { day: "Selasa", time: "11:30-12:15", sks: 1, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ISTIRAHAT TIDUR SIANG", teacher: "", downloadLink: "" },
-    { day: "Selasa", time: "11:30-12:15", sks: 1, room: "Kelas Madinah", group: "KF", cluster: "Wajib", subject: "ISTIRAHAT TIDUR SIANG", teacher: "", downloadLink: "" },
-    { day: "Selasa", time: "11:30-12:15", sks: 1, room: "RBM", group: "KG", cluster: "STT", subject: "ISTIRAHAT TIDUR SIANG", teacher: "", downloadLink: "" },
-    { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-101: Makna & Konsekuensi 2 Kalimat Syahadat", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/11yClAXt_5YcDrzyZ9-Ee4fJOSIwGQWcK/view?usp=drive_link" },
-    { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-201: Gerak Lurus dan Gaya", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/170mKM_vLYEeO0tIUOP063-k1wMW1a1jD/view?usp=drive_link" },
-    { day: "Selasa", time: "13:00-14:30", sks: 2, room: "RBM", group: "", cluster: "", subject: "Materi", teacher: "", downloadLink: "" },
-
-    // Rabu
-    { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-201: Pengantar Ilmu Hadits (Definisi & Sejarah)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1b839aBuE0qPkPX5TISgiloV3qGljV2EF/view?usp=drive_link" },
-    { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KWU-101: Pengantar Mindset Wirausaha Muslim", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1OY6JWCfKPjxgKECTDUoWadrY_eoMMdCj/view?usp=drive_link" },
-    { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-201: Pengenalan Alat-Alat Servis", teacher: "Aria Atmaja", downloadLink: "https://drive.google.com/file/d/1tgiZzRH8P-WWtoNdtRWkJW8qGDBcrU8b/view?usp=drive_link" },
-    { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "IPS-101: Aku & Lingkungan Sekitarku", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/1FlPhTpeWb9ARmQRa8g-dV74_tabkmwFI/view?usp=drive_link" },
-    { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "PAI-201: Public Speaking 1: Struktur Pidato & Mengatasi Gugup", teacher: "SupraSojo, S.Pd.I., M.Pd.", downloadLink: "https://drive.google.com/file/d/1HlMC_lIGb7L9rDr2MocXm3VCMP6uqyeg/view?usp=drive_link" },
-    { day: "Rabu", time: "11:30-12:15", sks: 1, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ISTIRAHAT TIDUR SIANG", teacher: "", downloadLink: "" },
-    { day: "Rabu", time: "11:30-12:15", sks: 1, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "ISTIRAHAT TIDUR SIANG", teacher: "", downloadLink: "" },
-    { day: "Rabu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ENG-201: Hobbies & Free Time", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/15-9a1S4ogBTjKjG6i2_268-tLqrquC4P/view?usp=drive_link" },
-    { day: "Rabu", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "HAD-101: Hadits Arba'in 1 (Hafalan & Makna Hadits #1-5", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1pND30uoMlg5Dqyzm5C4_Yl27_H5LXHh9/view?usp=drive_link" },
-
-    // Kamis
-    { day: "Kamis", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "TIK-101: Pengenalan Perangkat Keras & Lunak Komputer", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1JTJjRA_rWZ-62_W82aBKL23b2K0244bL/view?usp=drive_link" },
-    { day: "Kamis", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "TAU-201: Studi Kitab Tauhid 1", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1WoluRi1U0edST8BBaqPkLNiEIZLCPwvt/view?usp=drive_link" },
-    { day: "Kamis", time: "08:00-09:30", sks: 2, room: "RBM", group: "", cluster: "", subject: "", teacher: "", downloadLink: "" },
-    { day: "Kamis", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "STT", subject: "TIK-201: Pengolah Kata (Word) Lanjutan", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/1KzWoTzH_VqgVjd-0Sc3z9Xmwz7Z19TSX/view?usp=drive_link" },
-    { day: "Kamis", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "IPS-201: Masuk dan Berkembangnya Islam di Nusantara", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1X0S3XBjJEdEkKCGAUjcDze8Kfh2MWjuG/view?usp=drive_link" },
-    { day: "Kamis", time: "10:00-11:30", sks: 2, room: "RBM", group: "KF", cluster: "Wajib", subject: "Tugas: MAT-101", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-    { day: "Kamis", time: "11:30-12:15", sks: 1, room: "Kelas Mekah", group: "", cluster: "", subject: "ISTIRAHAT TIDUR SIANG", teacher: "", downloadLink: "" },
-    { day: "Kamis", time: "11:30-12:15", sks: 1, room: "Kelas Madinah", group: "", cluster: "", subject: "ISTIRAHAT TIDUR SIANG", teacher: "", downloadLink: "" },
-    { day: "Kamis", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "IPA-101: Ciri Makhluk Hidup & Klasifikasi Sederhana", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/1x-u8VWwCD2KJW16-wG0z_ZBrmbAb4Lpf/view?usp=drive_link" },
-    { day: "Kamis", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "ULQ-201: Sejarah Penulisan & Pengumpulan Al-Qur'an", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1b_WMo_1KKAWPXKzilPSKsFzNzUmdW4V8/view?usp=drive_link" },
-
-    // Jumat
-    { day: "Jumat", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "FIQ-101: Wudhu & Tayammum", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1ZLRZNGtttzsv0KQ7E9S2vezp3ma5vfwE/view?usp=drive_link" },
-    { day: "Jumat", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "NAH-201: Tanda-tanda I'rab untuk Isim", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "https://drive.google.com/file/d/1WX-53Q4hY5gvzAVbKsEjLHKACWgKo1K1/view?usp=drive_link" },
-    { day: "Jumat", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "AGB-201: Pengantar Agribisnis & Fikih Pertanian", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-    { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "SIR-101: Kondisi Dunia Sebelum Kenabian & Masa Kecil Nabi", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1uULQr6lFC2YylJ4ZdcktlUXbgKEPzdp-/view?usp=drive_link" },
-    { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-101: Pengantar Ilmu Balaghah", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "https://drive.google.com/file/d/1UyC0-W-l-Xfli8SSvpMcihgiuFc1zYS0/view?usp=drive_link" },
-    { day: "Jumat", time: "10:00-11:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "IPS-201: Masuk dan Berkembangnya Islam di Nusantara", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-    { day: "Jumat", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "Akh-201: Peristiwa Boikot & Wafatnya Khadijah dan Abu Thalib", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1vJCQq48tCQNX_S5X8NF3DqTE9weOhGse/view?usp=drive_link" },
-    { day: "Jumat", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "NAH-101: Pengenalan Kalimat (Jumlah Mufidah) & Jenis Kata", teacher: "Mahadi Sentosa, S.Sos", downloadLink: "https://drive.google.com/file/d/1kbTKODSzvge5WUbkRA5wpf3SJl8WVXci/view?usp=drive_link" },
-    { day: "Jumat", time: "13:00-14:30", sks: 2, room: "RBM", group: "", cluster: "", subject: "", teacher: "", downloadLink: "" },
-
-    // Sabtu
-    { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-201: Tafsir & Tadabbur Surat Al-Maa'un & Al-Kafirun", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1uy5pOjhibrZbLUOUfRJHNKtqV4AT6obY/view?usp=drive_link" },
-    { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-101: Adab Kepada Allah", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://url-penyimpanan-anda.com/modul/AKH-101.pdf" },
-    { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "RBM", group: "", cluster: "", subject: "", teacher: "", downloadLink: "" },
-    { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAF-101: Tafsir & Tadabbur Surat Al-Fatihah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1XyXIN1bsnIKVeGX3_H9MkaGlgrB2dhCu/view?usp=drive_link" },
-    { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-201: Membaca 3 (Membedakan Fakta & Opini dalam Teks)", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/12D_Sk1hB2q5e3BdNX1-Iw8kIjTrm6UId/view?usp=drive_link" },
-    { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "RBM", group: "", cluster: "", subject: "", teacher: "", downloadLink: "" },
-    { day: "Sabtu", time: "11:30-12:15", sks: 1, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ISTIRAHAT TIDUR SIANG", teacher: "", downloadLink: "" },
-    { day: "Sabtu", time: "11:30-12:15", sks: 1, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "ISTIRAHAT TIDUR SIANG", teacher: "", downloadLink: "" },
-    { day: "Sabtu", time: "11:30-12:15", sks: 1, room: "RBM", group: "KG", cluster: "STT", subject: "ISTIRAHAT TIDUR SIANG", teacher: "", downloadLink: "" },
-    { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-201: Peristiwa Boikot & Wafatnya Khadijah dan Abu Thalib", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1vJCQq48tCQNX_S5X8NF3DqTE9weOhGse/view?usp=drive_link" },
-    { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "NAH-101: Pengenalan Kalimat (Jumlah Mufidah) & Jenis Kata", teacher: "Mahadi Sentosa, S.Sos", downloadLink: "https://drive.google.com/file/d/1kbTKODSzvge5WUbkRA5wpf3SJl8WVXci/view?usp=drive_link" },
-    { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "RBM", group: "", cluster: "", subject: "", teacher: "", downloadLink: "" },
-];
-
-
+        const scheduleDataBulan2 = [
+            // Senin
+            { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "MAT-102: Pecahan & Desimal", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
+            { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "MAT-102: Pecahan & Desimal", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
+            { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "IND-102: Berbicara 1: Perkenalan Diri & Sapaan Santun", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
+            { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-202: Hifzhu Shihhah (Pola Hidup Sehat Rasulullah ﷺ)", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
+            { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-102: Classroom Objects & Instructions", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "" },
+            { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-202: Validasi Ide & Model Bisnis Sederhana", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
+            // Selasa
+            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-102: ABY Jilid 1A: Unit 3-4 (Tempat Tinggal & Kehidupan Harian)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "PANC-202: Implementasi Sila ke-2: Kemanusiaan yang Adil dan Beradab", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
+            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-202: ABY Jilid 1B: Unit 9-10 (Berbelanja & Cuaca)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KTR-102: Manajemen Kesehatan Dasar & Penyakit Umum", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
+            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-102: Studi Kitab Tauhid 1", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-202: Sistem Gerak pada Manusia (Rangka & Sendi)", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "" },
+            // Rabu
+            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-202: Klasifikasi Hadits (Shahih, Hasan, Dha'if)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KWU-102: Dasar-dasar Produk Halal & Thayyib", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
+            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-202: Praktik Menggunakan Alat Tangan & Solder", teacher: "Aria Atmaja", downloadLink: "" },
+            { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "IPS-102: Kebutuhan Manusia & Ekonomi Dasar", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
+            { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "PAI-202: Public Speaking 2: Teknik Vokal & Bahasa Tubuh", teacher: "SupraSojo, S.Pd.I., M.Pd.", downloadLink: "" },
+            { day: "Rabu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ENG-202: Food & Drinks", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "" },
+            { day: "Rabu", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "HAD-102: Hadits Arba'in 2 (Hafalan & Makna Hadits #6-10)", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
+            // Kamis
+            { day: "Kamis", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "TIK-103: Aplikasi Perkantoran 1: Pengolah Kata (Word) - Dasar", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
+            { day: "Kamis", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "TAU-202: Studi Kitab Tauhid 2", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
+            { day: "Kamis", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "STT", subject: "TIK-202: Pengolah Angka (Excel) Lanjutan", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
+            { day: "Kamis", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "IPS-202: Kerajaan-Kerajaan Islam di Nusantara", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
+            { day: "Kamis", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "IPA-102: Zat dan Wujudnya (Padat, Cair, Gas)", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "" },
+            { day: "Kamis", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "ULQ-202: Pengantar Ulumul Qur'an (Makkiyah & Madaniyah)", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
+            // Jumat
+            { day: "Jumat", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "FIQ-102: Shalat 1: Syarat & Rukun Shalat", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
+            { day: "Jumat", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "NAH-202: I'rab Isim Mutsanna & Jamak Mudzakkar Salim", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "" },
+            { day: "Jumat", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "AGB-202: Dasar-dasar Ilmu Tanah & Media Tanam", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
+            { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "SIR-102: Masa Kenabian & Dakwah di Mekah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
+            { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-102: Ilmu Ma'ani: Kalam Khabari & Insya'i", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "" },
+            { day: "Jumat", time: "10:00-11:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "IPS-202: Kerajaan-Kerajaan Islam di Nusantara", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
+            { day: "Jumat", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "AKH-202: Adab kepada Orang Tua & Guru", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
+            { day: "Jumat", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "NAH-102: Jumlah Ismiyah (Kalimat Nominal)", teacher: "Mahadi Sentosa, S.Sos", downloadLink: "" },
+            // Sabtu
+            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-202: Tafsir & Tadabbur Surat Al-'Asr & Al-Humazah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
+            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-102: Adab kepada Sesama & Lingkungan", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAF-102: Tafsir & Tadabbur Ayat Kursi", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
+            { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-202: Menulis 3: Membuat Ringkasan & Peta Konsep", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
+            { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-202: Peristiwa Isra' Mi'raj & Perintah Shalat", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
+            { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "NAH-102: Jumlah Ismiyah (Kalimat Nominal)", teacher: "Mahadi Sentosa, S.Sos", downloadLink: "" },
+        ];
         
         const defaultTeachers = [
             { no: 1, name: "Sulistiawan, S.Kom", major: "Pelajaran Umum & Keterampilan", hari: "Semua hari & jam", schedule: "Guru Cadangan" },
@@ -526,70 +482,11 @@ const initialScheduleData = [
             { no: 6, name: "Mia A. Lubis, S.Kom", major: "Pelajaran Umum", hari: "Semua Hari", schedule: "10.00 - 12.15 (Guru Cadangan)" },
             { no: 7, name: "Mahadi Sentosa, S.Sos", major: "Diniyah", hari: "Sabtu", schedule: "13.00-14.30" },
             { no: 8, name: "Suprasojo, S.Pd.I., M.Pd.", major: "Diniyah", hari: "Senin, Rabu", schedule: "8.00-11.30" },
+            { no: 9, name: "Aria Atmaja", major: "Teknik Mekanik Elektronik", hari: "Rabu", schedule: "08:00-09:30" },
         ];
 
-        // ===== LOGIKA PEMBUATAN MODUL =====
-        const parentSubjectMap = { 'MAT': 'Matematika', 'IND': 'Bahasa Indonesia', 'THI': 'Thibbun Nabawi', 'ENG': 'Bahasa Inggris', 'KWU': 'Kewirausahaan', 'ARB': 'Bahasa Arab', 'KES': 'Kesehatan', 'KTR': 'Keterampilan', 'TAU': 'Tauhid', 'IPA': 'IPA Terpadu', 'ULH': 'Ulumul Hadits', 'TME': 'Teknik Mekanik Elektronik', 'IPS': 'IPS Terpadu', 'PANC': 'Pancasila', 'HAD': 'Hadits', 'TIK': 'Teknologi Informasi', 'ULQ': 'Ulumul Quran', 'FIQ': 'Fiqih', 'NAH': 'Nahwu', 'SIR': 'Sirah Nabawiyah', 'BAL': 'Balaghah', 'TAF': 'Tafsir', 'AKH': 'Akhlak' };
-        const majorMap = { 'LKS': 'Literasi & Kreatif Syariah', 'STT': 'Sains & Teknologi Terapan', 'Wajib': 'Jurusan Wajib', '': 'Kelas Fondasi' };
-        const uniqueModules = {};
-        initialScheduleData.forEach(item => {
-            if (item.subject && item.subject.includes(':')) {
-                if (!uniqueModules[item.subject]) {
-                    uniqueModules[item.subject] = {
-                        
-                        teacher: item.teacher || "N/A",
-                        link: item.downloadLink || "",
-			sks: item.sks
-                    };
-                }
-            }
-        });
-        let moduleCounter = 1;
-        const defaultModules = Object.keys(uniqueModules).map(subject => {
-            const itemData = uniqueModules[subject];
-            const [code, ...nameParts] = subject.split(':');
-            const moduleName = nameParts.join(':').trim();
-            const prefix = code.trim().split('-')[0];
-            return {
-                no: moduleCounter++,
-                teacher: itemData.teacher,
-                parent_subject: parentSubjectMap[prefix] || 'Lainnya',
-                code: code.trim(),
-                module: moduleName,
-                sks: itemData.sks,
-                downloadLink: itemData.link
-            };
-        });
-        
-        // // 1. Mengurutkan array defaultModules berdasarkan nama guru (properti 'teacher')
-        defaultModules.sort((a, b) => a.teacher.localeCompare(b.teacher));
-
-        // 2. Memperbarui nomor urut (properti 'no') setelah data diurutkan
-        defaultModules.forEach((mod, index) => {
-            mod.no = index + 1;
-        });
-
-// ===== KODE BARU: MENGELOMPOKKAN MODUL BERDASARKAN GURU =====
-const modulesByTeacher = defaultModules.reduce((acc, module) => {
-    // Gunakan "Tanpa Guru" jika nama guru tidak ada
-    const teacherName = module.teacher || "Tanpa Guru"; 
-    
-    // Buat array baru jika nama guru ini belum ada di akumulator
-    if (!acc[teacherName]) {
-        acc[teacherName] = [];
-    }
-    
-    // Masukkan modul saat ini ke dalam grup guru yang sesuai
-    acc[teacherName].push(module);
-    
-    return acc;
-}, {});
-
-
-
-
         // --- GLOBAL STATE ---
-        let scheduleData = JSON.parse(localStorage.getItem('mySchedule')) || initialScheduleData;
+        let scheduleData = scheduleDataBulan1; // Default ke Bulan 1
 
         // --- DOM ELEMENTS ---
         const scheduleContainer = document.getElementById('schedule-container');
@@ -599,45 +496,31 @@ const modulesByTeacher = defaultModules.reduce((acc, module) => {
         const filterRoom = document.getElementById('filter-room');
         const resetFiltersBtn = document.getElementById('reset-filters');
         const teacherTableBody = document.querySelector('#teacher-table tbody');
-        const addTeacherBtn = document.getElementById('add-teacher-row');
         const moduleTableBody = document.querySelector('#module-table tbody');
-        const addModuleBtn = document.getElementById('add-module-row');
         const modal = document.getElementById('confirmation-modal');
         const modalConfirmBtn = document.getElementById('modal-confirm-btn');
         const modalCancelBtn = document.getElementById('modal-cancel-btn');
         const modalMessage = document.getElementById('modal-message');
+        const sidebar = document.getElementById('filter-sidebar');
+        const overlay = document.getElementById('filter-overlay');
+        const openBtn = document.getElementById('open-filter-btn');
+        const closeBtn = document.getElementById('close-filter-btn');
+        const tabBulan1 = document.getElementById('tab-bulan1');
+        const tabBulan2 = document.getElementById('tab-bulan2');
 
         // --- UTILITY & HELPER FUNCTIONS ---
+        const getGroupNameFromCode = (code) => {
+            if (!code || !code.includes('-') || code.split('-')[1].length !== 3) {
+                return "Modul Lain-lain";
+            }
+            const numStr = code.split('-')[1];
+            const bagian = numStr.charAt(0);
+            const sesi = numStr.charAt(2);
+            const sesiMap = { '1': 'Sesi Pertama', '2': 'Sesi Kedua', '3': 'Sesi Ketiga', '4': 'Sesi Keempat', '5': 'Sesi Kelima', '6': 'Sesi Keenam' };
+            const sesiText = sesiMap[sesi] || `Sesi ke-${sesi}`;
+            return `Materi Bagian ${bagian} - ${sesiText}`;
+        };
 
-
-const getGroupNameFromCode = (code) => {
-    // Jika kode tidak valid, kembalikan grup default
-    if (!code || !code.includes('-') || code.split('-')[1].length !== 3) {
-        return "Modul Lain-lain";
-    }
-
-    const numStr = code.split('-')[1]; // Ambil bagian angka, misal "101"
-    const bagian = numStr.charAt(0);     // Ambil digit pertama untuk "Bagian"
-    const sesi = numStr.charAt(2);      // Ambil digit ketiga untuk "Sesi"
-
-    // Mapping angka bulan ke teks
-    const sesiMap = {
-        '1': 'Sesi Pertama',
-        '2': 'Sesi Kedua',
-        '3': 'Sesi Ketiga',
-        '4': 'Sesi Keempat',
-        '5': 'Sesi Kelima',
-        '6': 'Sesi Keenam',
-    };
-
-    const sesiText = sesiMap[sesi] || `Sesi ke-${sesi}`;
-
-    return `Materi Bagian ${bagian} - ${sesiText}`;
-};
-
-
-
-	    
         const showConfirmation = (message) => {
             return new Promise((resolve) => {
                 modalMessage.textContent = message;
@@ -660,32 +543,8 @@ const getGroupNameFromCode = (code) => {
                 modalCancelBtn.addEventListener('click', cancelHandler);
             });
         };
-        const saveSchedule = () => {
-            localStorage.setItem('mySchedule', JSON.stringify(scheduleData));
-        };
-        const createEditableCell = (content) => {
-            const cell = document.createElement('td');
-            cell.className = 'px-6 py-4 whitespace-nowrap';
-            const div = document.createElement('div');
-            div.className = 'text-sm text-slate-900 editable-cell';
-            div.setAttribute('contenteditable', 'true');
-            div.textContent = content;
-            cell.appendChild(div);
-            return cell;
-        };
-
-        // --- SCHEDULE RENDER & FILTER LOGIC ---
-        const populateTeacherFilter = () => {
-            const teachers = [...new Set(scheduleData.map(item => item.teacher).filter(Boolean))];
-            teachers.sort();
-            filterTeacher.innerHTML = '<option value="all">Semua Guru</option>';
-            teachers.forEach(teacher => {
-                const option = document.createElement('option');
-                option.value = teacher;
-                option.textContent = teacher;
-                filterTeacher.appendChild(option);
-            });
-        };
+        
+        // --- RENDER FUNCTIONS ---
         const renderSchedule = () => {
             scheduleContainer.innerHTML = '';
             const grid = document.createElement('div');
@@ -693,51 +552,192 @@ const getGroupNameFromCode = (code) => {
             const days = ["", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
             const timeSlots = ["08:00-09:30", "10:00-11:30", "11:30-12:15", "13:00-14:30"];
             const rooms = ["Kelas Mekah", "Kelas Madinah", "RBM"];
+
             days.forEach(day => {
                 const dayHeader = document.createElement('div');
                 dayHeader.className = 'day-header text-slate-600 bg-slate-100';
                 dayHeader.textContent = day;
                 grid.appendChild(dayHeader);
             });
+
             timeSlots.forEach(time => {
                 const timeHeader = document.createElement('div');
                 timeHeader.className = 'time-slot text-teal-700 bg-slate-100 flex items-center justify-center';
                 timeHeader.textContent = time;
                 grid.appendChild(timeHeader);
+
                 days.slice(1).forEach(day => {
                     const cellContainer = document.createElement('div');
                     cellContainer.className = 'p-1 bg-slate-100 rounded-lg space-y-1 flex flex-col justify-around';
                     const dayTimeData = scheduleData.filter(item => item.day === day && item.time === time);
-                    if (day === 'Jumat' && time === '11:30-12:15') {
-                        // ... logic jumat bersih
-                    } else {
-                        rooms.forEach(room => {
-                            const item = dayTimeData.find(d => d.room === room);
-                            const cell = document.createElement('div');
-                            cell.className = 'schedule-cell';
-                            if (item) {
-                                cell.dataset.group = item.group;
-                                cell.dataset.teacher = item.teacher;
-                                cell.dataset.room = item.room;
-                                cell.dataset.cluster = item.cluster;
-                                if (item.room === 'RBM') cell.classList.add('room-rbm');
-                                if (item.room === 'Kelas Madinah') cell.classList.add('room-madinah');
-                                if (item.room === 'Kelas Mekah') cell.classList.add('room-mekah');
-                                let displayGroup = item.group;
-                                if (item.group === 'KG' && item.cluster) {
-                                    displayGroup = `KG (${item.cluster})`;
-                                }
-                                cell.innerHTML = `<div class="subject font-bold text-sm text-teal-900" contenteditable="true">📘${item.subject}</div><div class="group-display font-semibold text-xs text-slate-600">🧑‍🤝‍🧑${displayGroup}</div><div class="sks-display font-bold text-xs text-teal-500 text-right"> ${item.sks} SKS</div><div class="teacher font-semibold text-xs text-teal-600 mt-2" contenteditable="true">👤${item.teacher || ''}</div><div class="room text-xs font-semibold ${item.room === 'RBM' ? 'text-orange-700' : 'text-sky-700'} mt-1">📍 ${item.room}</div>`;
+
+                    rooms.forEach(room => {
+                        const item = dayTimeData.find(d => d.room === room);
+                        const cell = document.createElement('div');
+                        cell.className = 'schedule-cell';
+
+                        if (item) {
+                            cell.dataset.group = item.group;
+                            cell.dataset.teacher = item.teacher;
+                            cell.dataset.room = item.room;
+                            cell.dataset.cluster = item.cluster;
+
+                            if (item.room === 'RBM') cell.classList.add('room-rbm');
+                            if (item.room === 'Kelas Madinah') cell.classList.add('room-madinah');
+                            if (item.room === 'Kelas Mekah') cell.classList.add('room-mekah');
+
+                            let displayGroup = item.group;
+                            if (item.group === 'KG' && item.cluster) {
+                                displayGroup = `KG (${item.cluster})`;
                             }
-                            cellContainer.appendChild(cell);
-                        });
-                    }
+                            
+                            cell.innerHTML = `
+                                <div class="subject font-bold text-sm text-teal-900">📘 ${item.subject || 'Kosong'}</div>
+                                <div class="group-display font-semibold text-xs text-slate-600">🧑‍🤝‍🧑 ${displayGroup}</div>
+                                <div class="sks-display font-bold text-xs text-teal-500 text-right">${item.sks || 0} SKS</div>
+                                <div class="teacher font-semibold text-xs text-teal-600 mt-2">👤 ${item.teacher || ''}</div>
+                                <div class="room text-xs font-semibold ${item.room === 'RBM' ? 'text-orange-700' : 'text-sky-700'} mt-1">📍 ${item.room}</div>
+                            `;
+                        }
+                        cellContainer.appendChild(cell);
+                    });
                     grid.appendChild(cellContainer);
                 });
             });
             scheduleContainer.appendChild(grid);
             applyFilters();
         };
+
+        const renderModuleTable = () => {
+            // Gabungkan semua jadwal untuk membuat daftar modul yang komprehensif
+            const allScheduleEntries = [...scheduleDataBulan1, ...scheduleDataBulan2];
+            
+            const parentSubjectMap = { 'MAT': 'Matematika', 'IND': 'Bahasa Indonesia', 'THI': 'Thibbun Nabawi', 'ENG': 'Bahasa Inggris', 'KWU': 'Kewirausahaan', 'ARB': 'Bahasa Arab', 'KES': 'Kesehatan', 'KTR': 'Keterampilan', 'TAU': 'Tauhid', 'IPA': 'IPA Terpadu', 'ULH': 'Ulumul Hadits', 'TME': 'Teknik Mekanik Elektronik', 'IPS': 'IPS Terpadu', 'PANC': 'Pancasila', 'HAD': 'Hadits', 'TIK': 'Teknologi Informasi', 'ULQ': 'Ulumul Quran', 'FIQ': 'Fiqih', 'NAH': 'Nahwu', 'SIR': 'Sirah Nabawiyah', 'BAL': 'Balaghah', 'TAF': 'Tafsir', 'AKH': 'Akhlak' };
+            const uniqueModules = {};
+
+            allScheduleEntries.forEach(item => {
+                if (item.subject && item.subject.includes(':')) {
+                    if (!uniqueModules[item.subject]) {
+                        uniqueModules[item.subject] = {
+                            teacher: item.teacher || "N/A",
+                            link: item.downloadLink || "",
+                            sks: item.sks
+                        };
+                    }
+                }
+            });
+
+            let moduleCounter = 1;
+            const defaultModules = Object.keys(uniqueModules).map(subject => {
+                const itemData = uniqueModules[subject];
+                const [code, ...nameParts] = subject.split(':');
+                const moduleName = nameParts.join(':').trim();
+                const prefix = code.trim().split('-')[0];
+                return {
+                    no: moduleCounter++,
+                    teacher: itemData.teacher,
+                    parent_subject: parentSubjectMap[prefix] || 'Lainnya',
+                    code: code.trim(),
+                    module: moduleName,
+                    sks: itemData.sks,
+                    downloadLink: itemData.link
+                };
+            });
+            
+            moduleTableBody.innerHTML = '';
+            const modulesByTeacher = defaultModules.reduce((acc, module) => {
+                const teacherName = module.teacher || "Tanpa Guru";
+                if (!acc[teacherName]) { acc[teacherName] = []; }
+                acc[teacherName].push(module);
+                return acc;
+            }, {});
+
+            const sortedTeachers = Object.keys(modulesByTeacher).sort();
+
+            sortedTeachers.forEach(teacherName => {
+                const modules = modulesByTeacher[teacherName];
+                
+                const teacherRow = document.createElement('tr');
+                teacherRow.className = 'bg-slate-50 hover:bg-slate-100 cursor-pointer border-b border-slate-200';
+                teacherRow.style.userSelect = 'none';
+                teacherRow.innerHTML = `<td class="px-6 py-4 font-bold text-teal-700" colspan="7"><div class="flex items-center justify-between"><div class="flex items-center gap-3"><svg class="w-5 h-5 transition-transform duration-300 arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02Z" clip-rule="evenodd" /></svg><span>${teacherName}</span></div><span class="bg-teal-100 text-teal-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">${modules.length} Modul</span></div></td>`;
+                moduleTableBody.appendChild(teacherRow);
+
+                const detailsRow = document.createElement('tr');
+                detailsRow.className = 'hidden';
+
+                const detailsCell = document.createElement('td');
+                detailsCell.colSpan = 7;
+                detailsCell.className = "p-0";
+
+                const modulesContainer = document.createElement('div');
+                modulesContainer.className = "bg-white";
+
+                modules.sort((a, b) => a.code.localeCompare(b.code));
+                const groupsWithinTeacher = modules.reduce((acc, mod) => {
+                    const groupName = getGroupNameFromCode(mod.code);
+                    if (!acc[groupName]) { acc[groupName] = []; }
+                    acc[groupName].push(mod);
+                    return acc;
+                }, {});
+
+                Object.keys(groupsWithinTeacher).sort().forEach(groupName => {
+                    const groupHeader = document.createElement('div');
+                    groupHeader.className = 'flex items-center justify-between px-4 py-3 text-base font-bold text-teal-800 bg-teal-50 border-t border-b border-teal-100 cursor-pointer hover:bg-teal-200 transition';
+                    groupHeader.style.userSelect = 'none';
+                    groupHeader.innerHTML = `<span>${groupName}</span><svg class="w-5 h-5 transition-transform duration-300 arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02Z" clip-rule="evenodd" /></svg>`;
+                    modulesContainer.appendChild(groupHeader);
+                    
+                    const singleGroupContainer = document.createElement('div');
+                    singleGroupContainer.className = 'divide-y divide-slate-100 hidden';
+                    
+                    const modulesInGroup = groupsWithinTeacher[groupName];
+                    modulesInGroup.forEach(mod => {
+                        const moduleItem = document.createElement('div');
+                        moduleItem.className = 'grid grid-cols-7 gap-4 p-4 items-center text-sm hover:bg-slate-50 transition';
+                        moduleItem.innerHTML = `
+                            <div class="px-2 text-slate-500 font-medium">${mod.no}</div>
+                            <div class="col-span-1 px-2 text-slate-800 font-semibold">${mod.parent_subject}</div>
+                            <div class="col-span-1 px-2 text-slate-600">${mod.code}</div>
+                            <div class="col-span-2 px-2 text-slate-800">${mod.module}</div>
+                            <div class="px-2 text-slate-600">${mod.sks ? mod.sks + ' SKS' : 'N/A'}</div>
+                            <div class="px-2 text-right">
+                                ${mod.downloadLink ? `<a href="${mod.downloadLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full hover:bg-green-200 transition"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z" /><path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" /></svg>Unduh</a>` : `<span class="inline-flex items-center gap-2 bg-slate-100 text-slate-500 text-xs font-semibold px-2.5 py-1 rounded-full cursor-not-allowed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z" clip-rule="evenodd" /></svg>Kosong</span>`}
+                            </div>
+                        `;
+                        singleGroupContainer.appendChild(moduleItem);
+                    });
+                    modulesContainer.appendChild(singleGroupContainer);
+                    groupHeader.addEventListener('click', () => {
+                        singleGroupContainer.classList.toggle('hidden');
+                        groupHeader.querySelector('.arrow-icon').classList.toggle('rotate-90');
+                    });
+                });
+                detailsCell.appendChild(modulesContainer);
+                detailsRow.appendChild(detailsCell);
+                moduleTableBody.appendChild(detailsRow);
+                teacherRow.addEventListener('click', () => {
+                    detailsRow.classList.toggle('hidden');
+                    teacherRow.querySelector('.arrow-icon').classList.toggle('rotate-90');
+                });
+            });
+        };
+
+        const renderTeacherTable = () => {
+            teacherTableBody.innerHTML = '';
+            defaultTeachers.forEach(teacher => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-500">${teacher.no}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">${teacher.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${teacher.major}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${teacher.hari}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${teacher.schedule}</td>
+                `;
+                teacherTableBody.appendChild(row);
+            });
+        };
+
         const applyFilters = () => {
             const group = filterGroup.value;
             let cluster = filterCluster.value;
@@ -759,6 +759,7 @@ const getGroupNameFromCode = (code) => {
                 if (cluster !== 'all' && cellData.cluster !== cluster && cellData.cluster !== 'Wajib') isMatch = false;
                 if (teacher !== 'all' && cellData.teacher !== teacher) isMatch = false;
                 if (room !== 'all' && cellData.room !== room) isMatch = false;
+
                 if (group === 'all' && cluster === 'all' && teacher === 'all' && room === 'all') {
                     cell.classList.remove('highlight', 'dimmed');
                 } else if (isMatch) {
@@ -770,95 +771,49 @@ const getGroupNameFromCode = (code) => {
                 }
             });
         };
-        
-        // --- DATA TABLE LOGIC ---
-        const addTableRow = (tableBody, data, createRowFn) => {
-            const row = createRowFn(data);
-            tableBody.appendChild(row);
-        };
-        const updateRowNumbers = (tableBody) => {
-            const rows = tableBody.querySelectorAll('tr');
-            rows.forEach((row, index) => {
-                row.cells[0].textContent = index + 1;
+
+        const populateTeacherFilter = () => {
+            const teachers = [...new Set(scheduleData.map(item => item.teacher).filter(Boolean))];
+            teachers.sort();
+            filterTeacher.innerHTML = '<option value="all">Semua Guru</option>';
+            teachers.forEach(teacher => {
+                const option = document.createElement('option');
+                option.value = teacher;
+                option.textContent = teacher;
+                filterTeacher.appendChild(option);
             });
-        };
-        const createDeleteButton = (row, tableBody) => {
-            const cell = document.createElement('td');
-            cell.className = 'px-6 py-4 whitespace-nowrap text-center text-sm font-medium';
-            const button = document.createElement('button');
-            button.className = 'text-red-600 hover:text-red-900';
-            button.innerHTML = 'Hapus';
-            button.onclick = async () => {
-                const confirmed = await showConfirmation('Apakah Anda yakin ingin menghapus baris ini?');
-                if (confirmed) {
-                    row.remove();
-                    updateRowNumbers(tableBody);
-                }
-            };
-            cell.appendChild(button);
-            return cell;
-        };
-        const createTeacherRow = (teacherData) => {
-            const row = document.createElement('tr');
-            const noCell = document.createElement('td');
-            noCell.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-500';
-            noCell.textContent = teacherData.no;
-            row.appendChild(noCell);
-            row.appendChild(createEditableCell(teacherData.name));
-            row.appendChild(createEditableCell(teacherData.major));
-            row.appendChild(createEditableCell(teacherData.hari));
-            row.appendChild(createEditableCell(teacherData.schedule));
-            row.appendChild(createDeleteButton(row, teacherTableBody));
-            return row;
-        };
-
-        // ===== FUNGSI createModuleRow YANG SUDAH DIPERBAIKI =====
-        const createModuleRow = (moduleData) => {
-            const row = document.createElement('tr');
-            
-            // Tambah sel No, Jurusan, Mapel Induk, Kode, Modul, SKS
-            const noCell = document.createElement('td');
-            noCell.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-500';
-            noCell.textContent = moduleData.no;
-            row.appendChild(noCell);
-            row.appendChild(createEditableCell(moduleData.teacher));
-            row.appendChild(createEditableCell(moduleData.parent_subject));
-            row.appendChild(createEditableCell(moduleData.code));
-            row.appendChild(createEditableCell(moduleData.module));
-            row.appendChild(createEditableCell(moduleData.sks));
-
-            // Tambah sel untuk Tombol Aksi (Unduh)
-            const actionCell = document.createElement('td');
-            actionCell.className = 'px-6 py-4 whitespace-nowrap text-center';
-            if (moduleData.downloadLink) {
-                const downloadLink = document.createElement('a');
-                downloadLink.href = moduleData.downloadLink;
-                        // Buka link di tab baru, bukan langsung download
-        downloadLink.setAttribute('target', '_blank');
-        downloadLink.setAttribute('rel', 'noopener noreferrer'); // Tambahan untuk keamanan
- 
-                downloadLink.className = 'inline-flex items-center gap-2 bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full hover:bg-green-200 transition';
-                downloadLink.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z" /><path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" /></svg> Unduh`;
-                actionCell.appendChild(downloadLink);
-            } else {
-                const noLinkButton = document.createElement('span');
-                noLinkButton.className = 'inline-flex items-center gap-2 bg-slate-100 text-slate-500 text-xs font-semibold px-2.5 py-1 rounded-full cursor-not-allowed';
-                noLinkButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z" clip-rule="evenodd" /></svg> Kosong`;
-                actionCell.appendChild(noLinkButton);
-            }
-            row.appendChild(actionCell);
-            
-            // Tambah sel untuk Tombol Hapus
-            row.appendChild(createDeleteButton(row, moduleTableBody));
-            
-            return row;
         };
 
         // --- EVENT LISTENERS ---
+        const handleTabClick = (selectedData, activeTab) => {
+            scheduleData = selectedData;
+            
+            // Update tab styles
+            tabBulan1.classList.remove('active');
+            tabBulan2.classList.remove('active');
+            activeTab.classList.add('active');
+
+            // Rerender content
+            renderSchedule();
+            populateTeacherFilter();
+        };
+
+        tabBulan1.addEventListener('click', () => handleTabClick(scheduleDataBulan1, tabBulan1));
+        tabBulan2.addEventListener('click', () => handleTabClick(scheduleDataBulan2, tabBulan2));
+
+        const toggleSidebar = () => {
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('hidden');
+        };
+        if (openBtn) openBtn.addEventListener('click', toggleSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+
         filterGroup.addEventListener('change', applyFilters);
         filterCluster.addEventListener('change', applyFilters);
         filterTeacher.addEventListener('change', applyFilters);
         filterRoom.addEventListener('change', applyFilters);
+        
         resetFiltersBtn.addEventListener('click', () => {
             filterGroup.value = 'all';
             filterCluster.value = 'all';
@@ -866,16 +821,16 @@ const getGroupNameFromCode = (code) => {
             filterRoom.value = 'all';
             applyFilters();
         });
+
         document.getElementById('reset-schedule').addEventListener('click', async () => {
-            const confirmed = await showConfirmation('Apakah Anda yakin ingin mengembalikan jadwal ke data semula? Semua perubahan akan hilang.');
-            if (confirmed) {
-                localStorage.removeItem('mySchedule');
-                scheduleData = initialScheduleData;
-                renderSchedule();
-                populateTeacherFilter();
+            if (await showConfirmation('Apakah Anda yakin ingin mengembalikan jadwal ke data semula? Semua perubahan akan hilang.')) {
+                scheduleData = scheduleDataBulan1; // Reset to Bulan 1
+                handleTabClick(scheduleDataBulan1, tabBulan1); // Update UI
             }
         });
+
         document.getElementById('print-schedule').addEventListener('click', () => window.print());
+
         document.getElementById('download-jpg').addEventListener('click', function() {
             const downloadBtn = this;
             const label = downloadBtn.querySelector('.fab-label');
@@ -883,20 +838,15 @@ const getGroupNameFromCode = (code) => {
             const scheduleContainer = document.getElementById('schedule-container');
             label.textContent = 'Menyiapkan...';
             downloadBtn.disabled = true;
-            const options = {
-                scale: 2,
-                useCORS: true,
-                onclone: (documentClone) => {
-                    const container = documentClone.getElementById('schedule-container');
-                    if (container) {
-                        container.style.maxHeight = 'none';
-                        container.style.overflow = 'visible';
-                    }
+            html2canvas(scheduleContainer, { scale: 2, useCORS: true, onclone: (doc) => {
+                const container = doc.getElementById('schedule-container');
+                if (container) {
+                    container.style.maxHeight = 'none';
+                    container.style.overflow = 'visible';
                 }
-            };
-            html2canvas(scheduleContainer, options).then(canvas => {
+            }}).then(canvas => {
                 const link = document.createElement('a');
-                link.download = 'jadwal-kbm-keseluruhan.jpg';
+                link.download = `jadwal-kbm-${tabBulan1.classList.contains('active') ? 'bulan1' : 'bulan2'}.jpg`;
                 link.href = canvas.toDataURL('image/jpeg', 0.9);
                 link.click();
                 label.textContent = originalText;
@@ -910,133 +860,10 @@ const getGroupNameFromCode = (code) => {
                 }, 3000);
             });
         });
-        addTeacherBtn.addEventListener('click', () => {
-            const newRowNumber = teacherTableBody.rows.length + 1;
-            const newTeacherData = { no: newRowNumber, name: "Nama Guru Baru", major: "Bidang/Jurusan", hari: "Masukkan Hari", schedule: "Waktu Jadwal" };
-            addTableRow(teacherTableBody, newTeacherData, createTeacherRow);
-        });
-        addModuleBtn.addEventListener('click', () => {
-            const newRowNumber = moduleTableBody.rows.length + 1;
-            const newModuleData = { no: newRowNumber, teacher: "Nama Guru baru", parent_subject: "Mapel Induk", code: "Kode-Baru", module: "Nama Modul Baru", sks: "0 SKS", downloadLink: "" };
-            addTableRow(moduleTableBody, newModuleData, createModuleRow);
-        });
 
         // --- INITIALIZATION ---
-        teacherTableBody.innerHTML = '';
-        defaultTeachers.forEach(teacher => addTableRow(teacherTableBody, teacher, createTeacherRow));
-        
-// ===== KODE BARU: MERENDER TABEL MODUL DENGAN PENGELOMPOKAN =====
-moduleTableBody.innerHTML = ''; // Pastikan tabel kosong sebelum diisi
-
-// Urutkan nama guru berdasarkan abjad sebelum membuat baris
-const sortedTeachers = Object.keys(modulesByTeacher).sort();
-
-sortedTeachers.forEach(teacherName => {
-    const modules = modulesByTeacher[teacherName];
-    
-    // 1. Buat Baris Header untuk Guru (Bisa Diklik)
-    const teacherRow = document.createElement('tr');
-    teacherRow.className = 'bg-slate-50 hover:bg-slate-100 cursor-pointer border-b border-slate-200';
-    teacherRow.style.userSelect = 'none'; // Agar teks tidak terseleksi saat diklik
-
-    // `colspan="7"` agar sel ini mencakup semua kolom
-    teacherRow.innerHTML = `
-        <td class="px-6 py-4 font-bold text-teal-700" colspan="7">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <svg class="w-5 h-5 transition-transform duration-300 arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02Z" clip-rule="evenodd" />
-                    </svg>
-                    <span>${teacherName}</span>
-                </div>
-                <span class="bg-teal-100 text-teal-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">${modules.length} Modul</span>
-            </div>
-        </td>
-    `;
-    moduleTableBody.appendChild(teacherRow);
-
-    // 2. Buat Baris Konten untuk Daftar Modul (Awalnya Tersembunyi)
-    const detailsRow = document.createElement('tr');
-    detailsRow.className = 'hidden'; // Kelas 'hidden' dari Tailwind untuk menyembunyikan
-
-    // Sel ini juga mencakup semua kolom dan tidak memiliki padding
-    const detailsCell = document.createElement('td');
-    detailsCell.colSpan = 7;
-    detailsCell.className = "p-0";
-
-    // Kontainer untuk daftar modul di dalam sel
-// 1. Urutkan modul berdasarkan kodenya terlebih dahulu untuk memastikan urutan kronologis
-modules.sort((a, b) => a.code.localeCompare(b.code));
-
-// 2. Kelompokkan modul-modul yang sudah urut ini ke dalam sub-grup
-const groupsWithinTeacher = modules.reduce((acc, mod) => {
-    const groupName = getGroupNameFromCode(mod.code);
-    if (!acc[groupName]) {
-        acc[groupName] = [];
-    }
-    acc[groupName].push(mod);
-    return acc;
-}, {});
-
-// 3. Kontainer utama untuk semua sub-grup
-const modulesContainer = document.createElement('div');
-modulesContainer.className = "bg-white";
-
-// 4. Loop melalui sub-grup yang baru (Materi Bagian 1, dst.)
-Object.keys(groupsWithinTeacher).forEach(groupName => {
-    // Membuat sub-header untuk setiap grup materi
-    const groupHeader = document.createElement('div');
-    groupHeader.className = 'px-4 pt-4 pb-2 text-base font-bold text-teal-800 bg-teal-50 border-t border-b border-teal-100';
-    groupHeader.textContent = groupName;
-    modulesContainer.appendChild(groupHeader);
-    
-    // Wadah untuk modul di dalam grup ini
-    const singleGroupContainer = document.createElement('div');
-    singleGroupContainer.className = 'divide-y divide-slate-100';
-    
-    // Ambil semua modul yang ada di dalam grup ini
-    const modulesInGroup = groupsWithinTeacher[groupName];
-
-    // Loop modul-modul tersebut dan buat tampilannya
-    modulesInGroup.forEach(mod => {
-        const moduleItem = document.createElement('div');
-        moduleItem.className = 'grid grid-cols-7 gap-4 p-4 items-center text-sm hover:bg-slate-50 transition';
-        
-        moduleItem.innerHTML = `
-            <div class="px-2 text-slate-500 font-medium">${mod.no}</div>
-            <div class="col-span-1 px-2 text-slate-800 font-semibold">${mod.parent_subject}</div>
-            <div class="col-span-1 px-2 text-slate-600">${mod.code}</div>
-            <div class="col-span-2 px-2 text-slate-800">${mod.module}</div>
-            <div class="px-2 text-slate-600">${mod.sks ? mod.sks + ' SKS' : 'N/A'}</div>
-            <div class="px-2 text-right">
-                ${mod.downloadLink ? 
-                    `<a href="${mod.downloadLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full hover:bg-green-200 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z" /><path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" /></svg> 
-                        Unduh
-                    </a>` : 
-                    `<span class="inline-flex items-center gap-2 bg-slate-100 text-slate-500 text-xs font-semibold px-2.5 py-1 rounded-full cursor-not-allowed">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z" clip-rule="evenodd" /></svg> 
-                        Kosong
-                    </span>`
-                }
-            </div>
-        `;
-        singleGroupContainer.appendChild(moduleItem);
-    });
-    
-    modulesContainer.appendChild(singleGroupContainer);
-});
-
-detailsCell.appendChild(modulesContainer);
-    detailsRow.appendChild(detailsCell);
-    moduleTableBody.appendChild(detailsRow);
-
-    // 3. Tambahkan Event Listener untuk Toggle
-    teacherRow.addEventListener('click', () => {
-        detailsRow.classList.toggle('hidden');
-        teacherRow.querySelector('.arrow-icon').classList.toggle('rotate-90');
-    });
-});
+        renderTeacherTable();
+        renderModuleTable();
         populateTeacherFilter();
         renderSchedule();
     });
