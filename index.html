@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf-autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -170,43 +170,15 @@
 
         /* --- Print Styles --- */
         @media print {
-            @page {
-                size: landscape;
-                margin: 1.5cm;
-            }
-            body {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            #filter-sidebar, #open-filter-btn, #floating-action-buttons, #teacher-data-container, #module-data-container, #santri-data-container, #krs-container, header, #tabs-container {
+            body, #krs-container > div:not(#krs-display), #floating-action-buttons, header, #tabs-container, #teacher-data-container, #module-data-container, #santri-data-container, #schedule-container, #filter-sidebar, #open-filter-btn {
                 display: none !important;
             }
-            #main-content {
-                padding: 0;
-                margin: 0;
-            }
-            #schedule-container {
+            #krs-display {
+                display: block !important;
                 box-shadow: none;
                 border: none;
+                margin: 0;
                 padding: 0;
-                overflow: visible;
-                max-height: none;
-            }
-            .schedule-grid {
-                font-size: 8pt;
-                gap: 1px;
-                border: 1px solid #ccc;
-            }
-            .schedule-cell {
-                min-height: auto;
-                padding: 4px;
-                border: 1px solid #eee;
-            }
-            .highlight, .dimmed {
-                transform: none;
-                opacity: 1;
-                filter: none;
-                animation: none;
             }
         }
     </style>
@@ -532,51 +504,90 @@
             </div>
             <!-- STUDENT TABLE END -->
 
-            <!-- KRS TABLE CONTAINER START -->
-            <div id="krs-container" class="mt-8 bg-white p-4 sm:p-6 rounded-xl shadow-lg hidden">
-                <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
-                    <h3 id="krs-title" class="text-2xl font-bold text-teal-800">Kartu Rencana Studi</h3>
-                    <div class="flex items-center gap-2">
-                        <button id="download-krs-jpg" class="bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Unduh JPG</button>
-                        <button id="download-krs-pdf" class="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Unduh PDF</button>
-                        <button id="close-krs-btn" class="text-slate-500 hover:text-slate-800">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                    </div>
-                </div>
-                
-                <div id="krs-info-card" class="mb-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                   <!-- Santri info will be populated here -->
+            <!-- KRS CONTAINER START -->
+            <div id="krs-container" class="mt-8 mb-8 p-4 sm:p-6 rounded-xl shadow-lg bg-gray-50 hidden">
+                <div id="krs-display" class="mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8" style="width: 210mm;">
+                    <!-- Header -->
+                    <header class="text-center border-b-2 border-gray-200 pb-4 mb-6">
+                        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">KARTU RENCANA STUDI (KRS)</h1>
+                        <h2 class="text-lg md:text-xl font-semibold text-gray-700 mt-1">Markaz Qur'an Al-Maa'un</h2>
+                        <p class="text-md text-gray-600">Semester Ganjil</p>
+                    </header>
+            
+                    <!-- Informasi Santri -->
+                    <section id="info-santri" class="mb-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm text-gray-700">
+                            <div class="flex">
+                                <span class="w-36 font-semibold">Nama Santri</span>
+                                <span id="nama-santri">: </span>
+                            </div>
+                            <div class="flex">
+                                <span class="w-48 font-semibold">Total SKS yang bisa diambil</span>
+                                <span id="total-sks-ambil">: 40 sks</span>
+                            </div>
+                            <div class="flex">
+                                <span class="w-36 font-semibold">Jurusan</span>
+                                <span id="jurusan">: </span>
+                            </div>
+                            <div class="flex">
+                                <span class="w-48 font-semibold">Kelas</span>
+                                <span id="kelas">: </span>
+                            </div>
+                            <div class="flex">
+                                <span class="w-36 font-semibold">Kelompok</span>
+                                <span id="kelompok">: </span>
+                            </div>
+                            <div class="flex">
+                                <span class="w-48 font-semibold">Materi untuk Bulan ke</span>
+                                <span id="materi-bulan">: </span>
+                            </div>
+                        </div>
+                    </section>
+            
+                    <!-- Tabel Rencana Studi -->
+                    <section>
+                        <div class="overflow-x-auto">
+                            <table id="tabel-krs" class="w-full text-sm text-left text-gray-600">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3">Hari</th>
+                                        <th scope="col" class="px-4 py-3">Waktu</th>
+                                        <th scope="col" class="px-4 py-3">Kode</th>
+                                        <th scope="col" class="px-4 py-3">Mata Pelajaran / Modul</th>
+                                        <th scope="col" class="px-4 py-3">Ruang</th>
+                                        <th scope="col" class="px-4 py-3 text-center">SKS</th>
+                                        <th scope="col" class="px-4 py-3">Guru</th>
+                                        <th scope="col" class="px-4 py-3">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="krs-table-body">
+                                    <!-- Data will be populated here -->
+                                </tbody>
+                                <tfoot>
+                                    <tr class="font-semibold text-gray-900 bg-gray-100">
+                                        <td colspan="5" class="px-4 py-3 text-right">Total SKS yang Diambil</td>
+                                        <td id="total-sks-diambil" class="px-4 py-3 text-center">0</td>
+                                        <td colspan="2" class="px-4 py-3"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </section>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table id="krs-table" class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-slate-100">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Hari</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jadwal</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Materi</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Guru</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ruang</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">SKS</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="krs-table-body" class="bg-white divide-y divide-slate-200">
-                            <!-- KRS data will be populated here by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-                 <div class="flex justify-between items-center mt-4">
-                    <button id="add-krs-row" class="bg-teal-500 text-white px-4 py-2 rounded-md text-sm hover:bg-teal-600">+ Tambah Baris</button>
-                    <div class="text-right">
-                        <strong class="text-lg text-slate-700">Total SKS Diambil: </strong>
-                        <span id="krs-total-sks" class="text-lg font-bold text-teal-600">0 SKS</span>
-                    </div>
+                <!-- Tombol Aksi Section -->
+                <div class="mt-8 text-center flex justify-center items-center gap-4">
+                     <button id="add-krs-row" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-opacity-50">
+                        + Tambah Baris
+                    </button>
+                     <button id="download-krs-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 inline-flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>Unduh PDF</span>
+                    </button>
+                    <button id="close-krs-btn-bottom" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50">Tutup</button>
                 </div>
             </div>
-            <!-- KRS TABLE CONTAINER END -->
-
+            <!-- KRS CONTAINER END -->
         </main>
 
         <div id="floating-action-buttons">
@@ -834,13 +845,11 @@
         const tabBulan3 = document.getElementById('tab-bulan3');
         const tabBulan4 = document.getElementById('tab-bulan4');
         const krsContainer = document.getElementById('krs-container');
-        const krsTitle = document.getElementById('krs-title');
+        const krsDisplay = document.getElementById('krs-display');
+        const closeKrsBtnBottom = document.getElementById('close-krs-btn-bottom');
+        const downloadKrsBtn = document.getElementById('download-krs-btn');
         const krsTableBody = document.getElementById('krs-table-body');
-        const closeKrsBtn = document.getElementById('close-krs-btn');
         const addKrsRowBtn = document.getElementById('add-krs-row');
-        const krsInfoCard = document.getElementById('krs-info-card');
-        const downloadKrsJpgBtn = document.getElementById('download-krs-jpg');
-        const downloadKrsPdfBtn = document.getElementById('download-krs-pdf');
 
 
         // --- UTILITY & HELPER FUNCTIONS ---
@@ -897,7 +906,18 @@
 
                 timeSlots.forEach(time => {
                     // Skip RBM processing for Friday
-                    if (day === "Jumat" && time === "13:00-14:30") return;
+                    if (day === "Jumat") {
+                        const rbmEntry = processedData.find(item => item.day === "Jumat" && item.room === "RBM" && item.time === time);
+                        if (rbmEntry) {
+                            rbmEntry.subject = "";
+                            rbmEntry.teacher = "";
+                            rbmEntry.group = "";
+                            rbmEntry.cluster = "";
+                            rbmEntry.sks = 0;
+                        }
+                        if (time === "13:00-14:30") return;
+                    }
+
 
                     const slotEntries = processedData.filter(item => item.day === day && item.time === time);
                     
@@ -1183,14 +1203,15 @@
 
         // --- KRS LOGIC ---
         const updateKrsTotalSks = () => {
-            const totalSksElement = document.getElementById('krs-total-sks');
+            const totalSksElement = document.getElementById('total-sks-diambil');
             let totalSks = 0;
-            const sksCells = krsTableBody.querySelectorAll('tr td:nth-child(6)'); // 6th column is SKS
+            const krsTableForCalc = document.getElementById('krs-table-body');
+            const sksCells = krsTableForCalc.querySelectorAll('tr td:nth-child(6)'); // 6th column is SKS
             sksCells.forEach(cell => {
                 const sksValue = parseInt(cell.textContent, 10) || 0;
                 totalSks += sksValue;
             });
-            totalSksElement.textContent = `${totalSks} SKS`;
+            totalSksElement.textContent = totalSks;
         };
 
         const handleKrsClick = (event) => {
@@ -1204,15 +1225,13 @@
             const santriGroup = santriGroupInfo[0];
             const santriCluster = santriGroupInfo.length > 1 ? santriGroupInfo[1] : null;
 
-            krsInfoCard.innerHTML = `
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div><strong class="block text-slate-500">Nama Santri</strong> <span class="text-slate-800 font-semibold">${santriName}</span></div>
-                    <div><strong class="block text-slate-500">Kelas</strong> <span class="text-slate-800 font-semibold">${santriKelas}</span></div>
-                    <div><strong class="block text-slate-500">Kelompok</strong> <span class="text-slate-800 font-semibold">${row.dataset.santriGroup}</span></div>
-                    <div><strong class="block text-slate-500">Jurusan</strong> <span class="text-slate-800 font-semibold">${santriJurusan}</span></div>
-                    <div><strong class="block text-slate-500">Total SKS</strong> <span class="text-slate-800 font-semibold">40 SKS</span></div>
-                </div>
-            `;
+            // Populate Info Card
+            document.getElementById('nama-santri').textContent = `: ${santriName}`;
+            document.getElementById('jurusan').textContent = `: ${santriJurusan}`;
+            document.getElementById('kelas').textContent = `: ${santriKelas}`;
+            document.getElementById('kelompok').textContent = `: ${row.dataset.santriGroup}`;
+            const activeTab = document.querySelector('.tab-btn.active');
+            document.getElementById('materi-bulan').textContent = `: ${activeTab.textContent.replace('Bulan ', '')}`;
 
             let krsData = [];
             if (santriGroup === 'KF') {
@@ -1221,10 +1240,12 @@
                 krsData = scheduleData.filter(item => item.group === 'KG' && (item.cluster === santriCluster || item.cluster === 'Wajib'));
             }
 
-            krsTableBody.innerHTML = ''; // Clear previous data
+            const krsTableBodyEl = document.getElementById('krs-table-body');
+            krsTableBodyEl.innerHTML = ''; // Clear previous data
+            
             if (krsData.length > 0) {
                 krsData
-                    .filter(item => item.group !== 'Istirahat')
+                    .filter(item => item.group !== 'Istirahat' && item.subject && item.subject.trim() !== 'Kosong' && !item.subject.toLowerCase().includes('tugas mandiri'))
                     .sort((a, b) => {
                         const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
                         if (days.indexOf(a.day) !== days.indexOf(b.day)) {
@@ -1232,25 +1253,27 @@
                         }
                         return a.time.localeCompare(b.time);
                     })
-                    .forEach(item => {
+                    .forEach((item, index) => {
                         const tr = document.createElement('tr');
+                        tr.className = index % 2 === 0 ? 'bg-white border-b' : 'bg-gray-50 border-b';
+                        const code = item.subject.split(':')[0];
                         tr.innerHTML = `
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" contenteditable="true">${item.day}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" contenteditable="true">${item.time}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900" contenteditable="true">${item.subject}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" contenteditable="true">${item.teacher}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" contenteditable="true">${item.room}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" contenteditable="true">${item.sks}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm"><button class="delete-krs-row text-red-500 hover:text-red-700">Hapus</button></td>
+                            <td class="px-4 py-2" contenteditable="true">${item.day}</td>
+                            <td class="px-4 py-2" contenteditable="true">${item.time}</td>
+                            <td class="px-4 py-2" contenteditable="true">${code}</td>
+                            <td class="px-4 py-2" contenteditable="true">${item.subject.substring(code.length + 1).trim()}</td>
+                            <td class="px-4 py-2" contenteditable="true">${item.room}</td>
+                            <td class="px-4 py-2 text-center" contenteditable="true">${item.sks}</td>
+                            <td class="px-4 py-2" contenteditable="true">${item.teacher}</td>
+                            <td class="px-4 py-2 text-center"><button class="delete-krs-row text-red-500 hover:text-red-700">Hapus</button></td>
                         `;
-                        krsTableBody.appendChild(tr);
+                        krsTableBodyEl.appendChild(tr);
                     });
             } else {
-                 krsTableBody.innerHTML = `<tr><td colspan="7" class="text-center px-6 py-4 text-slate-500">Tidak ada data KRS untuk ditampilkan.</td></tr>`;
+                 krsTableBodyEl.innerHTML = `<tr><td colspan="8" class="text-center px-4 py-3 text-gray-500">Tidak ada data KRS untuk ditampilkan.</td></tr>`;
             }
 
             updateKrsTotalSks();
-            krsTitle.textContent = `Kartu Rencana Studi - ${santriName}`;
             krsContainer.classList.remove('hidden');
             krsContainer.scrollIntoView({ behavior: 'smooth' });
         };
@@ -1340,20 +1363,23 @@
             button.addEventListener('click', handleKrsClick);
         });
 
-        closeKrsBtn.addEventListener('click', () => {
+        closeKrsBtnBottom.addEventListener('click', () => {
             krsContainer.classList.add('hidden');
         });
 
         addKrsRowBtn.addEventListener('click', () => {
             const tr = document.createElement('tr');
+            const index = krsTableBody.children.length;
+            tr.className = index % 2 === 0 ? 'bg-white border-b' : 'bg-gray-50 border-b';
             tr.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" contenteditable="true"></td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" contenteditable="true"></td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900" contenteditable="true"></td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" contenteditable="true"></td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" contenteditable="true"></td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" contenteditable="true">0</td>
-                <td class="px-6 py-4 whitespace-nowrap text-center text-sm"><button class="delete-krs-row text-red-500 hover:text-red-700">Hapus</button></td>
+                <td class="px-4 py-2" contenteditable="true"></td>
+                <td class="px-4 py-2" contenteditable="true"></td>
+                <td class="px-4 py-2" contenteditable="true"></td>
+                <td class="px-4 py-2" contenteditable="true"></td>
+                <td class="px-4 py-2" contenteditable="true"></td>
+                <td class="px-4 py-2 text-center" contenteditable="true">0</td>
+                <td class="px-4 py-2" contenteditable="true"></td>
+                <td class="px-4 py-2 text-center"><button class="delete-krs-row text-red-500 hover:text-red-700">Hapus</button></td>
             `;
             krsTableBody.appendChild(tr);
             updateKrsTotalSks();
@@ -1372,51 +1398,117 @@
              }
         });
 
-        downloadKrsJpgBtn.addEventListener('click', () => {
-            const santriName = krsTitle.textContent.replace('Kartu Rencana Studi - ', '');
-            html2canvas(krsContainer, { scale: 2 }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `KRS-${santriName}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.9);
-                link.click();
-            });
-        });
+        downloadKrsBtn.addEventListener('click', () => {
+             const { jsPDF } = window.jspdf;
+             const pdf = new jsPDF({
+                 orientation: 'portrait',
+                 unit: 'mm',
+                 format: [210, 330]
+             });
+             const margin = 15;
+             let y = 10;
 
-        downloadKrsPdfBtn.addEventListener('click', () => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const santriName = krsTitle.textContent.replace('Kartu Rencana Studi - ', '');
-            
-            doc.setFontSize(16);
-            doc.text(krsTitle.textContent, 14, 22);
+             pdf.setFont('helvetica', 'bold');
+             pdf.setFontSize(12);
+             pdf.text('KARTU RENCANA STUDI (KRS)', 105, y, { align: 'center' });
+             y += 6;
+             pdf.setFontSize(10);
+             pdf.text("Markaz Qur'an Al-Maa'un", 105, y, { align: 'center' });
+             y += 4;
+             pdf.setFont('helvetica', 'normal');
+             pdf.setFontSize(9);
+             pdf.text('Semester Ganjil', 105, y, { align: 'center' });
+             y += 8;
 
-            const infoText = [];
-            krsInfoCard.querySelectorAll('div > div').forEach(div => {
-                infoText.push(`${div.querySelector('strong').innerText}: ${div.querySelector('span').innerText}`);
-            });
-            doc.setFontSize(10);
-            doc.text(infoText.join('\n'), 14, 30);
+             pdf.setFontSize(8);
+             const info = {
+                 left: [
+                     { label: 'Nama Santri', value: document.getElementById('nama-santri').textContent.substring(1).trim() },
+                     { label: 'Jurusan', value: document.getElementById('jurusan').textContent.substring(1).trim() },
+                     { label: 'Kelompok', value: document.getElementById('kelompok').textContent.substring(1).trim() }
+                 ],
+                 right: [
+                     { label: 'Total SKS yang bisa diambil', value: document.getElementById('total-sks-ambil').textContent.substring(1).trim() },
+                     { label: 'Kelas', value: document.getElementById('kelas').textContent.substring(1).trim() },
+                     { label: 'Materi untuk Bulan ke', value: document.getElementById('materi-bulan').textContent.substring(1).trim() }
+                 ]
+             };
+             
+             const leftLabelX = margin;
+             const leftColonX = leftLabelX + 45;
+             const leftValueX = leftColonX + 2;
+             const rightLabelX = 110;
+             const rightColonX = rightLabelX + 45;
+             const rightValueX = rightColonX + 2;
+             const lineHeight = 5;
 
-            const table = document.getElementById('krs-table');
-            const head = [['Hari', 'Jadwal', 'Materi', 'Guru', 'Ruang', 'SKS']];
-            const body = [];
-            table.querySelectorAll('tbody tr').forEach(row => {
-                const rowData = [];
-                row.querySelectorAll('td').forEach((cell, index) => {
-                    if (index < 6) { 
-                        rowData.push(cell.innerText);
-                    }
-                });
-                body.push(rowData);
-            });
+             const maxRows = Math.max(info.left.length, info.right.length);
 
-            doc.autoTable({
-                head: head,
-                body: body,
-                startY: 55,
-            });
+             for (let i = 0; i < maxRows; i++) {
+                 if (info.left[i]) {
+                     pdf.setFont('helvetica', 'bold');
+                     pdf.text(info.left[i].label, leftLabelX, y);
+                     pdf.setFont('helvetica', 'normal');
+                     pdf.text(':', leftColonX, y);
+                     pdf.text(info.left[i].value, leftValueX, y, { maxWidth: rightLabelX - leftValueX - 5 });
+                 }
+                 if (info.right[i]) {
+                     pdf.setFont('helvetica', 'bold');
+                     pdf.text(info.right[i].label, rightLabelX, y);
+                      pdf.setFont('helvetica', 'normal');
+                     pdf.text(':', rightColonX, y);
+                     pdf.text(info.right[i].value, rightValueX, y);
+                 }
+                 y += lineHeight;
+             }
+             
+             pdf.autoTable({
+                 html: '#tabel-krs',
+                 startY: y,
+                 theme: 'grid',
+                 styles: {
+                     font: 'helvetica',
+                     fontSize: 8,
+                     cellPadding: 1,
+                     valign: 'middle'
+                 },
+                 headStyles: {
+                     fillColor: [243, 244, 246],
+                     textColor: [31, 41, 55],
+                     fontStyle: 'bold',
+                     fontSize: 8.5,
+                 },
+                 footStyles: {
+                     fillColor: [243, 244, 246],
+                     textColor: [31, 41, 55],
+                     fontStyle: 'bold',
+                     fontSize: 8.5,
+                     halign: 'right'
+                 },
+                 columnStyles: {
+                     5: { halign: 'center' } 
+                 },
+                 didParseCell: function (data) {
+                     if (data.row.section === 'foot') {
+                        data.cell.styles.halign = 'right';
+                        if(data.column.index === 0) {
+                             data.cell.text = data.cell.text[0].replace(/:/g, '');
+                        }
+                     }
+                 },
+                 // Remove the last column ('Aksi') from the PDF
+                 columns: [
+                    { header: 'Hari', dataKey: 0 },
+                    { header: 'Waktu', dataKey: 1 },
+                    { header: 'Kode', dataKey: 2 },
+                    { header: 'Mata Pelajaran / Modul', dataKey: 3 },
+                    { header: 'Ruang', dataKey: 4 },
+                    { header: 'SKS', dataKey: 5 },
+                    { header: 'Guru', dataKey: 6 },
+                ]
+             });
 
-            doc.save(`KRS-${santriName}.pdf`);
+             pdf.save(`KRS_${document.getElementById('nama-santri').textContent.substring(1).trim()}.pdf`);
         });
 
         // --- INITIALIZATION ---
