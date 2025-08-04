@@ -108,10 +108,10 @@
         }
         
         /* --- Tab Styles --- */
-        .tab-btn {
+        .tab-btn, .semester-btn {
             transition: all 0.2s ease-in-out;
         }
-        .tab-btn.active {
+        .tab-btn.active, .semester-btn.active {
             background-color: #0d9488; /* teal-600 */
             color: white;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -128,7 +128,7 @@
             background-size: 1em;
             padding-right: 2.5rem;
         }
-       
+        
         /* --- KHS Styles --- */
         #khs-container { font-family: 'Times New Roman', Times, serif; }
         #khs-display table td, #khs-display table th { padding: 2px 4px; }
@@ -137,14 +137,14 @@
         /* --- Print Styles --- */
         @media print {
             @page {
-                size: landscape;
-                margin: 1.5cm;
+                size: A4 landscape;
+                margin: 1cm;
             }
             body {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-            #filter-section, #schedule-actions, #teacher-data-container, #module-data-container, #santri-data-container, #krs-container, #khs-container, header, #tabs-container {
+            #filter-section, #schedule-actions, #teacher-data-container, #module-data-container, #santri-data-container, #krs-container, #khs-container, header, #tabs-container, #semester-tabs-container {
                 display: none !important;
             }
             #main-content {
@@ -173,6 +173,11 @@
                 opacity: 1;
                 filter: none;
                 animation: none;
+                box-shadow: none !important;
+            }
+            .schedule-cell.highlight {
+                border: 1px solid #14b8a6; /* teal-500 */
+                background-color: #f0fdfa !important; /* teal-50 */
             }
         }
     </style>
@@ -185,57 +190,56 @@
             <header class="text-center mb-6">
                 <h1 class="text-3xl md:text-4xl font-bold text-teal-800">Roster KBM Dinamis</h1>
                 <h2 class="text-xl md:text-2xl font-semibold text-teal-700">Markaz Qur'an Al-Maa'un</h2>
-                <p class="text-slate-600 mt-2">Semester Ganjil</p>
+                <!-- "Semester Ganjil" text removed as per request -->
             </header>
 
-            <div id="filter-section" class="bg-white p-4 rounded-xl shadow-lg mb-6">
-                <h3 class="text-xl font-bold text-teal-800 mb-4">Filter Jadwal</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <div>
-                        <label for="filter-group" class="block text-sm font-medium text-slate-700">Kelompok</label>
-                        <select id="filter-group" class="filter-select mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md">
-                            <option value="all">Semua Kelompok</option>
-                            <option value="KF">Kelas Fondasi</option>
-                            <option value="KG">Kelas Gabungan</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="filter-cluster" class="block text-sm font-medium text-slate-700">Klaster</label>
-                        <select id="filter-cluster" class="filter-select mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md" disabled>
-                            <option value="all">Semua Klaster</option>
-                            <option value="LKS">Literasi & Kreatif Syariah</option>
-                            <option value="STT">Sains & Teknologi Terapan</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="filter-teacher" class="block text-sm font-medium text-slate-700">Guru</label>
-                        <select id="filter-teacher" class="filter-select mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md">
-                            <option value="all">Semua Guru</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="filter-room" class="block text-sm font-medium text-slate-700">Ruang</label>
-                        <select id="filter-room" class="filter-select mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md">
-                            <option value="all">Semua Ruang</option>
-                            <option value="Kelas Mekah">Kelas Mekah</option>
-                            <option value="Kelas Madinah">Kelas Madinah</option>
-                            <option value="RBM">RBM</option>
-                        </select>
-                    </div>
-                    <div class="self-end">
-                        <button id="reset-filters" class="w-full bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition">
-                            Reset Filter
-                        </button>
-                    </div>
+            <div id="filter-section" class="bg-white p-3 rounded-xl shadow-md mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 items-center">
+                    <select id="filter-group" class="filter-select w-full pl-3 pr-10 py-2 text-sm border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 rounded-md">
+                        <option value="all">Semua Kelompok</option>
+                        <option value="KF">Kelas Fondasi</option>
+                        <option value="KG">Kelas Gabungan</option>
+                    </select>
+                    <select id="filter-cluster" class="filter-select w-full pl-3 pr-10 py-2 text-sm border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 rounded-md" disabled>
+                        <option value="all">Semua Klaster</option>
+                        <option value="LKS">Literasi & Kreatif Syariah</option>
+                        <option value="STT">Sains & Teknologi Terapan</option>
+                    </select>
+                    <select id="filter-teacher" class="filter-select w-full pl-3 pr-10 py-2 text-sm border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 rounded-md">
+                        <option value="all">Semua Guru</option>
+                    </select>
+                    <select id="filter-room" class="filter-select w-full pl-3 pr-10 py-2 text-sm border-slate-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 rounded-md">
+                        <option value="all">Semua Ruang</option>
+                        <option value="Kelas Mekah">Kelas Mekah</option>
+                        <option value="Kelas Madinah">Kelas Madinah</option>
+                        <option value="RBM">RBM</option>
+                    </select>
+                    <button id="reset-filters" class="w-full bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition text-sm">
+                        Reset Filter
+                    </button>
                 </div>
             </div>
 
-            <div id="tabs-container" class="mb-4 bg-slate-200 p-1 rounded-lg flex space-x-1">
-                <button id="tab-bulan1" class="tab-btn flex-1 p-2 rounded-md font-semibold active">Bulan I</button>
-                <button id="tab-bulan2" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan II</button>
-                <button id="tab-bulan3" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan III</button>
-                <button id="tab-bulan4" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan IV</button>
-                <button id="tab-bulan5" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan V</button>
+            <div id="semester-tabs-container" class="mb-2 flex space-x-2">
+                <button id="semester-ganjil-btn" class="semester-btn flex-1 p-2 rounded-md font-semibold active">Semester Ganjil</button>
+                <button id="semester-genap-btn" class="semester-btn flex-1 p-2 rounded-md font-semibold">Semester Genap</button>
+            </div>
+
+            <div id="ganjil-tabs">
+                <div id="tabs-container" class="mb-4 bg-slate-200 p-1 rounded-lg flex space-x-1">
+                    <button id="tab-bulan1" class="tab-btn flex-1 p-2 rounded-md font-semibold active">Bulan I</button>
+                    <button id="tab-bulan2" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan II</button>
+                    <button id="tab-bulan3" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan III</button>
+                    <button id="tab-bulan4" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan IV</button>
+                </div>
+            </div>
+            <div id="genap-tabs" class="hidden">
+                 <div id="tabs-container-genap" class="mb-4 bg-slate-200 p-1 rounded-lg flex space-x-1">
+                    <button id="tab-bulan5" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan V</button>
+                    <button id="tab-bulan6" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan VI</button>
+                    <button id="tab-bulan7" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan VII</button>
+                    <button id="tab-bulan8" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan VIII</button>
+                </div>
             </div>
 
             <div id="schedule-container" class="bg-white p-2 rounded-xl shadow-lg overflow-auto max-h-[80vh]">
@@ -250,9 +254,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v3a2 2 0 002 2h6a2 2 0 002-2v-3h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" /></svg>
                     Cetak
                 </button>
-                <button id="download-jpg" class="flex items-center gap-2 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
+                <button id="download-schedule-pdf" class="flex items-center gap-2 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                    Unduh Jadwal
+                    Unduh Jadwal (PDF)
                 </button>
             </div>
             
@@ -1005,7 +1009,7 @@
             const grid = document.createElement('div');
             grid.className = 'schedule-grid';
             const days = ["", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-            const timeSlots = ["08:00-09:30", "10:00-11:30", "11:30-12:15", "13:00-14:30"];
+            const timeSlots = ["08:00-09:30", "10:00-11:30", "13:00-14:30"];
             const rooms = ["Kelas Mekah", "Kelas Madinah", "RBM"];
 
             days.forEach(day => {
@@ -1226,7 +1230,7 @@
                 }
                 let isMatch = true;
                 if (group !== 'all' && cellData.group !== group) isMatch = false;
-                if (cluster !== 'all' && cellData.cluster !== cluster && cellData.cluster !== 'Wajib') isMatch = false;
+                if (cluster !== 'all' && cellData.cluster !== cluster && !(cellData.cluster === 'Wajib' && group === 'KG')) isMatch = false;
                 if (teacher !== 'all' && cellData.teacher !== teacher) isMatch = false;
                 if (room !== 'all' && cellData.room !== room) isMatch = false;
 
@@ -1241,6 +1245,39 @@
                 }
             });
         };
+        
+        const getFilteredScheduleData = () => {
+            const groupVal = filterGroup.value;
+            const clusterVal = filterCluster.disabled ? 'all' : filterCluster.value;
+            const teacherVal = filterTeacher.value;
+            const roomVal = filterRoom.value;
+
+            if (groupVal === 'all' && clusterVal === 'all' && teacherVal === 'all' && roomVal === 'all') {
+                return scheduleData.filter(item => item.group && item.group !== 'Istirahat' && item.subject && item.subject.trim() !== '');
+            }
+
+            const filtered = scheduleData.filter(item => {
+                if (!item.group || item.group === 'Istirahat' || !item.subject || item.subject.trim() === '') {
+                    return false; // Always exclude breaks and empty slots
+                }
+
+                const groupMatch = (groupVal === 'all') || (item.group === groupVal);
+                
+                // For KG, a cluster filter should also match 'Wajib' subjects
+                const clusterMatch = (clusterVal === 'all') || (item.cluster === clusterVal) || (item.group === 'KG' && item.cluster === 'Wajib');
+                
+                const teacherMatch = (teacherVal === 'all') || (item.teacher === teacherVal);
+                const roomMatch = (roomVal === 'all') || (item.room === roomVal);
+                
+                if (groupVal === 'KG') {
+                    return groupMatch && clusterMatch && teacherMatch && roomMatch;
+                }
+                
+                return groupMatch && teacherMatch && roomMatch;
+            });
+            return filtered;
+        };
+
 
         const populateTeacherFilter = () => {
             const teachers = [...new Set(scheduleData.map(item => item.teacher).filter(Boolean))];
@@ -1414,7 +1451,7 @@
                             </tr>
                         </thead>
                         <tbody>${tableRows}</tbody>
-                         <tfoot>
+                          <tfoot>
                             <tr class="font-bold bg-gray-100"><td colspan="3" class="border border-black text-right pr-2">Jumlah SKS</td><td class="border border-black text-center">${totalSks}</td><td colspan="3" class="border border-black"></td></tr>
                             <tr class="font-bold bg-gray-100"><td colspan="5" class="border border-black text-right pr-2">IP Bulanan</td><td class="border border-black text-center">${ip}</td><td class="border border-black"></td></tr>
                         </tfoot>
@@ -1444,7 +1481,7 @@
         const handleTabClick = (selectedData, activeTab) => {
             scheduleData = selectedData;
             
-            [tabBulan1, tabBulan2, tabBulan3, tabBulan4, tabBulan5].forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(tab => tab.classList.remove('active'));
             activeTab.classList.add('active');
 
             renderSchedule();
@@ -1453,12 +1490,39 @@
             khsContainer.classList.add('hidden');
         };
 
-        tabBulan1.addEventListener('click', () => handleTabClick(processedScheduleBulan1, tabBulan1));
-        tabBulan2.addEventListener('click', () => handleTabClick(processedScheduleBulan2, tabBulan2));
-        tabBulan3.addEventListener('click', () => handleTabClick(processedScheduleBulan3, tabBulan3));
-        tabBulan4.addEventListener('click', () => handleTabClick(processedScheduleBulan4, tabBulan4));
-        tabBulan5.addEventListener('click', () => handleTabClick(processedScheduleBulan5, tabBulan5));
+        document.querySelectorAll('.tab-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                let data;
+                switch(e.target.id) {
+                    case 'tab-bulan1': data = processedScheduleBulan1; break;
+                    case 'tab-bulan2': data = processedScheduleBulan2; break;
+                    case 'tab-bulan3': data = processedScheduleBulan3; break;
+                    case 'tab-bulan4': data = processedScheduleBulan4; break;
+                    case 'tab-bulan5': data = processedScheduleBulan5; break;
+                    case 'tab-bulan6': data = processedScheduleBulan6; break;
+                    case 'tab-bulan7': data = processedScheduleBulan7; break;
+                    case 'tab-bulan8': data = processedScheduleBulan8; break;
+                }
+                handleTabClick(data, e.target);
+            });
+        });
 
+        document.querySelectorAll('.semester-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                document.querySelectorAll('.semester-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                if (e.target.id === 'semester-ganjil-btn') {
+                    document.getElementById('ganjil-tabs').classList.remove('hidden');
+                    document.getElementById('genap-tabs').classList.add('hidden');
+                    tabBulan1.click();
+                } else {
+                    document.getElementById('ganjil-tabs').classList.add('hidden');
+                    document.getElementById('genap-tabs').classList.remove('hidden');
+                    tabBulan5.click();
+                }
+            });
+        });
+        
         document.querySelectorAll('.data-header').forEach(header => {
             header.addEventListener('click', () => {
                 const content = header.nextElementSibling;
@@ -1487,29 +1551,79 @@
             }
         });
 
-        document.getElementById('print-schedule').addEventListener('click', () => window.print());
+        document.getElementById('print-schedule').addEventListener('click', () => {
+            const style = document.createElement('style');
+            // Hide dimmed cells by making them invisible, which preserves the table layout
+            style.innerHTML = `@media print { .schedule-cell.dimmed { visibility: hidden !important; } }`;
+            document.head.appendChild(style);
+            
+            window.print();
+            
+            // Clean up the added style after a short delay
+            setTimeout(() => {
+                document.head.removeChild(style);
+            }, 500);
+        });
 
-        document.getElementById('download-jpg').addEventListener('click', function() {
-            html2canvas(scheduleContainer, { scale: 2, useCORS: true, onclone: (doc) => {
-                const container = doc.getElementById('schedule-container');
-                if (container) {
-                    container.style.maxHeight = 'none';
-                    container.style.overflow = 'visible';
-                }
-            }}).then(canvas => {
-                const link = document.createElement('a');
-                let fileName = 'jadwal-kbm.jpg';
-                if(tabBulan1.classList.contains('active')) fileName = 'jadwal-kbm-bulan1.jpg';
-                if(tabBulan2.classList.contains('active')) fileName = 'jadwal-kbm-bulan2.jpg';
-                if(tabBulan3.classList.contains('active')) fileName = 'jadwal-kbm-bulan3.jpg';
-                if(tabBulan4.classList.contains('active')) fileName = 'jadwal-kbm-bulan4.jpg';
-                if(tabBulan5.classList.contains('active')) fileName = 'jadwal-kbm-bulan5.jpg';
-                link.download = fileName;
-                link.href = canvas.toDataURL('image/jpeg', 0.9);
-                link.click();
-            }).catch(err => {
-                console.error("Gagal membuat gambar jadwal:", err);
+        document.getElementById('download-schedule-pdf').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', format: 'a4' });
+            const activeTab = document.querySelector('.tab-btn.active');
+            const bulan = activeTab.textContent.replace('Bulan ', '');
+
+            doc.setFontSize(18);
+            doc.text('Jadwal Kegiatan Belajar Mengajar (Filtered)', 14, 20);
+            doc.setFontSize(12);
+            doc.text(`Bulan: ${bulan}`, 14, 28);
+            
+            const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+            const timeSlots = ["08:00-09:30", "10:00-11:30", "13:00-14:30"];
+            
+            const filteredData = getFilteredScheduleData();
+
+            const head = [['Waktu', ...days]];
+            const body = timeSlots.map(time => {
+                const row = [time];
+                days.forEach(day => {
+                    const entriesInCell = filteredData.filter(item => item.day === day && item.time === time);
+                    
+                    if (entriesInCell.length > 0) {
+                        const cellText = entriesInCell.map(item => {
+                            let displayGroup = item.group;
+                            if (item.group === 'KG' && item.cluster) {
+                                displayGroup = `KG (${item.cluster})`;
+                            }
+                            return `${item.subject}\nKel: ${displayGroup}\nGuru: ${item.teacher}\nRuang: ${item.room}`;
+                        }).join('\n\n');
+                        row.push(cellText);
+                    } else {
+                        row.push('');
+                    }
+                });
+                return row;
             });
+
+            doc.autoTable({
+                head: head,
+                body: body,
+                startY: 35,
+                theme: 'grid',
+                styles: {
+                    fontSize: 7,
+                    cellPadding: 2,
+                    valign: 'top'
+                },
+                headStyles: {
+                    fillColor: [22, 163, 74],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                columnStyles: {
+                    0: { cellWidth: 25 },
+                }
+            });
+
+            doc.save(`Jadwal_KBM_Bulan_${bulan}_Filtered.pdf`);
         });
 
         document.querySelectorAll('.krs-btn').forEach(button => {
@@ -1555,121 +1669,121 @@
         
         krsTableBody.addEventListener('input', (event) => {
              if (event.target.tagName === 'TD') {
-                 updateKrsTotalSks();
+                  updateKrsTotalSks();
              }
         });
 
         downloadKrsBtn.addEventListener('click', () => {
-             const { jsPDF } = window.jspdf;
-             const pdf = new jsPDF({
-                 orientation: 'portrait',
-                 unit: 'mm',
-                 format: [210, 330]
-             });
-             const margin = 15;
-             let y = 10;
+              const { jsPDF } = window.jspdf;
+              const pdf = new jsPDF({
+                  orientation: 'portrait',
+                  unit: 'mm',
+                  format: [210, 330]
+              });
+              const margin = 15;
+              let y = 10;
 
-             pdf.setFont('helvetica', 'bold');
-             pdf.setFontSize(12);
-             pdf.text('KARTU RENCANA STUDI (KRS)', 105, y, { align: 'center' });
-             y += 6;
-             pdf.setFontSize(10);
-             pdf.text("Markaz Qur'an Al-Maa'un", 105, y, { align: 'center' });
-             y += 4;
-             pdf.setFont('helvetica', 'normal');
-             pdf.setFontSize(9);
-             pdf.text('Semester Ganjil', 105, y, { align: 'center' });
-             y += 8;
+              pdf.setFont('helvetica', 'bold');
+              pdf.setFontSize(12);
+              pdf.text('KARTU RENCANA STUDI (KRS)', 105, y, { align: 'center' });
+              y += 6;
+              pdf.setFontSize(10);
+              pdf.text("Markaz Qur'an Al-Maa'un", 105, y, { align: 'center' });
+              y += 4;
+              pdf.setFont('helvetica', 'normal');
+              pdf.setFontSize(9);
+              pdf.text('Semester Ganjil', 105, y, { align: 'center' });
+              y += 8;
 
-             pdf.setFontSize(8);
-             const info = {
-                 left: [
-                     { label: 'Nama Santri', value: document.getElementById('nama-santri-krs').textContent.substring(1).trim() },
-                     { label: 'Jurusan', value: document.getElementById('jurusan-krs').textContent.substring(1).trim() },
-                     { label: 'Kelompok', value: document.getElementById('kelompok-krs').textContent.substring(1).trim() }
-                 ],
-                 right: [
-                     { label: 'Total SKS yang bisa diambil', value: document.getElementById('total-sks-ambil-krs').textContent.substring(1).trim() },
-                     { label: 'Kelas', value: document.getElementById('kelas-krs').textContent.substring(1).trim() },
-                     { label: 'Materi untuk Bulan ke', value: document.getElementById('materi-bulan-krs').textContent.substring(1).trim() }
-                 ]
-             };
-             
-             const leftLabelX = margin;
-             const leftColonX = leftLabelX + 45;
-             const leftValueX = leftColonX + 2;
-             const rightLabelX = 110;
-             const rightColonX = rightLabelX + 45;
-             const rightValueX = rightColonX + 2;
-             const lineHeight = 5;
+              pdf.setFontSize(8);
+              const info = {
+                  left: [
+                      { label: 'Nama Santri', value: document.getElementById('nama-santri-krs').textContent.substring(1).trim() },
+                      { label: 'Jurusan', value: document.getElementById('jurusan-krs').textContent.substring(1).trim() },
+                      { label: 'Kelompok', value: document.getElementById('kelompok-krs').textContent.substring(1).trim() }
+                  ],
+                  right: [
+                      { label: 'Total SKS yang bisa diambil', value: document.getElementById('total-sks-ambil-krs').textContent.substring(1).trim() },
+                      { label: 'Kelas', value: document.getElementById('kelas-krs').textContent.substring(1).trim() },
+                      { label: 'Materi untuk Bulan ke', value: document.getElementById('materi-bulan-krs').textContent.substring(1).trim() }
+                  ]
+              };
+              
+              const leftLabelX = margin;
+              const leftColonX = leftLabelX + 45;
+              const leftValueX = leftColonX + 2;
+              const rightLabelX = 110;
+              const rightColonX = rightLabelX + 45;
+              const rightValueX = rightColonX + 2;
+              const lineHeight = 5;
 
-             const maxRows = Math.max(info.left.length, info.right.length);
+              const maxRows = Math.max(info.left.length, info.right.length);
 
-             for (let i = 0; i < maxRows; i++) {
-                 if (info.left[i]) {
-                     pdf.setFont('helvetica', 'bold');
-                     pdf.text(info.left[i].label, leftLabelX, y);
-                     pdf.setFont('helvetica', 'normal');
-                     pdf.text(':', leftColonX, y);
-                     pdf.text(info.left[i].value, leftValueX, y, { maxWidth: rightLabelX - leftValueX - 5 });
-                 }
-                 if (info.right[i]) {
-                     pdf.setFont('helvetica', 'bold');
-                     pdf.text(info.right[i].label, rightLabelX, y);
+              for (let i = 0; i < maxRows; i++) {
+                  if (info.left[i]) {
+                      pdf.setFont('helvetica', 'bold');
+                      pdf.text(info.left[i].label, leftLabelX, y);
                       pdf.setFont('helvetica', 'normal');
-                     pdf.text(':', rightColonX, y);
-                     pdf.text(info.right[i].value, rightValueX, y);
-                 }
-                 y += lineHeight;
-             }
-             
-             pdf.autoTable({
-                 html: '#tabel-krs',
-                 startY: y,
-                 theme: 'grid',
-                 styles: {
-                     font: 'helvetica',
-                     fontSize: 8,
-                     cellPadding: 1,
-                     valign: 'middle'
-                 },
-                 headStyles: {
-                     fillColor: [243, 244, 246],
-                     textColor: [31, 41, 55],
-                     fontStyle: 'bold',
-                     fontSize: 8.5,
-                 },
-                 footStyles: {
-                     fillColor: [243, 244, 246],
-                     textColor: [31, 41, 55],
-                     fontStyle: 'bold',
-                     fontSize: 8.5,
-                     halign: 'right'
-                 },
-                 columnStyles: {
-                     5: { halign: 'center' } 
-                 },
-                 didParseCell: function (data) {
-                     if (data.row.section === 'foot') {
-                        data.cell.styles.halign = 'right';
-                        if(data.column.index === 0) {
-                             data.cell.text = data.cell.text[0].replace(/:/g, '');
-                        }
-                     }
-                 },
-                 // Remove the last column ('Aksi') from the PDF
-                 columns: [
-                    { header: 'Hari', dataKey: 0 },
-                    { header: 'Waktu', dataKey: 1 },
-                    { header: 'Kode', dataKey: 2 },
-                    { header: 'Mata Pelajaran / Modul', dataKey: 3 },
-                    { header: 'Ruang', dataKey: 4 },
-                    { header: 'SKS', dataKey: 5 },
-                    { header: 'Guru', dataKey: 6 },
-                ]
-             });
+                      pdf.text(':', leftColonX, y);
+                      pdf.text(info.left[i].value, leftValueX, y, { maxWidth: rightLabelX - leftValueX - 5 });
+                  }
+                  if (info.right[i]) {
+                      pdf.setFont('helvetica', 'bold');
+                      pdf.text(info.right[i].label, rightLabelX, y);
+                       pdf.setFont('helvetica', 'normal');
+                      pdf.text(':', rightColonX, y);
+                      pdf.text(info.right[i].value, rightValueX, y);
+                  }
+                  y += lineHeight;
+              }
+              
+              pdf.autoTable({
+                  html: '#tabel-krs',
+                  startY: y,
+                  theme: 'grid',
+                  styles: {
+                      font: 'helvetica',
+                      fontSize: 8,
+                      cellPadding: 1,
+                      valign: 'middle'
+                  },
+                  headStyles: {
+                      fillColor: [243, 244, 246],
+                      textColor: [31, 41, 55],
+                      fontStyle: 'bold',
+                      fontSize: 8.5,
+                  },
+                  footStyles: {
+                      fillColor: [243, 244, 246],
+                      textColor: [31, 41, 55],
+                      fontStyle: 'bold',
+                      fontSize: 8.5,
+                      halign: 'right'
+                  },
+                  columnStyles: {
+                      5: { halign: 'center' } 
+                  },
+                  didParseCell: function (data) {
+                      if (data.row.section === 'foot') {
+                          data.cell.styles.halign = 'right';
+                          if(data.column.index === 0) {
+                               data.cell.text = data.cell.text[0].replace(/:/g, '');
+                          }
+                      }
+                  },
+                  // Remove the last column ('Aksi') from the PDF
+                  columns: [
+                      { header: 'Hari', dataKey: 0 },
+                      { header: 'Waktu', dataKey: 1 },
+                      { header: 'Kode', dataKey: 2 },
+                      { header: 'Mata Pelajaran / Modul', dataKey: 3 },
+                      { header: 'Ruang', dataKey: 4 },
+                      { header: 'SKS', dataKey: 5 },
+                      { header: 'Guru', dataKey: 6 },
+                  ]
+              });
 
-             pdf.save(`KRS_${document.getElementById('nama-santri-krs').textContent.substring(1).trim()}.pdf`);
+              pdf.save(`KRS_${document.getElementById('nama-santri-krs').textContent.substring(1).trim()}.pdf`);
         });
 
         downloadKhsBtn.addEventListener('click', () => {
@@ -1700,6 +1814,10 @@
         const processedScheduleBulan3 = processAndFillScheduleData(scheduleDataBulan3);
         const processedScheduleBulan4 = processAndFillScheduleData(scheduleDataBulan4);
         const processedScheduleBulan5 = processAndFillScheduleData(scheduleDataBulan5);
+        const processedScheduleBulan6 = processAndFillScheduleData(scheduleDataBulan5); // Placeholder
+        const processedScheduleBulan7 = processAndFillScheduleData(scheduleDataBulan5); // Placeholder
+        const processedScheduleBulan8 = processAndFillScheduleData(scheduleDataBulan5); // Placeholder
+
 
         scheduleData = processedScheduleBulan1; // Set initial data
 
