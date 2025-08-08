@@ -492,13 +492,48 @@
         function handleAttendanceSubmit(event, role) { event.preventDefault(); const session = getActiveSession(); if (!session || !session.loggedIn) { showMessage('Anda harus login.', 'error'); window.location.hash = '#login'; return; } const form = event.target; const submitBtn = form.querySelector('button[type="submit"]'); submitBtn.textContent = "Mengirim..."; submitBtn.disabled = true; let data; if (role === 'guru') { data = { action: 'submitAttendance', role: 'guru', teacherName: session.userData.profileName, attendanceDate: form.querySelector('#attendanceDateGuru').value, className: form.querySelector('#className').value, lateMinutes: form.querySelector('#lateMinutesGuru').value || '0', remarks: form.querySelector('#remarksGuru').value }; } else if (role === 'staf') { data = { action: 'submitAttendance', role: 'staf', stafName: session.userData.profileName, attendanceDate: form.querySelector('#attendanceDateStaf').value, jabatan: form.querySelector('#jabatanStaf').value, lateMinutes: form.querySelector('#lateMinutesStaf').value || '0', remarks: form.querySelector('#remarksStaf').value }; } else { data = { action: 'submitAttendance', role: 'rapat', name: session.userData.profileName, date: form.querySelector('#rapatDate').value, startTime: form.querySelector('#rapatStartTime').value, endTime: form.querySelector('#rapatEndTime').value, remarks: form.querySelector('#rapatRemarks').value }; } fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.ok ? res.json() : Promise.reject(res)).then(result => { if (result.status === "success") { showMessage('Absensi berhasil direkam!', 'success'); form.reset(); const today = new Date().toISOString().split('T')[0]; document.getElementById('attendanceDateGuru').value = today; document.getElementById('attendanceDateStaf').value = today; document.getElementById('rapatDate').value = today; showPage('#absensi'); } else { showMessage(result.message || 'Gagal mengirim absensi.', 'error'); } }).catch(error => { console.error('Attendance Error:', error); showMessage('Gagal terhubung.', 'error'); }).finally(() => { submitBtn.textContent = `Kirim Absensi ${role.charAt(0).toUpperCase() + role.slice(1)}`; submitBtn.disabled = false; }); }
         function updateActiveLink() { const hash = window.location.hash || '#beranda'; showPage(hash); document.querySelectorAll('#mainNav a:not(.auth-button)').forEach(a => { a.classList.toggle('active', a.getAttribute('href') === hash); }); }
         function updateDateTime() {
-            const now = new Date();
-            const optionsMasehi = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Jakarta' };
-            const dateStringMasehi = now.toLocaleDateString('id-ID', optionsMasehi);
-            const optionsHijri = { calendar: 'islamic-umalqura', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' };
-            const dateStringHijri = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura-nu-latn', optionsHijri).format(now);
-            document.getElementById('date-display').innerHTML = `${dateStringMasehi}<br><span class="hijri-date">${dateStringHijri}</span>`;
-        }
+    // Tentukan waktu Maghrib (18:30)
+    const WAKTU_MAGHRIB = 18.5; // 18.5 merepresentasikan 18:30
+
+    let now = new Date();
+    const jamSekarang = now.getHours() + (now.getMinutes() / 60);
+
+    // --- LOGIKA PERGANTIAN HARI HIJRIAH ---
+    // Jika waktu saat ini sudah melewati Maghrib, maka untuk perhitungan Hijriah,
+    // kita anggap sudah masuk hari berikutnya.
+    if (jamSekarang >= WAKTU_MAGHRIB) {
+        now.setDate(now.getDate() + 1);
+    }
+
+    // Hitung tanggal Masehi (menggunakan tanggal asli sebelum penyesuaian)
+    const tanggalMasehiAsli = new Date();
+    const optionsMasehi = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Jakarta' };
+    const dateStringMasehi = tanggalMasehiAsli.toLocaleDateString('id-ID', optionsMasehi);
+
+    // --- Metode "Kamus Manual" ---
+    
+    // 1. Buat "kamus" nama bulan Hijriah
+    const namaBulanHijriah = [
+        "Muharram", "Safar", "Rabi'ul Awal", "Rabi'ul Akhir",
+        "Jumadil Awal", "Jumadil Akhir", "Rajab", "Sya'ban",
+        "Ramadhan", "Syawwal", "Dzulqa'dah", "Dzulhijjah"
+    ];
+
+    // 2. Minta browser untuk memberikan ANGKA-nya saja (menggunakan tanggal 'now' yang sudah disesuaikan)
+    const optionsHijriNumeric = { calendar: 'islamic-umalqura', day: 'numeric', month: 'numeric', year: 'numeric', timeZone: 'Asia/Jakarta' };
+    const formatter = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura-nu-latn', optionsHijriNumeric);
+    const parts = formatter.formatToParts(now);
+
+    // 3. Ambil setiap bagian tanggal
+    const day = parts.find(p => p.type === 'day').value;
+    const monthIndex = parts.find(p => p.type === 'month').value - 1; // Kurangi 1 karena array dimulai dari 0
+    const year = parts.find(p => p.type === 'year').value;
+
+    // 4. Gabungkan secara manual menggunakan kamus kita
+    const dateStringHijri = `${day} ${namaBulanHijriah[monthIndex]} ${year} H`;
+
+    document.getElementById('date-display').innerHTML = `${dateStringMasehi}<br><span class="hijri-date">${dateStringHijri}</span>`;
+}
         
         // --- FUNGSI KHUSUS UNTUK SISTEM INFORMASI KBM ---
         function initializeSistemInformasi() {
