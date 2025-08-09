@@ -60,6 +60,27 @@
         #nav-arrow-right { right: -15px; }
         @media (max-width: 768px) { .nav-arrow { background-color: rgba(44, 94, 46, 0.5); } }
 
+/* Tambahkan selector ini ke CSS Anda */
+#pengunjung-hari-ini {
+    background-color: #fef9c3; /* Warna kuning muda */
+    border: 1px solid #fde047;
+}
+#visitor-list {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+#visitor-list li {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
         #attendanceNav { background-color: var(--error-color); }
         #attendanceNav:hover, #attendanceNav.active { background-color: #c82333; }
         #sistemInformasiNav { background-color: var(--info-color); }
@@ -215,6 +236,49 @@
         justify-content: center; /* Pusatkan foto profil dan nama */
     }
 }
+        /* === PERBAIKAN TAMPILAN ROSTER KBM DI SELULER === */
+@media (max-width: 768px) {
+    /* Perkecil ukuran font dasar untuk seluruh jadwal */
+    #schedule-container {
+        font-size: 12px; 
+    }
+    /* Perkecil kolom waktu dan jarak antar sel */
+    .schedule-grid {
+        grid-template-columns: 60px repeat(6, 1fr); 
+        gap: 2px;
+    }
+    /* Perkecil header hari dan waktu */
+    .time-slot, .day-header {
+        padding: 4px 2px;
+        font-size: 10px;
+    }
+    /* Buat sel menjadi lebih ringkas */
+    .schedule-cell {
+        min-height: auto; /* Biarkan tinggi sel menyesuaikan konten */
+        padding: 5px;
+        border-radius: 4px;
+    }
+
+    /* Atur ulang ukuran font di dalam sel agar proporsional */
+    .schedule-cell .subject, .schedule-cell .subject a {
+        font-size: 1em; /* 1em akan relatif terhadap 12px yang kita atur di atas */
+        font-weight: 600; /* Sedikit tebalkan agar mudah dibaca */
+    }
+    .schedule-cell .group-display,
+    .schedule-cell .teacher {
+        font-size: 0.85em; /* Perkecil lagi font info grup dan guru */
+        margin-top: 3px;
+        line-height: 1.3;
+    }
+    /* Tumpuk info grup & ruang secara vertikal untuk hemat tempat */
+    .schedule-cell .group-display span {
+        display: block; 
+        margin-left: 0 !important;
+    }
+    .schedule-cell .group-display .room {
+        margin-left: 0 !important;
+    }
+}
     </style>
 </head>
 <body>
@@ -286,9 +350,16 @@
                 <h2>Kalender Pendidikan Madrasah 2025/2026</h2>
                 <div id="dynamic-calendar-grid" class="calendar-grid"></div>
                 <footer class="text-center mt-12 text-gray-500 text-sm">
-                    <p>Direktur Jenderal Pendidikan Islam, TTD, Suyitno</p>
+                    <p>Update terakhir kalender 08 Agustus 2025</p>
                 </footer>
             </section>
+<section id="pengunjung-hari-ini" class="section hidden">
+    <h2>Pengguna Aktif Hari Ini</h2>
+    <div id="visitor-list-container">
+        <p>Memuat data...</p>
+    </div>
+</section>
+
         </main>
     </div>
     <div id="lembaga" class="page-section hidden container section"><h2>Lembaga di Bawah Naungan Kami</h2><div class="grid-container"><div class="card"><div class="card-content"><h3>Lembaga Pendidikan: Rumah Tahfidz Qur'an Markaz Qur'an Al-Maa'un</h3><p>Fokus pada pendidikan dan pembinaan generasi muda untuk menjadi penghafal Al-Qur'an yang berakhlak mulia.</p></div></div><div class="card"><div class="card-content"><h3>Lembaga Sosial: Rumah Anak Yatim Abu Darda</h3><p>Memberikan perlindungan, kasih sayang, dan pemenuhan kebutuhan hidup bagi anak-anak yatim dan dhuafa.</p></div></div></div></div>
@@ -431,6 +502,38 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+
+function fetchDailyVisitors() {
+    const data = { action: 'getTodaysVisitors' };
+    const visitorSection = document.getElementById('pengunjung-hari-ini');
+    const visitorContainer = document.getElementById('visitor-list-container');
+
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status === 'success' && result.visitors.length > 0) {
+            let listHtml = '<ul id="visitor-list">';
+            result.visitors.forEach(visitorName => {
+                listHtml += `<li>${visitorName}</li>`;
+            });
+            listHtml += '</ul>';
+            visitorContainer.innerHTML = listHtml;
+            visitorSection.classList.remove('hidden'); // Tampilkan section jika ada data
+        } else {
+            visitorContainer.innerHTML = '<p>Belum ada pengguna yang aktif hari ini.</p>';
+            visitorSection.classList.add('hidden'); // Sembunyikan jika tidak ada
+        }
+    })
+    .catch(error => {
+        console.error('Gagal mengambil data pengunjung:', error);
+        visitorContainer.innerHTML = '<p>Gagal memuat data pengunjung.</p>';
+    });
+}
+
         // --- DATA GLOBAL & KONFIGURASI ---
         const CONFIG = { SCRIPT_URL: "https://script.google.com/macros/s/AKfycbw6Kh6UpyLS9prJTeZ8WO16csV7Hu8fKX8pGJqrW4Fs8r70SOL_Sd2dh9JqYFfGCsMdMA/exec", CLOUDINARY_URL: "https://api.cloudinary.com/v1_1/deva5eknr/image/upload", CLOUDINARY_UPLOAD_PRESET: "markaz", ICONS: { eye: `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`, eyeOff: `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>` } };
         const appData = { 
@@ -439,6 +542,7 @@
             gallery: [ { img: 'https://placehold.co/400x250/6f42c1/FFFFFF?text=Halaqah+Tahfidz', title: 'Halaqah Tahfidz Pagi', desc: 'Para santri sedang menyetorkan hafalan Al-Qur\'an kepada Musyrif.' }, { img: 'https://placehold.co/400x250/fd7e14/FFFFFF?text=Buka+Puasa+Bersama', title: 'Buka Puasa Bersama', desc: 'Kegiatan buka puasa bersama anak-anak yatim dan dhuafa di bulan Ramadhan.' }, { img: 'https://placehold.co/400x250/20c997/FFFFFF?text=Penyaluran+Bantuan', title: 'Penyaluran Bantuan', desc: 'Distribusi bantuan sembako dari para donatur kepada masyarakat sekitar.' } ], 
             calendarEvents: [ { date: "2025-07-14", title: "Pengenalan Lingkungan Madrasah", color: "event-green", span: 3 }, { date: "2025-08-11", title: "Ujian Bulanan", color: "event-darkblue", span: 6 }, { date: "2025-08-17", title: "Hari Kemerdekaan RI", color: "holiday" }, { date: "2025-09-05", title: "Maulid Nabi Muhammad SAW", color: "holiday" }, { date: "2025-12-01", title: "Penilaian Akhir Semester (PAS)", color: "event-lightblue", span: 12 }, { date: "2025-12-13", title: "Penerimaan Rapor", color: "event-darkblue" }, { date: "2025-12-15", title: "Libur Akhir Semester", color: "event-orange", span: 17 }, { date: "2026-01-01", title: "Tahun Baru Masehi 2026", color: "holiday" }, { date: "2026-01-05", title: "Awal Masuk Semester Genap", color: "" }, { date: "2026-01-26", title: "Isra Mi'raj Nabi Muhammad SAW", color: "holiday" }, { date: "2026-02-23", title: "Perkiraan Libur Awal Ramadan", color: "event-yellow", span: 3 }, { date: "2026-02-26", title: "Awal Puasa Ramadan 1447 H", color: "holiday" }, { date: "2026-03-20", title: "Perkiraan Libur Idul Fitri", color: "event-yellow", span: 12 }, { date: "2026-03-28", title: "Hari Raya Idul Fitri 1447 H", color: "holiday", span: 2 }, { date: "2026-04-01", title: "Perkiraan Libur Idul Fitri", color: "event-yellow", span: 4 }, { date: "2026-05-01", title: "Hari Buruh Internasional", color: "holiday" }, { date: "2026-06-01", title: "Hari Lahir Pancasila", color: "holiday" }, { date: "2026-06-01", title: "Penilaian Akhir Tahun (PAT)", color: "event-lightblue", span: 12 }, { date: "2026-06-04", title: "Hari Raya Idul Adha 1447 H", color: "holiday" }, { date: "2026-06-13", title: "Penerimaan Rapor", color: "event-darkblue" }, { date: "2026-06-14", title: "Tahun Baru Islam 1448 H", color: "holiday" }, { date: "2026-06-15", title: "Libur Akhir Tahun", color: "event-orange", span: 28 } ],
             
+
             // PERBAIKAN: Data jadwal, santri, dan guru dipindahkan ke sini agar global
             santri: [ { id: 1, nama: "Ahmad Royyan", gender: "Laki-Laki", grup: "KG LKS", kelas: "XII", jurusan: "Bisnis & Manajemen" }, { id: 2, nama: "M. Alvin Ramadhan Lubis", gender: "Laki-Laki", grup: "KF", kelas: "X", jurusan: "Non Jurusan" }, { id: 3, nama: "Abdullah Ridho Selamet", gender: "Laki-Laki", grup: "KG LKS", kelas: "X", jurusan: "Bisnis & Manajemen" }, { id: 4, nama: "Rizki Fadilah", gender: "Laki-Laki", grup: "KF", kelas: "VIII", jurusan: "Non Jurusan" }, { id: 5, nama: "Annisa Akbar Siregar", gender: "Perempuan", grup: "KG STT", kelas: "XII", jurusan: "Agribisnis (Pertanian & Peternakan)" }, { id: 6, nama: "Intan Akbar Siregar", gender: "Perempuan", grup: "KG STT", kelas: "IX", jurusan: "Sains & Teknologi" }, { id: 7, nama: "Aprilia Alvina Rikay", gender: "Perempuan", grup: "KG LKS", kelas: "X", jurusan: "Pendidikan Agama Islam" }, { id: 8, nama: "Aprilia Alvani Rikay", gender: "Perempuan", grup: "KG LKS", kelas: "X", jurusan: "Pendidikan Agama Islam" }, { id: 9, nama: "Rahmah Azizah Lubis", gender: "Perempuan", grup: "KG LKS", kelas: "XI", jurusan: "Tahfidz & Bahasa Arab" }, { id: 10, nama: "Aisyah Az-Zahra", gender: "Perempuan", grup: "KG LKS", kelas: "VIII", jurusan: "Tahfidz & Bahasa Arab" }, { id: 11, nama: "Nur Halimah", gender: "Perempuan", grup: "KG LKS", kelas: "VIII", jurusan: "Tahfidz & Bahasa Arab" }, { id: 12, nama: "Nur Alfia Fauzana", gender: "Perempuan", grup: "KG LKS", kelas: "VIII", jurusan: "Pendidikan Agama Islam" }, { id: 13, nama: "Putri Maharani Br. Tarigan", gender: "Perempuan", grup: "KF", kelas: "VIII", jurusan: "Non Jurusan" }, { id: 14, nama: "Dedek Suci Ramadhani", gender: "Perempuan", grup: "KF", kelas: "VII", jurusan: "Non Jurusan" }, { id: 15, nama: "Aisyah Nur Fadillah", gender: "Perempuan", grup: "KF", kelas: "VII", jurusan: "Non Jurusan" } ],
             teachers: [ { no: 1, name: "Sulistiawan, S.Kom", major: "Pelajaran Umum & Keterampilan", hari: "Semua hari & jam", schedule: "Guru Cadangan" }, { no: 2, name: "Zhofri F. Majdi, S.Sos", major: "Diniyah", hari: "Kamis, Jumat, Sabtu", schedule: "Kamis (08-10), Jumat & Sabtu (Semua Jam)" }, { no: 3, name: "M. Ryza Anshori, S.Pd", major: "Diniyah", hari: "Jumat", schedule: "Semua Jam" }, { no: 4, name: "Erwan Syahputra, S.Pd", major: "Diniyah", hari: "Selasa, Rabu, Sabtu", schedule: "Selasa (Semua Jam), Rabu & Sabtu (sampai 10.00)" }, { no: 5, name: "Ariyanti R. Siregar, S.Kom", major: "Pelajaran Umum", hari: "Senin, Rabu, Kamis", schedule: "12.45 - 14.15" }, { no: 6, name: "Mia A. Lubis, S.Kom", major: "Pelajaran Umum", hari: "Semua Hari", schedule: "10.00 - 12.15 (Guru Cadangan)" }, { no: 7, name: "Mahadi Sentosa, S.Sos", major: "Diniyah", hari: "Sabtu", schedule: "13.00-14.30" }, { no: 8, name: "Suprasojo, S.Pd.I., M.Pd.", major: "Diniyah", hari: "Senin, Rabu", schedule: "8.00-11.30" }, { no: 9, name: "Aria Atmaja", major: "Teknik Mekanik Elektronik", hari: "Rabu", schedule: "08:00-09:30" } ],
@@ -506,7 +610,12 @@
             sessionStorage.removeItem('userSession');
             const protectedHashes = ['#absensi', '#profile', '#sistem-informasi'];
             if (protectedHashes.includes(window.location.hash)) { window.location.hash = '#beranda'; }
+
+document.getElementById('pengunjung-hari-ini')?.classList.add('hidden');
+
         }
+
+
         function renderNewsCards() { const container = document.getElementById('news-container'); if (container) container.innerHTML = appData.news.map(item => `<div class="card"><img src="${item.img}" alt="${item.title}" onerror="this.onerror=null;this.src='https://placehold.co/400x200/cccccc/FFFFFF?text=Error';"><div class="card-content"><h3>${item.title}</h3><p class="meta">${item.meta}</p><p>${item.desc}</p></div></div>`).join(''); }
         function renderGalleryCards() { const container = document.getElementById('gallery-container'); if (container) container.innerHTML = appData.gallery.map(item => `<div class="card"><img src="${item.img}" alt="${item.title}" onerror="this.onerror=null;this.src='https://placehold.co/400x250/cccccc/FFFFFF?text=Error';"><div class="card-content"><h3>${item.title}</h3><p>${item.desc}</p></div></div>`).join(''); }
         function fetchMarqueeText() { const session = getActiveSession(); const isLoggedIn = !!(session && session.loggedIn); const data = { action: 'getMarqueeText', isLoggedIn: isLoggedIn }; fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.ok ? res.json() : Promise.reject(res)).then(result => { if (result.status === 'success' && result.text && result.text.trim() !== '') { const textContent = ` ${result.text} ••• `; ui.marqueeText.textContent = textContent.repeat(10); ui.marqueeContainer.classList.remove('hidden'); } else { ui.marqueeContainer.classList.add('hidden'); } }).catch(error => { console.error('Error fetching marquee text:', error); ui.marqueeContainer.classList.add('hidden'); }); }
@@ -851,23 +960,52 @@
             isSistemInformasiInitialized = true;
         }
 
-        // --- INISIALISASI APLIKASI UTAMA ---
-        function initializeApp() {
-            updateDateTime();
-            setTodayDate(); // Panggil fungsi baru untuk set tanggal
-            
-            const session = getActiveSession();
-            if (session && session.loggedIn) { showLoggedInView(session.userData); } else { showLoggedOutView(); }
-            
-            updateActiveLink();
-            setupMainEventListeners();
-            renderNewsCards();
-            renderGalleryCards();
-            fetchMarqueeText();
-            renderDynamicCalendar(2025, 7, 12);
-            setupSlideshow();
-            populateSubstituteTeachers();
-        }
+function logUserVisit() {
+    const session = getActiveSession();
+    if (session && session.loggedIn) {
+        const data = {
+            action: 'logVisit',
+            username: session.username
+        };
+        fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        })
+        .then(res => res.json())
+        .then(result => {
+            if(result.status !== 'success') {
+                console.error("Gagal mencatat kunjungan:", result.message);
+            }
+        })
+        .catch(error => console.error('Error saat mencatat kunjungan:', error));
+    }
+}
+
+// --- INISIALISASI APLIKASI UTAMA ---
+function initializeApp() {
+    updateDateTime();
+    setTodayDate();
+    
+    // Gabungkan pengecekan sesi menjadi satu blok yang benar
+    const session = getActiveSession();
+    if (session && session.loggedIn) {
+        showLoggedInView(session.userData);
+        logUserVisit();           // Catat kunjungan pengguna
+        fetchDailyVisitors();     // Ambil dan tampilkan daftar pengunjung
+    } else {
+        showLoggedOutView();
+    }
+    
+    updateActiveLink();
+    setupMainEventListeners();
+    renderNewsCards();
+    renderGalleryCards();
+    fetchMarqueeText();
+    renderDynamicCalendar(2025, 7, 12);
+    setupSlideshow();
+    populateSubstituteTeachers();
+}
 
         initializeApp();
     });
