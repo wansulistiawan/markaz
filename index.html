@@ -413,8 +413,18 @@
             <div class="form-group"><label for="rapatRemarks">Keterangan Rapat</label><textarea id="rapatRemarks" rows="3" required></textarea></div>
             <button type="submit" class="submit-btn">Kirim Absensi Rapat</button>
         </form>
+		
+			<div id="attendanceHistorySection" class="mt-12 pt-8 border-t-2 border-gray-200">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Riwayat Absensi Anda (30 Hari Terakhir)</h2>
+		<div id="historyContainer" class="overflow-x-auto bg-white rounded-lg shadow">
+			<p class="p-6 text-center text-gray-500">Memuat riwayat absensi...</p>
+		</div>
+	</div>
+		
     </div>
     
+
+	
     <!-- KONTEN UNTUK SISTEM INFORMASI -->
     <div id="sistem-informasi" class="page-section hidden">
         <div id="page-wrapper" class="relative min-h-screen">
@@ -504,7 +514,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // --- BAGIAN 1: KONFIGURASI & DATA UTAMA ---
     const CONFIG = {
-        SCRIPT_URL: "https://script.google.com/macros/s/AKfycbw6Kh6UpyLS9prJTeZ8WO16csV7Hu8fKX8pGJqrW4Fs8r70SOL_Sd2dh9JqYFfGCsMdMA/exec",
+        SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec",
         CLOUDINARY_URL: "https://api.cloudinary.com/v1_1/deva5eknr/image/upload",
         CLOUDINARY_UPLOAD_PRESET: "markaz",
         ICONS: {
@@ -528,7 +538,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-201: Pengantar Thibbun Nabawi", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1ZjmZkzVknCL8sNPz4nWwaARTN62AN1qG/view" },
                     { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-101: Greetings & Introductions", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/1LYRMv43xr0ei9aHJ4Rm8VVGEZv2LMoJT/view?usp=drive_link" },
                     { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-201: Riset Pasar & Analisis Kompetitor", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1ibVSjYmLhxxAhmAm_EGJ-qowFDPy3aZ_/view?usp=drive_link" },
-                    { day: "", time: "", sks: 2, room: "", group: "KG", cluster: "LKS", subject: "KELAS SD", teacher: "Reza Frananda", downloadLink: "" },            
                     { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-101: ABY Jilid 1A Unit 1-2 (Perkenalan & Keluarga)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1KNuZMEsYPEznGzEcyhTR5GDb5J3gUwM5/view?usp=drive_link" },
                     { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "PANC-201: Implementasi nilai-nilai Pancasila Dalam Kehidupan", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1V0ZYiN9sYr5ZYXR3yfk5p80uLFNlbv9g/view?usp=drive_link" },
                     { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-201: ABY Jilid 1B Unit 7-8 (Pendidikan & Pekerjaan)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/19dfcrahHUBSjFQx0bNvcGDxm2gJw35Tt/view?usp=drive_link" },
@@ -558,6 +567,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-201: Membaca 3 (Membedakan Fakta & Opini dalam Teks)", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/12D_Sk1hB2q5e3BdNX1-Iw8kIjTrm6UId/view?usp=drive_link" },
                     { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-201: Peristiwa Boikot & Wafatnya Khadijah dan Abu Thalib", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1vJCQq48tCQNX_S5X8NF3DqTE9weOhGse/view?usp=drive_link" },
                     { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "NAH-101: Pengenalan Kalimat (Jumlah Mufidah) & Jenis Kata", teacher: "Mahadi Sentosa, S.Sos", downloadLink: "https://drive.google.com/file/d/1kbTKODSzvge5WUbkRA5wpf3SJl8WVXci/view?usp=drive_link" },
+					
+ { day: "Senin", time: "08:00-11:30", sks: 2, room: "Kelas SD", group: "SD", cluster: "", subject: "KELAS SD", teacher: "Reza Frananda", downloadLink: "" },
+ { day: "Selasa", time: "08:00-11:30", sks: 2, room: "Kelas SD", group: "SD", cluster: "", subject: "KELAS SD", teacher: "Reza Frananda", downloadLink: "" },
+ { day: "Rabu", time: "08:00-11:30", sks: 2, room: "Kelas SD", group: "SD", cluster: "", subject: "KELAS SD", teacher: "Reza Frananda", downloadLink: "" },
+ { day: "Kamis", time: "08:00-11:30", sks: 2, room: "Kelas SD", group: "SD", cluster: "", subject: "KELAS SD", teacher: "Reza Frananda", downloadLink: "" },
+ { day: "Jumat", time: "08:00-11:30", sks: 2, room: "Kelas SD", group: "SD", cluster: "", subject: "KELAS SD", teacher: "Reza Frananda", downloadLink: "" },
                 ],
                 bulan2: [
                     { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "MAT-102: Pecahan & Desimal", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/14mAyOGGZXxbiC0OM9lUWFkY3xzkpDCD2/view?usp=drive_link" },
@@ -735,7 +750,15 @@ document.addEventListener('DOMContentLoaded', function() {
     let isSistemInformasiInitialized = false;
 
     // --- BAGIAN 2: DEFINISI SEMUA FUNGSI ---
-    
+    // FUNGSI BANTUAN UNTUK MENGAMBIL TANGGAL HARI INI
+function getClientDateString() {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = today.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+	
     function showMessage(message, type = 'error') { ui.messageBox.textContent = message; ui.messageBox.className = `message-box ${type} show`; setTimeout(() => { ui.messageBox.classList.remove('show'); }, 3500); }
     function getActiveSession() { return JSON.parse(localStorage.getItem('userSession') || sessionStorage.getItem('userSession') || 'null'); }
 
@@ -757,6 +780,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('rapatNameDisplay').value = name;
                 document.getElementById('jabatanStaf').value = jabatan;
                 populateTeacherClasses(session, document.getElementById('attendanceDateGuru').value);
+				
+				    if (session && session.loggedIn) {
+					fetchAndRenderAttendanceHistory(session.userData.profileName);
+					}
+				
             }
         } else { document.getElementById('beranda').classList.remove('hidden'); }
     }
@@ -796,7 +824,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (session && session.loggedIn) {
             const data = {
                 action: 'logVisit',
-                username: session.username
+                username: session.username,
+				dateString: getClientDateString()
             };
             fetch(CONFIG.SCRIPT_URL, {
                 method: 'POST',
@@ -814,7 +843,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function fetchDailyVisitors() {
-        const data = { action: 'getTodaysVisitors' };
+        const data = { action: 'getTodaysVisitors', dateString: getClientDateString() };
         const visitorSection = document.getElementById('pengunjung-hari-ini');
         const visitorContainer = document.getElementById('visitor-list-container');
         if (!visitorSection || !visitorContainer) return;
@@ -1050,6 +1079,58 @@ function handleLoginSubmit(event) {
         }
         fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.ok ? res.json() : Promise.reject(res)).then(result => { if (result.status === "success") { showMessage('Absensi berhasil direkam!', 'success'); form.reset(); setTodayDate(); showPage('#absensi'); } else { showMessage(result.message || 'Gagal mengirim absensi.', 'error'); } }).catch(error => { console.error('Attendance Error:', error); showMessage('Gagal terhubung.', 'error'); }).finally(() => { submitBtn.textContent = `Kirim Absensi ${role.charAt(0).toUpperCase() + role.slice(1)}`; submitBtn.disabled = false; });
     }
+	
+	// FUNGSI BARU UNTUK MENGAMBIL DAN MENAMPILKAN RIWAYAT
+function fetchAndRenderAttendanceHistory(profileName) {
+    const historyContainer = document.getElementById('historyContainer');
+    if (!historyContainer) return;
+
+    historyContainer.innerHTML = '<p class="p-6 text-center text-gray-500">Memuat riwayat absensi...</p>';
+
+    const data = {
+        action: 'getAttendanceHistory',
+        profileName: profileName // PERBAIKAN: Pastikan kunci dan nilainya menggunakan profileName
+    };
+
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status === 'success') {
+            if (result.history.length > 0) {
+                let tableHTML = '<table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr>' +
+                                '<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>' +
+                                '<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Peran</th>' +
+                                '<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Informasi</th>' +
+                                '<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keterangan</th>' +
+                                '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+                
+                result.history.forEach(item => {
+                    tableHTML += `<tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.tanggal}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.peran}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.informasi}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-500">${item.keterangan}</td>
+                                  </tr>`;
+                });
+
+                tableHTML += '</tbody></table>';
+                historyContainer.innerHTML = tableHTML;
+            } else {
+                historyContainer.innerHTML = '<p class="p-6 text-center text-gray-500">Tidak ada riwayat absensi dalam 30 hari terakhir.</p>';
+            }
+        } else {
+            throw new Error(result.message || 'Gagal mengambil data.');
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching attendance history:', error);
+        historyContainer.innerHTML = `<p class="p-6 text-center text-red-500">Terjadi kesalahan: ${error.message}</p>`;
+    });
+}
 
     function updateActiveLink() { const hash = window.location.hash || '#beranda'; showPage(hash); document.querySelectorAll('#mainNav a:not(.auth-button)').forEach(a => { a.classList.toggle('active', a.getAttribute('href') === hash); }); }
     
