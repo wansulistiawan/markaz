@@ -327,6 +327,7 @@
                     <a href="#beranda" class="active">Beranda</a>
                     <a href="#lembaga">Lembaga</a>
                     <a href="#tentang">Tentang</a>
+					<a href="#laporan" id="laporanNav" class="hidden" style="background-color: #0dcaf0;">Laporan Tahfidz</a>
 					<a href="#musyrif" id="musyrifNav" class="hidden" style="background-color: #fd7e14;">Halaman Musyrif</a>
 					<a href="#musyrifah" id="musyrifahNav" class="hidden" style="background-color: #6f42c1;">Halaman Musyrifah</a>
                     <a href="#absensi" id="attendanceNav" class="hidden">Absensi</a>
@@ -342,6 +343,24 @@
         </div>
     </div>
     
+	<!-- ======================================================= -->
+<!-- === AWAL HALAMAN LAPORAN TAHFIDZ === -->
+<!-- ======================================================= -->
+<div id="laporan" class="page-section hidden container section">
+    <h2 class="text-3xl font-bold text-gray-800">Laporan Nilai Tahfidz Santri</h2>
+    <p class="mb-6 text-gray-600">Pilih tanggal untuk melihat semua laporan nilai tahfidz yang masuk.</p>
+    
+    <div class="form-group bg-white p-4 rounded-lg shadow-sm" style="max-width: 350px;">
+        <label for="laporanTanggal" class="text-base font-semibold">Pilih Tanggal Laporan</label>
+        <input type="date" id="laporanTanggal" class="mt-2">
+    </div>
+
+    <div id="laporanContainer" class="mt-8 overflow-x-auto bg-white rounded-lg shadow">
+        <p class="p-8 text-center text-gray-500">Silakan pilih tanggal untuk melihat laporan.</p>
+    </div>
+</div>
+<!-- === AKHIR HALAMAN LAPORAN TAHFIDZ === -->
+	
     <div id="marquee-container" class="hidden">
         <div id="marquee-text-wrapper">
             <span id="marquee-text"></span>
@@ -975,7 +994,25 @@ function showPage(hash) {
                 fetchAndRenderDailyReports('musyrifah');
                 document.querySelectorAll('#musyrifah input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
             }
+        } else if (targetHash === '#laporan') {
+    const session = getActiveSession();
+    const userJabatan = (session && session.userData) ? session.userData.jabatan : '';
+    if (session && session.loggedIn && (userJabatan === 'Kepala Rumah Anak Yatim' || userJabatan === 'Kepala Rumah Tahfidz Quran' || userJabatan === 'Waka Kurikulum')) {
+        const datePicker = document.getElementById('laporanTanggal');
+        
+        // Hanya tambahkan event listener jika belum ada
+        if (!datePicker.dataset.listenerAttached) {
+            datePicker.addEventListener('change', (e) => {
+                fetchAndRenderTahfidzReport(e.target.value);
+            });
+            datePicker.dataset.listenerAttached = 'true';
         }
+        
+        // Set tanggal hari ini dan langsung panggil fungsi
+        datePicker.value = new Date().toISOString().slice(0, 10);
+        fetchAndRenderTahfidzReport(datePicker.value);
+    }
+}
     } else {
         document.getElementById('beranda').classList.remove('hidden');
     }
@@ -1004,6 +1041,13 @@ if (userData.jabatan === 'Musyrif') {
     musyrifahNav.classList.remove('hidden');
     musyrifNav.classList.add('hidden');
 }
+const laporanNav = document.getElementById('laporanNav');
+const userJabatan = userData.jabatan || '';
+if (userJabatan === 'Kepala Rumah Anak Yatim' || userJabatan === 'Waka Kurikulum' || userJabatan === 'Kepala Rumah Tahfidz Quran') {
+    laporanNav.classList.remove('hidden');
+} else {
+    laporanNav.classList.add('hidden');
+}
         if (window.location.hash === '#login') { window.location.hash = '#beranda'; }
     }
 
@@ -1016,6 +1060,7 @@ if (userData.jabatan === 'Musyrif') {
         document.getElementById('pengunjung-hari-ini')?.classList.add('hidden'); // Sembunyikan saat logout
 		document.getElementById('musyrifNav').classList.add('hidden');
 		document.getElementById('musyrifahNav').classList.add('hidden');
+		document.getElementById('laporanNav').classList.add('hidden');
         localStorage.removeItem('userSession');
         sessionStorage.removeItem('userSession');
         const protectedHashes = ['#absensi', '#profile', '#sistem-informasi'];
@@ -1545,7 +1590,61 @@ function fetchAndRenderDailyReports(role) {
         reportContainer.innerHTML = `<p class="p-6 text-center text-red-500">Gagal memuat laporan: ${error.message}</p>`;
     });
 }
-	
+
+// FUNGSI BARU UNTUK HALAMAN LAPORAN TAHFIDZ
+function fetchAndRenderTahfidzReport(dateString) {
+    const reportContainer = document.getElementById('laporanContainer');
+    reportContainer.innerHTML = '<p class="p-6 text-center text-gray-500">Memuat laporan untuk tanggal ' + dateString + '...</p>';
+
+    // Ubah format YYYY-MM-DD dari date picker ke DD/MM/YYYY yang dibutuhkan script
+    const parts = dateString.split('-');
+    const formattedDateForScript = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+    const data = {
+        action: 'getTahfidzReport',
+        dateString: formattedDateForScript
+    };
+
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status === 'success') {
+            if (result.reports.length > 0) {
+                let tableHTML = '<table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr>' +
+                                '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Santri</th>' +
+                                '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Musyrif/ah</th>' +
+                                '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ziyadah (P)</th>' +
+                                '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ziyadah (S)</th>' +
+                                '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Muraja\'ah</th>' +
+                                '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+                
+                result.reports.forEach(item => {
+                    tableHTML += `<tr>
+                                    <td class="px-4 py-4 font-medium text-gray-900">${item.namaSantri}</td>
+                                    <td class="px-4 py-4 text-sm text-gray-500">${item.musyrif}</td>
+                                    <td class="px-4 py-4 text-sm text-gray-500">${item.ziyadahPText || '-'} (${item.ziyadahP || '0'})</td>
+                                    <td class="px-4 py-4 text-sm text-gray-500">${item.ziyadahSText || '-'} (${item.ziyadahS || '0'})</td>
+                                    <td class="px-4 py-4 text-sm text-gray-500">${item.murajaahText || '-'} (${item.murajaah || '0'})</td>
+                                  </tr>`;
+                });
+
+                tableHTML += '</tbody></table>';
+                reportContainer.innerHTML = tableHTML;
+            } else {
+                reportContainer.innerHTML = `<p class="p-6 text-center text-gray-500">Tidak ada laporan Tahfidz yang masuk pada tanggal ${dateString}.</p>`;
+            }
+        } else {
+            throw new Error(result.message);
+        }
+    })
+    .catch(error => {
+        reportContainer.innerHTML = `<p class="p-6 text-center text-red-500">Gagal memuat laporan: ${error.message}</p>`;
+    });
+}	
 	
     // --- (Fungsi-fungsi SI KBM di sini) ---
 function initializeSistemInformasi() {
