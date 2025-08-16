@@ -15,6 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Bagian CSS untuk Styling -->
     <style>
@@ -332,7 +333,9 @@
 					<a href="#musyrifah" id="musyrifahNav" class="hidden" style="background-color: #6f42c1;">Halaman Musyrifah</a>
                     <a href="#absensi" id="attendanceNav" class="hidden">Absensi</a>
                     <a href="#sistem-informasi" id="sistemInformasiNav" class="hidden">Sistem Informasi</a>
-                    <a href="#penerimaan">Penerimaan</a>
+					<a href="#slip-gaji" id="slipGajiNav" class="hidden" style="background-color: #198754;">Slip Gaji</a>
+                    <a href="#laporan-keuangan" id="laporanKeuanganNav" class="hidden" style="background-color: #6610f2;">Laporan Keuangan</a>
+					<a href="#penerimaan">Penerimaan</a>
                     <a href="#kegiatan">Kegiatan</a>
                     <a href="#legalitas">Legalitas</a>
                     <a href="#mitra">Mitra</a>
@@ -360,6 +363,40 @@
     </div>
 </div>
 <!-- === AKHIR HALAMAN LAPORAN TAHFIDZ === -->
+
+<div id="slip-gaji" class="page-section hidden container section">
+    <h2 class="text-3xl font-bold text-gray-800">Slip Gaji Karyawan</h2>
+    <p class="mb-8 text-gray-600">Silakan pilih periode bulan untuk melihat rincian gaji Anda.</p>
+
+    <div id="slipGajiFilters" class="bg-gray-100 p-4 rounded-lg shadow-sm flex flex-wrap items-end gap-4 mb-8">
+        <div id="employeeSelectorContainer" class="form-group hidden flex-grow">
+            <label for="employeeSelect" class="font-semibold">Pilih Karyawan</label>
+            <select id="employeeSelect" class="filter-select w-full mt-1"></select>
+        </div>
+        
+        <div class="form-group flex-grow" style="min-width: 150px;">
+			<label for="monthSelectNew" class="font-semibold">Pilih Bulan</label>
+			<select id="monthSelectNew" class="filter-select w-full mt-1"></select>
+		</div>
+		<div class="form-group" style="width: 120px;">
+			<label for="yearSelect" class="font-semibold">Tahun</label>
+			<select id="yearSelect" class="filter-select w-full mt-1"></select>
+		</div>
+        
+        <div class="form-group">
+            <button id="showSlipGajiBtn" class="bg-teal-600 text-white py-3 px-6 rounded-md hover:bg-teal-700 w-full md:w-auto">Tampilkan</button>
+        </div>
+    </div>
+
+    <div id="slipGajiContainer" class="mt-8">
+        <p class="p-8 text-center text-gray-500">Silakan pilih nama (jika tersedia) dan bulan, lalu klik "Tampilkan".</p>
+    </div>
+	<div id="downloadSlipContainer" class="mt-6 text-center hidden">
+    <button id="downloadSlipBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg">
+        Unduh Slip Gaji (PDF)
+    </button>
+	</div>
+</div>
 	
     <div id="marquee-container" class="hidden">
         <div id="marquee-text-wrapper">
@@ -538,6 +575,97 @@
     <div id="kegiatan" class="page-section hidden container section"><h2>Galeri Kegiatan</h2><div id="gallery-container" class="grid-container"></div></div>
     <div id="legalitas" class="page-section hidden container section"><h2>Akreditas & Legalitas</h2><ul><li><strong>Akta Notaris:</strong> Nomor 12 Tgl 10 Feb 2022</li><li><strong>SK Kemenkumham:</strong> AHU-0004281.AH.01.04.Tahun 2022</li><li><strong>NPWP:</strong> 63.382.276.2-115.000</li></ul></div>
     <div id="mitra" class="page-section hidden container section"><h2>Mitra Kebaikan</h2><p>Kami bekerja sama dengan berbagai pihak, termasuk <strong>Yayasan Sahabat Yatim Indonesia</strong>.</p></div>
+	
+	
+	<div id="laporan-keuangan" class="page-section hidden container section">
+    <h2 class="text-3xl font-bold text-gray-800">Laporan Keuangan</h2>
+
+    <div id="keuangan-form-container" class="hidden mb-12">
+        
+<h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Input Transaksi Keuangan</h3>
+<div class="bg-gray-50 p-6 rounded-lg">
+    
+    <<div class="form-group max-w-sm">
+    <label for="tanggalKeuangan">Pilih Tanggal Transaksi</label>
+    <div class="flex items-center gap-2 mt-1">
+        <input type="date" id="tanggalKeuangan" class="flex-grow">
+        <button type="button" id="setTanggalDefaultBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-3 rounded-lg text-sm">Set</button>
+    </div>
+</div>
+
+    <!-- Langkah 2: Tabel Input (Awalnya Tersembunyi) -->
+    <div id="keuangan-input-table-container" class="hidden mt-6">
+        <div class="overflow-x-auto">
+            <table class="min-w-full border">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="px-4 py-2 border text-left">Keterangan</th>
+                        <th class="px-4 py-2 border text-left w-48">Masuk (Rp)</th>
+                        <th class="px-4 py-2 border text-left w-48">Keluar (Rp)</th>
+                        <th class="px-4 py-2 border text-left w-64">Kelompok</th>
+                        <th class="px-4 py-2 border w-16"></th>
+                    </tr>
+                </thead>
+                <tbody id="keuangan-input-tbody">
+                    <!-- Baris input akan ditambahkan oleh JavaScript di sini -->
+                </tbody>
+            </table>
+        </div>
+        <div class="flex justify-between items-center mt-4">
+            <button type="button" id="addKeuanganRowBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg text-sm">+ Tambah Baris</button>
+            <button type="button" id="saveKeuanganBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">Simpan Semua</button>
+        </div>
+    </div>
+</div>
+<!-- === SAMPAI DI SINI === -->
+    </div>
+<div id="daily-transaction-container" class="mt-8"></div>
+    <div>
+        <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Lihat Laporan Bulanan</h3>
+        <div class="bg-gray-100 p-4 rounded-lg shadow-sm flex flex-wrap items-end gap-4 mb-8">
+            <div class="form-group flex-grow" style="min-width: 150px;">
+                <label for="laporanBulan" class="font-semibold">Pilih Bulan</label>
+                <select id="laporanBulan" class="filter-select w-full mt-1"></select>
+            </div>
+            <div class="form-group" style="width: 120px;">
+                <label for="laporanTahun" class="font-semibold">Tahun</label>
+                <select id="laporanTahun" class="filter-select w-full mt-1"></select>
+            </div>
+            <div class="form-group">
+                <button id="tampilkanLaporanKeuanganBtn" class="bg-teal-600 text-white py-3 px-6 rounded-md hover:bg-teal-700 w-full md:w-auto">Tampilkan</button>
+            </div>
+        </div>
+
+        <div id="keuangan-report-container" class="mt-8">
+            <p class="p-8 text-center text-gray-500">Silakan pilih bulan dan tahun, lalu klik "Tampilkan".</p>
+        </div>
+		
+
+<div id="yearly-summary-container" class="mt-8">
+    <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Ringkasan Tahunan</h3>
+
+    <div class="flex justify-end gap-2 mb-4">
+        <button id="shareYearlySummaryBtn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg text-sm">Bagikan</button>
+        <button id="downloadYearlySummaryBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm">Unduh</button>
+    </div>
+
+    <div id="printable-summary" class="p-4 bg-white rounded-lg border">
+        <div id="group-totals-container" class="mb-6"></div>
+
+        <div class="mb-4 flex justify-center gap-4 text-sm" id="chart-options">
+            <label><input type="radio" name="chartType" value="income_expense" checked> Dana Masuk vs Keluar</label>
+            <label><input type="radio" name="chartType" value="income_groups"> Kelompok Dana Masuk</label>
+            <label><input type="radio" name="chartType" value="expense_groups"> Kelompok Dana Keluar</label>
+        </div>
+
+        <div id="keuangan-chart-container" style="height: 350px;">
+            <canvas id="keuanganChart"></canvas>
+        </div>
+    </div>
+</div>
+    </div>
+
+</div>
 	<!-- ======================================================= -->
 <!-- === AWAL HALAMAN MUSYRIF === -->
 <!-- ======================================================= -->
@@ -694,7 +822,7 @@
      </div>
 </div>
 <!-- === AKHIR HALAMAN MUSYRIFAH === -->
-    <div id="login" class="page-section hidden container"><form id="loginForm" class="custom-form"><h2 style="text-align: center;">Login Pengurus / Staf</h2><div class="form-group"><label for="username">Username</label><input type="text" id="username" name="username" required></div><div class="form-group password-container"><label for="password">Password</label><input type="password" id="password" name="password" required><span class="toggle-password"></span></div><div class="form-group remember-me"><div><input type="checkbox" id="remember" name="remember"><label for="remember">Ingat saya selama 30 hari</label></div><a href="#" id="forgotPasswordLink" class="forgot-password">Lupa Sandi?</a></div><button type="submit" class="submit-btn">Masuk</button></form></div>
+    <div id="login" class="page-section hidden container"><form id="loginForm" class="custom-form"><h2 style="text-align: center;">Login Pengurus / Staf</h2><div class="form-group"><label for="username">Username</label><input type="text" id="username" name="username" autocomplete="username" required></div><div class="form-group password-container"><label for="password">Password</label><input type="password" id="password" name="password" required><span class="toggle-password"></span></div><div class="form-group remember-me"><div><input type="checkbox" id="remember" name="remember"><label for="remember">Ingat saya selama 30 hari</label></div><a href="#" id="forgotPasswordLink" class="forgot-password">Lupa Sandi?</a></div><button type="submit" class="submit-btn">Masuk</button></form></div>
     <div id="donasiModal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h2>Tata Cara Donasi</h2><p>Silakan transfer ke <strong>Bank BRI: 7040-0102-7168535</strong> a/n Markaz Yatim Duafa Qurani.</p><p style="text-align:center; margin-top:1rem;">Atau scan QRIS:</p><img src="qrisdonasi.png" alt="QRIS Donasi" style="width:250px;display:block;margin:15px auto;border-radius:8px;" onerror="this.onerror=null;this.src='https://placehold.co/250x250/cccccc/FFFFFF?text=QRIS+Error';"><a href="qrisdonasi.png" class="download-btn" download="qrisdonasi.png">Unduh QRIS</a><p>Konfirmasi ke <strong>085261804096</strong>.</p></div></div>
     <div id="profileModal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h2>Profil Saya</h2><form id="profileForm"><div class="profile-picture-container"><img id="profilePicturePreview" src="https://placehold.co/128x128/e9ecef/343a40?text=Foto" alt="Foto Profil"><input type="file" id="profilePictureInput" accept="image/*"><label for="profilePictureInput" id="uploadPictureLabel">Ganti Foto</label></div><div class="form-group"><label for="profileName">Nama Profil</label><input type="text" id="profileName" required></div><div class="form-group"><label for="profileDob">Tanggal Lahir</label><input type="date" id="profileDob"></div><div class="form-group"><label for="profileAddress">Alamat</label><textarea id="profileAddress" rows="3"></textarea></div><div class="form-group"><label for="profileJabatan">Jabatan</label><input type="text" id="profileJabatan"></div><div class="form-group"><label for="profileUsername">Username</label><input type="text" id="profileUsername" required readonly style="background-color:#e9ecef;cursor:not-allowed;"></div><div style="display:flex;gap:10px;margin-top:20px;"><button type="submit" class="submit-btn" style="flex:1;">Simpan</button><button type="button" id="changePasswordFromProfile" class="auth-button" style="flex:1;background-color:var(--secondary-color);">Ganti Sandi</button><button type="button" id="logoutFromProfile" class="auth-button" style="flex:1;background-color:var(--error-color);color:white;">Logout</button></div></form></div></div>
     <div id="changePasswordModal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h2>Ganti Kata Sandi</h2><form id="changePasswordForm"><div class="form-group password-container"><label for="currentPassword">Sandi Saat Ini</label><input type="password" id="currentPassword" required><span class="toggle-password"></span></div><div class="form-group password-container"><label for="newPassword">Sandi Baru</label><input type="password" id="newPassword" required><span class="toggle-password"></span></div><div class="form-group password-container"><label for="confirmNewPassword">Konfirmasi Sandi Baru</label><input type="password" id="confirmNewPassword" required><span class="toggle-password"></span></div><button type="submit" class="submit-btn">Simpan</button></form></div></div>
@@ -936,6 +1064,7 @@ document.addEventListener('DOMContentLoaded', function() {
  ], bulan6: [], bulan7: [], bulan8: []
         }
     };
+ 
     const ui = { messageBox: document.getElementById('messageBox'), donasiModal: document.getElementById("donasiModal"), donasiBtn: document.getElementById("donasiBtn"), loginButton: document.getElementById('loginButton'), userProfile: document.getElementById('userProfile'), userProfileName: document.getElementById('userProfileName'), navProfilePic: document.getElementById('navProfilePic'), attendanceNav: document.getElementById('attendanceNav'), sistemInformasiNav: document.getElementById('sistemInformasiNav'), kalenderPendidikan: document.getElementById('kalenderPendidikanSection'), marqueeContainer: document.getElementById('marquee-container'), marqueeText: document.getElementById('marquee-text'), dynamicCalendarGrid: document.getElementById('dynamic-calendar-grid'), slideshowContainer: document.getElementById('slideshow') };
     
     let isSistemInformasiInitialized = false;
@@ -953,7 +1082,519 @@ function getClientDateString() {
     function showMessage(message, type = 'error') { ui.messageBox.textContent = message; ui.messageBox.className = `message-box ${type} show`; setTimeout(() => { ui.messageBox.classList.remove('show'); }, 3500); }
     function getActiveSession() { return JSON.parse(localStorage.getItem('userSession') || sessionStorage.getItem('userSession') || 'null'); }
 
-    // GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
+// FUNGSI BARU UNTUK MENAMPILKAN TRANSAKSI HARIAN
+function renderDailyTransactions(allMonthData, selectedDate) {
+    const container = document.getElementById('daily-transaction-container');
+
+    // Normalisasi tanggal yang dipilih (menghilangkan masalah zona waktu)
+    const targetDate = new Date(selectedDate + 'T00:00:00');
+    const targetDateString = targetDate.toLocaleDateString('id-ID');
+
+    const dailyData = allMonthData.filter(row => {
+        // Normalisasi tanggal dari data sheet
+        const transactionDate = new Date(row[0]);
+        const transactionDateString = transactionDate.toLocaleDateString('id-ID');
+        return transactionDateString === targetDateString;
+    });
+
+    let runningTotal = 0; // Inisialisasi saldo berjalan
+    const rowsHTML = dailyData.map(row => {
+        const isIncome = row[1] === 'Uang Masuk';
+        const amount = parseFloat(row[4]) || 0;
+        runningTotal += isIncome ? amount : -amount;
+
+        return `
+            <tr class="hover:bg-gray-50">
+                <td class="px-2 py-2 border">${new Date(row[0]).toLocaleDateString('id-ID')}</td>
+                <td class="px-2 py-2 border">${row[3]}</td>
+                <td class="px-2 py-2 border text-right">${isIncome ? amount.toLocaleString('id-ID') : '-'}</td>
+                <td class="px-2 py-2 border text-right">${!isIncome ? amount.toLocaleString('id-ID') : '-'}</td>
+                <td class="px-2 py-2 border text-right font-semibold">${runningTotal.toLocaleString('id-ID')}</td>
+                <td class="px-2 py-2 border">${row[2]}</td>
+                <td class="px-2 py-2 border text-center"><button class="text-red-500 hover:text-red-700" onclick="handleDeleteTransaction('${new Date(row[0]).getTime()}')">Hapus</button></td>
+            </tr>
+        `;
+    }).join('');
+
+    const displayDate = targetDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    container.innerHTML = `
+        <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Rincian Transaksi Tanggal ${displayDate}</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm mt-2 mb-4 border-collapse">
+                <thead class="bg-gray-100"><tr>
+                    <th class="px-2 py-2 border text-left">Tanggal</th><th class="px-2 py-2 border text-left">Keterangan</th>
+                    <th class="px-2 py-2 border text-right">Masuk</th><th class="px-2 py-2 border text-right">Keluar</th>
+                    <th class="px-2 py-2 border text-right">Total</th><th class="px-2 py-2 border text-left">Kelompok</th>
+                    <th class="px-2 py-2 border">Aksi</th>
+                </tr></thead>
+                <tbody>${rowsHTML || `<tr><td colspan="7" class="p-4 text-center border">Tidak ada transaksi pada tanggal ini.</td></tr>`}</tbody>
+            </table>
+        </div>`;
+}
+
+// FUNGSI BARU UNTUK MENGHAPUS TRANSAKSI
+function handleDeleteTransaction(timestamp) {
+    if (!confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) return;
+
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'deleteTransaction', timestamp: timestamp }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status === 'success') {
+            showMessage(result.message, 'success');
+            document.getElementById('tampilkanLaporanKeuanganBtn').click(); // Refresh laporan
+        } else {
+            throw new Error(result.message);
+        }
+    })
+    .catch(error => showMessage(`Gagal menghapus: ${error.message}`, 'error'));
+}
+
+// FUNGSI BARU UNTUK MENGUNDUH/MEMBAGIKAN GAMBAR
+function downloadOrShareSummary(action = 'download') {
+    const summaryNode = document.getElementById('printable-summary');
+    html2canvas(summaryNode, { scale: 2 }).then(canvas => {
+        canvas.toBlob(function(blob) {
+            const fileName = `Ringkasan Keuangan Tahunan - ${document.getElementById('laporanTahun').value}.png`;
+            if (action === 'download') {
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = URL.createObjectURL(blob);
+                link.click();
+            } else if (action === 'share' && navigator.share) {
+                navigator.share({
+                    files: [new File([blob], fileName, { type: 'image/png' })],
+                    title: 'Ringkasan Keuangan Tahunan',
+                }).catch(err => console.error("Error sharing:", err));
+            }
+        });
+    });
+}
+
+
+
+// =======================================================
+// === FUNGSI-FUNGSI BARU UNTUK LAPORAN KEUANGAN ===
+// =======================================================
+
+function setupKeuanganEventListeners() {
+    document.getElementById('tampilkanLaporanKeuanganBtn')?.addEventListener('click', () => {
+        const bulan = document.getElementById('laporanBulan').value;
+        const tahun = document.getElementById('laporanTahun').value;
+        fetchAndRenderKeuanganReport(tahun, bulan);
+    });
+    document.getElementById('addKeuanganRowBtn')?.addEventListener('click', addKeuanganInputRow);
+    document.getElementById('saveKeuanganBtn')?.addEventListener('click', handleSaveKeuangan);
+
+	document.getElementById('setTanggalDefaultBtn')?.addEventListener('click', handleSetDefaultDate);
+
+
+    // Listener untuk pilihan grafik
+    document.querySelectorAll('input[name="chartType"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            const tahun = document.getElementById('laporanTahun').value;
+            // Panggil lagi fungsi fetch data tahunan untuk menggambar ulang grafik
+            fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getYearlyFinancialData', year: parseInt(tahun) }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(res=>res.json()).then(result => {
+                if (result.status === 'success') {
+                    renderKeuanganChartAndTotals(result.data, tahun);
+                }
+            });
+        });
+    });
+
+    // Listener untuk tombol unduh dan bagikan
+    document.getElementById('downloadYearlySummaryBtn')?.addEventListener('click', () => downloadOrShareSummary('download'));
+    document.getElementById('shareYearlySummaryBtn')?.addEventListener('click', () => downloadOrShareSummary('share'));
+	
+}
+
+function updateKelompokKeuangan() {
+    const jenis = document.querySelector('input[name="jenisTransaksi"]:checked').value;
+    const selectKelompok = document.getElementById('kelompokKeuangan');
+    selectKelompok.innerHTML = ''; // Kosongkan pilihan
+
+    const kelompokMasuk = ["Infak Langsung", "Infak Bulanan", "Kotak Infak", "SPP", "Jual Sembako", "Keuntungan Usaha"];
+    const kelompokKeluar = ["Kebutuhan Anak Yatim", "Kebutuhan Rumah", "Buku/ATK", "Kesehatan dan Pengobatan", "Kebutuhan Rumah Tahfidz", "Transport", "Gaji dan Tunjangan", "Pengembangan Usaha"];
+    const options = (jenis === 'Uang Masuk') ? kelompokMasuk : kelompokKeluar;
+
+    options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        selectKelompok.appendChild(option);
+    });
+}
+
+function handleKeuanganSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Menyimpan...';
+
+    const data = {
+        action: 'submitKeuangan',
+        tanggal: document.getElementById('tanggalKeuangan').value,
+        jenis: document.querySelector('input[name="jenisTransaksi"]:checked').value,
+        jumlah: document.getElementById('jumlahKeuangan').value,
+        kelompok: document.getElementById('kelompokKeuangan').value,
+        keterangan: document.getElementById('keteranganKeuangan').value
+    };
+
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status === 'success') {
+            showMessage(result.message, 'success');
+            form.reset();
+            updateKelompokKeuangan(); // Reset dropdown ke default
+            // Otomatis refresh laporan jika melihat bulan yang sama
+            const bulan = (new Date(data.tanggal).getMonth() + 1).toString().padStart(2, '0');
+            const tahun = new Date(data.tanggal).getFullYear().toString();
+            if (document.getElementById('laporanBulan').value == bulan && document.getElementById('laporanTahun').value == tahun) {
+                fetchAndRenderKeuanganReport(tahun, bulan);
+            }
+        } else {
+            throw new Error(result.message);
+        }
+    })
+    .catch(error => showMessage(`Gagal menyimpan: ${error.message}`, 'error'))
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Simpan Transaksi';
+    });
+}
+// === TAMBAHKAN FUNGSI YANG HILANG INI ===
+const createTable = (title, data, headers) => {
+    let rows = data.map(row => `
+        <tr>
+            <td class="px-4 py-2 border">${new Date(row[headers.date]).toLocaleDateString('id-ID')}</td>
+            <td class="px-4 py-2 border">${row[headers.group]}</td>
+            <td class="px-4 py-2 border">${row[headers.desc]}</td>
+            <td class="px-4 py-2 border text-right">${(parseFloat(row[headers.amount]) || 0).toLocaleString('id-ID')}</td>
+        </tr>
+    `).join('');
+    return `
+        <h4 class="font-bold text-lg ${title.includes('Masuk') ? 'text-green-600' : 'text-red-600'}">${title}</h4>
+        <table class="w-full text-sm mt-2 mb-4 border-collapse">
+            <thead><tr class="bg-gray-100">
+                <th class="px-4 py-2 border text-left">Tanggal</th><th class="px-4 py-2 border text-left">Kelompok</th>
+                <th class="px-4 py-2 border text-left">Keterangan</th><th class="px-4 py-2 border text-right">Jumlah</th>
+            </tr></thead>
+            <tbody>${rows || `<tr><td colspan="4" class="p-4 text-center border">Tidak ada data.</td></tr>`}</tbody>
+        </table>`;
+};
+// GANTI FUNGSI LAMA DENGAN VERSI BARU INI
+function fetchAndRenderKeuanganReport(tahun, bulan) {
+    const reportContainer = document.getElementById('keuangan-report-container');
+    reportContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Memuat laporan bulanan...</p>';
+    document.getElementById('yearly-summary-container').classList.add('hidden');
+    document.getElementById('daily-transaction-container').innerHTML = ''; // Kosongkan rincian harian
+
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'getLaporanKeuangan', year: parseInt(tahun), month: parseInt(bulan) }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status !== 'success') throw new Error(result.message);
+
+        const l = result.laporan;
+        const formatRp = num => `Rp ${num.toLocaleString('id-ID')}`;
+
+        const headerIndexes = { date: 0, group: 2, desc: 3, amount: 4 };
+        const tableMasuk = createTable('Rincian Dana Masuk', l.danaMasuk, headerIndexes);
+        const tableKeluar = createTable('Rincian Dana Keluar', l.danaKeluar, headerIndexes);
+
+        const reportHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>${tableMasuk}</div>
+                <div>${tableKeluar}</div>
+            </div>
+            <div class="mt-8 p-4 bg-gray-50 rounded-lg border">
+                <h4 class="font-bold text-xl mb-4 text-center">Ringkasan Keuangan</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between text-gray-700"><span>Saldo Kas Bulan Lalu</span> <span>${formatRp(l.saldoBulanLalu)}</span></div>
+                    <div class="flex justify-between text-green-600"><span>Total Dana Masuk Bulan Ini</span> <span>${formatRp(l.totalMasuk)}</span></div>
+                    <div class="flex justify-between text-red-600"><span>Total Dana Keluar Bulan Ini</span> <span>-${formatRp(l.totalKeluar)}</span></div>
+                    <div class="flex justify-between font-bold border-t pt-2"><span>Selisih Bulan Ini</span> <span>${formatRp(l.selisihBulanIni)}</span></div>
+                    <div class="flex justify-between font-bold text-xl text-blue-600 border-t-2 pt-2 mt-2"><span>Sisa Saldo Kas Akhir Bulan Ini</span> <span>${formatRp(l.saldoAkhirBulanIni)}</span></div>
+                </div>
+            </div>`;
+        reportContainer.innerHTML = reportHTML;
+
+        const selectedDate = document.getElementById('tanggalKeuangan').value;
+        const allMonthData = l.danaMasuk.concat(l.danaKeluar);
+        renderDailyTransactions(allMonthData, selectedDate);
+
+        return fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getYearlyFinancialData', year: parseInt(tahun) }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status !== 'success') throw new Error(result.message);
+        document.getElementById('yearly-summary-container').classList.remove('hidden');
+        renderKeuanganChartAndTotals(result.data, tahun);
+    })
+    .catch(error => {
+        reportContainer.innerHTML = `<p class="p-8 text-center text-red-600 bg-red-50 rounded-lg">Gagal memuat laporan: ${error.message}</p>`;
+    });
+}
+
+let keuanganChartInstance = null;
+function renderKeuanganChartAndTotals(yearlyData, year) {
+    const groupTotalsContainer = document.getElementById('group-totals-container');
+    const chartType = document.querySelector('input[name="chartType"]:checked').value;
+    const ctx = document.getElementById('keuanganChart').getContext('2d');
+
+    // Proses data tahunan
+    const monthlyTotals = Array(12).fill(0).map(() => ({ masuk: 0, keluar: 0 }));
+    const incomeGroups = {};
+    const expenseGroups = {};
+
+    yearlyData.forEach(row => {
+        const date = new Date(row[0]);
+        const month = date.getMonth(); // 0-11
+        const jenis = row[1];
+        const kelompok = row[2];
+        const jumlah = parseFloat(row[4]) || 0;
+
+        if (jenis === 'Uang Masuk') {
+            monthlyTotals[month].masuk += jumlah;
+            incomeGroups[kelompok] = (incomeGroups[kelompok] || 0) + jumlah;
+        } else if (jenis === 'Uang Keluar') {
+            monthlyTotals[month].keluar += jumlah;
+            expenseGroups[kelompok] = (expenseGroups[kelompok] || 0) + jumlah;
+        }
+    });
+
+    // Tampilkan total per kelompok
+    let totalsHTML = '<h4 class="font-bold mb-2">Total per Kelompok Tahun ' + year + '</h4><div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">';
+    totalsHTML += '<div><span class="font-semibold block">Dana Masuk</span>';
+    for(const key in incomeGroups) totalsHTML += `<div class="flex justify-between"><span>${key}</span><span>${incomeGroups[key].toLocaleString('id-ID')}</span></div>`;
+    totalsHTML += '</div><div><span class="font-semibold block">Dana Keluar</span>';
+    for(const key in expenseGroups) totalsHTML += `<div class="flex justify-between"><span>${key}</span><span>${expenseGroups[key].toLocaleString('id-ID')}</span></div>`;
+    totalsHTML += '</div></div>';
+    groupTotalsContainer.innerHTML = totalsHTML;
+
+    // Atur data untuk grafik
+    let chartConfig;
+    const monthLabels = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
+
+    if (chartType === 'income_expense') {
+        chartConfig = {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [
+                    { label: 'Dana Masuk', data: monthlyTotals.map(m => m.masuk), backgroundColor: 'rgba(75, 192, 192, 0.6)' },
+                    { label: 'Dana Keluar', data: monthlyTotals.map(m => m.keluar), backgroundColor: 'rgba(255, 99, 132, 0.6)' }
+                ]
+            }
+        };
+    } else if (chartType === 'income_groups') {
+        chartConfig = {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(incomeGroups),
+                datasets: [{ data: Object.values(incomeGroups) }]
+            }
+        };
+    } else { // expense_groups
+        chartConfig = {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(expenseGroups),
+                datasets: [{ data: Object.values(expenseGroups) }]
+            }
+        };
+    }
+
+    chartConfig.options = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } };
+
+    if (keuanganChartInstance) keuanganChartInstance.destroy();
+    keuanganChartInstance = new Chart(ctx, chartConfig);
+}
+
+// === TAMBAHKAN SEMUA FUNGSI BARU DI BAWAH INI ===
+
+// Baca tanggal terakhir dari localStorage, atau gunakan tanggal hari ini jika tidak ada
+let lastKeuanganDate = localStorage.getItem('lastKeuanganDate') || new Date().toISOString().slice(0, 10);
+
+// === GANTI SELURUH FUNGSI INI ===
+function addKeuanganInputRow() {
+    const tbody = document.getElementById('keuangan-input-tbody');
+    const newRow = document.createElement('tr');
+    newRow.className = 'keuangan-input-row';
+    // Hapus atribut oninput dari HTML
+    newRow.innerHTML = `
+        <td class="border p-1"><input type="text" class="w-full p-2 border-gray-300 rounded" placeholder="Keterangan transaksi..."></td>
+        <td class="border p-1"><input type="number" step="500" class="w-full p-2 border-gray-300 rounded" placeholder="0"></td>
+        <td class="border p-1"><input type="number" step="500" class="w-full p-2 border-gray-300 rounded" placeholder="0"></td>
+        <td class="border p-1"><select class="w-full p-2 border-gray-300 rounded bg-white"></select></td>
+        <td class="border p-1 text-center"><button class="text-red-500 hover:text-red-700 font-bold">X</button></td>
+    `;
+    tbody.appendChild(newRow);
+
+    // Pasang event listener menggunakan JavaScript
+    const masukInput = newRow.querySelector('td:nth-child(2) input');
+    const keluarInput = newRow.querySelector('td:nth-child(3) input');
+
+    masukInput.addEventListener('input', () => handleAmountInput(masukInput, 'masuk'));
+    keluarInput.addEventListener('input', () => handleAmountInput(keluarInput, 'keluar'));
+
+    updateKelompokForRow(newRow); // Isi dropdown untuk baris baru
+
+    newRow.querySelector('button').addEventListener('click', () => newRow.remove());
+}
+
+function handleAmountInput(inputElement, type) {
+    const row = inputElement.closest('tr');
+    const masukInput = row.querySelector('td:nth-child(2) input');
+    const keluarInput = row.querySelector('td:nth-child(3) input');
+
+    if (type === 'masuk' && inputElement.value > 0) {
+        keluarInput.value = '';
+    } else if (type === 'keluar' && inputElement.value > 0) {
+        masukInput.value = '';
+    }
+    updateKelompokForRow(row);
+}
+
+function updateKelompokForRow(row) {
+    const masukValue = row.querySelector('td:nth-child(2) input').value;
+    const keluarValue = row.querySelector('td:nth-child(3) input').value;
+    const selectEl = row.querySelector('select');
+    selectEl.innerHTML = '';
+
+    const kelompokMasuk = ["Infak Langsung", "Infak Bulanan", "Kotak Infak", "SPP", "Jual Sembako", "Keuntungan Usaha"];
+    const kelompokKeluar = ["Kebutuhan Anak Yatim", "Kebutuhan Rumah", "Buku/ATK", "Kesehatan dan Pengobatan", "Kebutuhan Rumah Tahfidz", "Transport", "Gaji dan Tunjangan", "Pengembangan Usaha"];
+
+    let options = [];
+    if (keluarValue > 0) {
+    options = kelompokKeluar;
+} else { 
+    options = kelompokMasuk;
+}
+
+    options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        selectEl.appendChild(option);
+    });
+}
+
+function handleSaveKeuangan() {
+    const tanggal = document.getElementById('tanggalKeuangan').value;
+    const rows = document.querySelectorAll('.keuangan-input-row');
+    const transactions = [];
+
+    rows.forEach(row => {
+        const keterangan = row.querySelector('td:nth-child(1) input').value.trim();
+        const masuk = parseFloat(row.querySelector('td:nth-child(2) input').value) || 0;
+        const keluar = parseFloat(row.querySelector('td:nth-child(3) input').value) || 0;
+        const kelompok = row.querySelector('select').value;
+
+        if (keterangan && (masuk > 0 || keluar > 0)) {
+            transactions.push({
+                tanggal: tanggal,
+                jenis: masuk > 0 ? 'Uang Masuk' : 'Uang Keluar',
+                jumlah: masuk > 0 ? masuk : keluar,
+                kelompok: kelompok,
+                keterangan: keterangan
+            });
+        }
+    });
+
+    if (transactions.length === 0) {
+        showMessage('Tidak ada data valid untuk disimpan.', 'error');
+        return;
+    }
+
+    const saveBtn = document.getElementById('saveKeuanganBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Menyimpan...';
+
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'submitKeuanganBatch', transactions: transactions }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status === 'success') {
+            showMessage(result.message, 'success');
+            lastKeuanganDate = tanggal; // Simpan tanggal terakhir
+            document.getElementById('keuangan-input-tbody').innerHTML = ''; // Kosongkan tabel
+            addKeuanganInputRow(); // Tambah satu baris baru
+        } else {
+            throw new Error(result.message);
+        }
+    })
+    .catch(error => showMessage(`Gagal menyimpan: ${error.message}`, 'error'))
+    .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Simpan Semua';
+    });
+}
+// === SAMPAI DI SINI ===
+
+// === TAMBAHKAN FUNGSI BARU INI ===
+function handleSetDefaultDate() {
+    const tanggalInput = document.getElementById('tanggalKeuangan');
+    if (!tanggalInput.value) {
+        showMessage('Silakan pilih tanggal terlebih dahulu.', 'error');
+        return;
+    }
+    lastKeuanganDate = tanggalInput.value;
+    localStorage.setItem('lastKeuanganDate', lastKeuanganDate); // Simpan ke localStorage
+    showMessage(`Tanggal default diatur ke ${new Date(lastKeuanganDate + 'T00:00:00').toLocaleDateString('id-ID')}`, 'success');
+
+    document.getElementById('tampilkanLaporanKeuanganBtn').click();
+}
+
+// FUNGSI BARU UNTUK MENGUNDUH SLIP GAJI SEBAGAI PDF
+function downloadSlipPDF() {
+    const slipNode = document.getElementById('slipGajiContent'); // Kita akan tambahkan ID ini nanti
+    if (!slipNode) return;
+
+    const namaKaryawan = slipNode.dataset.nama;
+    const periode = slipNode.dataset.periode;
+    const fileName = `Slip Gaji - ${namaKaryawan} - ${periode}.pdf`;
+
+    html2canvas(slipNode, { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a5'
+        });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(fileName);
+    });
+}
+
+
+// GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
 function showPage(hash) {
     document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
     const targetHash = (hash === '' || hash === '#') ? '#beranda' : hash;
@@ -993,22 +1634,87 @@ function showPage(hash) {
                 document.querySelectorAll('#musyrifah input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
             }
         } else if (targetHash === '#laporan') {
+            const session = getActiveSession();
+            const userJabatan = (session && session.userData) ? session.userData.jabatan : '';
+            if (session && session.loggedIn && (userJabatan === 'Kepala' || userJabatan === 'Waka Kurikulum' || userJabatan === 'Kepala Rumah Anak Yatim' || userJabatan === 'Kepala Rumah Tahfidz Quran')) {
+                const datePicker = document.getElementById('laporanTanggal');
+                if (!datePicker.dataset.listenerAttached) {
+                    datePicker.addEventListener('change', (e) => {
+                        fetchAndRenderTahfidzReport(e.target.value);
+                    });
+                    datePicker.dataset.listenerAttached = 'true';
+                }
+                datePicker.value = new Date().toISOString().slice(0, 10);
+                fetchAndRenderTahfidzReport(datePicker.value);
+            }
+        } else if (targetHash === '#slip-gaji') {
+            const session = getActiveSession();
+            if (session && session.loggedIn) {
+                const userJabatan = session.userData.jabatan || '';
+                const isAdmin = (userJabatan === 'Kepala' || userJabatan === 'Waka Kurikulum' || session.username === 'wawan' || session.username === 'admin');
+                const employeeSelector = document.getElementById('employeeSelectorContainer');
+                
+                populateMonthYearDropdowns(document.getElementById('monthSelectNew'), document.getElementById('yearSelect'));
+
+                if (isAdmin) {
+                    employeeSelector.classList.remove('hidden');
+                    populateEmployeeDropdown();
+                } else {
+                    employeeSelector.classList.add('hidden');
+                }
+                
+                const showBtn = document.getElementById('showSlipGajiBtn');
+                if (!showBtn.dataset.listenerAttached) {
+                    showBtn.addEventListener('click', fetchAndRenderSlipGaji);
+                    showBtn.dataset.listenerAttached = 'true';
+                }
+            }
+        } else if (targetHash === '#laporan-keuangan') {
     const session = getActiveSession();
-    const userJabatan = (session && session.userData) ? session.userData.jabatan : '';
-    if (session && session.loggedIn && (userJabatan === 'Kepala Rumah Anak Yatim' || userJabatan === 'Kepala Rumah Tahfidz Quran' || userJabatan === 'Waka Kurikulum')) {
-        const datePicker = document.getElementById('laporanTanggal');
-        
-        // Hanya tambahkan event listener jika belum ada
-        if (!datePicker.dataset.listenerAttached) {
-            datePicker.addEventListener('change', (e) => {
-                fetchAndRenderTahfidzReport(e.target.value);
-            });
-            datePicker.dataset.listenerAttached = 'true';
+    const allowedUsers = ['mia', 'wawan', 'aria', 'yeni', 'admin'];
+    if (session && session.loggedIn && allowedUsers.includes(session.username)) {
+
+		setupKeuanganEventListeners();
+		
+        // Mengisi dropdown bulan dan tahun untuk laporan
+        const bulanSelect = document.getElementById('laporanBulan');
+        const tahunSelect = document.getElementById('laporanTahun');
+        if (bulanSelect.options.length === 0) {
+            populateMonthYearDropdowns(bulanSelect, tahunSelect);
         }
-        
-        // Set tanggal hari ini dan langsung panggil fungsi
-        datePicker.value = new Date().toISOString().slice(0, 10);
-        fetchAndRenderTahfidzReport(datePicker.value);
+
+        // Logika untuk menampilkan form input hanya untuk 'mia'
+        const formContainer = document.getElementById('keuangan-form-container');
+        if (session.username === 'mia') {
+            formContainer.classList.remove('hidden');
+            const tanggalInput = document.getElementById('tanggalKeuangan');
+            tanggalInput.value = lastKeuanganDate; 
+
+            // Menampilkan tabel jika tanggal sudah dipilih
+            const tableContainer = document.getElementById('keuangan-input-table-container');
+            tableContainer.classList.remove('hidden');
+            if (document.getElementById('keuangan-input-tbody').children.length === 0) {
+                addKeuanganInputRow();
+            }
+
+            // Event listener untuk input tanggal
+            if (!tanggalInput.dataset.listenerAttached) {
+                tanggalInput.addEventListener('change', () => {
+                    tableContainer.classList.remove('hidden');
+                    if (document.getElementById('keuangan-input-tbody').children.length === 0) {
+                        addKeuanganInputRow();
+                    }
+                });
+                tanggalInput.dataset.listenerAttached = 'true';
+            }
+
+        } else {
+            formContainer.classList.add('hidden');
+        }
+
+        setupKeuanganEventListeners();
+
+        document.getElementById('tampilkanLaporanKeuanganBtn').click();
     }
 }
     } else {
@@ -1039,13 +1745,28 @@ if (userData.jabatan === 'Musyrif') {
     musyrifahNav.classList.remove('hidden');
     musyrifNav.classList.add('hidden');
 }
+
 const laporanNav = document.getElementById('laporanNav');
 const userJabatan = userData.jabatan || '';
+const session = getActiveSession();
 if (userJabatan === 'Kepala Rumah Anak Yatim' || userJabatan === 'Waka Kurikulum' || userJabatan === 'Kepala Rumah Tahfidz Quran') {
     laporanNav.classList.remove('hidden');
 } else {
     laporanNav.classList.add('hidden');
 }
+
+const laporanKeuanganNav = document.getElementById('laporanKeuanganNav');
+const allowedUsers = ['mia', 'wawan', 'aria', 'yeni', 'admin'];
+if (session && session.loggedIn && allowedUsers.includes(session.username)) {
+    laporanKeuanganNav.classList.remove('hidden');
+}
+
+const slipGajiNav = document.getElementById('slipGajiNav');
+
+if (session && session.loggedIn) {
+   slipGajiNav.classList.remove('hidden');
+}
+
         if (window.location.hash === '#login') { window.location.hash = '#beranda'; }
     }
 
@@ -1059,6 +1780,8 @@ if (userJabatan === 'Kepala Rumah Anak Yatim' || userJabatan === 'Waka Kurikulum
 		document.getElementById('musyrifNav').classList.add('hidden');
 		document.getElementById('musyrifahNav').classList.add('hidden');
 		document.getElementById('laporanNav').classList.add('hidden');
+		document.getElementById('slipGajiNav').classList.add('hidden');
+		document.getElementById('laporanKeuanganNav').classList.add('hidden');
         localStorage.removeItem('userSession');
         sessionStorage.removeItem('userSession');
         const protectedHashes = ['#absensi', '#profile', '#sistem-informasi'];
@@ -1325,6 +2048,179 @@ function handleLoginSubmit(event) {
         }
         fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.ok ? res.json() : Promise.reject(res)).then(result => {if (result.status === "success") {showMessage('Absensi berhasil direkam!', 'success');const namaGuru = form.querySelector('#teacherNameDisplay').value;form.reset();form.querySelector('#teacherNameDisplay').value = namaGuru;setTodayDate();fetchAndRenderAttendanceHistory(session.userData.profileName);} else if (result.status === "duplicate") {showMessage(result.message, 'error');} else {showMessage(result.message || 'Gagal mengirim absensi.', 'error');}}).catch(error => { console.error('Attendance Error:', error); showMessage('Gagal terhubung.', 'error'); }).finally(() => { submitBtn.textContent = `Kirim Absensi ${role.charAt(0).toUpperCase() + role.slice(1)}`; submitBtn.disabled = false; });
     }
+
+// =======================================================
+// === FUNGSI-FUNGSI BARU UNTUK FITUR SLIP GAJI ===
+// =======================================================
+
+function populateMonthYearDropdowns(monthSelect, yearSelect) {
+    monthSelect.innerHTML = '';
+    yearSelect.innerHTML = '';
+
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    monthNames.forEach((month, index) => {
+        const option = document.createElement('option');
+        option.value = (index + 1).toString().padStart(2, '0');
+        option.textContent = month;
+        monthSelect.appendChild(option);
+    });
+
+    const currentYear = new Date().getFullYear();
+    for (let y = 2025; y <= currentYear; y++) {
+        const option = document.createElement('option');
+        option.value = y;
+        option.textContent = y;
+        yearSelect.appendChild(option);
+    }
+
+    monthSelect.value = (new Date().getMonth() + 1).toString().padStart(2, '0');
+    yearSelect.value = currentYear;
+}
+
+function populateEmployeeDropdown() {
+    const employeeSelect = document.getElementById('employeeSelect');
+    employeeSelect.innerHTML = '<option value="">Memuat karyawan...</option>';
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'getEmployeeList' }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status === 'success') {
+            employeeSelect.innerHTML = '<option value="">Pilih Karyawan...</option>';
+            result.employees.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                employeeSelect.appendChild(option);
+            });
+        } else {
+            throw new Error(result.message);
+        }
+    })
+    .catch(error => {
+        employeeSelect.innerHTML = `<option value="">${error.message}</option>`;
+    });
+}
+
+// GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
+function fetchAndRenderSlipGaji() {
+    const slipContainer = document.getElementById('slipGajiContainer');
+    const downloadContainer = document.getElementById('downloadSlipContainer');
+    downloadContainer.classList.add('hidden'); // Sembunyikan tombol setiap kali memuat
+
+    const session = getActiveSession();
+    const userJabatan = (session && session.userData) ? session.userData.jabatan : '';
+    const isAdmin = (userJabatan === 'Kepala' || userJabatan === 'Waka Kurikulum' || session.username === 'wawan' || session.username === 'admin');
+    const targetProfileName = isAdmin ? document.getElementById('employeeSelect').value : session.userData.profileName;
+    const selectedMonth = document.getElementById('monthSelectNew').value;
+    const selectedYear = document.getElementById('yearSelect').value;
+    const targetMonth = `${selectedYear}-${selectedMonth}`;
+
+    if (isAdmin && !targetProfileName) {
+        showMessage('Silakan pilih nama karyawan terlebih dahulu.', 'error');
+        return;
+    }
+
+    slipContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Memuat slip gaji...</p>';
+
+    const data = {
+        action: 'getSlipGaji',
+        targetProfileName: targetProfileName,
+        targetMonth: targetMonth,
+        requesterUsername: session.username,
+        requesterJabatan: userJabatan
+    };
+
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status === 'success') {
+            const s = result.slip;
+
+            // Fungsi pembulatan
+            const roundToHundred = num => Math.round(num / 100) * 100;
+
+            // Bangun HTML Rincian Pendapatan
+            let pendapatanHTML = '';
+            if (s.pendapatan.gajiPokok > 0) pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok</span> <span>${s.pendapatan.gajiPokok.toLocaleString('id-ID')}</span></div>`;
+            if (s.pendapatan.honorMengajar > 0) pendapatanHTML += `<div class="flex justify-between"><span>Honor Mengajar</span> <span>${s.pendapatan.honorMengajar.toLocaleString('id-ID')}</span></div>`;
+            if (s.pendapatan.tunjanganMakan > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan Makan</span> <span>${s.pendapatan.tunjanganMakan.toLocaleString('id-ID')}</span></div>`;
+            if (s.pendapatan.tunjanganBPJS > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan BPJamsostek</span> <span>${s.pendapatan.tunjanganBPJS.toLocaleString('id-ID')}</span></div>`;
+            if (s.pendapatan.tunjanganFasilitas > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan Fasilitas</span> <span>${s.pendapatan.tunjanganFasilitas.toLocaleString('id-ID')}</span></div>`;
+            if (s.pendapatan.lembur > 0) pendapatanHTML += `<div class="flex justify-between"><span>Lembur</span> <span>${s.pendapatan.lembur.toLocaleString('id-ID')}</span></div>`;
+            if (s.pendapatan.bonusLain > 0) pendapatanHTML += `<div class="flex justify-between"><span>Bonus Lain</span> <span>${s.pendapatan.bonusLain.toLocaleString('id-ID')}</span></div>`;
+            if (s.pendapatan.bonusRapat > 0) pendapatanHTML += `<div class="flex justify-between"><span>Bonus Rapat</span> <span>${Math.round(s.pendapatan.bonusRapat).toLocaleString('id-ID')}</span></div>`;
+
+            // Bangun HTML Rincian Potongan
+            let potonganHTML = '';
+            if (s.potongan.potonganMakan > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Makan</span> <span>${s.potongan.potonganMakan.toLocaleString('id-ID')}</span></div>`;
+            if (s.potongan.potonganBPJS > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan BPJamsostek</span> <span>${s.potongan.potonganBPJS.toLocaleString('id-ID')}</span></div>`;
+            if (s.potongan.potonganFasilitas > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Fasilitas (Rumah, Listrik, Air, Internet, dll.)</span> <span>${s.potongan.potonganFasilitas.toLocaleString('id-ID')}</span></div>`;
+            if (s.potongan.potonganAbsen > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Absen (${s.kehadiran.totalAbsen} hari)</span> <span>${roundToHundred(s.potongan.potonganAbsen).toLocaleString('id-ID')}</span></div>`;
+            if (s.potongan.potonganTerlambat > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Terlambat</span> <span>${s.potongan.potonganTerlambat.toLocaleString('id-ID')}</span></div>`;
+            if (s.potongan.hutang > 0) potonganHTML += `<div class="flex justify-between"><span>Hutang</span> <span>${s.potongan.hutang.toLocaleString('id-ID')}</span></div>`;
+            if (s.potongan.denda > 0) potonganHTML += `<div class="flex justify-between"><span>Denda</span> <span>${s.potongan.denda.toLocaleString('id-ID')}</span></div>`;
+
+            let kehadiranHTML = '';
+            if (s.kehadiran.totalMengajar > 0) kehadiranHTML += `<li>Total Mengajar: ${s.kehadiran.totalMengajar} sesi</li>`;
+            if (s.kehadiran.hariKerja > 0) kehadiranHTML += `<li>Kehadiran Staf: ${s.kehadiran.totalMasuk} dari ${s.kehadiran.hariKerja} hari kerja</li>`;
+
+            const totalPendapatan = Object.values(s.pendapatan).reduce((a, b) => a + b, 0);
+            const totalPotongan = Object.values(s.potongan).reduce((a, b) => a + b, 0);
+            const gajiBersih = totalPendapatan - totalPotongan;
+
+            const slipHTML = `
+                <div id="slipGajiContent" data-nama="${s.nama}" data-periode="${s.periode}">
+                    <div class="bg-white p-6 rounded-lg shadow-lg border">
+                        <div class="text-center border-b pb-4 mb-4">
+                            <h3 class="text-2xl font-bold">SLIP GAJI</h3>
+                            <p class="text-gray-600">Periode: ${new Date(s.periode + '-02').toLocaleString('id-ID', {month:'long', year:'numeric'})}</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-sm mb-6">
+                            <div><span class="font-semibold">Nama:</span> ${s.nama}</div>
+                            <div><span class="font-semibold">Jabatan:</span> ${s.jabatan}</div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h4 class="font-bold text-lg text-green-600 border-b mb-2 pb-1">Pendapatan</h4>
+                                <div class="space-y-2">${pendapatanHTML || '<div class="flex justify-between"><span>-</span> <span>0</span></div>'}</div>
+                                <div class="flex justify-between font-bold border-t pt-2 mt-2"><span>Total Pendapatan</span> <span>${roundToHundred(totalPendapatan).toLocaleString('id-ID')}</span></div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-red-600 border-b mb-2 pb-1">Potongan</h4>
+                                <div class="space-y-2">${potonganHTML || '<div class="flex justify-between"><span>-</span> <span>0</span></div>'}</div>
+                                <div class="flex justify-between font-bold border-t pt-2 mt-2"><span>Total Potongan</span> <span>${roundToHundred(totalPotongan).toLocaleString('id-ID')}</span></div>
+                            </div>
+                        </div>
+                        <div class="border-t mt-6 pt-4">
+                           <div class="flex justify-between font-bold text-xl">
+                                <span>GAJI BERSIH</span>
+                                <span>Rp ${roundToHundred(gajiBersih).toLocaleString('id-ID')}</span>
+                           </div>
+                        </div>
+                        ${kehadiranHTML ? `<div class="text-xs text-gray-500 mt-6 border-t pt-2"><b>Rincian Kehadiran:</b><ul>${kehadiranHTML}</ul></div>` : ''}
+                    </div>
+                </div>`;
+            slipContainer.innerHTML = slipHTML;
+            downloadContainer.classList.remove('hidden'); // Tampilkan tombol unduh
+            document.getElementById('downloadSlipBtn').onclick = downloadSlipPDF; // Pasang event listener
+        } else if (result.status === 'pending') {
+            slipContainer.innerHTML = `<p class="p-8 text-center text-blue-600 bg-blue-50 rounded-lg">${result.message}</p>`;
+        } else {
+            throw new Error(result.message);
+        }
+    })
+    .catch(error => {
+        slipContainer.innerHTML = `<p class="p-8 text-center text-red-600 bg-red-50 rounded-lg">Gagal memuat slip gaji: ${error.message}</p>`;
+    });
+}
+
 	
 	// FUNGSI BARU UNTUK MENGAMBIL DAN MENAMPILKAN RIWAYAT
 function fetchAndRenderAttendanceHistory(profileName) {
@@ -2251,6 +3147,7 @@ function initializeSistemInformasi() {
             const selectedDate = document.getElementById('attendanceDateGuru').value;
             populateTeacherClasses(null, selectedDate, selectedTeacher);
         });
+		
     }
 
     function initializeApp() {
