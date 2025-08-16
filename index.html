@@ -1683,34 +1683,45 @@ function showPage(hash) {
             populateMonthYearDropdowns(bulanSelect, tahunSelect);
         }
 
-        // Logika untuk menampilkan form input hanya untuk 'mia'
-        const formContainer = document.getElementById('keuangan-form-container');
-        if (session.username === 'mia') {
-            formContainer.classList.remove('hidden');
-            const tanggalInput = document.getElementById('tanggalKeuangan');
-            tanggalInput.value = lastKeuanganDate; 
+        // === GANTI BLOK `if` LAMA DENGAN VERSI BARU INI ===
 
-            // Menampilkan tabel jika tanggal sudah dipilih
-            const tableContainer = document.getElementById('keuangan-input-table-container');
+const formContainer = document.getElementById('keuangan-form-container');
+const tableContainer = document.getElementById('keuangan-input-table-container');
+const tanggalInput = document.getElementById('tanggalKeuangan');
+
+// Tampilkan bagian form untuk semua user yang berwenang
+formContainer.classList.remove('hidden');
+tanggalInput.value = lastKeuanganDate;
+
+// Sekarang, atur visibilitas tabel input berdasarkan username
+if (session.username === 'mia') {
+    tableContainer.classList.remove('hidden'); // Tampilkan tabel untuk mia
+    if (document.getElementById('keuangan-input-tbody').children.length === 0) {
+        addKeuanganInputRow();
+    }
+} else {
+    tableContainer.classList.add('hidden'); // Sembunyikan tabel untuk user lain
+}
+
+// Event listener untuk input tanggal (berlaku untuk semua)
+if (!tanggalInput.dataset.listenerAttached) {
+    tanggalInput.addEventListener('change', () => {
+        // Jika mia, tampilkan tabel. Jika bukan, tabel tetap tersembunyi.
+        if (session.username === 'mia') {
             tableContainer.classList.remove('hidden');
             if (document.getElementById('keuangan-input-tbody').children.length === 0) {
                 addKeuanganInputRow();
             }
-
-            // Event listener untuk input tanggal
-            if (!tanggalInput.dataset.listenerAttached) {
-                tanggalInput.addEventListener('change', () => {
-                    tableContainer.classList.remove('hidden');
-                    if (document.getElementById('keuangan-input-tbody').children.length === 0) {
-                        addKeuanganInputRow();
-                    }
-                });
-                tanggalInput.dataset.listenerAttached = 'true';
-            }
-
-        } else {
-            formContainer.classList.add('hidden');
         }
+        // Refresh rincian transaksi harian untuk semua
+        document.getElementById('tampilkanLaporanKeuanganBtn').click();
+    });
+    tanggalInput.dataset.listenerAttached = 'true';
+}
+
+// === SAMPAI DI SINI ===
+
+        
 
         setupKeuanganEventListeners();
 
