@@ -355,10 +355,10 @@
 .dropdown-content a:hover {
     background-color: #ddd;
 }
-.dropdown:hover .dropdown-content {
+.dropdown-content-show {
     display: block;
 }
-.dropdown:hover .dropbtn {
+.dropbtn.active {
     background-color: var(--info-color-hover);
     border-radius: 5px 5px 0 0;
 }
@@ -4440,6 +4440,7 @@ function initializeSistemInformasi() {
     }
         updateActiveLink();
         setupMainEventListeners();
+		setupDropdownMobile();
         renderNewsCards();
         renderGalleryCards();
         fetchMarqueeText();
@@ -4452,6 +4453,49 @@ function initializeSistemInformasi() {
 	setupResultModalListeners();
 	setupInputSoalPage();
     }
+
+function setupDropdownMobile() {
+    // 1. Menangani klik pada tombol dropdown
+    const dropbtn = document.querySelector('#sistemInformasiDropdown .dropbtn');
+    if (dropbtn) {
+        dropbtn.addEventListener('click', function(event) {
+            // Mencegah link default '#' agar halaman tidak melompat
+            event.preventDefault(); 
+
+            // Cari submenu yang berhubungan dengan tombol ini
+            const dropdownContent = this.nextElementSibling;
+
+            // Toggle (tambah/hapus) class untuk menampilkan/menyembunyikan submenu
+            dropdownContent.classList.toggle('dropdown-content-show');
+
+            // Toggle class 'active' pada tombol itu sendiri untuk mengubah gayanya
+            this.classList.toggle('active');
+        });
+    }
+
+    // 2. Menutup dropdown jika pengguna mengklik di luar area menu
+    window.addEventListener('click', function(event) {
+        // Cek apakah yang diklik BUKAN tombol dropdown itu sendiri
+        if (!event.target.matches('#sistemInformasiNav')) {
+            const dropdowns = document.querySelectorAll('.dropdown-content');
+            const dropButtons = document.querySelectorAll('.dropbtn');
+
+            dropdowns.forEach(menu => {
+                // Hapus class 'show' dari semua dropdown yang mungkin terbuka
+                if (menu.classList.contains('dropdown-content-show')) {
+                    menu.classList.remove('dropdown-content-show');
+                }
+            });
+
+            dropButtons.forEach(button => {
+                 // Hapus class 'active' dari semua tombol
+                if (button.classList.contains('active')) {
+                    button.classList.remove('active');
+                }
+            });
+        }
+    });
+}
 
     // --- MULAI APLIKASI ---
     initializeApp();
