@@ -4360,11 +4360,191 @@ function initializeSistemInformasi() {
             setTimeout(() => { document.head.removeChild(style); }, 500);
         });
         document.getElementById('download-schedule-pdf').addEventListener('click', function() { /* ...logic... */ });
-        addKrsRowBtn.addEventListener('click', () => { /* ...logic... */ });
+        addKrsRowBtn.addEventListener('click', () => {
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `<td class="px-4 py-2" contenteditable="true">Hari Baru</td><td class="px-4 py-2" contenteditable="true">Waktu Baru</td><td class="px-4 py-2" contenteditable="true">KODE</td><td class="px-4 py-2" contenteditable="true">Mata Pelajaran Baru</td><td class="px-4 py-2" contenteditable="true">Ruang Baru</td><td class="px-4 py-2 text-center" contenteditable="true">2</td><td class="px-4 py-2" contenteditable="true">Guru Baru</td><td class="px-4 py-2 text-center"><button class="delete-krs-row text-red-500 hover:text-red-700">Hapus</button></td>`;
+            krsTableBody.appendChild(newRow);
+            updateKrsTotalSks();
+        });
         closeKrsBtnBottom.addEventListener('click', () => krsContainer.classList.add('hidden'));
         closeKhsBtnBottom.addEventListener('click', () => khsContainer.classList.add('hidden'));
-        downloadKrsBtn.addEventListener('click', () => { /* ...logic... */ });
-        downloadKhsBtn.addEventListener('click', () => { /* ...logic... */ });
+        downloadKrsBtn.addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: [210, 330]
+            });
+            const margin = 15;
+            let y = 10;
+
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(12);
+            pdf.text('KARTU RENCANA STUDI (KRS)', 105, y, { align: 'center' });
+            y += 6;
+            pdf.setFontSize(10);
+            pdf.text("Markaz Qur'an Al-Maa'un", 105, y, { align: 'center' });
+            y += 4;
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(9);
+            pdf.text('Semester Ganjil', 105, y, { align: 'center' });
+            y += 8;
+
+            pdf.setFontSize(8);
+            const info = {
+                left: [
+                    { label: 'Nama Santri', value: document.getElementById('nama-santri-krs').textContent.substring(1).trim() },
+                    { label: 'Jurusan', value: document.getElementById('jurusan-krs').textContent.substring(1).trim() },
+                    { label: 'Kelompok', value: document.getElementById('kelompok-krs').textContent.substring(1).trim() }
+                ],
+                right: [
+                    { label: 'Total SKS yang bisa diambil', value: document.getElementById('total-sks-ambil-krs').textContent.substring(1).trim() },
+                    { label: 'Kelas', value: document.getElementById('kelas-krs').textContent.substring(1).trim() },
+                    { label: 'Materi untuk Bulan ke', value: document.getElementById('materi-bulan-krs').textContent.substring(1).trim() }
+                ]
+            };
+            
+            const leftLabelX = margin;
+            const leftColonX = leftLabelX + 45;
+            const leftValueX = leftColonX + 2;
+            const rightLabelX = 110;
+            const rightColonX = rightLabelX + 45;
+            const rightValueX = rightColonX + 2;
+            const lineHeight = 5;
+
+            const maxRows = Math.max(info.left.length, info.right.length);
+
+            for (let i = 0; i < maxRows; i++) {
+                if (info.left[i]) {
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(info.left[i].label, leftLabelX, y);
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.text(':', leftColonX, y);
+                    pdf.text(info.left[i].value, leftValueX, y, { maxWidth: rightLabelX - leftValueX - 5 });
+                }
+                if (info.right[i]) {
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(info.right[i].label, rightLabelX, y);
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.text(':', rightColonX, y);
+                    pdf.text(info.right[i].value, rightValueX, y);
+                }
+                y += lineHeight;
+            }
+            
+            pdf.autoTable({
+                html: '#tabel-krs',
+                startY: y,
+                theme: 'grid',
+                styles: {
+                    font: 'helvetica',
+                    fontSize: 8,
+                    cellPadding: 1,
+                    valign: 'middle'
+                },
+                headStyles: {
+                    fillColor: [243, 244, 246],
+                    textColor: [31, 41, 55],
+                    fontStyle: 'bold',
+                    fontSize: 8.5,
+                },
+                footStyles: {
+                    fillColor: [243, 244, 246],
+                    textColor: [31, 41, 55],
+                    fontStyle: 'bold',
+                    fontSize: 8.5,
+                    halign: 'right'
+                },
+                columnStyles: {
+                    5: { halign: 'center' } 
+                },
+                didParseCell: function (data) {
+                    if (data.row.section === 'foot') {
+                        data.cell.styles.halign = 'right';
+                        if(data.column.index === 0) {
+                            data.cell.text = data.cell.text[0].replace(/:/g, '');
+                        }
+                    }
+                },
+                columns: [
+                    { header: 'Hari', dataKey: 0 },
+                    { header: 'Waktu', dataKey: 1 },
+                    { header: 'Kode', dataKey: 2 },
+                    { header: 'Mata Pelajaran / Modul', dataKey: 3 },
+                    { header: 'Ruang', dataKey: 4 },
+                    { header: 'SKS', dataKey: 5 },
+                    { header: 'Guru', dataKey: 6 },
+                ]
+            });
+
+            pdf.save(`KRS_${document.getElementById('nama-santri-krs').textContent.substring(1).trim()}.pdf`);
+        });
+        // PERUBAHAN: Mengganti metode unduh KHS dari .html() menjadi .autoTable()
+        downloadKhsBtn.addEventListener('click', () => {
+            const infoSantriKhs = document.getElementById('info-santri-khs');
+            if (!infoSantriKhs || khsContainer.classList.contains('hidden')) {
+                showMessage('Tampilkan KHS terlebih dahulu sebelum mengunduh.', 'error');
+                return; // KOMENTAR: Hentikan fungsi jika konten KHS tidak terlihat
+            }
+			
+			const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: [210, 330] // Menggunakan format standar F4 untuk KHS
+            });
+
+            // KOMENTAR: Ambil data dari elemen info KHS
+            const infoSantriKhs = document.getElementById('info-santri-khs');
+            const santriName = infoSantriKhs.querySelector('.flex:nth-child(1) span:last-child').textContent.trim();
+            const kelasJurusan = infoSantriKhs.querySelector('.flex:nth-child(2) span:last-child').textContent.trim();
+            const semesterBulan = infoSantriKhs.querySelector('.flex:nth-child(3) span:last-child').textContent.trim();
+            const klaster = infoSantriKhs.querySelector('.flex:nth-child(4) span:last-child').textContent.trim();
+            const fileName = `KHS - ${santriName}.pdf`;
+
+            doc.autoTable({
+                html: '#tabel-nilai',
+                startY: 55, // KOMENTAR: Atur posisi awal tabel agar ada ruang untuk header
+                didDrawPage: function(data) {
+                    // KOMENTAR: Fungsi untuk menggambar header PDF secara manual
+                    doc.setFontSize(16);
+                    doc.setFont("times", "bold");
+                    doc.text("KARTU HASIL STUDI (KHS)", doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+                    
+                    doc.setFontSize(12);
+                    doc.setFont("times", "normal");
+                    doc.text("Markaz Qur'an Al-Maa'un", doc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
+                    
+                    // KOMENTAR: Menggambar informasi santri
+                    doc.setFontSize(10);
+                    let infoY = 40;
+                    doc.text(`Nama Santri: ${santriName}`, data.settings.margin.left, infoY);
+                    doc.text(`Semester / Bulan: ${semesterBulan}`, doc.internal.pageSize.getWidth() - data.settings.margin.right, infoY, { align: 'right' });
+                    infoY += 6;
+                    doc.text(`Kelas / Jurusan: ${kelasJurusan}`, data.settings.margin.left, infoY);
+                    doc.text(`Klaster: ${klaster}`, doc.internal.pageSize.getWidth() - data.settings.margin.right, infoY, { align: 'right' });
+                },
+                theme: 'grid', // KOMENTAR: Menggunakan tema 'grid' agar mirip dengan KRS
+                styles: {
+                    font: 'times',
+                    fontSize: 9,
+                    cellPadding: 2,
+                    valign: 'middle'
+                },
+                headStyles: {
+                    fillColor: [44, 94, 46], // Warna hijau primer
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                footStyles: {
+                    fillColor: [248, 249, 250], // Warna abu-abu terang
+                    textColor: [0, 0, 0],
+                    fontStyle: 'bold'
+                }
+            });
+
+            doc.save(fileName);
+        });
     }
 
     // --- INITIALIZATION ---
