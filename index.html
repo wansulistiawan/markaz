@@ -329,40 +329,58 @@
 }
 
 /* === TAMBAHKAN SEMUA GAYA DROPDOWN DI BAWAH INI === */
+/* === GANTI SEMUA GAYA DROPDOWN SEBELUMNYA DENGAN BLOK INI === */
+
+/* Wadah dropdown di dalam navigasi */
 .dropdown {
-    position: relative;
+    position: relative; /* Tetap relative untuk referensi awal */
     display: inline-block;
 }
+
+/* Tombol Dropdown */
 .dropbtn {
-    background-color: var(--info-color); /* Warna biru info */
+    background-color: var(--info-color);
 }
+
+/* GAYA UNTUK TOMBOL YANG AKTIF (saat menu terbuka) */
+.dropbtn.active {
+    background-color: var(--info-color-hover);
+    border-radius: 5px 5px 0 0;
+}
+
+/* Konten Dropdown (Submenu) */
 .dropdown-content {
-    display: none;
-    position: absolute;
-	top: 100%;
+    display: none; /* Awalnya tetap disembunyikan */
+    position: fixed; /* KUNCI #1: Diubah ke FIXED agar tidak terkurung */
     background-color: #f1f1f1;
-    min-width: 200px;
+    min-width: 200px; /* Atur lebar minimal submenu */
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1100;
+    z-index: 9999; /* KUNCI #2: Z-INDEX SUPER TINGGI untuk berada di paling atas */
     border-radius: 0 0 5px 5px;
-    overflow: hidden; /* Agar sudutnya rapi */
+    overflow: hidden;
 }
+
+/* Class untuk menampilkan submenu via JavaScript */
+.dropdown-content-show {
+    display: block;
+}
+
 .dropdown-content a {
     color: black;
     padding: 12px 16px;
     text-decoration: none;
     display: block;
-    font-weight: normal; /* Membuat teks sub-menu tidak tebal */
+    font-weight: normal;
 }
+
 .dropdown-content a:hover {
     background-color: #ddd;
 }
-.dropdown-content-show {
-    display: block;
-}
-.dropbtn.active {
-    background-color: var(--info-color-hover);
-    border-radius: 5px 5px 0 0;
+
+/* Pastikan dropdown di dalam nav utama tidak merusak layout */
+#mainNav .nav-container > .dropdown {
+    display: flex;
+    padding: 0;
 }
 
 .krs-btn-color {
@@ -4442,7 +4460,7 @@ function initializeSistemInformasi() {
     }
         updateActiveLink();
         setupMainEventListeners();
-		setupDropdownMobile();
+		setupAdvancedDropdown(); 
         renderNewsCards();
         renderGalleryCards();
         fetchMarqueeText();
@@ -4456,48 +4474,65 @@ function initializeSistemInformasi() {
 	setupInputSoalPage();
     }
 
-function setupDropdownMobile() {
-    // 1. Menangani klik pada tombol dropdown
+// HAPUS FUNGSI LAMA setupDropdownMobile() DAN GANTI DENGAN INI
+function setupAdvancedDropdown() {
     const dropbtn = document.querySelector('#sistemInformasiDropdown .dropbtn');
-    if (dropbtn) {
-        dropbtn.addEventListener('click', function(event) {
-            // Mencegah link default '#' agar halaman tidak melompat
-            event.preventDefault(); 
+    const dropdownContent = document.querySelector('#sistemInformasiDropdown .dropdown-content');
+    
+    // Jika elemen tidak ditemukan, hentikan fungsi
+    if (!dropbtn || !dropdownContent) return;
 
-            // Cari submenu yang berhubungan dengan tombol ini
-            const dropdownContent = this.nextElementSibling;
+    const originalParent = dropdownContent.parentElement; // Simpan "rumah" asli dari submenu
 
-            // Toggle (tambah/hapus) class untuk menampilkan/menyembunyikan submenu
-            dropdownContent.classList.toggle('dropdown-content-show');
+    // Fungsi untuk menutup menu
+    const closeMenu = () => {
+        if (dropdownContent.classList.contains('dropdown-content-show')) {
+            dropdownContent.classList.remove('dropdown-content-show');
+            dropbtn.classList.remove('active');
+            // Kembalikan submenu ke "rumah" aslinya setelah animasi selesai
+            setTimeout(() => {
+                originalParent.appendChild(dropdownContent);
+                // Hapus style posisi agar tidak bentrok nanti
+                dropdownContent.style.left = '';
+                dropdownContent.style.top = '';
+                dropdownContent.style.width = '';
+            }, 150);
+        }
+    };
 
-            // Toggle class 'active' pada tombol itu sendiri untuk mengubah gayanya
-            this.classList.toggle('active');
-        });
-    }
+    // Saat tombol "Sistem Informasi" di-klik
+    dropbtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopPropagation(); // Mencegah klik menyebar ke window
 
-    // 2. Menutup dropdown jika pengguna mengklik di luar area menu
-    window.addEventListener('click', function(event) {
-        // Cek apakah yang diklik BUKAN tombol dropdown itu sendiri
-        if (!event.target.matches('#sistemInformasiNav')) {
-            const dropdowns = document.querySelectorAll('.dropdown-content');
-            const dropButtons = document.querySelectorAll('.dropbtn');
+        const isMenuOpen = dropdownContent.classList.contains('dropdown-content-show');
 
-            dropdowns.forEach(menu => {
-                // Hapus class 'show' dari semua dropdown yang mungkin terbuka
-                if (menu.classList.contains('dropdown-content-show')) {
-                    menu.classList.remove('dropdown-content-show');
-                }
-            });
+        if (isMenuOpen) {
+            closeMenu();
+        } else {
+            // "Bebaskan" submenu dengan memindahkannya ke <body>
+            document.body.appendChild(dropdownContent);
 
-            dropButtons.forEach(button => {
-                 // Hapus class 'active' dari semua tombol
-                if (button.classList.contains('active')) {
-                    button.classList.remove('active');
-                }
-            });
+            // Hitung posisi tombol di layar
+            const btnRect = dropbtn.getBoundingClientRect();
+
+            // Atur posisi submenu tepat di bawah tombol
+            dropdownContent.style.left = `${btnRect.left}px`;
+            dropdownContent.style.top = `${btnRect.bottom}px`;
+            // Samakan lebar submenu dengan tombolnya agar rapi
+            dropdownContent.style.width = `${btnRect.width}px`;
+
+            // Tampilkan submenu
+            dropdownContent.classList.add('dropdown-content-show');
+            dropbtn.classList.add('active');
         }
     });
+
+    // Tambahkan event listener untuk menutup menu jika mengklik di tempat lain
+    window.addEventListener('click', closeMenu);
 }
+    
+
 
     // --- MULAI APLIKASI ---
     initializeApp();
