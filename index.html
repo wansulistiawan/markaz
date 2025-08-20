@@ -450,7 +450,37 @@
     padding: 0;
 }
 
+.materi-item label.recommended {
+    font-weight: 600;
+    color: #166534; /* Warna hijau tua */
+}
+.materi-item label.other {
+    color: #6b7280; /* Warna abu-abu */
+}
 
+#add-materi-modal .modal-content {
+    /* DITAMBAHKAN: Menggunakan Flexbox untuk menata elemen di dalamnya secara vertikal */
+    display: flex;
+    flex-direction: column;
+    /* DITAMBAHKAN: Membatasi tinggi pop-up agar tidak keluar dari layar */
+    max-height: 90vh; 
+}
+
+#add-materi-modal #materi-list-container {
+    /* DITAMBAHKAN: Membuat area daftar ini fleksibel, bisa membesar/menyusut */
+    /* dan scrollbar akan muncul di dalamnya tanpa menutupi elemen lain. */
+    flex: 1;
+    min-height: 0; /* Trik agar flexbox berfungsi baik di semua browser */
+}
+
+.materi-item label.prerequisite-failed {
+    color: #b91c1c; /* Warna merah tua */
+    cursor: not-allowed;
+}
+
+.materi-item label.prerequisite-failed .font-bold {
+    text-decoration: line-through;
+}
 
     </style>
 </head>
@@ -807,6 +837,12 @@
             </section>
         </div>
         <div class="mt-8 text-center flex justify-center items-center gap-4">
+			<button id="refresh-krs-btn" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 inline-flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                </svg>
+                <span>Refresh</span>
+            </button>
 			<button id="add-krs-row" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-opacity-50">Tambah Materi</button>
 			<button id="save-krs-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">Simpan KRS</button>
 			<button id="download-krs-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg><span>Unduh PDF</span></button>
@@ -1220,8 +1256,8 @@ b. Soekarno
             <p class="text-gray-500">Memuat daftar materi...</p>
         </div>
         <div class="text-right">
-            <button id="simpan-materi-btn" class="submit-btn" style="width: auto; padding: 10px 30px;">Simpan</button>
-        </div>
+                <button id="simpan-materi-btn" class="submit-btn" style="width: auto; padding: 10px 30px;">Input</button>
+            </div>
     </div>
 </div>
 
@@ -1295,9 +1331,11 @@ document.addEventListener('DOMContentLoaded', function() {
  { day: "Jumat", time: "08:00-11:30", sks: 2, room: "Kelas SD", group: "SD", cluster: "", subject: "KELAS SD", teacher: "Reza Frananda", downloadLink: "" },
                 ],
                 bulan2: [
-                    { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "MAT-101: Operasi Bilangan Bulat & KPK/FPB", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/14mAyOGGZXxbiC0OM9lUWFkY3xzkpDCD2/view?usp=drive_link" },
+                    // DIUBAH: MAT-102 ditukar dengan KWU-102, kemudian KWU-102 ditukar dengan IND-102. Hasil akhirnya IND-102 di posisi ini.
+                    { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "IND-102: Berbicara 1: Perkenalan Diri & Sapaan Santun", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/12C3tX82DIS6BqYBt2DdKlvCRKTgNzX8Y/view?usp=drive_link" },
                     { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "MAT-102: Pecahan & Desimal", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/14mAyOGGZXxbiC0OM9lUWFkY3xzkpDCD2/view?usp=drive_link" },
-                    { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "IND-102: Berbicara 1: Perkenalan Diri & Sapaan Santun", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/12C3tX82DIS6BqYBt2DdKlvCRKTgNzX8Y/view?usp=drive_link" },
+                    // DIUBAH: Hasil akhir dari pertukaran posisi KWU-102 ada di sini.
+                    { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "KWU-102: Dasar-dasar Produk Halal & Thayyib", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1RAq8tygsge8GoCBrhn21gnHbDnu4pbZy/view?usp=drive_link" },
                     { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "AKH-202: Adab kepada Orang Tua & Guru (Gabungan)", teacher: "SupraSojo, S.Pd.I., M.Pd.", downloadLink: "https://drive.google.com/file/d/1k_P5RN0TS25K_3K3yc4yMNGsOj1qOtE2/view?usp=drive_link" },
                     { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-102: Classroom Objects & Instructions", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/1q2btB5Fv1-ifXl9n7tOLT9bk1CmpsMYt/view?usp=drive_link" },
                     { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-202: Validasi Ide & Model Bisnis Sederhana", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1rR-udDxso8F9x2pExZTfemJoiZQDknDn/view?usp=drive_link" },
@@ -1308,7 +1346,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-102: Studi Kitab Tauhid 1", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1qjYbEFYXgoJa5oBrE8-D3-8XcpML3qfc/view?usp=drive_link" },
                     { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-202: Sistem Gerak pada Manusia (Rangka & Sendi)", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/16GiZXYA0pLnivjI-AgZxa0cs1bm5onLt/view?usp=drive_link" },
                     { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-202: Klasifikasi Hadits (Shahih, Hasan, Dha'if)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/15Wdnf8x9oqPhjhurjqJC8eEN5VlG51uY/view?usp=drive_link" },
-                    { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KWU-102: Dasar-dasar Produk Halal & Thayyib", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1RAq8tygsge8GoCBrhn21gnHbDnu4pbZy/view?usp=drive_link" },
+                    // DIUBAH: MAT-102 sekarang di sini dengan guru baru.
+                    { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "MAT-102: Pecahan & Desimal", teacher: "Suprasojo, S.Pd.I., M.Pd.", downloadLink: "https://drive.google.com/file/d/14mAyOGGZXxbiC0OM9lUWFkY3xzkpDCD2/view?usp=drive_link" },
                     { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-202: Praktik Menggunakan Alat Tangan & Solder", teacher: "Aria Atmaja", downloadLink: "https://drive.google.com/file/d/1g6ZMvLvlZz5ML1wFJla4tEsd8Thi6ixr/view?usp=drive_link" },
                     { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "IPS-102: Kebutuhan Manusia & Ekonomi Dasar", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/1X1TZ0rn3LEjpuGPitnEuwU3_4LVC307_/view?usp=drive_link" },
                     { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "PAI-202: Public Speaking 2: Teknik Vokal & Bahasa Tubuh", teacher: "SupraSojo, S.Pd.I., M.Pd.", downloadLink: "https://drive.google.com/file/d/15A_dulFxCo0C-KfJI8SwDUJ8JHC9chNp/view?usp=drive_link" },
@@ -1322,6 +1361,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     { day: "Kamis", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "ULQ-202: Pengantar Ulumul Qur'an (Makkiyah & Madaniyah)", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1zjGj93zp0Q75e-R910X9rJD3vDwvJjRO/view?usp=drive_link" },
                     { day: "Jumat", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "FIQ-102: Shalat 1: Syarat & Rukun Shalat", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1N8ElP99WQz3mtS3Grci-OhJSaIYd7kXc/view?usp=drive_link" },
                     { day: "Jumat", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "NAH-202: I'rab Isim Mutsanna & Jamak Mudzakkar Salim", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "https://drive.google.com/file/d/1QwWpcn3ulii4n4C50In2dlF6uPTBTODV/view?usp=drive_link" },
+                    // DITAMBAHKAN: Materi baru Agribisnis di ruang RBM pada hari Jumat.
+                    { day: "Jumat", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "AGR-201: Pengantar Agribisnis (Hidroponik)", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
                     { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "SIR-102: Masa Kenabian & Dakwah di Mekah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1ru17RARAr5mBS8fXP_tD_2HE3KH41ZeW/view?usp=drive_link" },
                     { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-102: Ilmu Ma'ani: Kalam Khabari & Insya'i", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "https://drive.google.com/file/d/1_sbsi-bfwpLPjzgR7G00yOCRj-4fZIIK/view?usp=drive_link" },
                     { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-202: Tafsir & Tadabbur Surat Al-'Asr & Al-Humazah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/14DD1UeZQ-_1UojKNOZ6n_-8Z1BXQlMms/view?usp=drive_link" },
@@ -1619,57 +1660,7 @@ async function renderExamSchedule() {
     container.appendChild(grid);
 }
 
-function handleSimpanMateriKrs() {
-    const selectedCheckboxes = document.querySelectorAll('#materi-list-container input[type="checkbox"]:checked');
-    if (selectedCheckboxes.length === 0) {
-        showMessage('Silakan pilih minimal satu materi.', 'error');
-        return;
-    }
 
-    const session = getActiveSession();
-    const santriName = document.getElementById('nama-santri-krs').textContent.substring(1).trim();
-    const bulan = document.getElementById('materi-bulan-krs').textContent.substring(1).trim();
-    const timestamp = new Date().toISOString();
-
-    const dataToSave = [];
-    selectedCheckboxes.forEach(cb => {
-        const itemData = JSON.parse(cb.dataset.subject);
-        dataToSave.push({
-            timestamp: timestamp,
-            namaSantri: santriName,
-            bulan: bulan,
-            kodeMateri: cb.value,
-            namaMateri: itemData.subject,
-            sks: itemData.sks,
-            guru: itemData.teacher
-        });
-    });
-
-    const submitBtn = document.getElementById('simpan-materi-btn');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Menyimpan...';
-
-    fetch(CONFIG.SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'saveKrsData', krsData: dataToSave }),
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    })
-    .then(res => res.json())
-    .then(result => {
-        if (result.status === 'success') {
-            showMessage('Materi berhasil ditambahkan ke KRS!', 'success');
-            document.getElementById('add-materi-modal').style.display = 'none';
-            // Di sini Anda bisa menambahkan logika untuk memuat ulang tabel KRS dari sheet jika perlu
-        } else {
-            throw new Error(result.message);
-        }
-    })
-    .catch(error => showMessage(`Gagal menyimpan: ${error.message}`, 'error'))
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Simpan';
-    });
-}
 
 function setupExamListeners() {
     document.addEventListener('click', function(e) {
@@ -3805,74 +3796,84 @@ function fetchAndRenderTahfidzReport(dateString) {
         reportContainer.innerHTML = `<p class="p-6 text-center text-red-500">Gagal memuat laporan: ${error.message}</p>`;
     });
 }	
-const handleKrsClick = (event, userData = null) => {
+const handleKrsClick = async (event, userData = null) => {
+    if (event) { // Jika dipanggil dari klik tombol, bukan dari refresh
+         const santriRow = event.target.closest('tr');
+         userData = {
+            profileName: santriRow.dataset.santriName,
+            // Tambahkan data lain jika perlu dari dataset
+         };
+    }
+    
     if (!userData) {
         console.error("Tidak ada data pengguna untuk menampilkan KRS.");
         return;
     }
 
     const loggedInSantriName = userData.profileName;
-    
-    // CARI DATA LENGKAP SANTRI DI DALAM appData BERDASARKAN NAMA
     const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
-
-    // Jika data santri tidak ditemukan, hentikan.
     if (!santriData) {
-        alert(`Data untuk santri bernama "${loggedInSantriName}" tidak ditemukan dalam daftar.`);
+        alert(`Data untuk santri "${loggedInSantriName}" tidak ditemukan.`);
         return;
     }
 
-    // AMBIL SEMUA DATA DARI HASIL PENCARIAN
-    const santriName = santriData.nama;
-    const groupInfo = santriData.grup; // contoh: "KG LKS"
-    const santriKelas = santriData.kelas;
-    const santriJurusan = santriData.jurusan;
-    
-    const groupInfoParts = (typeof groupInfo === 'string' && groupInfo) ? groupInfo.split(' ') : [];
-    const santriGroup = groupInfoParts[0] || '';
-    const santriCluster = groupInfoParts[1] || '';
-    
-    const currentScheduleData = appState.processedSchedules[appState.activeMonthKey];
-
-    // Tampilkan data di header KRS
-    document.getElementById('nama-santri-krs').textContent = `: ${santriName}`;
-    document.getElementById('jurusan-krs').textContent = `: ${santriJurusan}`;
-    document.getElementById('kelas-krs').textContent = `: ${santriKelas}`;
-    document.getElementById('kelompok-krs').textContent = `: ${groupInfo}`;
+    // Tampilkan data header KRS seperti biasa
+    document.getElementById('nama-santri-krs').textContent = `: ${santriData.nama}`;
+    document.getElementById('jurusan-krs').textContent = `: ${santriData.jurusan}`;
+    document.getElementById('kelas-krs').textContent = `: ${santriData.kelas}`;
+    document.getElementById('kelompok-krs').textContent = `: ${santriData.grup}`;
     const activeTab = document.querySelector('.tab-btn.active');
-    document.getElementById('materi-bulan-krs').textContent = `: ${activeTab.textContent.replace('Bulan ', '')}`;
+    const bulan = activeTab.textContent.replace('Bulan ', '');
+    document.getElementById('materi-bulan-krs').textContent = `: ${bulan}`;
 
-    // Filter data jadwal berdasarkan kelompok santri
-    let krsData = [];
-    if (santriGroup === 'KF') {
-        krsData = currentScheduleData.filter(item => item.group === 'KF');
-    } else if (santriGroup === 'KG' && santriCluster) {
-        krsData = currentScheduleData.filter(item => item.group === 'KG' && (item.cluster === santriCluster || item.cluster === 'Wajib'));
-    }
-
-    krsTableBody.innerHTML = ''; 
-    if (krsData.length > 0) {
-        krsData
-            .filter(item => item.group !== 'Istirahat' && item.subject && item.subject.trim() !== 'Kosong' && !item.subject.toLowerCase().includes('tugas mandiri'))
-            .sort((a, b) => {
-                const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-                return days.indexOf(a.day) - days.indexOf(b.day) || a.time.localeCompare(b.time);
-            })
-            .forEach((item, index) => {
-                const tr = document.createElement('tr');
-                tr.className = index % 2 === 0 ? 'bg-white border-b' : 'bg-gray-50 border-b';
-                const code = item.subject.split(':')[0];
-                tr.innerHTML = `<td class="px-4 py-2" contenteditable="false">${item.day}</td><td class="px-4 py-2" contenteditable="false">${item.time}</td><td class="px-4 py-2" contenteditable="false">${code}</td><td class="px-4 py-2" contenteditable="false">${item.subject.substring(code.length + 1).trim()}</td><td class="px-4 py-2" contenteditable="false">${item.room}</td><td class="px-4 py-2 text-center" contenteditable="false">${item.sks}</td><td class="px-4 py-2" contenteditable="false">${item.teacher}</td><td class="px-4 py-2 text-center"><button class="delete-krs-row text-red-500 hover:text-red-700">Hapus</button></td>`;
-                krsTableBody.appendChild(tr);
-            });
-    } else {
-         krsTableBody.innerHTML = `<tr><td colspan="8" class="text-center px-4 py-3 text-gray-500">Tidak ada data KRS untuk ditampilkan.</td></tr>`;
-    }
-
-    updateKrsTotalSks();
+    krsTableBody.innerHTML = `<tr><td colspan="8" class="text-center p-4">Memuat data KRS dari server...</td></tr>`;
     krsContainer.classList.remove('hidden');
     khsContainer.classList.add('hidden');
     krsContainer.scrollIntoView({ behavior: 'smooth' });
+
+    try {
+        // Langkah 1: Ambil data KRS yang sudah tersimpan dari Google Sheet
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getKrsData', namaSantri: loggedInSantriName, bulan: bulan }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        const savedKrsData = result.data;
+
+        // Langkah 2: Tampilkan data yang sudah tersimpan ke dalam tabel
+        krsTableBody.innerHTML = ''; 
+        if (savedKrsData.length > 0) {
+            savedKrsData
+                .sort((a, b) => { // Urutkan berdasarkan hari dan waktu
+                    const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+                    return days.indexOf(a.Hari) - days.indexOf(b.Hari) || a.Waktu.localeCompare(b.Waktu);
+                })
+                .forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = index % 2 === 0 ? 'bg-white border-b' : 'bg-gray-50 border-b';
+                    tr.innerHTML = `
+                        <td class="px-4 py-2">${item.Hari}</td>
+                        <td class="px-4 py-2">${item.Waktu}</td>
+                        <td class="px-4 py-2">${item.KodeMateri}</td>
+                        <td class="px-4 py-2">${item.NamaMateri}</td>
+                        <td class="px-4 py-2">${item.Ruang}</td>
+                        <td class="px-4 py-2 text-center">${item.SKS}</td>
+                        <td class="px-4 py-2">${item.Guru}</td>
+                        <td class="px-4 py-2 text-center">
+                            <button class="delete-krs-row text-red-500 hover:text-red-700">Hapus</button>
+                        </td>`;
+                    krsTableBody.appendChild(tr);
+                });
+        } else {
+             krsTableBody.innerHTML = `<tr><td colspan="8" class="text-center px-4 py-3 text-gray-500">Belum ada materi yang diambil. Klik 'Tambah Materi' untuk memulai.</td></tr>`;
+        }
+        updateKrsTotalSks();
+    } catch (error) {
+        krsTableBody.innerHTML = `<tr><td colspan="8" class="text-center p-4 text-red-500">Gagal memuat data: ${error.message}</td></tr>`;
+    }
 };
 
 async function handleKhsClick(event, userData = null) {
@@ -4023,7 +4024,23 @@ function initializeSistemInformasi() {
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
     const modalMessage = document.getElementById('modal-message');
     
-
+// DITAMBAHKAN: Event listener untuk tombol refresh KRS
+        document.getElementById('refresh-krs-btn')?.addEventListener('click', () => {
+            const santriNameElement = document.getElementById('nama-santri-krs');
+            // Cek apakah ada nama santri yang sedang ditampilkan
+            if (santriNameElement && santriNameElement.textContent.length > 2) {
+                const santriName = santriNameElement.textContent.replace(': ', '').trim();
+                
+                // Beri pesan loading kepada pengguna
+                krsTableBody.innerHTML = `<tr><td colspan="8" class="text-center p-4 text-gray-500">Memuat ulang data KRS...</td></tr>`;
+                
+                // Panggil kembali fungsi utama untuk mengambil dan menampilkan data KRS terbaru
+                handleKrsClick(null, { profileName: santriName });
+                showMessage('Data KRS berhasil dimuat ulang.', 'success');
+            } else {
+                showMessage('Tidak dapat merefresh, data santri tidak ditemukan.', 'error');
+            }
+        });
 
     // --- UTILITY & HELPER FUNCTIONS ---
     const getGroupNameFromCode = (code) => {
@@ -4439,43 +4456,188 @@ function initializeSistemInformasi() {
             setTimeout(() => { document.head.removeChild(style); }, 500);
         });
         document.getElementById('download-schedule-pdf').addEventListener('click', function() { /* ...logic... */ });
-        addKrsRowBtn.addEventListener('click', () => {
-            const modal = document.getElementById('add-materi-modal');
-            const container = document.getElementById('materi-list-container');
-            container.innerHTML = '<p class="text-gray-500">Memuat daftar materi...</p>';
-            modal.style.display = "block";
+        
+		// FUNGSI BARU: Untuk menangani klik tombol "Input" dari dalam modal
+function handleInputMateriFromModal() {
+    const selectedCheckboxes = document.querySelectorAll('#materi-list-container input[type="checkbox"]:checked');
+    const modal = document.getElementById('add-materi-modal');
 
-            const allSubjects = {};
-            Object.values(appData.schedules).flat().forEach(item => {
-                if (item.subject && item.subject.includes(':') && !item.subject.toLowerCase().includes('tugas mandiri')) {
-                    const code = item.subject.split(':')[0].trim();
-                    if (!allSubjects[code]) {
-                        allSubjects[code] = {
-                            subject: item.subject,
-                            sks: item.sks,
-                            teacher: item.teacher,
-                        };
-                    }
-                }
-            });
+    // Hitung SKS saat ini di tabel
+    let currentSks = 0;
+    krsTableBody.querySelectorAll('tr td:nth-child(6)').forEach(cell => {
+        currentSks += parseInt(cell.textContent, 10) || 0;
+    });
 
-            container.innerHTML = '';
-            Object.keys(allSubjects).sort().forEach(code => {
-                const item = allSubjects[code];
-                const checkboxId = `materi-${code}`;
-                const div = document.createElement('div');
-                div.className = 'flex items-center p-2 rounded-md hover:bg-gray-100';
-                div.innerHTML = `
-                    <input id="${checkboxId}" type="checkbox" value="${code}" data-subject='${JSON.stringify(item)}' class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
-                    <label for="${checkboxId}" class="ml-3 text-sm text-gray-700">${item.subject} (${item.sks} SKS)</label>
-                `;
-                container.appendChild(div);
-            });
+    // DIUBAH: Logika perhitungan SKS baru yang tidak akan double counting
+    let newSks = 0;
+    const itemsToAdd = [];
+    selectedCheckboxes.forEach(cb => {
+        // Karena pop-up sekarang hanya menampilkan materi yang belum diambil,
+        // kita bisa langsung menjumlahkan SKS dari semua yang diceklis.
+        const item = JSON.parse(cb.dataset.subject);
+        newSks += item.sks;
+        itemsToAdd.push(item);
+    });
 
-            modal.querySelector('.close-button').onclick = () => {
-                modal.style.display = "none";
-            };
+    // Validasi batas SKS
+    if (currentSks + newSks > 34) {
+        showMessage(`Gagal, total SKS akan menjadi ${currentSks + newSks}. Batas maksimal adalah 34 SKS.`, 'error');
+        return;
+    }
+
+    // Tambahkan baris baru ke tabel KRS
+    itemsToAdd.forEach(item => {
+        const tr = document.createElement('tr');
+        const code = item.subject.split(':')[0].trim();
+        tr.innerHTML = `
+            <td class="px-4 py-2">${item.day}</td>
+            <td class="px-4 py-2">${item.time}</td>
+            <td class="px-4 py-2">${code}</td>
+            <td class="px-4 py-2">${item.subject.substring(code.length + 1).trim()}</td>
+            <td class="px-4 py-2">${item.room}</td>
+            <td class="px-4 py-2 text-center">${item.sks}</td>
+            <td class="px-4 py-2">${item.teacher}</td>
+            <td class="px-4 py-2 text-center"><button class="delete-krs-row text-red-500 hover:text-red-700">Hapus</button></td>
+        `;
+        krsTableBody.appendChild(tr);
+    });
+
+    updateKrsTotalSks();
+    modal.style.display = 'none';
+}
+
+
+// DIUBAH TOTAL: Event listener untuk tombol 'Tambah Materi'
+addKrsRowBtn.addEventListener('click', async () => {
+    const modal = document.getElementById('add-materi-modal');
+    const container = document.getElementById('materi-list-container');
+    const inputBtn = modal.querySelector('#simpan-materi-btn');
+
+    inputBtn.disabled = false;
+    inputBtn.textContent = 'Input';
+    container.innerHTML = '<p class="text-gray-500">Memeriksa riwayat nilai dan prasyarat...</p>';
+    modal.style.display = "block";
+
+    const loggedInSantriName = document.getElementById('nama-santri-krs').textContent.replace(': ', '');
+    const session = getActiveSession();
+    const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
+    if (!santriData) {
+        container.innerHTML = '<p class="text-red-500">Data santri tidak ditemukan.</p>';
+        return;
+    }
+
+    // DITAMBAHKAN: Peta untuk melacak level tertinggi yang LULUS per rumpun materi
+    const highestPassedLevel = {};
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getAllKHSData', username: session.username }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        // DITAMBAHKAN: Proses semua nilai untuk mengisi peta 'highestPassedLevel'
+        for (const code in result.nilai) {
+            const score = result.nilai[code];
+            if (score >= 60) { // Jika nilai LULUS (minimal C)
+                const prefix = code.slice(0, -1); // Rumpun materi, cth: "MAT-10"
+                const level = parseInt(code.slice(-1), 10);
+                // Simpan level tertinggi yang lulus untuk rumpun tersebut
+                if (!highestPassedLevel[prefix] || level > highestPassedLevel[prefix]) {
+                    highestPassedLevel[prefix] = level;
+                }
+            }
+        }
+    } catch (error) {
+        container.innerHTML = `<p class="p-4 text-center text-red-500">Gagal mengambil riwayat nilai: ${error.message}</p>`;
+        return;
+    }
+
+    const groupInfoParts = (santriData.grup || '').split(' ');
+    const santriGroup = groupInfoParts[0] || '';
+    const santriCluster = groupInfoParts[1] || '';
+
+    const currentlySavedCodes = Array.from(krsTableBody.querySelectorAll('tr'))
+        .map(tr => tr.querySelector('td:nth-child(3)')?.textContent)
+        .filter(Boolean);
+
+    const uniqueSubjects = new Map();
+    Object.values(appData.schedules).flat().forEach(item => {
+        if (item.subject && item.subject.includes(':')) {
+            const code = item.subject.split(':')[0].trim();
+            if (!uniqueSubjects.has(code)) {
+                uniqueSubjects.set(code, item);
+            }
+        }
+    });
+
+    const availableSubjects = Array.from(uniqueSubjects.values())
+        .filter(item => !currentlySavedCodes.includes(item.subject.split(':')[0].trim()));
+
+    container.innerHTML = '';
+    if (availableSubjects.length === 0) {
+        container.innerHTML = '<p class="p-4 text-center text-gray-500">Semua materi yang tersedia sudah diambil.</p>';
+    }
+
+    availableSubjects
+        .sort((a,b) => a.subject.localeCompare(b.subject))
+        .forEach(item => {
+            const code = item.subject.split(':')[0].trim();
+            const prefix = code.slice(0, -1);
+            const level = parseInt(code.slice(-1), 10);
+            const checkboxId = `materi-${code}`;
+
+            // DIUBAH: Logika baru untuk menentukan apakah materi bisa diambil
+            const maxPassed = highestPassedLevel[prefix] || 0; // Level tertinggi yg lulus, default 0
+            // Materi bisa diambil jika levelnya adalah level yang gagal/belum diambil (maxPassed + 1)
+            // atau level yang lebih rendah (untuk mengulang).
+            const isUnlocked = level <= maxPassed + 1;
+            const isDisabled = !isUnlocked;
+
+            let labelClass = 'other';
+            if (isDisabled) {
+                labelClass = 'prerequisite-failed';
+            } else if (item.group === santriGroup || (item.group === 'KG' && (item.cluster === santriCluster || item.cluster === 'Wajib'))) {
+                labelClass = 'recommended';
+            }
+
+            const div = document.createElement('div');
+            div.className = 'flex items-start p-2 rounded-md hover:bg-gray-100 materi-item border-b';
+            
+            const input = document.createElement('input');
+            input.id = checkboxId;
+            input.type = 'checkbox';
+            input.value = code;
+            input.className = 'h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 mt-1';
+            input.disabled = isDisabled;
+            input.dataset.subject = JSON.stringify(item);
+            
+            const label = document.createElement('label');
+            label.htmlFor = checkboxId;
+            label.className = `ml-3 text-sm flex-1 ${labelClass}`;
+            if(!isDisabled) label.classList.add('cursor-pointer');
+            
+            label.innerHTML = `
+                <div class="font-bold">${item.subject}</div>
+                <div class="text-xs text-gray-500">
+                    ${item.day}, ${item.time} | ${item.room} | ${item.sks} SKS
+                </div>
+            `;
+
+            div.appendChild(input);
+            div.appendChild(label);
+            container.appendChild(div);
+        });
+    
+    const newBtn = inputBtn.cloneNode(true);
+    inputBtn.parentNode.replaceChild(newBtn, inputBtn);
+    newBtn.addEventListener('click', handleInputMateriFromModal);
+
+    modal.querySelector('.close-button').onclick = () => {
+        modal.style.display = "none";
+    };
+});
         closeKrsBtnBottom.addEventListener('click', () => krsContainer.classList.add('hidden'));
         closeKhsBtnBottom.addEventListener('click', () => khsContainer.classList.add('hidden'));
         downloadKrsBtn.addEventListener('click', () => {
@@ -4790,7 +4952,7 @@ function handleSaveKrs() {
             const selectedDate = document.getElementById('attendanceDateGuru').value;
             populateTeacherClasses(null, selectedDate, selectedTeacher);
         });
-		document.getElementById('simpan-materi-btn')?.addEventListener('click', handleSimpanMateriKrs);
+		
 		
     }
 
