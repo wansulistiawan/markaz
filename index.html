@@ -772,7 +772,7 @@
             <section id="info-santri-krs" class="mb-8">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm text-gray-700">
                     <div class="flex"><span class="w-36 font-semibold">Nama Santri</span><span id="nama-santri-krs">: </span></div>
-                    <div class="flex"><span class="w-48 font-semibold">Total SKS yang bisa diambil</span><span id="total-sks-ambil-krs">: 40 sks</span></div>
+                    <div class="flex"><span class="w-48 font-semibold">Total SKS yang bisa diambil</span><span id="total-sks-ambil-krs">: 34 sks</span></div>
                     <div class="flex"><span class="w-36 font-semibold">Jurusan</span><span id="jurusan-krs">: </span></div>
                     <div class="flex"><span class="w-48 font-semibold">Kelas</span><span id="kelas-krs">: </span></div>
                     <div class="flex"><span class="w-36 font-semibold">Kelompok</span><span id="kelompok-krs">: </span></div>
@@ -807,10 +807,11 @@
             </section>
         </div>
         <div class="mt-8 text-center flex justify-center items-center gap-4">
-            <button id="add-krs-row" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-opacity-50">+ Tambah Baris</button>
-            <button id="download-krs-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg><span>Unduh PDF</span></button>
-            <button id="close-krs-btn-bottom" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50">Tutup</button>
-        </div>
+			<button id="add-krs-row" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-opacity-50">Tambah Materi</button>
+			<button id="save-krs-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">Simpan KRS</button>
+			<button id="download-krs-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg><span>Unduh PDF</span></button>
+			<button id="close-krs-btn-bottom" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50">Tutup</button>
+		</div>
     </div>
     
     <div id="khs-container" class="mt-8 mb-8 p-4 sm:p-6 rounded-xl shadow-lg bg-gray-50 hidden">
@@ -1210,6 +1211,21 @@ b. Soekarno
         </button>
     </div>
 </div>
+
+<div id="add-materi-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Pilih Materi untuk Ditambahkan</h2>
+        <div id="materi-list-container" class="max-h-80 overflow-y-auto border rounded-lg p-4 space-y-2 mb-6">
+            <p class="text-gray-500">Memuat daftar materi...</p>
+        </div>
+        <div class="text-right">
+            <button id="simpan-materi-btn" class="submit-btn" style="width: auto; padding: 10px 30px;">Simpan</button>
+        </div>
+    </div>
+</div>
+
+
 	<footer><div class="container"><p>&copy; 2025 Yayasan Markaz Yatim Duafa Qurani. Semua Hak Cipta Dilindungi.</p><p>Jl. Protokol Desa Sei Kamah II, Sei Dadap, Asahan, Sumut | <a href="mailto:markazyatimduafaqurani@gmail.com">markazyatimduafaqurani@gmail.com</a> | 085261804096</p></div></footer>
 
 <script>
@@ -1279,7 +1295,7 @@ document.addEventListener('DOMContentLoaded', function() {
  { day: "Jumat", time: "08:00-11:30", sks: 2, room: "Kelas SD", group: "SD", cluster: "", subject: "KELAS SD", teacher: "Reza Frananda", downloadLink: "" },
                 ],
                 bulan2: [
-                    { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "MAT-102: Pecahan & Desimal", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/14mAyOGGZXxbiC0OM9lUWFkY3xzkpDCD2/view?usp=drive_link" },
+                    { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "MAT-101: Operasi Bilangan Bulat & KPK/FPB", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/14mAyOGGZXxbiC0OM9lUWFkY3xzkpDCD2/view?usp=drive_link" },
                     { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "MAT-102: Pecahan & Desimal", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/14mAyOGGZXxbiC0OM9lUWFkY3xzkpDCD2/view?usp=drive_link" },
                     { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "IND-102: Berbicara 1: Perkenalan Diri & Sapaan Santun", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/12C3tX82DIS6BqYBt2DdKlvCRKTgNzX8Y/view?usp=drive_link" },
                     { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "AKH-202: Adab kepada Orang Tua & Guru (Gabungan)", teacher: "SupraSojo, S.Pd.I., M.Pd.", downloadLink: "https://drive.google.com/file/d/1k_P5RN0TS25K_3K3yc4yMNGsOj1qOtE2/view?usp=drive_link" },
@@ -1601,6 +1617,58 @@ async function renderExamSchedule() {
         });
     });
     container.appendChild(grid);
+}
+
+function handleSimpanMateriKrs() {
+    const selectedCheckboxes = document.querySelectorAll('#materi-list-container input[type="checkbox"]:checked');
+    if (selectedCheckboxes.length === 0) {
+        showMessage('Silakan pilih minimal satu materi.', 'error');
+        return;
+    }
+
+    const session = getActiveSession();
+    const santriName = document.getElementById('nama-santri-krs').textContent.substring(1).trim();
+    const bulan = document.getElementById('materi-bulan-krs').textContent.substring(1).trim();
+    const timestamp = new Date().toISOString();
+
+    const dataToSave = [];
+    selectedCheckboxes.forEach(cb => {
+        const itemData = JSON.parse(cb.dataset.subject);
+        dataToSave.push({
+            timestamp: timestamp,
+            namaSantri: santriName,
+            bulan: bulan,
+            kodeMateri: cb.value,
+            namaMateri: itemData.subject,
+            sks: itemData.sks,
+            guru: itemData.teacher
+        });
+    });
+
+    const submitBtn = document.getElementById('simpan-materi-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Menyimpan...';
+
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'saveKrsData', krsData: dataToSave }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status === 'success') {
+            showMessage('Materi berhasil ditambahkan ke KRS!', 'success');
+            document.getElementById('add-materi-modal').style.display = 'none';
+            // Di sini Anda bisa menambahkan logika untuk memuat ulang tabel KRS dari sheet jika perlu
+        } else {
+            throw new Error(result.message);
+        }
+    })
+    .catch(error => showMessage(`Gagal menyimpan: ${error.message}`, 'error'))
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Simpan';
+    });
 }
 
 function setupExamListeners() {
@@ -3905,10 +3973,21 @@ khsData = khsData
 	
 	const updateKrsTotalSks = () => {
         const totalSksElement = document.getElementById('total-sks-diambil');
+        // DIUBAH: Variabel addMateriBtn sekarang dideklarasikan dengan benar di sini.
+        const addMateriBtn = document.getElementById('add-krs-row');
         let totalSks = 0;
         const sksCells = krsTableBody.querySelectorAll('tr td:nth-child(6)');
         sksCells.forEach(cell => { totalSks += parseInt(cell.textContent, 10) || 0; });
         totalSksElement.textContent = totalSks;
+
+        // Logika untuk menonaktifkan tombol jika SKS >= 34
+        if (totalSks >= 34) {
+            addMateriBtn.disabled = true;
+            addMateriBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            addMateriBtn.disabled = false;
+            addMateriBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
     };
 	
     // --- (Fungsi-fungsi SI KBM di sini) ---
@@ -4361,10 +4440,41 @@ function initializeSistemInformasi() {
         });
         document.getElementById('download-schedule-pdf').addEventListener('click', function() { /* ...logic... */ });
         addKrsRowBtn.addEventListener('click', () => {
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `<td class="px-4 py-2" contenteditable="true">Hari Baru</td><td class="px-4 py-2" contenteditable="true">Waktu Baru</td><td class="px-4 py-2" contenteditable="true">KODE</td><td class="px-4 py-2" contenteditable="true">Mata Pelajaran Baru</td><td class="px-4 py-2" contenteditable="true">Ruang Baru</td><td class="px-4 py-2 text-center" contenteditable="true">2</td><td class="px-4 py-2" contenteditable="true">Guru Baru</td><td class="px-4 py-2 text-center"><button class="delete-krs-row text-red-500 hover:text-red-700">Hapus</button></td>`;
-            krsTableBody.appendChild(newRow);
-            updateKrsTotalSks();
+            const modal = document.getElementById('add-materi-modal');
+            const container = document.getElementById('materi-list-container');
+            container.innerHTML = '<p class="text-gray-500">Memuat daftar materi...</p>';
+            modal.style.display = "block";
+
+            const allSubjects = {};
+            Object.values(appData.schedules).flat().forEach(item => {
+                if (item.subject && item.subject.includes(':') && !item.subject.toLowerCase().includes('tugas mandiri')) {
+                    const code = item.subject.split(':')[0].trim();
+                    if (!allSubjects[code]) {
+                        allSubjects[code] = {
+                            subject: item.subject,
+                            sks: item.sks,
+                            teacher: item.teacher,
+                        };
+                    }
+                }
+            });
+
+            container.innerHTML = '';
+            Object.keys(allSubjects).sort().forEach(code => {
+                const item = allSubjects[code];
+                const checkboxId = `materi-${code}`;
+                const div = document.createElement('div');
+                div.className = 'flex items-center p-2 rounded-md hover:bg-gray-100';
+                div.innerHTML = `
+                    <input id="${checkboxId}" type="checkbox" value="${code}" data-subject='${JSON.stringify(item)}' class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                    <label for="${checkboxId}" class="ml-3 text-sm text-gray-700">${item.subject} (${item.sks} SKS)</label>
+                `;
+                container.appendChild(div);
+            });
+
+            modal.querySelector('.close-button').onclick = () => {
+                modal.style.display = "none";
+            };
         });
         closeKrsBtnBottom.addEventListener('click', () => krsContainer.classList.add('hidden'));
         closeKhsBtnBottom.addEventListener('click', () => khsContainer.classList.add('hidden'));
@@ -4495,7 +4605,7 @@ function initializeSistemInformasi() {
             });
 
             // KOMENTAR: Ambil data dari elemen info KHS
-           
+            
             const santriName = infoSantriKhs.querySelector('.flex:nth-child(1) span:last-child').textContent.trim();
             const kelasJurusan = infoSantriKhs.querySelector('.flex:nth-child(2) span:last-child').textContent.trim();
             const semesterBulan = infoSantriKhs.querySelector('.flex:nth-child(3) span:last-child').textContent.trim();
@@ -4545,6 +4655,7 @@ function initializeSistemInformasi() {
 
             doc.save(fileName);
         });
+        
     }
 
     // --- INITIALIZATION ---
@@ -4571,12 +4682,73 @@ function initializeSistemInformasi() {
     isSistemInformasiInitialized = true;
 }
 
+// DITAMBAHKAN: Fungsi baru untuk menangani penyimpanan data KRS
+function handleSaveKrs() {
+    const saveBtn = document.getElementById('save-krs-btn');
+    const tableRows = document.querySelectorAll('#krs-table-body tr');
+    
+    // Validasi jika tidak ada materi yang diambil
+    if (tableRows.length === 0 || !tableRows[0].querySelector('td')) {
+        showMessage('Tidak ada data KRS untuk disimpan.', 'error');
+        return;
+    }
+
+    const krsData = [];
+    tableRows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        // Pastikan baris memiliki sel yang cukup sebelum diproses
+        if (cells.length >= 7) {
+            krsData.push({
+                hari: cells[0].textContent,
+                waktu: cells[1].textContent,
+                kodeMateri: cells[2].textContent,
+                namaMateri: cells[3].textContent,
+                ruang: cells[4].textContent,
+                sks: parseInt(cells[5].textContent, 10),
+                guru: cells[6].textContent
+            });
+        }
+    });
+
+    const namaSantri = document.getElementById('nama-santri-krs').textContent.replace(': ', '');
+    const bulan = document.getElementById('materi-bulan-krs').textContent.replace(': ', '');
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Menyimpan...';
+
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'saveOrUpdateKrs', // Menggunakan action baru
+            namaSantri: namaSantri,
+            bulan: bulan,
+            krsData: krsData 
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status === 'success') {
+            showMessage(result.message, 'success');
+        } else {
+            throw new Error(result.message);
+        }
+    })
+    .catch(error => showMessage(`Gagal menyimpan: ${error.message}`, 'error'))
+    .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Simpan KRS';
+    });
+}
+
+
     // --- BAGIAN 3: EVENT LISTENERS & INISIALISASI ---
 
     function setupMainEventListeners() {
         if (ui.donasiBtn) ui.donasiBtn.onclick = () => document.getElementById('donasiModal').style.display = "block";
         if (ui.userProfile) ui.userProfile.onclick = () => openProfileModal();
 		
+		document.getElementById('save-krs-btn')?.addEventListener('click', handleSaveKrs);
         document.querySelectorAll('.close-button').forEach(btn => { btn.onclick = () => { btn.closest('.modal').style.display = 'none'; }; });
         window.onclick = (event) => { if (event.target.classList.contains('modal')) { event.target.style.display = "none"; } }
         window.addEventListener('hashchange', updateActiveLink);
@@ -4618,6 +4790,7 @@ function initializeSistemInformasi() {
             const selectedDate = document.getElementById('attendanceDateGuru').value;
             populateTeacherClasses(null, selectedDate, selectedTeacher);
         });
+		document.getElementById('simpan-materi-btn')?.addEventListener('click', handleSimpanMateriKrs);
 		
     }
 
