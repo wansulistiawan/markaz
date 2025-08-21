@@ -532,6 +532,7 @@
 						</div>
 					</div>
 					<a href="#absensi" id="attendanceNav" class="hidden">Absensi</a>
+					<a href="#halaman-ujian-admin" id="halamanUjianAdminNav" class="hidden">Ujian</a>
 					<a href="#ujian-online" id="ujianOnlineNav" class="hidden" style="background-color: #ff69b4;">Ujian Online</a>
 					<a href="#penerimaan">Penerimaan</a>
                     <a href="#kegiatan">Kegiatan</a>
@@ -1108,6 +1109,39 @@
          </div>
      </div>
 </div>
+
+<div id="halaman-ujian-admin" class="page-section hidden container section">
+    <h2 class="text-3xl font-bold text-gray-800">Buka Akses Ujian Manual</h2>
+    <p class="mb-8 text-gray-600">Pilih santri dan materi ujian yang ingin diberi akses di luar jadwal reguler. Akses akan berlaku selama 24 jam.</p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="font-bold border-b pb-2 mb-2">1. Pilih Santri</h3>
+            <div id="admin-santri-list-container" class="max-h-96 overflow-y-auto space-y-2">
+                <p>Memuat daftar santri...</p>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="font-bold border-b pb-2 mb-2">2. Pilih Materi Ujian</h3>
+            <div id="admin-materi-list-container" class="max-h-96 overflow-y-auto space-y-2">
+                <p>Memuat daftar materi...</p>
+            </div>
+        </div>
+    </div>
+    <div class="mt-8 text-center">
+        <button id="buka-ujian-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-10 rounded-lg shadow-lg">Buka Ujian</button>
+    </div>
+	<div class="mt-12 pt-8 border-t">
+        <h2 class="text-2xl font-bold text-gray-800">Daftar Ujian yang Dibuka Manual</h2>
+        <div id="admin-unlocked-exams-list" class="mt-4 bg-white p-4 rounded-lg shadow">
+            <p class="text-gray-500">Memuat daftar...</p>
+        </div>
+        <div class="mt-4 text-right">
+            <button id="tutup-ujian-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">Tutup Ujian Terpilih</button>
+        </div>
+    </div>
+</div>
+
 <!-- === AKHIR HALAMAN MUSYRIFAH === -->
 <<div id="ujian-online" class="page-section hidden container section">
     <h2 class="text-3xl font-bold text-gray-800">Jadwal Ujian Online</h2>
@@ -1285,7 +1319,17 @@ document.addEventListener('DOMContentLoaded', function() {
 		santriMusyrif: ["Abdullah Ridho Selamet", "Ahmad Royyan", "Ahsin Lutfaka", "Ibrahim", "M. Alvin Ramadhan Lubis", "Rizki Fadilla", "Yasir Al-Fath"].sort(),
 		santriMusyrifah: ["Aisyah Az-Zahra", "Aisyah Nur Fadilla", "Annisa Akbar Siregar", "Aprilia Alvani Rikay", "Aprilia Alvana Rikay", "Dedek Suci Ramadhani", "Dira Adiana Putri", "Hadzira Inayah Safa", "Intan Akbar Siregar", "Nur Alfia Fauzana", "Nur Halimah", "Putri Maharani Br. Tarigan", "Rahmah Azizah Lubis", "Rara Azahra", "Suci Agus Anggira", "Zaenab"].sort(),
         santri: [ { id: 1, nama: "Ahmad Royyan", gender: "Laki-Laki", grup: "KG LKS", kelas: "XII", jurusan: "Bisnis & Manajemen" }, { id: 2, nama: "M. Alvin Ramadhan Lubis", gender: "Laki-Laki", grup: "KF", kelas: "X", jurusan: "Non Jurusan" }, { id: 3, nama: "Abdullah Ridho Selamet", gender: "Laki-Laki", grup: "KG LKS", kelas: "X", jurusan: "Bisnis & Manajemen" }, { id: 4, nama: "Rizki Fadilah", gender: "Laki-Laki", grup: "KF", kelas: "VIII", jurusan: "Non Jurusan" }, { id: 5, nama: "Annisa Akbar Siregar", gender: "Perempuan", grup: "KG STT", kelas: "XII", jurusan: "Agribisnis (Pertanian & Peternakan)" }, { id: 6, nama: "Intan Akbar Siregar", gender: "Perempuan", grup: "KG STT", kelas: "IX", jurusan: "Sains & Teknologi" }, { id: 7, nama: "Aprilia Alvana Rikay", gender: "Perempuan", grup: "KG LKS", kelas: "X", jurusan: "Pendidikan Agama Islam" }, { id: 8, nama: "Aprilia Alvani Rikay", gender: "Perempuan", grup: "KG LKS", kelas: "X", jurusan: "Pendidikan Agama Islam" }, { id: 9, nama: "Rahmah Azizah Lubis", gender: "Perempuan", grup: "KG LKS", kelas: "XI", jurusan: "Tahfidz & Bahasa Arab" }, { id: 10, nama: "Aisyah Az-Zahra", gender: "Perempuan", grup: "KG LKS", kelas: "VIII", jurusan: "Tahfidz & Bahasa Arab" }, { id: 11, nama: "Nur Halimah", gender: "Perempuan", grup: "KG LKS", kelas: "VIII", jurusan: "Tahfidz & Bahasa Arab" }, { id: 12, nama: "Nur Alfia Fauzana", gender: "Perempuan", grup: "KG LKS", kelas: "VIII", jurusan: "Pendidikan Agama Islam" }, { id: 13, nama: "Putri Maharani Br. Tarigan", gender: "Perempuan", grup: "KF", kelas: "VIII", jurusan: "Non Jurusan" }, { id: 14, nama: "Dedek Suci Ramadhani", gender: "Perempuan", grup: "KF", kelas: "VII", jurusan: "Non Jurusan" }, { id: 15, nama: "Aisyah Nur Fadillah", gender: "Perempuan", grup: "KF", kelas: "VII", jurusan: "Non Jurusan" } ],
-        teachers: [ { no: 1, name: "Sulistiawan, S.Kom", major: "Pelajaran Umum & Keterampilan", hari: "Semua hari & jam", schedule: "Guru Cadangan" }, { no: 2, name: "Zhofri F. Majdi, S.Sos", major: "Diniyah", hari: "Kamis, Jumat, Sabtu", schedule: "Kamis (08-10), Jumat & Sabtu (Semua Jam)" }, { no: 3, name: "M. Ryza Anshori, S.Pd", major: "Diniyah", hari: "Jumat", schedule: "Semua Jam" }, { no: 4, name: "Erwan Syahputra, S.Pd", major: "Diniyah", hari: "Selasa, Rabu, Sabtu", schedule: "Selasa (Semua Jam), Rabu & Sabtu (sampai 10.00)" }, { no: 5, name: "Ariyanti R. Siregar, S.Kom", major: "Pelajaran Umum", hari: "Senin, Rabu, Kamis", schedule: "12.45 - 14.15" }, { no: 6, name: "Mia A. Lubis, S.Kom", major: "Pelajaran Umum", hari: "Semua Hari", schedule: "10.00 - 12.15 (Guru Cadangan)" }, { no: 7, name: "Mahadi Sentosa, S.Sos", major: "Diniyah", hari: "Sabtu", schedule: "13.00-14.30" }, { no: 8, name: "Suprasojo, S.Pd.I., M.Pd.", major: "Diniyah", hari: "Senin, Rabu", schedule: "8.00-11.30" }, { no: 9, name: "Aria Atmaja", major: "Teknik Mekanik Elektronik", hari: "Rabu", schedule: "08:00-09:30" } ],
+        teachers: [ 
+            { no: 1, name: "Sulistiawan, S.Kom", username: "wawan", major: "Pelajaran Umum & Keterampilan", hari: "Semua hari & jam", schedule: "Guru Cadangan" }, 
+            { no: 2, name: "Zhofri F. Majdi, S.Sos", username: "zhofri", major: "Diniyah", hari: "Kamis, Jumat, Sabtu", schedule: "Kamis (08-10), Jumat & Sabtu (Semua Jam)" }, 
+            { no: 3, name: "M. Ryza Anshori, S.Pd", username: "ryza", major: "Diniyah", hari: "Jumat", schedule: "Semua Jam" }, 
+            { no: 4, name: "Erwan Syahputra, S.Pd", username: "erwan", major: "Diniyah", hari: "Selasa, Rabu, Sabtu", schedule: "Selasa (Semua Jam), Rabu & Sabtu (sampai 10.00)" }, 
+            { no: 5, name: "Ariyanti R. Siregar, S.Kom", username: "yanti", major: "Pelajaran Umum", hari: "Senin, Rabu, Kamis", schedule: "12.45 - 14.15" }, 
+            { no: 6, name: "Mia A. Lubis, S.Kom", username: "mia", major: "Pelajaran Umum", hari: "Semua Hari", schedule: "10.00 - 12.15 (Guru Cadangan)" }, 
+            { no: 7, name: "Mahadi Sentosa, S.Sos", username: "mahadi", major: "Diniyah", hari: "Sabtu", schedule: "13.00-14.30" }, 
+            { no: 8, name: "Suprasojo, S.Pd.I., M.Pd.", username: "suprasojo", major: "Diniyah", hari: "Senin, Rabu", schedule: "8.00-11.30" }, 
+            { no: 9, name: "Aria Atmaja", username: "aria", major: "Teknik Mekanik Elektronik", hari: "Rabu", schedule: "08:00-09:30" } 
+        ],
         schedules: {
             bulan1: [
                     { day: "Senin", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "MAT-101: Operasi Bilangan Bulat & KPK/FPB", teacher: "Sulistiawan, S.Kom", downloadLink: "https://url-penyimpanan-anda.com/modul/MAT-101.pdf" },
@@ -1541,127 +1585,185 @@ let currentExamData = {};
 let currentQuestions = [];
 let examAnswers = {};
 let firstAttemptScore = null;
-
+let isExamInProgress = false;
+const alarmSound = new Audio('alarm.mp3');
+alarmSound.loop = true;
 
 // =======================================================
 // === FUNGSI-FUNGSI UNTUK UJIAN ONLINE ===
 // =======================================================
+
+// === VARIABEL DAN FUNGSI BARU UNTUK UJIAN ONLINE DINAMIS ===
+let examInterval; // Variabel untuk menyimpan interval update
+const subjectToMonthMap = {}; // Peta untuk mencari tahu materi ini ada di bulan ke berapa
+
+/**
+ * Helper untuk menghitung rentang tanggal pekan ujian untuk bulan akademik tertentu.
+ */
+function getAcademicMonthInfo(monthNumber) {
+    const baseStartDate = new Date('2025-07-14T00:00:00');
+    const monthOffsetDays = (monthNumber - 1) * 35; // Setiap bulan akademik adalah 5 pekan (35 hari)
+    const monthStartDate = new Date(baseStartDate);
+    monthStartDate.setDate(baseStartDate.getDate() + monthOffsetDays);
+
+    const examWeekStart = new Date(monthStartDate);
+    examWeekStart.setDate(monthStartDate.getDate() + 28); // Pekan ke-5 dimulai setelah 4 pekan (28 hari)
+    
+    const examWeekEnd = new Date(examWeekStart);
+    examWeekEnd.setDate(examWeekStart.getDate() + 7);
+    examWeekEnd.setSeconds(examWeekEnd.getSeconds() - 1);
+
+    return { examWeekStart, examWeekEnd };
+}
+
+/**
+ * Helper untuk memeriksa apakah waktu saat ini berada dalam slot KBM.
+ */
+function isTimeInSlot(now, timeSlot) {
+    if (!timeSlot.includes('-')) return false;
+    const [start, end] = timeSlot.split('-');
+    const [startHour, startMinute] = start.split(':').map(Number);
+    const [endHour, endMinute] = end.split(':').map(Number);
+
+    const startTime = new Date(now);
+    startTime.setHours(startHour, startMinute, 0, 0);
+
+    const endTime = new Date(now);
+    endTime.setHours(endHour, endMinute, 0, 0);
+    
+    return now >= startTime && now <= endTime;
+}
+
+// === FUNGSI UTAMA UJIAN ONLINE (VERSI BARU YANG LENGKAP) ===
 async function renderExamSchedule() {
+    if (examInterval) clearInterval(examInterval);
+
     const container = document.getElementById('ujian-schedule-container');
     if (!container) return;
     
-    container.innerHTML = '<p class="p-8 text-center text-gray-500">Memuat jadwal ujian...</p>';
+    container.innerHTML = '<p class="p-8 text-center text-gray-500">Memuat KRS dan status ujian...</p>';
     const session = getActiveSession();
-    const santriData = appData.santri.find(s => s.nama === session.userData.profileName);
-    if (!session || !session.loggedIn || !santriData) {
-        container.innerHTML = '<p class="p-8 text-center text-red-500">Data santri tidak ditemukan, silakan login ulang.</p>';
+    if (!session || !session.loggedIn || !session.userData.jabatan || session.userData.jabatan.toLowerCase().trim() !== 'santri') {
+        container.innerHTML = '<p class="p-8 text-center text-gray-500">Halaman ini hanya untuk santri.</p>';
         return;
     }
 
-    const santriGroupInfo = santriData.grup; // e.g., "KG LKS"
-    const santriGroup = santriGroupInfo.split(' ')[0]; // e.g., "KG"
-    const santriCluster = santriGroupInfo.split(' ')[1] || ''; // e.g., "LKS"
+    // DITAMBAHKAN: Cek apakah user yang melihat adalah admin
+    const isAdmin = ['wawan', 'mia', 'admin'].includes(session.username);
 
-    let availableExams = [];
-    let nilaiUjian = {};
+    if (Object.keys(subjectToMonthMap).length === 0) {
+        Object.entries(appData.schedules).forEach(([monthKey, scheduleItems]) => {
+            const monthNumber = parseInt(monthKey.replace('bulan', ''));
+            scheduleItems.forEach(item => {
+                if(item.subject && item.subject.includes(':')) {
+                    const code = item.subject.split(':')[0].trim();
+                    subjectToMonthMap[code] = monthNumber;
+                }
+            });
+        });
+    }
+
+    let savedKrsSubjects = [], availableExams = [], nilaiUjian = {}, unlockedExams = [];
     try {
-        const [examsResponse, nilaiResponse] = await Promise.all([
+        const [krsResponse, examsResponse, nilaiResponse, unlockedResponse] = await Promise.all([
+            fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllKrsSubjectsForSantri', namaSantri: session.userData.profileName }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }}),
             fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAvailableExams' }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }}),
-            fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getNilaiUjian', username: session.username }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }})
+            fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getNilaiUjian', username: session.username }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }}),
+            // DITAMBAHKAN: Ambil daftar ujian yang dibuka manual
+            fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getUnlockedExams', username: session.username }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }})
         ]);
         
+        const krsResult = await krsResponse.json();
+        if (krsResult.status === 'success') savedKrsSubjects = krsResult.data; else throw new Error(krsResult.message);
         const examsResult = await examsResponse.json();
-        if (examsResult.status === 'success') availableExams = examsResult.availableExams;
-        else throw new Error(`Gagal memuat daftar ujian: ${examsResult.message}`);
-
+        if (examsResult.status === 'success') availableExams = examsResult.availableExams; else throw new Error(examsResult.message);
         const nilaiResult = await nilaiResponse.json();
-        if (nilaiResult.status === 'success') nilaiUjian = nilaiResult.nilai;
-        else throw new Error(`Gagal memuat riwayat nilai: ${nilaiResult.message}`);
+        if (nilaiResult.status === 'success') nilaiUjian = nilaiResult.nilai; else throw new Error(nilaiResult.message);
+        const unlockedResult = await unlockedResponse.json();
+        if (unlockedResult.status === 'success') unlockedExams = unlockedResult.unlockedExams; else throw new Error(unlockedResult.message);
 
     } catch (error) {
         container.innerHTML = `<p class="p-8 text-center text-red-500">${error.message}</p>`;
         return;
     }
     
-    container.innerHTML = '';
-    const grid = document.createElement('div');
-    grid.className = 'schedule-grid';
-    const days = ["", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-    const timeSlots = ["08:00-09:30", "10:00-11:30", "13:00-14:30"];
-    const scheduleData = appData.schedules.bulan1;
+    const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    
+    const updateExamGrid = () => {
+        const now = new Date();
+        container.innerHTML = '';
+        if (savedKrsSubjects.length === 0) {
+            container.innerHTML = '<p class="p-8 text-center text-gray-500">Anda belum mengambil materi pelajaran di KRS.</p>';
+            return;
+        }
 
-    days.forEach(day => {
-        const dayHeader = document.createElement('div');
-        dayHeader.className = 'day-header text-slate-600 bg-slate-100';
-        dayHeader.textContent = day;
-        grid.appendChild(dayHeader);
-    });
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
 
-    timeSlots.forEach(time => {
-        const timeHeader = document.createElement('div');
-        timeHeader.className = 'time-slot text-teal-700 bg-slate-100 flex items-center justify-center';
-        timeHeader.textContent = time;
-        grid.appendChild(timeHeader);
+        savedKrsSubjects.forEach(item => {
+            const subjectCode = item.code;
+            if (!availableExams.includes(subjectCode)) return;
+            const academicMonth = subjectToMonthMap[subjectCode];
+            if (!academicMonth) return;
+            const { examWeekStart, examWeekEnd } = getAcademicMonthInfo(academicMonth);
+            const riwayat = nilaiUjian[subjectCode];
 
-        days.slice(1).forEach(day => {
-            const cell = document.createElement('div');
-            cell.className = 'schedule-cell p-2';
-            
-            // PERBAIKAN: Filter jadwal sesuai kelompok & klaster santri
-            const item = scheduleData.find(d => 
-                d.day === day && 
-                d.time === time &&
-                (d.group === santriGroup || (d.group === "KG" && d.cluster === "Wajib")) &&
-                (santriGroup !== "KG" || !d.cluster || d.cluster === "Wajib" || d.cluster === santriCluster)
-            );
+            let statusText = 'Ujian belum tersedia';
+            let statusColor = 'bg-gray-400';
+            let isDisabled = true;
 
-            if (item && item.subject.includes(':')) {
-                const subjectCode = item.subject.split(':')[0].trim();
-                const hasQuestions = availableExams.includes(subjectCode);
-                
-                let buttonText = 'Soal Belum Tersedia';
-                let buttonColor = 'bg-gray-400 cursor-not-allowed';
-                let buttonDisabled = 'disabled';
+            const isDateInRange = now >= examWeekStart && now <= examWeekEnd;
+            const isDayCorrect = days[now.getDay()] === item.day;
+            const isTimeCorrect = isTimeInSlot(now, item.time);
+            const isExamWindowActive = isDateInRange && isDayCorrect && isTimeCorrect;
+            // DITAMBAHKAN: Cek apakah ujian ini dibuka manual
+            const isSpeciallyUnlocked = unlockedExams.includes(subjectCode);
 
-                if (hasQuestions) {
-                    const riwayat = nilaiUjian[subjectCode];
-                    if (riwayat) {
-                        if (riwayat.skor >= 80) {
-                            buttonText = `Selesai (${riwayat.skor})`;
-                            buttonColor = 'bg-green-600 cursor-not-allowed';
-                        } else if (riwayat.percobaan >= 2) {
-                            buttonText = `Selesai (${riwayat.skor})`;
-                            buttonColor = 'bg-yellow-600 cursor-not-allowed';
-                        } else {
-                             buttonText = 'Kerjakan Ulang';
-                             buttonColor = 'bg-blue-600 hover:bg-blue-700';
-                             buttonDisabled = '';
-                        }
-                    } else {
-                        buttonText = 'Mulai Ujian';
-                        buttonColor = 'bg-blue-600 hover:bg-blue-700';
-                        buttonDisabled = '';
-                    }
+            if (riwayat) {
+                if (riwayat.skor >= 75) {
+                    statusText = `Selesai (Nilai: ${riwayat.skor})`; statusColor = 'bg-green-600'; isDisabled = true;
+                } else {
+                    statusText = 'Kerjakan Ulang'; statusColor = 'bg-blue-600 hover:bg-blue-700'; isDisabled = false;
                 }
-
-                cell.innerHTML = `
-                    <div class="subject flex-grow font-bold text-sm text-teal-900">${item.subject}</div>
-                    <div class="teacher text-xs text-slate-600 mt-1">👤 ${item.teacher}</div>
-                    <button class="start-exam-trigger w-full mt-3 py-2 px-4 rounded-md text-white text-sm font-semibold ${buttonColor}" 
-                            data-subject-code="${subjectCode}" 
-                            data-subject-title="${item.subject}" ${buttonDisabled}>
-                        ${buttonText}
-                    </button>
-                `;
+            } else {
+                // DIUBAH: Tombol aktif jika jadwal reguler ATAU dibuka manual ATAU yang lihat admin
+                if (isExamWindowActive || isSpeciallyUnlocked || isAdmin) {
+                    statusText = 'Mulai Ujian'; statusColor = 'bg-blue-600 hover:bg-blue-700'; isDisabled = false;
+                } else {
+                    statusText = 'Ujian Belum Aktif'; statusColor = 'bg-gray-400'; isDisabled = true;
+                }
             }
-            grid.appendChild(cell);
+
+            const card = document.createElement('div');
+            card.className = 'schedule-cell p-4 border rounded-lg flex flex-col';
+            card.innerHTML = `
+                <div class="subject flex-grow font-bold text-teal-900">${item.subject}</div>
+                <div class="text-sm text-slate-600 mt-2">
+                    <p>Jadwal: ${item.day}, ${item.time}</p>
+                    <p>Pengajar: ${item.teacher}</p>
+                    <p class="text-xs italic mt-1 ${isSpeciallyUnlocked ? 'text-green-600 font-bold' : ''}">
+                        ${isSpeciallyUnlocked ? 'Akses Ujian Dibuka Manual' : `Pekan Ujian: ${examWeekStart.toLocaleDateString('id-ID')} - ${examWeekEnd.toLocaleDateString('id-ID')}`}
+                    </p>
+                </div>
+                <button class="start-exam-trigger w-full mt-4 py-2 px-4 rounded-md text-white font-semibold ${statusColor} ${isDisabled ? 'cursor-not-allowed' : ''}" 
+                        data-subject-code="${subjectCode}" 
+                        data-subject-title="${item.subject}" ${isDisabled ? 'disabled' : ''}>
+                    ${statusText}
+                </button>
+            `;
+            grid.appendChild(card);
         });
-    });
-    container.appendChild(grid);
+
+        if (grid.children.length === 0) {
+             container.innerHTML = '<p class="p-8 text-center text-gray-500">Tidak ada ujian yang tersedia untuk materi di KRS Anda saat ini.</p>';
+        } else { container.appendChild(grid); }
+    };
+
+    updateExamGrid();
+    examInterval = setInterval(updateExamGrid, 30000);
 }
 
-
-
+// === FUNGSI-FUNGSI PENDUKUNG UJIAN ONLINE ===
 function setupExamListeners() {
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('start-exam-trigger')) {
@@ -1705,8 +1807,8 @@ function setupResultModalListeners() {
     });
 }
 
-
 async function startExam() {
+	isExamInProgress = true;
     const examContainer = document.getElementById('exam-container');
     const questionsContainer = document.getElementById('exam-questions');
     
@@ -1772,10 +1874,12 @@ async function startExam() {
 }
 
 function calculateAndShowResult() {
+	isExamInProgress = false;
+    alarmSound.pause();
+    alarmSound.currentTime = 0;
+	
     let correctAnswers = 0;
     currentQuestions.forEach((q, index) => {
-        // PERBAIKAN: Mencocokkan jawaban yang dipilih dengan kunci jawaban dari sheet (berupa teks, bukan huruf A/B/C)
-        // Contoh: q.a berisi "Jakarta", examAnswers[`q${index}`] juga harus berisi "Jakarta"
         if (examAnswers[`q${index}`] === q.a) {
             correctAnswers++;
         }
@@ -1788,10 +1892,8 @@ function calculateAndShowResult() {
     let isRemedial = firstAttemptScore !== null;
 
     if (isRemedial) {
-        // Jika ini remedial, ambil nilai tertinggi, tapi maksimal 80
         finalScore = Math.min(Math.max(firstAttemptScore, score), 80);
     } else {
-        // Jika ini percobaan pertama
         firstAttemptScore = score;
         finalScore = score;
     }
@@ -1800,7 +1902,6 @@ function calculateAndShowResult() {
     const resultMessageEl = document.getElementById('result-message');
     const resultActionsEl = document.getElementById('result-actions');
     
-    // Kirim nilai ke Google Sheet
     const session = getActiveSession();
     const dataToSave = {
         action: 'simpanNilaiUjian',
@@ -1808,7 +1909,7 @@ function calculateAndShowResult() {
         namaSantri: session.userData.profileName,
         kodeMateri: currentExamData.code,
         judulMateri: currentExamData.title,
-        skor: firstAttemptScore, // Selalu kirim skor percobaan pertama
+        skor: firstAttemptScore,
         skorAkhir: finalScore
     };
     
@@ -1819,14 +1920,11 @@ function calculateAndShowResult() {
     }).then(res => res.json()).then(result => {
         if (result.status !== 'success') {
             console.error("Gagal menyimpan nilai:", result.message);
-            // Tetap tampilkan hasil ke pengguna meskipun gagal simpan
         }
     }).catch(err => console.error("Error saat menyimpan nilai:", err));
 
-
     resultScoreEl.textContent = finalScore;
     
-    // Logika Tampilan Modal Hasil
     if (finalScore >= 80) {
         resultScoreEl.className = 'text-8xl font-bold my-8 pass';
         resultMessageEl.textContent = 'Selamat, nilai Anda sangat baik! Nilai akhir Anda akan dicatat di KHS.';
@@ -1841,7 +1939,7 @@ function calculateAndShowResult() {
             resultActionsEl.innerHTML = `<button id="result-remedial-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg">Ujian Ulang</button>
                                          <button id="result-later-btn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-8 rounded-lg mt-2">Cukup</button>`;
         }
-    } else { // Di bawah 75
+    } else { 
         resultScoreEl.className = 'text-8xl font-bold my-8 fail';
         if (isRemedial) {
             resultMessageEl.textContent = `Anda telah menyelesaikan remedial. Nilai akhir Anda (${finalScore}) akan dicatat di KHS.`;
@@ -1861,6 +1959,7 @@ function closeResultModal() {
     document.getElementById('exam-result-modal').style.display = 'none';
     firstAttemptScore = null;
 	window.location.hash = '#ujian-online';
+    renderExamSchedule(); // Muat ulang jadwal untuk update status tombol
 }
 
 function startRemedial() {
@@ -1869,7 +1968,6 @@ function startRemedial() {
     startExam();
 }
 
-// Fungsi Bantuan Fullscreen
 function enterFullscreen(element) {
     if (element.requestFullscreen) { element.requestFullscreen(); } 
     else if (element.mozRequestFullScreen) { element.mozRequestFullScreen(); } 
@@ -1881,6 +1979,36 @@ function exitFullscreen() {
     if (document.exitFullscreen) { document.exitFullscreen(); } 
     else if (document.mozCancelFullScreen) { document.mozCancelFullScreen(); } 
     else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+}
+
+function playAlarm() {
+    // Cek lagi untuk memastikan alarm hanya berbunyi saat ujian berlangsung
+    if (isExamInProgress) {
+        alarmSound.play().catch(error => {
+            console.error("Gagal memutar audio:", error);
+            // Fallback jika audio gagal diputar
+            alert("PERINGATAN: Keluar dari mode fullscreen atau pindah tab tidak diizinkan selama ujian!");
+        });
+        alert("PERINGATAN: Anda terdeteksi keluar dari layar ujian. Harap kembali fokus pada ujian.");
+    }
+}
+
+function setupExamSecurityListeners() {
+    // Listener untuk mendeteksi keluar dari mode fullscreen (misal: tekan Esc)
+    document.addEventListener('fullscreenchange', () => {
+        // `document.fullscreenElement` akan null jika tidak dalam mode fullscreen
+        if (!document.fullscreenElement && isExamInProgress) {
+            playAlarm();
+        }
+    });
+
+    // Listener untuk mendeteksi pindah tab atau minimize browser
+    document.addEventListener('visibilitychange', () => {
+        // `document.hidden` akan true jika tab tidak aktif
+        if (document.hidden && isExamInProgress) {
+            playAlarm();
+        }
+    });
 }
 
 // =======================================================
@@ -1974,6 +2102,8 @@ function setupInputSoalPage() {
     }
 }
 
+// GANTI FUNGSI INI SECARA KESELURUHAN
+// GANTI FUNGSI INI SECARA KESELURUHAN
 function handleSimpanSoal() {
     const materiSelect = document.getElementById('materi-soal-select');
     const materiKode = materiSelect.value;
@@ -1982,33 +2112,24 @@ function handleSimpanSoal() {
         return;
     }
 
+    // DITAMBAHKAN: Logika untuk mencari nama guru & username-nya di frontend
+    const teacherName = Object.values(appData.schedules).flat().find(item => item.subject.startsWith(materiKode))?.teacher;
+    const teacherData = appData.teachers.find(t => t.name === teacherName);
+    const teacherUsername = teacherData ? teacherData.username : '';
+
     const rows = document.querySelectorAll('#soal-preview-container .soal-row');
     const dataSoal = [];
-    let isValid = true;
-
     rows.forEach((row, index) => {
-        const isiSoal = row.querySelector('td:nth-child(2)').textContent;
-        const kunciJawaban = row.querySelector('.kunci-jawaban-input').value.toUpperCase() || ''; // Jadi string kosong jika tidak diisi
-		const poin = row.querySelector('.poin-soal-input').value || 4;
-
-        if (!kunciJawaban || !poin) {
-            isValid = false;
-        }
-
         dataSoal.push({
             kodeMateri: materiKode,
             nomorSoal: index + 1,
-            isiSoal: isiSoal,
-            kunciJawaban: kunciJawaban,
-            poin: parseInt(poin)
+            isiSoal: row.querySelector('td:nth-child(2)').textContent,
+            kunciJawaban: row.querySelector('.kunci-jawaban-input').value.toUpperCase() || '',
+            poin: parseInt(row.querySelector('.poin-soal-input').value) || 4
         });
     });
-
     
-    
-    if (!confirm(`Anda akan menyimpan ${dataSoal.length} soal untuk materi ${materiKode}. Lanjutkan?`)) {
-        return;
-    }
+    if (!confirm(`Anda akan menyimpan ${dataSoal.length} soal. Lanjutkan?`)) return;
 
     const simpanBtn = document.getElementById('simpan-soal-btn');
     simpanBtn.disabled = true;
@@ -2016,14 +2137,19 @@ function handleSimpanSoal() {
 
     fetch(CONFIG.SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'simpanBankSoal', soalData: dataSoal }),
+        body: JSON.stringify({ 
+            action: 'simpanBankSoal', 
+            soalData: { 
+                soal: dataSoal, 
+                usernameGuru: teacherUsername // Kirim username yang sudah ditemukan
+            } 
+        }),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
     })
     .then(res => res.json())
     .then(result => {
         if (result.status === 'success') {
             showMessage(result.message, 'success');
-            // Reset halaman input
             document.getElementById('paste-soal-area').value = '';
             document.getElementById('soal-preview-container').innerHTML = `<p class="p-8 text-center text-gray-400">Pratinjau soal akan muncul di sini.</p>`;
             simpanBtn.classList.add('hidden');
@@ -2044,6 +2170,7 @@ function handleSimpanSoal() {
 // =======================================================
 let soalGuruData = []; // Untuk menyimpan data soal yang diambil
 
+// GANTI FUNGSI INI SECARA KESELURUHAN
 async function setupHalamanGuru() {
     const session = getActiveSession();
     if (!session || !session.loggedIn) return;
@@ -2063,19 +2190,22 @@ async function setupHalamanGuru() {
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
 
-        soalGuruData = result.soal; // Simpan data soal secara global
-        const materiGuru = result.materi;
+        soalGuruData = result.soal;
+        const materiGuruDariServer = result.materi;
 
-        // Isi dropdown materi
         guruMateriSelect.innerHTML = '<option value="all">Tampilkan Semua Materi</option>';
-        for (const kode in materiGuru) {
+        for (const kode in materiGuruDariServer) {
+            // DIUBAH: Mencari nama materi lengkap di frontend berdasarkan kode
+            const subjectData = Object.values(appData.schedules).flat().find(item => item.subject.startsWith(kode));
+            const namaLengkapMateri = subjectData ? subjectData.subject : kode;
+
             const option = document.createElement('option');
             option.value = kode;
-            option.textContent = materiGuru[kode];
+            option.textContent = namaLengkapMateri;
             guruMateriSelect.appendChild(option);
         }
 
-        renderSoalUntukGuru('all'); // Tampilkan semua soal pada awalnya
+        renderSoalUntukGuru('all');
 
     } catch (error) {
         soalContainer.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat data: ${error.message}</p>`;
@@ -2094,7 +2224,7 @@ function renderSoalUntukGuru(filterKodeMateri) {
     
     const filteredSoal = filterKodeMateri === 'all' 
         ? soalGuruData 
-        : soalGuruData.filter(s => s.KodeMateri === filterKodeMateri);
+        : soalGuruData.filter(s => s.kodemateri === filterKodeMateri);
 
     if (filteredSoal.length === 0) {
         soalContainer.innerHTML = `<p class="p-8 text-center text-gray-400">Tidak ada soal untuk materi ini.</p>`;
@@ -2115,14 +2245,14 @@ function renderSoalUntukGuru(filterKodeMateri) {
 
     filteredSoal.forEach((soal, index) => {
         tableHTML += `
-            <tr class="soal-row-guru" data-kode-materi="${soal.KodeMateri}" data-nomor-soal="${soal.NomorSoal}">
+            <tr class="soal-row-guru" data-kode-materi="${soal.kodemateri}" data-nomor-soal="${soal.nomorsoal}">
                 <td class="px-4 py-3 align-top">${index + 1}</td>
-                <td class="px-4 py-3 text-sm text-gray-800 whitespace-pre-wrap">${soal.IsiSoal}</td>
+                <td class="px-4 py-3 text-sm text-gray-800 whitespace-pre-wrap">${soal.isisoal}</td>
                 <td class="px-4 py-3 align-top">
-                    <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md uppercase" maxlength="1" value="${soal.KunciJawaban || ''}">
+                    <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md uppercase" maxlength="1" value="${soal.kuncijawaban || ''}">
                 </td>
                 <td class="px-4 py-3 align-top">
-                    <input type="number" class="poin-soal-input w-full p-2 border rounded-md" value="${soal.Poin || 0}">
+                    <input type="number" class="poin-soal-input w-full p-2 border rounded-md" value="${soal.poin || 0}">
                 </td>
             </tr>
         `;
@@ -2912,68 +3042,218 @@ function showPage(hash) {
         }
 else if (targetHash === '#halaman-guru') {
     setupHalamanGuru();
-}
+} else if (targetHash === '#halaman-ujian-admin') {
+            setupHalamanUjianAdmin();
+        }
+
     } else {
         // Jika tidak ada hash atau hash tidak ditemukan, tampilkan beranda
         document.getElementById('beranda').classList.remove('hidden');
     }
 }
 
+// DITAMBAHKAN: Fungsi baru untuk menampilkan daftar ujian yang dibuka
+async function renderUnlockedExamsList() {
+    const container = document.getElementById('admin-unlocked-exams-list');
+    container.innerHTML = `<p class="text-gray-500">Memuat daftar...</p>`;
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllUnlockedExams' }) });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        if (result.data.length === 0) {
+            container.innerHTML = `<p class="text-gray-500">Tidak ada ujian yang sedang dibuka secara manual.</p>`;
+            return;
+        }
+
+        // Kelompokkan data berdasarkan santri
+        const groupedBySantri = result.data.reduce((acc, item) => {
+            const santriName = appData.santri.find(s => (s.username || s.nama.toLowerCase().replace(/\s/g, '')) === item.usernameSantri)?.nama || item.usernameSantri;
+            if (!acc[santriName]) {
+                acc[santriName] = [];
+            }
+            acc[santriName].push(item);
+            return acc;
+        }, {});
+        
+        container.innerHTML = '';
+        for (const santriName in groupedBySantri) {
+            let materiHtml = groupedBySantri[santriName].map(item => `
+                <div class="ml-6"><input type="checkbox" value="${item.rowNum}" class="mr-2 unlocked-exam-cb"><label>${item.kodeMateri}</label></div>
+            `).join('');
+            container.innerHTML += `
+                <div class="py-2 border-b">
+                    <p class="font-bold">${santriName}:</p>
+                    ${materiHtml}
+                </div>
+            `;
+        }
+
+    } catch(error) {
+        container.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+    }
+}
+
+// DIUBAH TOTAL: Fungsi setup utama untuk halaman admin
+async function setupHalamanUjianAdmin() {
+    const santriContainer = document.getElementById('admin-santri-list-container');
+    const materiContainer = document.getElementById('admin-materi-list-container');
+    const bukaUjianBtn = document.getElementById('buka-ujian-btn');
+    const tutupUjianBtn = document.getElementById('tutup-ujian-btn');
+
+    santriContainer.innerHTML = '<p>Memuat daftar santri...</p>';
+    materiContainer.innerHTML = '<p>Memuat daftar materi ujian...</p>';
+
+    try {
+        // DIUBAH: Mengambil daftar santri dari server, bukan dari appData
+        const [santriResponse, examsResponse] = await Promise.all([
+            fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getSantriListWithUsernames' }) }),
+            fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAvailableExams' }) })
+        ]);
+
+        // Populate Santri List dengan data yang valid
+        const santriResult = await santriResponse.json();
+        if(santriResult.status !== 'success') throw new Error(santriResult.message);
+        santriContainer.innerHTML = '';
+        santriResult.santri.sort((a, b) => a.profileName.localeCompare(b.profileName)).forEach(s => {
+            // Menggunakan username asli dari sheet Users
+            santriContainer.innerHTML += `<div><input type="checkbox" id="santri_${s.username}" value="${s.username}" class="mr-2"><label for="santri_${s.username}">${s.profileName}</label></div>`;
+        });
+
+        // Populate Materi List
+        const examsResult = await examsResponse.json();
+        if(examsResult.status !== 'success') throw new Error(examsResult.message);
+        materiContainer.innerHTML = '';
+        const uniqueSubjects = new Map();
+        Object.values(appData.schedules).flat().forEach(item => {
+            if (item.subject && item.subject.includes(':')) {
+                const code = item.subject.split(':')[0].trim();
+                if (examsResult.availableExams.includes(code) && !uniqueSubjects.has(code)) {
+                    uniqueSubjects.set(code, item.subject);
+                }
+            }
+        });
+        Array.from(uniqueSubjects.entries()).sort((a, b) => a[1].localeCompare(b[1])).forEach(([code, subject]) => {
+            materiContainer.innerHTML += `<div><input type="checkbox" id="materi_${code}" value="${code}" class="mr-2"><label for="materi_${code}">${subject}</label></div>`;
+        });
+
+    } catch(error) {
+        santriContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+        materiContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+    }
+
+    // Event listener untuk tombol "Buka Ujian" (tetap sama)
+    bukaUjianBtn.onclick = async () => {
+        const selectedSantri = Array.from(santriContainer.querySelectorAll('input:checked')).map(cb => cb.value);
+        const selectedMateri = Array.from(materiContainer.querySelectorAll('input:checked')).map(cb => cb.value);
+        if (selectedSantri.length === 0 || selectedMateri.length === 0) {
+            showMessage('Pilih minimal satu santri dan satu materi ujian.', 'error');
+            return;
+        }
+        bukaUjianBtn.disabled = true;
+        bukaUjianBtn.textContent = 'Memproses...';
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'unlockExamsForSantri', santriUsernames: selectedSantri, subjectCodes: selectedMateri }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const result = await response.json();
+            if(result.status !== 'success') throw new Error(result.message);
+            showMessage(result.message, 'success');
+            renderUnlockedExamsList();
+        } catch(error) {
+            showMessage(`Gagal: ${error.message}`, 'error');
+        } finally {
+            bukaUjianBtn.disabled = false;
+            bukaUjianBtn.textContent = 'Buka Ujian';
+        }
+    };
+
+    // Event listener untuk tombol "Tutup Ujian" (tetap sama)
+    tutupUjianBtn.onclick = async () => {
+        const selectedExams = Array.from(document.querySelectorAll('.unlocked-exam-cb:checked')).map(cb => parseInt(cb.value));
+        if (selectedExams.length === 0) {
+            showMessage('Pilih minimal satu ujian yang ingin ditutup.', 'error');
+            return;
+        }
+        tutupUjianBtn.disabled = true;
+        tutupUjianBtn.textContent = 'Menutup...';
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'closeManualExams', rowsToDelete: selectedExams }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const result = await response.json();
+            if(result.status !== 'success') throw new Error(result.message);
+            showMessage(result.message, 'success');
+            renderUnlockedExamsList();
+        } catch(error) {
+            showMessage(`Gagal: ${error.message}`, 'error');
+        } finally {
+            tutupUjianBtn.disabled = false;
+            tutupUjianBtn.textContent = 'Tutup Ujian Terpilih';
+        }
+    };
+
+    renderUnlockedExamsList();
+}
 
     function showLoggedInView(userData) {
-        ui.loginButton.classList.add('hidden');
-        ui.attendanceNav.classList.remove('hidden');
-        ui.sistemInformasiNav.classList.remove('hidden');
-        ui.kalenderPendidikan.classList.remove('hidden');
-        if (userData && userData.profileName) {
-            ui.userProfileName.textContent = userData.profileName;
-            ui.navProfilePic.src = userData.profilePicture || 'https://placehold.co/80x80/e9ecef/343a40?text=F';
-            ui.navProfilePic.onerror = () => { ui.navProfilePic.src = 'https://placehold.co/80x80/e9ecef/343a40?text=E'; };
-        } else {
-            ui.userProfileName.textContent = `Hi, Pengguna`;
-            ui.navProfilePic.src = 'https://placehold.co/80x80/e9ecef/343a40?text=F';
-        }
-        ui.userProfile.classList.remove('hidden');
-		const adminUsers = ['mia', 'wawan', 'admin'];
-document.getElementById('inputSoalNav').classList.toggle('hidden', !adminUsers.includes(userData.username));
-		// === GANTI SEMUA IF/ELSE NAVIGASI DENGAN BLOK INI ===
-const session = getActiveSession();
-if (session && session.loggedIn) {
-    const username = session.username;
-    const jabatan = session.userData.jabatan || '';
-    // PERUBAHAN: Membuat pengecekan jabatan 'Santri' tidak sensitif terhadap huruf besar/kecil dan spasi
-    const isSantri = (jabatan || '').trim().toLowerCase() === 'santri';
-
-    // KOMENTAR: Variabel-variabel ini digunakan untuk menentukan peran selain santri
-    const isKepalaOrWaka = jabatan === 'Kepala Rumah Anak Yatim' || jabatan === 'Kepala Rumah Tahfidz' || jabatan === 'Waka Kurikulum';
-    const isMusyrif = jabatan === 'Musyrif';
-    const isMusyrifah = jabatan === 'Musyrifah';
-    const financeUsers = ['mia', 'wawan', 'aria', 'yeni', 'admin'];
-    const karyawanUsers = ['wawan', 'admin', 'aria', 'yeni', 'mia', 'zhofri', 'erwan', 'mahadi', 'zaidun', 'yanti', 'ryza', 'reza', 'uswah', 'erma'];
-	const isGuru = (userData.jabatan || '').trim().toLowerCase() === 'guru';
-	const canAccessBankSoal = isGuru || userData.username === 'mia' || userData.username === 'wawan' || userData.username === 'admin';
-	document.getElementById('halamanGuruNav').classList.toggle('hidden', !canAccessBankSoal);
-    // PERUBAHAN: Logika untuk menampilkan/menyembunyikan menu utama berdasarkan peran Santri
-    document.getElementById('attendanceNav').classList.toggle('hidden', isSantri);
-    document.getElementById('ujianOnlineNav').classList.toggle('hidden', !isSantri);
-
-    // PERUBAHAN: Logika untuk menampilkan dropdown Sistem Informasi jika user memiliki akses ke salah satu sub-menunya
-    const showDropdown = isSantri || isKepalaOrWaka || isMusyrif || isMusyrifah || financeUsers.includes(username) || karyawanUsers.includes(username);
-    document.getElementById('sistemInformasiDropdown').classList.toggle('hidden', !showDropdown);
-    
-    // KOMENTAR: Kode ini mengatur visibilitas setiap sub-menu di dalam dropdown
-    document.getElementById('krsNav').classList.toggle('hidden', !isSantri);
-    document.getElementById('khsNav').classList.toggle('hidden', !isSantri);
-    document.getElementById('slipGajiNav').classList.toggle('hidden', !karyawanUsers.includes(username));
-    document.getElementById('laporanKeuanganNav').classList.toggle('hidden', !financeUsers.includes(username));
-    document.getElementById('laporanNav').classList.toggle('hidden', !isKepalaOrWaka);
-    document.getElementById('musyrifNav').classList.toggle('hidden', !isMusyrif);
-    document.getElementById('musyrifahNav').classList.toggle('hidden', !isMusyrifah);
-}
-		
-
-        if (window.location.hash === '#login') { window.location.hash = '#beranda'; }
+    ui.loginButton.classList.add('hidden');
+    ui.attendanceNav.classList.remove('hidden');
+    ui.sistemInformasiNav.classList.remove('hidden');
+    ui.kalenderPendidikan.classList.remove('hidden');
+    if (userData && userData.profileName) {
+        ui.userProfileName.textContent = userData.profileName;
+        ui.navProfilePic.src = userData.profilePicture || 'https://placehold.co/80x80/e9ecef/343a40?text=F';
+        ui.navProfilePic.onerror = () => { ui.navProfilePic.src = 'https://placehold.co/80x80/e9ecef/343a40?text=E'; };
+    } else {
+        ui.userProfileName.textContent = `Hi, Pengguna`;
+        ui.navProfilePic.src = 'https://placehold.co/80x80/e9ecef/343a40?text=F';
     }
+    ui.userProfile.classList.remove('hidden');
+    
+    const session = getActiveSession();
+    if (session && session.loggedIn) {
+        const username = session.username;
+        const jabatan = session.userData.jabatan || '';
+        const isSantri = (jabatan || '').trim().toLowerCase() === 'santri';
+        const isKepalaOrWaka = jabatan === 'Kepala Rumah Anak Yatim' || jabatan === 'Kepala Rumah Tahfidz' || jabatan === 'Waka Kurikulum';
+        const isMusyrif = jabatan === 'Musyrif';
+        const isMusyrifah = jabatan === 'Musyrifah';
+        const financeUsers = ['mia', 'wawan', 'aria', 'yeni', 'admin'];
+        const karyawanUsers = ['wawan', 'admin', 'aria', 'yeni', 'mia', 'zhofri', 'erwan', 'mahadi', 'zaidun', 'yanti', 'ryza', 'reza', 'uswah', 'erma'];
+        const isGuru = (userData.jabatan || '').trim().toLowerCase() === 'guru';
+        const canAccessBankSoal = isGuru || userData.username === 'mia' || userData.username === 'wawan' || userData.username === 'admin';
+        const isAdminUjian = ['wawan', 'mia', 'admin'].includes(username);
+
+        document.getElementById('attendanceNav').classList.toggle('hidden', isSantri);
+        document.getElementById('ujianOnlineNav').classList.toggle('hidden', !isSantri);
+        
+        const showDropdown = isSantri || isKepalaOrWaka || isMusyrif || isMusyrifah || financeUsers.includes(username) || karyawanUsers.includes(username) || isAdminUjian;
+        document.getElementById('sistemInformasiDropdown').classList.toggle('hidden', !showDropdown);
+        
+        // Cek ID 'halamanUjianAdminNav' di dalam dropdown navigasi Anda
+        const halamanUjianAdminNav = document.getElementById('halamanUjianAdminNav');
+        if(halamanUjianAdminNav) {
+            halamanUjianAdminNav.classList.toggle('hidden', !isAdminUjian);
+        }
+        
+        document.getElementById('krsNav').classList.toggle('hidden', !isSantri);
+        document.getElementById('khsNav').classList.toggle('hidden', !isSantri);
+        document.getElementById('slipGajiNav').classList.toggle('hidden', !karyawanUsers.includes(username));
+        document.getElementById('laporanKeuanganNav').classList.toggle('hidden', !financeUsers.includes(username));
+        document.getElementById('laporanNav').classList.toggle('hidden', !isKepalaOrWaka);
+        document.getElementById('musyrifNav').classList.toggle('hidden', !isMusyrif);
+        document.getElementById('musyrifahNav').classList.toggle('hidden', !isMusyrifah);
+        document.getElementById('halamanGuruNav').classList.toggle('hidden', !canAccessBankSoal);
+        document.getElementById('inputSoalNav').classList.toggle('hidden', !isAdminUjian);
+    }
+    
+    if (window.location.hash === '#login') { window.location.hash = '#beranda'; }
+}
 
     function showLoggedOutView() {
         ui.loginButton.classList.remove('hidden');
@@ -3876,8 +4156,20 @@ const handleKrsClick = async (event, userData = null) => {
     }
 };
 
+// DIUBAH TOTAL: Fungsi KHS sekarang mengambil daftar materi dari KRS yang tersimpan
 async function handleKhsClick(event, userData = null) {
-    if (!userData) return;
+    if (!userData && event) {
+         const santriRow = event.target.closest('tr');
+         userData = {
+            profileName: santriRow.dataset.santriName,
+            username: santriRow.dataset.santriName.toLowerCase().replace(/\s/g, ''), // Asumsi username
+         };
+    }
+    
+    if (!userData) {
+        console.error("Tidak ada data pengguna untuk menampilkan KHS.");
+        return;
+    }
 
     const loggedInSantriName = userData.profileName;
     const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
@@ -3887,90 +4179,90 @@ async function handleKhsClick(event, userData = null) {
     }
     
     const khsDisplay = document.getElementById('khs-display');
-    khsDisplay.innerHTML = '<p class="p-8 text-center text-gray-500">Memuat data KHS...</p>';
+    khsDisplay.innerHTML = '<p class="p-8 text-center text-gray-500">Memuat data KHS dari KRS & Riwayat Nilai...</p>';
     khsContainer.classList.remove('hidden');
     krsContainer.classList.add('hidden');
     khsContainer.scrollIntoView({ behavior: 'smooth' });
 
     const activeTab = document.querySelector('.tab-btn.active');
     const bulan = activeTab.textContent.replace('Bulan ', '');
-    const activeMonthKey = `bulan${activeTab.id.replace('tab-bulan', '')}`;
+    const bulanNumber = parseInt(activeTab.id.replace('tab-bulan', ''), 10);
     
-    let userScores = {};
     try {
-        const response = await fetch(CONFIG.SCRIPT_URL, {
+        // Langkah 1: Ambil SEMUA materi yang terdaftar di KRS santri
+        const krsResponse = await fetch(CONFIG.SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'getKHSData', username: userData.username, bulan: bulan }),
+            body: JSON.stringify({ action: 'getAllKrsSubjectsForSantri', namaSantri: loggedInSantriName }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
-        const result = await response.json();
-        if(result.status === 'success') {
-            userScores = result.nilai;
-        } else {
-            throw new Error(result.message);
-        }
-    } catch(error) {
-        khsDisplay.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat nilai: ${error.message}</p>`;
-        return;
-    }
-
-    const scheduleThisMonth = appData.schedules[activeMonthKey] || [];
-    const groupInfo = santriData.grup;
-    const santriGroup = groupInfo.split(' ')[0];
-    const santriCluster = groupInfo.split(' ')[1] || '';
-
-    let khsData = [];
-if (santriGroup === 'KF') {
-    khsData = scheduleThisMonth.filter(item => item.group === 'KF');
-} else if (santriGroup === 'KG' && santriCluster) {
-    khsData = scheduleThisMonth.filter(item => item.group === 'KG' && (item.cluster === santriCluster || item.cluster === 'Wajib'));
-}
-
-// Proses data yang sudah difilter dengan benar
-khsData = khsData
-    .filter(item => item.group !== 'Istirahat' && item.subject && item.subject.trim() !== 'Kosong' && !item.subject.toLowerCase().includes('tugas mandiri'))
-    .map((item, index) => {
-        const code = item.subject.split(':')[0].trim();
-        const nilai = userScores[code] !== undefined ? userScores[code] : 0;
-        let huruf = 'E';
-        let bobot = 0.00;
-        if (nilai >= 90) { huruf = 'A'; bobot = 4.00; }
-        else if (nilai >= 85) { huruf = 'A-'; bobot = 3.75; }
-        else if (nilai >= 80) { huruf = 'B+'; bobot = 3.50; }
-        else if (nilai >= 75) { huruf = 'B'; bobot = 3.00; }
-        else if (nilai >= 70) { huruf = 'B-'; bobot = 2.75; }
-        else if (nilai >= 65) { huruf = 'C+'; bobot = 2.50; }
-        else if (nilai >= 60) { huruf = 'C'; bobot = 2.00; }
-        else if (nilai >= 55) { huruf = 'D'; bobot = 1.00; }
+        const krsResult = await krsResponse.json();
+        if(krsResult.status !== 'success') throw new Error(krsResult.message);
         
-        return {
-            no: index + 1,
-            kode: code,
-            materi: item.subject.substring(code.length + 1).trim(),
-            sks: item.sks,
-            huruf: huruf,
-            bobot: bobot,
-            nilai: parseFloat(nilai).toFixed(2)
-        };
-    });
+        // Langkah 2: Ambil SEMUA riwayat nilai santri
+        const nilaiResponse = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getAllKHSData', username: userData.username }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const nilaiResult = await nilaiResponse.json();
+        if(nilaiResult.status !== 'success') throw new Error(nilaiResult.message);
 
-    let tableRows = '', totalSks = 0, totalNilaiBobot = 0;
-    khsData.forEach(item => {
-        tableRows += `<tr><td class="border border-black text-center">${item.no}</td><td class="border border-black">${item.kode}</td><td class="border border-black">${item.materi}</td><td class="border border-black text-center">${item.sks}</td><td class="border border-black text-center">${item.huruf}</td><td class="border border-black text-center">${item.bobot.toFixed(2)}</td><td class="border border-black text-center">${item.nilai}</td></tr>`;
-        totalSks += item.sks;
-        totalNilaiBobot += item.sks * item.bobot;
-    });
-    const ip = totalSks > 0 ? (totalNilaiBobot / totalSks).toFixed(2) : "0.00";
-    
-    // Perbarui innerHTML dari khsDisplay dengan template KHS yang sudah ada
-    // Template KHS Anda dari file (tidak disertakan ulang di sini agar ringkas)
-    khsDisplay.innerHTML = `<header class="flex items-center justify-between border-b-2 border-black pb-2"><div class="flex items-center"><img src="Logo_yayasan.png" alt="Logo Institusi" class="h-16 w-16 mr-4" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"><div class="h-16 w-16 mr-4 bg-gray-200 items-center justify-center text-gray-500 font-bold" style="display: none;">LOGO</div><div><h1 class="text-xl font-bold">MARKAZ QUR'AN AL-MAA'UN</h1><p class="text-xs">Lembaga Pendidikan Islam Terpadu</p></div></div></header><div class="text-center my-4"><h3 class="text-xl font-bold underline">KARTU HASIL STUDI (KHS)</h3></div><section id="info-santri-khs" class="grid grid-cols-2 gap-x-8 text-sm mb-4"></section><section><table id="tabel-nilai" class="w-full text-sm border-collapse border border-black"><thead class="bg-gray-200"><tr><th class="border border-black">NO</th><th class="border border-black">KODE</th><th class="border border-black text-left">MATERI</th><th class="border border-black">SKS</th><th class="border border-black">Huruf</th><th class="border border-black">Bobot</th><th class="border border-black">Nilai</th></tr></thead><tbody></tbody><tfoot></tfoot></table></section><footer class="flex justify-between items-start mt-6 text-xs" style="background-color: white; color: black;"><div><p>1 lembar untuk Santri</p><p>1 lembar untuk bid. kurikulum</p><p>1 lembar untuk Arsip</p></div><div class="text-center"><p>Sei Kamah II, ${new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p><p>Mudir,</p><div class="h-12"></div><p class="font-bold underline">Aria Atmaja</p></div></footer>`;
+        const allGrades = nilaiResult.nilai;
+        
+        // Langkah 3: Saring materi KRS hanya untuk bulan yang aktif
+        const krsForThisMonth = krsResult.data.filter(item => {
+            return subjectToMonthMap[item.code] === bulanNumber;
+        });
 
-    // Isi bagian yang dinamis secara terpisah
-    khsDisplay.querySelector('tbody').innerHTML = tableRows;
-    khsDisplay.querySelector('tfoot').innerHTML = `<tr class="font-bold bg-gray-100"><td colspan="3" class="border border-black text-right pr-2">Jumlah SKS</td><td class="border border-black text-center">${totalSks}</td><td colspan="3" class="border border-black"></td></tr><tr class="font-bold bg-gray-100"><td colspan="5" class="border border-black text-right pr-2">IP Bulanan</td><td class="border border-black text-center">${ip}</td><td class="border border-black"></td></tr>`;
-    khsDisplay.querySelector('#info-santri-khs').innerHTML = `<div><div class="flex"><span class="w-32">NAMA</span><span>: ${santriData.nama}</span></div><div class="flex"><span class="w-32">Kelas / Jurusan</span><span>: ${santriData.kelas} / ${santriData.jurusan}</span></div></div><div><div class="flex"><span class="w-28">Semester / Bulan</span><span>: Ganjil / ${bulan}</span></div><div class="flex"><span class="w-28">Klaster</span><span>: ${santriData.grup}</span></div></div>`;
-};    
+        if (krsForThisMonth.length === 0) {
+            khsDisplay.innerHTML = `<p class="p-8 text-center text-gray-500">Tidak ada materi KRS yang terdaftar untuk Bulan ${bulan}.</p>`;
+            return;
+        }
+
+        // Langkah 4: Proses data KHS dengan menggabungkan materi KRS dan nilai
+        const khsData = krsForThisMonth.map((item, index) => {
+            const nilai = allGrades[item.code] !== undefined ? allGrades[item.code] : 0;
+            let huruf = 'E';
+            let bobot = 0.00;
+            if (nilai >= 90) { huruf = 'A'; bobot = 4.00; }
+            else if (nilai >= 85) { huruf = 'A-'; bobot = 3.75; }
+            else if (nilai >= 80) { huruf = 'B+'; bobot = 3.50; }
+            else if (nilai >= 75) { huruf = 'B'; bobot = 3.00; }
+            else if (nilai >= 70) { huruf = 'B-'; bobot = 2.75; }
+            else if (nilai >= 65) { huruf = 'C+'; bobot = 2.50; }
+            else if (nilai >= 60) { huruf = 'C'; bobot = 2.00; }
+            else if (nilai >= 55) { huruf = 'D'; bobot = 1.00; }
+            
+            return {
+                no: index + 1,
+                kode: item.code,
+                materi: item.name,
+                sks: item.sks,
+                huruf: huruf,
+                bobot: bobot,
+                nilai: parseFloat(nilai).toFixed(2)
+            };
+        });
+
+        let tableRows = '', totalSks = 0, totalNilaiBobot = 0;
+        khsData.forEach(item => {
+            tableRows += `<tr><td class="border border-black text-center">${item.no}</td><td class="border border-black">${item.kode}</td><td class="border border-black">${item.materi}</td><td class="border border-black text-center">${item.sks}</td><td class="border border-black text-center">${item.huruf}</td><td class="border border-black text-center">${item.bobot.toFixed(2)}</td><td class="border border-black text-center">${item.nilai}</td></tr>`;
+            totalSks += parseInt(item.sks) || 0;
+            totalNilaiBobot += (parseInt(item.sks) || 0) * item.bobot;
+        });
+        const ip = totalSks > 0 ? (totalNilaiBobot / totalSks).toFixed(2) : "0.00";
+        
+        // Langkah 5: Tampilkan KHS ke layar
+        khsDisplay.innerHTML = `<header class="flex items-center justify-between border-b-2 border-black pb-2"><div class="flex items-center"><img src="Logo_yayasan.png" alt="Logo Institusi" class="h-16 w-16 mr-4" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"><div class="h-16 w-16 mr-4 bg-gray-200 items-center justify-center text-gray-500 font-bold" style="display: none;">LOGO</div><div><h1 class="text-xl font-bold">MARKAZ QUR'AN AL-MAA'UN</h1><p class="text-xs">Lembaga Pendidikan Islam Terpadu</p></div></div></header><div class="text-center my-4"><h3 class="text-xl font-bold underline">KARTU HASIL STUDI (KHS)</h3></div><section id="info-santri-khs" class="grid grid-cols-2 gap-x-8 text-sm mb-4"></section><section><table id="tabel-nilai" class="w-full text-sm border-collapse border border-black"><thead class="bg-gray-200"><tr><th class="border border-black">NO</th><th class="border border-black">KODE</th><th class="border border-black text-left">MATERI</th><th class="border border-black">SKS</th><th class="border border-black">Huruf</th><th class="border border-black">Bobot</th><th class="border border-black">Nilai</th></tr></thead><tbody></tbody><tfoot></tfoot></table></section><footer class="flex justify-between items-start mt-6 text-xs" style="background-color: white; color: black;"><div><p>1 lembar untuk Santri</p><p>1 lembar untuk bid. kurikulum</p><p>1 lembar untuk Arsip</p></div><div class="text-center"><p>Sei Kamah II, ${new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p><p>Mudir,</p><div class="h-12"></div><p class="font-bold underline">Aria Atmaja</p></div></footer>`;
+
+        khsDisplay.querySelector('tbody').innerHTML = tableRows;
+        khsDisplay.querySelector('tfoot').innerHTML = `<tr class="font-bold bg-gray-100"><td colspan="3" class="border border-black text-right pr-2">Jumlah SKS</td><td class="border border-black text-center">${totalSks}</td><td colspan="3" class="border border-black"></td></tr><tr class="font-bold bg-gray-100"><td colspan="5" class="border border-black text-right pr-2">IP Bulanan</td><td class="border border-black text-center">${ip}</td><td class="border border-black"></td></tr>`;
+        khsDisplay.querySelector('#info-santri-khs').innerHTML = `<div><div class="flex"><span class="w-32">NAMA</span><span>: ${santriData.nama}</span></div><div class="flex"><span class="w-32">Kelas / Jurusan</span><span>: ${santriData.kelas} / ${santriData.jurusan}</span></div></div><div><div class="flex"><span class="w-28">Semester / Bulan</span><span>: Ganjil / ${bulan}</span></div><div class="flex"><span class="w-28">Klaster</span><span>: ${santriData.grup}</span></div></div>`;
+
+    } catch(error) {
+        khsDisplay.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat KHS: ${error.message}</p>`;
+    }
+}   
 	
 	const updateKrsTotalSks = () => {
         const totalSksElement = document.getElementById('total-sks-diambil');
@@ -4986,6 +5278,7 @@ function handleSaveKrs() {
 		renderExamSchedule();
     setupExamListeners();
 	setupResultModalListeners();
+	setupExamSecurityListeners();
 	setupInputSoalPage();
     }
 
