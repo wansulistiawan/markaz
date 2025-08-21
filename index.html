@@ -1712,26 +1712,52 @@ async function renderExamSchedule() {
             let statusColor = 'bg-gray-400';
             let isDisabled = true;
 
-            const isDateInRange = now >= examWeekStart && now <= examWeekEnd;
-            const isDayCorrect = days[now.getDay()] === item.day;
-            const isTimeCorrect = isTimeInSlot(now, item.time);
-            const isExamWindowActive = isDateInRange && isDayCorrect && isTimeCorrect;
-            // DITAMBAHKAN: Cek apakah ujian ini dibuka manual
+            const isExamWeekOver = now > examWeekEnd;
             const isSpeciallyUnlocked = unlockedExams.includes(subjectCode);
+            const isExamWindowActive = (now >= examWeekStart && now <= examWeekEnd) && days[now.getDay()] === item.day && isTimeInSlot(now, item.time);
 
-            if (riwayat) {
-                if (riwayat.skor >= 75) {
-                    statusText = `Selesai (Nilai: ${riwayat.skor})`; statusColor = 'bg-green-600'; isDisabled = true;
-                } else {
-                    statusText = 'Kerjakan Ulang'; statusColor = 'bg-blue-600 hover:bg-blue-700'; isDisabled = false;
+            if (riwayat) { // Jika sudah pernah ujian
+                if (isExamWeekOver && !isAdmin) {
+                    statusText = `Selesai (Nilai: ${riwayat.skor})`;
+                    statusColor = 'bg-green-300';
+                    isDisabled = true;
+                } else if (riwayat.skor >= 80) {
+                    statusText = `Selesai (Nilai: ${riwayat.skor})`;
+                    statusColor = 'bg-green-600';
+                    isDisabled = true;
+                } else if (riwayat.percobaan >= 2) {
+                    statusText = `Selesai (Nilai: ${riwayat.skor})`;
+                    statusColor = 'bg-gray-500';
+                    isDisabled = true;
+                } else if (riwayat.skor >= 75) { // Nilai 75-79
+                    statusText = 'Ulang (Opsional)';
+                    statusColor = 'bg-yellow-500 hover:bg-yellow-600';
+                    isDisabled = false;
+                } else { // Nilai < 75
+                    statusText = 'Kerjakan Ulang (Wajib)';
+                    statusColor = 'bg-red-600 hover:bg-blue-700';
+                    isDisabled = false;
                 }
-            } else {
-                // DIUBAH: Tombol aktif jika jadwal reguler ATAU dibuka manual ATAU yang lihat admin
-                if (isExamWindowActive || isSpeciallyUnlocked || isAdmin) {
-                    statusText = 'Mulai Ujian'; statusColor = 'bg-blue-600 hover:bg-blue-700'; isDisabled = false;
+            } else { // Jika belum pernah ujian
+                if (isExamWeekOver && !isSpeciallyUnlocked && !isAdmin) {
+                    statusText = 'Selesai (Belum Ujian)';
+                    statusColor = 'bg-gray-500';
+                    isDisabled = true;
+                } else if (isExamWindowActive || isSpeciallyUnlocked || isAdmin) {
+                    statusText = 'Mulai Ujian';
+                    statusColor = 'bg-blue-600 hover:bg-blue-700';
+                    isDisabled = false;
                 } else {
-                    statusText = 'Ujian Belum Aktif'; statusColor = 'bg-gray-400'; isDisabled = true;
+                    statusText = 'Ujian Belum Aktif';
+                    statusColor = 'bg-gray-400';
+                    isDisabled = true;
                 }
+            }
+
+            // Override untuk admin
+            if (isAdmin && riwayat && riwayat.skor < 80) {
+                isDisabled = false; 
+                statusColor = 'bg-purple-600 hover:bg-purple-700';
             }
 
             const card = document.createElement('div');
