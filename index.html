@@ -305,6 +305,59 @@
     .schedule-cell .group-display .room {
         margin-left: 0 !important;
     }
+	
+	 /* Sembunyikan header tabel di mobile karena layout-nya diubah */
+    #soal-preview-container thead,
+    #guru-soal-container thead {
+        display: none;
+    }
+
+    /* Ubah setiap baris menjadi flex container agar item bisa diatur ulang */
+    #soal-preview-container tr,
+    #guru-soal-container tr {
+        display: flex;
+        flex-wrap: wrap; /* Izinkan item pindah ke baris baru */
+        gap: 0.75rem; /* Beri jarak antar item */
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+    }
+
+    #soal-preview-container td,
+    #guru-soal-container td {
+        padding: 0;
+        border: none;
+    }
+
+    /* Atur agar Nomor dan Isi Soal memakan satu baris penuh */
+    #soal-preview-container td:nth-child(1), /* Kolom Nomor */
+    #guru-soal-container td:nth-child(1),
+    #soal-preview-container td:nth-child(2), /* Kolom Isi Soal */
+    #guru-soal-container td:nth-child(2) {
+        flex-basis: 100%;
+        width: 100%;
+    }
+    
+    /* Buat Nomor Soal menjadi tebal */
+    #soal-preview-container td:nth-child(1),
+    #guru-soal-container td:nth-child(1) {
+        font-weight: 600;
+        margin-bottom: -0.5rem; /* Kurangi sedikit jarak ke soal */
+    }
+
+    /* Atur agar input Kunci Jawaban dan Poin berbagi tempat di baris kedua */
+    #soal-preview-container td:nth-child(3), /* Kolom Kunci Jawaban */
+    #guru-soal-container td:nth-child(3) {
+        flex: 1 1 60%; /* Biarkan membesar, basis 60% */
+    }
+
+    #soal-preview-container td:nth-child(4), /* Kolom Poin */
+    #guru-soal-container td:nth-child(4) {
+        flex: 1 1 30%; /* Biarkan membesar, basis 30% */
+    }
+    /* Akhir dari blok CSS perbaikan */
+	
 }
 
 .dropdown:hover .dropdown-content,
@@ -1219,7 +1272,7 @@ b. Soekarno
 
 <div id="halaman-guru" class="page-section hidden container section">
     <h2 class="text-3xl font-bold text-gray-800">Bank Soal Anda</h2>
-    <p class="mb-8 text-gray-600">Di halaman ini, Anda dapat melihat dan melengkapi kunci jawaban serta poin untuk soal-soal dari materi yang Anda ajar.</p>
+    <p class="mb-8 text-gray-600">Di halaman ini, Anda dapat melihat dan melengkapi kunci jawaban serta poin untuk soal-soal dari materi yang Anda ajar. Anda juga bisa merubah isi soal jika dirasa soal tersebut kurang cocok untuk diujikan ke anak-anak.</p>
 
     <div class="bg-white p-6 rounded-xl shadow-md">
         <div class="form-group max-w-md mb-6">
@@ -2341,7 +2394,9 @@ function renderSoalUntukGuru(filterKodeMateri) {
         tableHTML += `
             <tr class="soal-row-guru" data-kode-materi="${soal.kodemateri}" data-nomor-soal="${soal.nomorsoal}">
                 <td class="px-4 py-3 align-top">${index + 1}</td>
-                <td class="px-4 py-3 text-sm text-gray-800 whitespace-pre-wrap">${soal.isisoal}</td>
+                <td class="px-4 py-3 text-sm text-gray-800">
+                    <textarea class="w-full p-2 border rounded-md" rows="4">${soal.isisoal}</textarea>
+                </td>
                 <td class="px-4 py-3 align-top">
                     <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md uppercase" maxlength="1" value="${soal.kuncijawaban || ''}">
                 </td>
@@ -2365,7 +2420,8 @@ function handleUpdateSoal() {
         dataToUpdate.push({
             kodeMateri: row.dataset.kodeMateri,
             nomorSoal: parseInt(row.dataset.nomorSoal),
-            isiSoal: row.querySelector('td:nth-child(2)').textContent,
+            // DIUBAH: Mengambil isi soal dari .value sebuah textarea, bukan .textContent
+            isiSoal: row.querySelector('td:nth-child(2) textarea').value,
             kunciJawaban: row.querySelector('.kunci-jawaban-input').value.toUpperCase() || '',
             poin: row.querySelector('.poin-soal-input').value || 0
         });
@@ -2384,13 +2440,11 @@ function handleUpdateSoal() {
     updateBtn.disabled = true;
     updateBtn.textContent = 'Menyimpan...';
 
-    // DITAMBAHKAN: Mengambil username guru yang sedang login dari sesi
     const session = getActiveSession();
     const teacherUsername = session ? session.username : '';
 
     fetch(CONFIG.SCRIPT_URL, {
         method: 'POST',
-        // DIUBAH: Format data yang dikirim disesuaikan agar sama seperti format dari halaman admin
         body: JSON.stringify({ 
             action: 'simpanBankSoal', 
             soalData: { 
