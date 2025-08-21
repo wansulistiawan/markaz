@@ -482,6 +482,29 @@
     text-decoration: line-through;
 }
 
+.nav-link-wrapper {
+    position: relative;
+    display: inline-block;
+    padding-right: 15px; /* Beri sedikit ruang agar notifikasi tidak menempel */
+}
+
+.notification-dot {
+    position: absolute;
+    top: -8px;  /* Sesuaikan posisi vertikal */
+    right: -5px; /* Sesuaikan posisi horizontal */
+    width: 22px;
+    height: 22px;
+    background-color: #dc2626; /* Warna merah */
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    border: 2px solid white;
+}
+
     </style>
 </head>
 <body>
@@ -517,7 +540,7 @@
                     <a href="#lembaga">Lembaga</a>
                     <a href="#tentang">Tentang</a>
 					<div id="sistemInformasiDropdown" class="dropdown hidden">
-					<a href="#" id="sistemInformasiNav" class="dropbtn">Sistem Informasi &#9662;</a>
+					<a href="#" id="sistemInformasiNav" class="dropbtn"><span class="nav-link-wrapper">Sistem Informasi &#9662;</span></a>
 						<div class="dropdown-content">
 						<a href="#roster-kbm" id="rosterKbmNav">Roster KBM</a>
 						<a href="#krs" id="krsNav">KRS (Kartu Rencana Studi)</a>
@@ -528,7 +551,7 @@
 						<a href="#musyrif" id="musyrifNav">Halaman Musyrif</a>
 						<a href="#musyrifah" id="musyrifahNav">Halaman Musyrifah</a>
 						<a href="#input-soal" id="inputSoalNav">Input Soal Ujian</a>
-						<a href="#halaman-guru" id="halamanGuruNav">Bank Soal Guru</a>
+						<a href="#halaman-guru" id="halamanGuruNav"><span class="nav-link-wrapper">Bank Soal Guru</span></a>
 						</div>
 					</div>
 					<a href="#absensi" id="attendanceNav" class="hidden">Absensi</a>
@@ -2037,6 +2060,51 @@ function setupExamSecurityListeners() {
     });
 }
 
+/**
+ * Fungsi untuk membuat atau menghapus titik notifikasi di navigasi.
+ */
+function updateNavNotifications(count) {
+    const navLinks = ['#sistemInformasiNav .nav-link-wrapper', '#halamanGuruNav .nav-link-wrapper'];
+
+    navLinks.forEach(selector => {
+        const wrapper = document.querySelector(selector);
+        if (!wrapper) return;
+
+        // Hapus notifikasi lama jika ada
+        const oldDot = wrapper.querySelector('.notification-dot');
+        if (oldDot) oldDot.remove();
+
+        // Tambahkan notifikasi baru jika count > 0
+        if (count > 0) {
+            const dot = document.createElement('span');
+            dot.className = 'notification-dot';
+            dot.textContent = count;
+            wrapper.appendChild(dot);
+        }
+    });
+}
+
+/**
+ * Fungsi untuk mengambil data notifikasi dari server dan menampilkannya.
+ */
+async function fetchAndShowTeacherNotifications() {
+    const session = getActiveSession();
+    if (!session || !session.loggedIn) return;
+
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getMissingKeysCountForGuru', namaGuru: session.userData.profileName }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const result = await response.json();
+        if (result.status === 'success') {
+            updateNavNotifications(result.count);
+        }
+    } catch(error) {
+        console.error("Gagal mengambil notifikasi:", error);
+    }
+}
 // =======================================================
 // === FUNGSI-FUNGSI UNTUK INPUT SOAL ===
 // =======================================================
@@ -2297,7 +2365,7 @@ function handleUpdateSoal() {
         dataToUpdate.push({
             kodeMateri: row.dataset.kodeMateri,
             nomorSoal: parseInt(row.dataset.nomorSoal),
-            isiSoal: row.querySelector('td:nth-child(2)').textContent, // Kirimkan juga isi soal
+            isiSoal: row.querySelector('td:nth-child(2)').textContent,
             kunciJawaban: row.querySelector('.kunci-jawaban-input').value.toUpperCase() || '',
             poin: row.querySelector('.poin-soal-input').value || 0
         });
@@ -2316,17 +2384,26 @@ function handleUpdateSoal() {
     updateBtn.disabled = true;
     updateBtn.textContent = 'Menyimpan...';
 
-    // Kita gunakan kembali fungsi 'simpanBankSoal' karena logikanya sama (hapus lalu tambah)
+    // DITAMBAHKAN: Mengambil username guru yang sedang login dari sesi
+    const session = getActiveSession();
+    const teacherUsername = session ? session.username : '';
+
     fetch(CONFIG.SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'simpanBankSoal', soalData: dataToUpdate }),
+        // DIUBAH: Format data yang dikirim disesuaikan agar sama seperti format dari halaman admin
+        body: JSON.stringify({ 
+            action: 'simpanBankSoal', 
+            soalData: { 
+                soal: dataToUpdate, 
+                usernameGuru: teacherUsername 
+            }
+        }),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
     })
     .then(res => res.json())
     .then(result => {
         if (result.status === 'success') {
             showMessage(result.message, 'success');
-            // Muat ulang data untuk merefleksikan perubahan
             setupHalamanGuru(); 
         } else {
             throw new Error(result.message);
@@ -3251,9 +3328,13 @@ async function setupHalamanUjianAdmin() {
         const isMusyrifah = jabatan === 'Musyrifah';
         const financeUsers = ['mia', 'wawan', 'aria', 'yeni', 'admin'];
         const karyawanUsers = ['wawan', 'admin', 'aria', 'yeni', 'mia', 'zhofri', 'erwan', 'mahadi', 'zaidun', 'yanti', 'ryza', 'reza', 'uswah', 'erma'];
-        const isGuru = (userData.jabatan || '').trim().toLowerCase() === 'guru';
+        const isGuru = (jabatan || '').trim().toLowerCase() === 'guru' || appData.teachers.some(t => t.name === session.userData.profileName);
         const canAccessBankSoal = isGuru || userData.username === 'mia' || userData.username === 'wawan' || userData.username === 'admin';
         const isAdminUjian = ['wawan', 'mia', 'admin'].includes(username);
+
+		if (isGuru) {
+        fetchAndShowTeacherNotifications();
+    }
 
         document.getElementById('attendanceNav').classList.toggle('hidden', isSantri);
         document.getElementById('ujianOnlineNav').classList.toggle('hidden', !isSantri);
