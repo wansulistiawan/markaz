@@ -558,6 +558,13 @@
     border: 2px solid white;
 }
 
+/* --- Tambahkan kode ini ke dalam tag <style> Anda --- */
+
+#fullscreenWarningModal {
+    /* DITAMBAHKAN: Atur z-index lebih tinggi dari halaman ujian (5000) agar muncul di atas */
+    z-index: 9001;
+}
+
     </style>
 </head>
 <body>
@@ -1330,6 +1337,18 @@ b. Soekarno
             </div>
     </div>
 </div>
+
+<div id="fullscreenWarningModal" class="modal" style="background-color: rgba(0,0,0,0.85);">
+    <div class="modal-content text-center">
+        <h2 class="text-2xl font-bold text-red-600 mb-4">PERINGATAN!</h2>
+        <p class="text-gray-700 text-lg mb-6">
+            Anda terdeteksi keluar dari mode layar penuh. Harap kembali ke mode layar penuh untuk melanjutkan ujian.
+        </p>
+        <button id="reenterFullscreenBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">
+            Kembali ke Ujian
+        </button>
+    </div>
+</div>
 	
     <div id="login" class="page-section hidden container"><form id="loginForm" class="custom-form"><h2 style="text-align: center;">Login Pengurus / Staf</h2><div class="form-group"><label for="username">Username</label><input type="text" id="username" name="username" autocomplete="username" required></div><div class="form-group password-container"><label for="password">Password</label><input type="password" id="password" name="password" required><span class="toggle-password"></span></div><div class="form-group remember-me"><div><input type="checkbox" id="remember" name="remember"><label for="remember">Ingat saya selama 30 hari</label></div><a href="#" id="forgotPasswordLink" class="forgot-password">Lupa Sandi?</a></div><button type="submit" class="submit-btn">Masuk</button></form></div>
     <div id="donasiModal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h2>Tata Cara Donasi</h2><p>Silakan transfer ke <strong>Bank BRI: 7040-0102-7168535</strong> a/n Markaz Yatim Duafa Qurani.</p><p style="text-align:center; margin-top:1rem;">Atau scan QRIS:</p><img src="qrisdonasi.png" alt="QRIS Donasi" style="width:250px;display:block;margin:15px auto;border-radius:8px;" onerror="this.onerror=null;this.src='https://placehold.co/250x250/cccccc/FFFFFF?text=QRIS+Error';"><a href="qrisdonasi.png" class="download-btn" download="qrisdonasi.png">Unduh QRIS</a><p>Konfirmasi ke <strong>085261804096</strong>.</p></div></div>
@@ -1664,6 +1683,7 @@ let firstAttemptScore = null;
 let isExamInProgress = false;
 const alarmSound = new Audio('alarm.mp3');
 alarmSound.loop = true;
+alarmSound.volume = 1.0;
 
 // =======================================================
 // === FUNGSI-FUNGSI UNTUK UJIAN ONLINE ===
@@ -2089,27 +2109,38 @@ function playAlarm() {
         alarmSound.play().catch(error => {
             console.error("Gagal memutar audio:", error);
             // Fallback jika audio gagal diputar
-            alert("PERINGATAN: Keluar dari mode fullscreen atau pindah tab tidak diizinkan selama ujian!");
+          
         });
-        alert("PERINGATAN: Anda terdeteksi keluar dari layar ujian. Harap kembali fokus pada ujian.");
+        document.getElementById('fullscreenWarningModal').style.display = 'block';
     }
 }
 
 function setupExamSecurityListeners() {
-    // Listener untuk mendeteksi keluar dari mode fullscreen (misal: tekan Esc)
+    // DIUBAH: Listener fullscreen sekarang menangani saat masuk dan keluar
     document.addEventListener('fullscreenchange', () => {
-        // `document.fullscreenElement` akan null jika tidak dalam mode fullscreen
-        if (!document.fullscreenElement && isExamInProgress) {
+        if (document.fullscreenElement) {
+            // Jika santri berhasil masuk lagi ke fullscreen
+            alarmSound.pause();
+            alarmSound.currentTime = 0;
+            document.getElementById('fullscreenWarningModal').style.display = 'none';
+        } else if (isExamInProgress) {
+            // Jika santri keluar dari fullscreen saat ujian berlangsung
             playAlarm();
         }
     });
 
-    // Listener untuk mendeteksi pindah tab atau minimize browser
+    // Listener untuk pindah tab (tetap sama)
     document.addEventListener('visibilitychange', () => {
-        // `document.hidden` akan true jika tab tidak aktif
         if (document.hidden && isExamInProgress) {
             playAlarm();
         }
+    });
+
+    // DITAMBAHKAN: Event listener untuk tombol "Kembali ke Ujian" di dalam pop-up
+    document.getElementById('reenterFullscreenBtn').addEventListener('click', () => {
+        // Fungsi ini hanya memicu permintaan fullscreen, sisanya akan ditangani
+        // oleh listener 'fullscreenchange' di atas.
+        enterFullscreen(document.documentElement);
     });
 }
 
@@ -2398,10 +2429,10 @@ function renderSoalUntukGuru(filterKodeMateri) {
                     <textarea class="w-full p-2 border rounded-md" rows="4">${soal.isisoal}</textarea>
                 </td>
                 <td class="px-4 py-3 align-top">
-                    <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md uppercase" maxlength="1" value="${soal.kuncijawaban || ''}">
+                    <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md uppercase" maxlength="1" value="${soal.kuncijawaban || ''}" placeholder="Cth: A">
                 </td>
                 <td class="px-4 py-3 align-top">
-                    <input type="number" class="poin-soal-input w-full p-2 border rounded-md" value="${soal.poin || 0}">
+                    <input type="number" class="poin-soal-input w-full p-2 border rounded-md" value="${soal.poin || 0}" placeholder="Cth: A">
                 </td>
             </tr>
         `;
