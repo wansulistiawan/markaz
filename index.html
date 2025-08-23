@@ -571,45 +571,71 @@
 
 /* --- Tambahkan kode ini untuk membuat notifikasi meriah --- */
 
+/* --- GANTI SEMUA CSS NOTIFIKASI LAMA DENGAN BLOK BARU INI --- */
+
 /* Atur gaya dasar untuk area notifikasi */
 #header-notification-area p {
     font-size: 0.85em;
     font-weight: bold;
-    padding: 5px 12px;
+    padding: 8px 15px; /* Sedikit diperbesar agar bingkai terlihat bagus */
     border-radius: 15px;
     margin-top: 5px;
     display: inline-block;
-    border: none; 
     
+    /* DITAMBAHKAN: Posisi relatif untuk bingkai animasi */
+    position: relative;
+    z-index: 1; /* Pastikan teks di atas bingkai */
+    
+    /* Gradien warna teks (tetap sama) */
     background: linear-gradient(90deg, #ff8a00, #e52e71, #2980b9, #ff8a00);
     background-size: 200% 100%;
-    
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     
-    /* DIUBAH: Panggil DUA animasi sekaligus, satu untuk warna dan satu untuk efek cahaya */
-    animation: shimmer-effect 4s linear infinite, glow-effect 2s ease-in-out infinite;
+    /* Animasi teks (tetap sama) */
+    animation: shimmer-effect 4s linear infinite;
 }
 
-/* Definisikan animasi 'shimmer-effect' (tetap sama) */
+/* DITAMBAHKAN: Pseudo-elemen untuk menciptakan bingkai neon turbulen */
+#header-notification-area p::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    
+    /* Membuat bentuk bingkai dengan padding transparan */
+    border: 2px solid transparent;
+    border-radius: 15px; /* Samakan dengan border-radius elemen utama */
+    
+    /* Gradien dua warna (biru dan pink) sebagai sumber garis turbulen */
+    background: linear-gradient(45deg, #00c6ff, #f09) border-box;
+    
+    /* Trik untuk membuat background hanya muncul di area border */
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) padding-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    
+    /* Panggil animasi untuk gerakan turbulen */
+    animation: turbulent-frame 2s linear infinite;
+    
+    z-index: -1; /* Letakkan bingkai di belakang teks */
+}
+
+/* Animasi 'shimmer-effect' untuk teks (tetap sama) */
 @keyframes shimmer-effect {
-    0% {
-        background-position: 200% 0;
-    }
-    100% {
-        background-position: -200% 0;
-    }
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
-/* DITAMBAHKAN: Definisikan animasi 'glow-effect' untuk efek cahaya berdenyut */
-@keyframes glow-effect {
-    0%, 100% {
-        text-shadow: 0 0 3px #fff, 0 0 5px #ffd700; /* Cahaya awal */
-    }
-    50% {
-        text-shadow: 0 0 10px #fff, 0 0 15px #ffd700; /* Cahaya lebih terang di tengah animasi */
-    }
+/* DITAMBAHKAN: Animasi 'turbulent-frame' untuk bingkai neon */
+@keyframes turbulent-frame {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(5deg) scale(1.02); }
+    50% { transform: rotate(0deg); }
+    75% { transform: rotate(-5deg) scale(1.02); }
+    100% { transform: rotate(0deg); }
 }
 
 
@@ -1831,45 +1857,49 @@ function isTimeInSlot(now, timeSlot) {
     return now >= startTime && now <= endTime;
 }
 
+// DIUBAH TOTAL: Fungsi notifikasi sekarang bisa menangani event yang berlangsung beberapa hari
 function checkAndDisplayHeaderNotifications() {
     const notificationArea = document.getElementById('header-notification-area');
     if (!notificationArea) return;
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Atur waktu ke awal hari untuk perbandingan yang akurat
+    today.setHours(0, 0, 0, 0);
 
-    let upcomingEvent = null;
-    let minDiffDays = Infinity;
+    const notificationsToShow = [];
 
-    // Cari satu acara terdekat dalam rentang 2 hari
     appData.calendarEvents.forEach(event => {
         const eventDate = new Date(event.date + 'T00:00:00');
-        const diffTime = eventDate.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const span = event.span || 1; // Ambil durasi hari, default 1 jika tidak ada
+        const endDate = new Date(eventDate);
+        endDate.setDate(eventDate.getDate() + span - 1);
 
-        if (diffDays >= 0 && diffDays < minDiffDays) {
-            minDiffDays = diffDays;
-            upcomingEvent = event;
+        // Hitung selisih hari ke TANGGAL MULAI acara
+        const diffDays = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+        let message = '';
+
+        // DIUBAH: Logika baru untuk memeriksa rentang tanggal
+        if (today >= eventDate && today <= endDate) {
+            // Kondisi 1: Acara sedang berlangsung hari ini
+            message = `Sedang berlangsung: ${event.title}`;
+        } else if (diffDays > 0 && diffDays <= 2) {
+            // Kondisi 2: Acara akan datang dalam 1-2 hari
+            message = `${diffDays} hari lagi: ${event.title}`;
+        }
+
+        if (message) {
+            notificationsToShow.push(message);
         }
     });
 
-    // Hapus notifikasi lama
     notificationArea.innerHTML = '';
 
-    // Tampilkan notifikasi jika ada acara terdekat dalam 2 hari
-    if (upcomingEvent && minDiffDays <= 2) {
-        let message = '';
-        if (minDiffDays === 0) {
-            message = `Hari ini: ${upcomingEvent.title}`;
-        } else if (minDiffDays === 1) {
-            message = `1 hari lagi: ${upcomingEvent.title}`;
-        } else if (minDiffDays === 2) {
-            message = `2 hari lagi: ${upcomingEvent.title}`;
-        }
-        
-        const p = document.createElement('p');
-        p.textContent = message;
-        notificationArea.appendChild(p);
+    if (notificationsToShow.length > 0) {
+        notificationsToShow.forEach(msg => {
+            const p = document.createElement('p');
+            p.textContent = msg;
+            notificationArea.appendChild(p);
+        });
     }
 }
 
@@ -3760,40 +3790,47 @@ function setupSantriSelectorListeners() {
     }
     
     function populateTeacherClasses(session, selectedDateStr, targetTeacherName = null) {
-        const selectedDate = new Date(selectedDateStr + 'T00:00:00'); 
-        const dayIndex = selectedDate.getDay();
-        const daysInIndonesian = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-        const currentDayName = daysInIndonesian[dayIndex];
-        const classNameSelect = document.getElementById('className');
+    const selectedDate = new Date(selectedDateStr + 'T00:00:00'); 
+    const dayIndex = selectedDate.getDay();
+    const daysInIndonesian = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const currentDayName = daysInIndonesian[dayIndex];
+    const classNameSelect = document.getElementById('className');
+    
+    classNameSelect.innerHTML = '<option value="">Memuat kelas...</option>';
+    
+    const teacherName = targetTeacherName || (session && session.userData ? session.userData.profileName : null);
+    
+    if (teacherName && appData.schedules) {
+        let taughtClasses = new Set();
         
-        classNameSelect.innerHTML = '<option value="">Memuat kelas...</option>';
-        
-        const teacherName = targetTeacherName || (session && session.userData ? session.userData.profileName : null);
-        if (teacherName) {
-            let taughtClasses = new Set();
-            for (const monthKey in appData.schedules) {
-                appData.schedules[monthKey].forEach(scheduleItem => {
-                    if (scheduleItem.teacher === teacherName && scheduleItem.day === currentDayName) {
-                        taughtClasses.add(scheduleItem.subject);
-                    }
-                });
+        // LOGIKA BARU: Cek apakah data berbentuk array (dari server) atau objek (dummy)
+        const schedulesToScan = Array.isArray(appData.schedules) 
+            ? appData.schedules 
+            : Object.values(appData.schedules).flat();
+
+        schedulesToScan.forEach(scheduleItem => {
+            if (scheduleItem.teacher === teacherName && scheduleItem.day === currentDayName) {
+                taughtClasses.add(scheduleItem.subject);
             }
-            classNameSelect.innerHTML = '';
-            if (taughtClasses.size > 0) {
-                classNameSelect.innerHTML = '<option value="">Pilih Kelas...</option>';
-                taughtClasses.forEach(subject => {
-                    const option = document.createElement('option');
-                    option.value = subject;
-                    option.textContent = subject;
-                    classNameSelect.appendChild(option);
-                });
-            } else {
-                classNameSelect.innerHTML = '<option value="">Tidak ada jadwal mengajar pada tanggal ini</option>';
-            }
+        });
+
+        classNameSelect.innerHTML = '';
+        if (taughtClasses.size > 0) {
+            classNameSelect.innerHTML = '<option value="">Pilih Kelas...</option>';
+            // Ditambahkan .sort() agar daftar kelas urut abjad dan rapi
+            Array.from(taughtClasses).sort().forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject;
+                option.textContent = subject;
+                classNameSelect.appendChild(option);
+            });
         } else {
-            classNameSelect.innerHTML = '<option value="">Silakan login terlebih dahulu</option>';
+            classNameSelect.innerHTML = '<option value="">Tidak ada jadwal mengajar pada tanggal ini</option>';
         }
+    } else {
+        classNameSelect.innerHTML = '<option value="">Silakan login terlebih dahulu</option>';
     }
+}
 
     function populateSubstituteTeachers() {
         const selectElement = document.getElementById('substituteTeacherName');
@@ -4618,6 +4655,34 @@ async function handleKhsClick(event, userData = null) {
             addMateriBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     };
+
+/**
+ * Fungsi baru untuk mengambil data roster dari Google Sheet.
+ * Mengembalikan data jika berhasil, atau null jika gagal.
+ */
+async function fetchRosterDataFromServer() {
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getRosterData' }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const result = await response.json();
+        
+        // Cek jika status sukses DAN ada data yang dikembalikan
+        if (result.status === 'success' && result.data && result.data.length > 0) {
+            console.log("Berhasil mengambil data roster terbaru dari server.");
+            return result.data; // Kembalikan data yang berhasil diunduh
+        } else {
+            // Jika fetch berhasil tapi tidak ada data, log pesan peringatan
+            console.warn("Server tidak mengembalikan data roster. Akan menggunakan data dummy.");
+            return null; // Kembalikan null karena tidak ada data
+        }
+    } catch (error) {
+        console.error("KRITIS: Gagal mengambil data jadwal dari server!", error);
+        return null; // Kembalikan null jika terjadi error koneksi
+    }
+}
 	
     // --- (Fungsi-fungsi SI KBM di sini) ---
 function initializeSistemInformasi() {
@@ -5451,9 +5516,7 @@ addKrsRowBtn.addEventListener('click', async () => {
     // --- INITIALIZATION ---
     function initializeApp() {
         // Proses semua data jadwal sekali saat aplikasi dimuat
-        for (const key in appData.schedules) {
-            appState.processedSchedules[key] = processAndFillScheduleData(appData.schedules[key]);
-        }
+        
 
         // Render semua bagian aplikasi
         renderSantriTable();
@@ -5584,14 +5647,41 @@ function handleSaveKrs() {
 		
     }
 
-    function initializeApp() {
+    async function initializeApp() {
         updateDateTime();
         setTodayDate();
 		
 		checkAndDisplayHeaderNotifications();
         setInterval(checkAndDisplayHeaderNotifications, 60 * 60 * 1000); // Cek setiap 1 jam
 
-        
+        // 1. Panggil fungsi baru untuk mencoba mengambil data dari server
+    const fetchedSchedules = await fetchRosterDataFromServer();
+
+    // 2. Tentukan data mana yang akan digunakan
+    if (fetchedSchedules) {
+        // Jika unduhan berhasil, timpa data dummy dengan data baru dari server
+        appData.schedules = fetchedSchedules;
+    } else {
+        // Jika unduhan gagal, gunakan data dummy yang sudah ada di file
+        console.log("Menggunakan data dummy untuk menampilkan jadwal.");
+    }
+    
+    // 3. Olah data yang sudah final (baik itu dari server atau dummy) ke dalam appState
+    appState.processedSchedules = {};
+    for (let i = 1; i <= 8; i++) {
+        const monthKey = `bulan${i}`;
+        
+        // LOGIKA BARU: Cek apakah data berbentuk array (dari server) atau objek (dummy)
+        if (Array.isArray(appData.schedules)) {
+             // Jika dari server, filter berdasarkan properti 'bulan'
+             appState.processedSchedules[monthKey] = appData.schedules.filter(item => String(item.bulan) === String(i));
+        } else {
+             // Jika dummy, ambil langsung dari properti objek
+             appState.processedSchedules[monthKey] = appData.schedules[monthKey] || [];
+        }
+    }
+    // ====================================================================
+	
         const session = getActiveSession();
         if (session && session.loggedIn) {
             showLoggedInView(session.userData);
