@@ -1470,6 +1470,9 @@ b. Soekarno
 	<footer><div class="container"><p>&copy; 2025 Yayasan Markaz Yatim Duafa Qurani. Semua Hak Cipta Dilindungi.</p><p>Jl. Protokol Desa Sei Kamah II, Sei Dadap, Asahan, Sumut | <a href="mailto:markazyatimduafaqurani@gmail.com">markazyatimduafaqurani@gmail.com</a> | 085261804096</p></div></footer>
 
 <script>
+
+
+
 document.addEventListener('DOMContentLoaded', function() {
     // --- BAGIAN 1: KONFIGURASI & DATA UTAMA ---
     const CONFIG = {
@@ -1481,6 +1484,81 @@ document.addEventListener('DOMContentLoaded', function() {
             eyeOff: `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
         }
     };
+
+// === TAMBAHKAN BLOK KODE INI DI BAGIAN ATAS SCRIPT ANDA ===
+    let santriDataWithUsernames = null; // Cache untuk santri data termasuk usernames
+
+    /**
+     * Mengambil daftar santri lengkap dengan username mereka dari server.
+     * Menggunakan sistem cache sederhana untuk menghindari permintaan berulang.
+     * @returns {Promise<Array>} Array berisi objek data santri.
+     */
+    async function getSantriDataWithUsernames() {
+        // Jika data sudah ada di cache, langsung kembalikan
+        if (santriDataWithUsernames) {
+            return santriDataWithUsernames;
+        }
+        
+        // Jika belum ada, ambil dari server
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getSantriListWithUsernames' }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const result = await response.json();
+            if (result.status === 'success' && result.santri) {
+                santriDataWithUsernames = result.santri; // Simpan hasil ke cache
+                return santriDataWithUsernames;
+            } else {
+                throw new Error(result.message || 'Gagal mengambil daftar santri dari server.');
+            }
+        } catch (error) {
+            console.error("Error fetching santri list with usernames:", error);
+            // Lemparkan error agar bisa ditangani oleh fungsi yang memanggilnya
+            throw error;
+        }
+    }
+    // ==========================================================
+
+
+
+/**
+ * Fungsi baru untuk menentukan bulan akademik yang sedang berjalan
+ * berdasarkan tanggal hari ini dan data dari appData.calendarEvents.
+ * @returns {number} Nomor bulan yang sedang aktif (contoh: 2 untuk Bulan II).
+ */
+function getCurrentAcademicMonth() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Atur waktu ke awal hari untuk perbandingan yang akurat
+
+    // 1. Ambil semua acara "Awal Materi Bulan" dari kalender dan urutkan berdasarkan tanggal
+    const monthStartEvents = appData.calendarEvents
+        .filter(event => event.title.startsWith("Awal Materi Bulan"))
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    let currentMonth = 0;
+
+    // 2. Cari acara "Awal Materi" terakhir yang sudah lewat dari tanggal hari ini
+    for (const event of monthStartEvents) {
+        const eventDate = new Date(event.date);
+        if (eventDate <= today) {
+            // Ekstrak nomor bulan dari judul acara
+            const monthMatch = event.title.match(/Bulan (I|II|III|IV|V|VI|VII|VIII)/);
+            if (monthMatch) {
+                const romanMap = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8 };
+                currentMonth = romanMap[monthMatch[1]];
+            }
+        } else {
+            // Karena sudah diurutkan, kita bisa berhenti jika menemukan acara di masa depan
+            break;
+        }
+    }
+    
+    console.log(`Bulan akademik saat ini terdeteksi: Bulan ${currentMonth}`);
+    return currentMonth;
+}
+
 
     const appData = {
         heroImages: ["anakdidik.jpg", "anakdidik01.jpg", "anakdidik02.jpg", "anakdidik03.jpg", "anakdidik04.jpg"],
@@ -1921,8 +1999,8 @@ async function renderExamSchedule() {
     // DITAMBAHKAN: Cek apakah user yang melihat adalah admin
     const isAdmin = ['wawan', 'mia', 'admin'].includes(session.username);
 
-    if (Object.keys(subjectToMonthMap).length === 0) {
-        Object.entries(appData.schedules).forEach(([monthKey, scheduleItems]) => {
+    if (Object.keys(subjectToMonthMap).length === 0 && appState.processedSchedules) {
+        Object.entries(appState.processedSchedules).forEach(([monthKey, scheduleItems]) => {
             const monthNumber = parseInt(monthKey.replace('bulan', ''));
             scheduleItems.forEach(item => {
                 if(item.subject && item.subject.includes(':')) {
@@ -1987,7 +2065,7 @@ async function renderExamSchedule() {
             const isExamWindowActive = (now >= examWeekStart && now <= examWeekEnd) && days[now.getDay()] === item.day && isTimeInSlot(now, item.time);
 
             if (riwayat) { // Jika sudah pernah ujian
-                if (isExamWeekOver && !isAdmin) {
+                if (isExamWeekOver && !isAdmin && !isSpeciallyUnlocked) {
                     statusText = `Selesai (Nilai: ${riwayat.skor})`;
                     statusColor = 'bg-green-300';
                     isDisabled = true;
@@ -2029,7 +2107,16 @@ async function renderExamSchedule() {
                 isDisabled = false; 
                 statusColor = 'bg-purple-600 hover:bg-purple-700';
             }
-
+			if (isSpeciallyUnlocked) {
+                isDisabled = false; // SELALU aktifkan tombol
+                statusColor = 'bg-orange-500 hover:bg-orange-600'; // Beri warna khusus (oranye)
+                
+                if (riwayat) {
+                    statusText = `Ulang Ujian (Manual)`;
+                } else {
+                    statusText = 'Mulai Ujian (Manual)';
+                }
+            }
             const card = document.createElement('div');
             card.className = 'schedule-cell p-4 border rounded-lg flex flex-col';
             card.innerHTML = `
@@ -2376,7 +2463,7 @@ function setupInputSoalPage() {
     // 1. Isi dropdown materi dari data jadwal yang ada
     if (materiSelect && materiSelect.options.length <= 1) {
         const uniqueSubjects = {};
-        Object.values(appData.schedules).flat().forEach(item => {
+        Object.values(appState.processedSchedules).flat().forEach(item => {
             if (item.subject && item.subject.includes(':')) {
                 const code = item.subject.split(':')[0].trim();
                 if (!uniqueSubjects[code]) {
@@ -3699,15 +3786,17 @@ async function setupHalamanUjianAdmin() {
     }
 
 // KOMENTAR: Fungsi baru untuk menangani tombol "Tampilkan" KRS/KHS
+// === GANTI FUNGSI LAMA DENGAN FUNGSI BARU YANG LENGKAP INI ===
 function setupSantriSelectorListeners() {
     const showReportBtn = document.getElementById('show-report-btn');
     if (!showReportBtn) return;
 
-    showReportBtn.addEventListener('click', () => {
+    // Tambahkan event listener ke tombol "Tampilkan"
+    showReportBtn.addEventListener('click', async () => { // Jadikan fungsi ini async
         const reportType = showReportBtn.dataset.reportType;
         const selectedMonth = document.getElementById('santri-month-selector').value;
-        
-        // KOMENTAR: Klik tab bulan yang sesuai secara programatik untuk memastikan data benar
+
+        // Klik tab bulan yang sesuai secara programatik untuk memastikan data roster benar
         const tabToClick = document.getElementById(`tab-bulan${selectedMonth}`);
         if (tabToClick) {
             tabToClick.click();
@@ -3716,18 +3805,42 @@ function setupSantriSelectorListeners() {
             return;
         }
 
-        // Panggil fungsi untuk menampilkan laporan
-        const session = getActiveSession();
-        if (reportType === 'krs') {
-            handleKrsClick(null, session.userData);
-        } else {
-            handleKhsClick(null, session.userData);
-        }
+        try {
+            // Ambil nama santri dari elemen display di form pilihan
+            const santriName = document.getElementById('santri-selector-name').textContent.replace(': ', '').trim();
 
-        // Sembunyikan kembali kontainer pilihan
-        document.getElementById('santri-selection-container').classList.add('hidden');
+            // Panggil fungsi baru untuk mendapatkan daftar santri dengan USERNAME ASLI
+            const allSantriWithUsernames = await getSantriDataWithUsernames();
+            
+            // Cari data lengkap santri yang dipilih berdasarkan nama
+            const santriDataForReport = allSantriWithUsernames.find(s => s.profileName === santriName);
+
+            // Jika karena suatu alasan data santri tidak ditemukan, tampilkan error
+            if (!santriDataForReport) {
+                showMessage(`Data pengguna untuk santri "${santriName}" tidak ditemukan di sistem.`, 'error');
+                return;
+            }
+
+            // Sekarang kita memiliki objek santriDataForReport yang berisi profileName dan username yang BENAR
+            
+            // Panggil fungsi yang sesuai dengan data santri yang telah ditemukan
+            if (reportType === 'krs') {
+                // Fungsi KRS tidak butuh username, tapi tidak masalah mengirim data lengkap
+                handleKrsClick(null, santriDataForReport);
+            } else {
+                // Fungsi KHS akan menerima OBJEK dengan USERNAME YANG BENAR
+                handleKhsClick(null, santriDataForReport);
+            }
+
+            // Sembunyikan kembali kontainer pilihan setelah selesai
+            document.getElementById('santri-selection-container').classList.add('hidden');
+        } catch (error) {
+            // Tangani jika terjadi error saat mengambil data santri
+            showMessage(`Terjadi kesalahan saat memproses data: ${error.message}`, 'error');
+        }
     });
 }
+// =================================================================
 
 
     function renderNewsCards() { const container = document.getElementById('news-container'); if (container) container.innerHTML = appData.news.map(item => `<div class="card"><img src="${item.img}" alt="${item.title}" onerror="this.onerror=null;this.src='https://placehold.co/400x200/cccccc/FFFFFF?text=Error';"><div class="card-content"><h3>${item.title}</h3><p class="meta">${item.meta}</p><p>${item.desc}</p></div></div>`).join(''); }
@@ -3798,18 +3911,31 @@ function setupSantriSelectorListeners() {
     
     classNameSelect.innerHTML = '<option value="">Memuat kelas...</option>';
     
+    // --- PERUBAHAN DIMULAI DI SINI ---
+    
+    // 1. Panggil fungsi baru untuk mendapatkan bulan akademik saat ini
+    const currentAcademicMonth = getCurrentAcademicMonth();
+    if (currentAcademicMonth === 0) {
+         classNameSelect.innerHTML = '<option value="">Kalender akademik belum dimulai</option>';
+         return;
+    }
+
     const teacherName = targetTeacherName || (session && session.userData ? session.userData.profileName : null);
     
     if (teacherName && appData.schedules) {
         let taughtClasses = new Set();
         
-        // LOGIKA BARU: Cek apakah data berbentuk array (dari server) atau objek (dummy)
         const schedulesToScan = Array.isArray(appData.schedules) 
             ? appData.schedules 
             : Object.values(appData.schedules).flat();
 
         schedulesToScan.forEach(scheduleItem => {
-            if (scheduleItem.teacher === teacherName && scheduleItem.day === currentDayName) {
+            // 2. Tambahkan kondisi filter untuk mencocokkan bulan akademik
+            if (
+                scheduleItem.teacher === teacherName && 
+                scheduleItem.day === currentDayName &&
+                String(scheduleItem.bulan) === String(currentAcademicMonth) // <-- KONDISI BARU
+            ) {
                 taughtClasses.add(scheduleItem.subject);
             }
         });
@@ -4449,193 +4575,342 @@ function fetchAndRenderTahfidzReport(dateString) {
         reportContainer.innerHTML = `<p class="p-6 text-center text-red-500">Gagal memuat laporan: ${error.message}</p>`;
     });
 }	
+
+
 const handleKrsClick = async (event, userData = null) => {
-    if (event) { // Jika dipanggil dari klik tombol, bukan dari refresh
-         const santriRow = event.target.closest('tr');
-         userData = {
-            profileName: santriRow.dataset.santriName,
-            // Tambahkan data lain jika perlu dari dataset
-         };
-    }
-    
-    if (!userData) {
-        console.error("Tidak ada data pengguna untuk menampilkan KRS.");
-        return;
-    }
+        // Logika ini untuk klik dari tabel Data Santri di halaman Roster
+        if (event) {
+            const santriRow = event.target.closest('tr');
+            // Ambil semua data santri dari baris yang di-klik
+            const clickedSantriData = {
+                profileName: santriRow.dataset.santriName,
+                grup: santriRow.dataset.santriGroup,
+                kelas: santriRow.dataset.santriKelas,
+                jurusan: santriRow.dataset.santriJurusan
+            };
 
-    const loggedInSantriName = userData.profileName;
-    const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
-    if (!santriData) {
-        alert(`Data untuk santri "${loggedInSantriName}" tidak ditemukan.`);
-        return;
-    }
+            const session = getActiveSession();
+            const isAdmin = session && ['wawan', 'mia', 'admin'].includes(session.username);
 
-    // Tampilkan data header KRS seperti biasa
-    document.getElementById('nama-santri-krs').textContent = `: ${santriData.nama}`;
-    document.getElementById('jurusan-krs').textContent = `: ${santriData.jurusan}`;
-    document.getElementById('kelas-krs').textContent = `: ${santriData.kelas}`;
-    document.getElementById('kelompok-krs').textContent = `: ${santriData.grup}`;
-    const activeTab = document.querySelector('.tab-btn.active');
-    const bulan = activeTab.textContent.replace('Bulan ', '');
-    document.getElementById('materi-bulan-krs').textContent = `: ${bulan}`;
+            // === LOGIKA BARU UNTUK ADMIN ===
+            if (isAdmin) {
+                // 1. Sembunyikan halaman roster dan tampilkan halaman santri
+                document.getElementById('roster-kbm').classList.add('hidden');
+                document.getElementById('santri').classList.remove('hidden');
 
-    krsTableBody.innerHTML = `<tr><td colspan="8" class="text-center p-4">Memuat data KRS dari server...</td></tr>`;
-    krsContainer.classList.remove('hidden');
-    khsContainer.classList.add('hidden');
-    krsContainer.scrollIntoView({ behavior: 'smooth' });
+                // 2. Tampilkan dan isi form pilihan bulan
+                const selectionContainer = document.getElementById('santri-selection-container');
+                selectionContainer.classList.remove('hidden');
+                document.getElementById('santri-selector-name').textContent = `: ${clickedSantriData.profileName}`;
+                document.getElementById('santri-selector-group').textContent = `: ${clickedSantriData.grup}`;
 
-    try {
-        // Langkah 1: Ambil data KRS yang sudah tersimpan dari Google Sheet
-        const response = await fetch(CONFIG.SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'getKrsData', namaSantri: loggedInSantriName, bulan: bulan }),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        });
-        const result = await response.json();
-        if (result.status !== 'success') throw new Error(result.message);
+                // 3. Pastikan dropdown bulan sudah terisi
+                const monthSelector = document.getElementById('santri-month-selector');
+                if (monthSelector.options.length === 0) {
+                    const months = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+                    months.forEach((month, index) => {
+                        const option = document.createElement('option');
+                        option.value = index + 1;
+                        option.textContent = month;
+                        monthSelector.appendChild(option);
+                    });
+                }
 
-        const savedKrsData = result.data;
+                // 4. Atur tombol "Tampilkan" untuk KRS
+                const showReportBtn = document.getElementById('show-report-btn');
+                showReportBtn.textContent = 'Tampilkan KRS';
+                showReportBtn.dataset.reportType = 'krs';
+                showReportBtn.classList.remove('khs-btn-color');
+                showReportBtn.classList.add('krs-btn-color');
 
-        // Langkah 2: Tampilkan data yang sudah tersimpan ke dalam tabel
-        krsTableBody.innerHTML = ''; 
-        if (savedKrsData.length > 0) {
-            savedKrsData
-                .sort((a, b) => { // Urutkan berdasarkan hari dan waktu
-                    const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-                    return days.indexOf(a.Hari) - days.indexOf(b.Hari) || a.Waktu.localeCompare(b.Waktu);
-                })
-                .forEach((item, index) => {
-                    const tr = document.createElement('tr');
-                    tr.className = index % 2 === 0 ? 'bg-white border-b' : 'bg-gray-50 border-b';
-                    tr.innerHTML = `
-                        <td class="px-4 py-2">${item.Hari}</td>
-                        <td class="px-4 py-2">${item.Waktu}</td>
-                        <td class="px-4 py-2">${item.KodeMateri}</td>
-                        <td class="px-4 py-2">${item.NamaMateri}</td>
-                        <td class="px-4 py-2">${item.Ruang}</td>
-                        <td class="px-4 py-2 text-center">${item.SKS}</td>
-                        <td class="px-4 py-2">${item.Guru}</td>
-                        <td class="px-4 py-2 text-center">
-                            <button class="delete-krs-row text-red-500 hover:text-red-700">Hapus</button>
-                        </td>`;
-                    krsTableBody.appendChild(tr);
-                });
-        } else {
-             krsTableBody.innerHTML = `<tr><td colspan="8" class="text-center px-4 py-3 text-gray-500">Belum ada materi yang diambil. Klik 'Tambah Materi' untuk memulai.</td></tr>`;
+                // 5. Pastikan kontainer hasil (KRS/KHS) disembunyikan
+                document.getElementById('krs-container').classList.add('hidden');
+                document.getElementById('khs-container').classList.add('hidden');
+                
+                // 6. Hentikan eksekusi fungsi di sini untuk admin
+                return;
+            }
+            // Jika bukan admin, teruskan userData untuk pemrosesan normal
+            userData = clickedSantriData;
         }
-        updateKrsTotalSks();
-    } catch (error) {
-        krsTableBody.innerHTML = `<tr><td colspan="8" class="text-center p-4 text-red-500">Gagal memuat data: ${error.message}</td></tr>`;
-    }
-};
 
-// DIUBAH TOTAL: Fungsi KHS sekarang mengambil daftar materi dari KRS yang tersimpan
-async function handleKhsClick(event, userData = null) {
-    if (!userData && event) {
-         const santriRow = event.target.closest('tr');
-         userData = {
-            profileName: santriRow.dataset.santriName,
-            username: santriRow.dataset.santriName.toLowerCase().replace(/\s/g, ''), // Asumsi username
-         };
-    }
-    
-    if (!userData) {
-        console.error("Tidak ada data pengguna untuk menampilkan KHS.");
-        return;
-    }
-
-    const loggedInSantriName = userData.profileName;
-    const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
-    if (!santriData) {
-        alert(`Data untuk santri "${loggedInSantriName}" tidak ditemukan.`);
-        return;
-    }
-    
-    const khsDisplay = document.getElementById('khs-display');
-    khsDisplay.innerHTML = '<p class="p-8 text-center text-gray-500">Memuat data KHS dari KRS & Riwayat Nilai...</p>';
-    khsContainer.classList.remove('hidden');
-    krsContainer.classList.add('hidden');
-    khsContainer.scrollIntoView({ behavior: 'smooth' });
-
-    const activeTab = document.querySelector('.tab-btn.active');
-    const bulan = activeTab.textContent.replace('Bulan ', '');
-    const bulanNumber = parseInt(activeTab.id.replace('tab-bulan', ''), 10);
-    
-    try {
-        // Langkah 1: Ambil SEMUA materi yang terdaftar di KRS santri
-        const krsResponse = await fetch(CONFIG.SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'getAllKrsSubjectsForSantri', namaSantri: loggedInSantriName }),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        });
-        const krsResult = await krsResponse.json();
-        if(krsResult.status !== 'success') throw new Error(krsResult.message);
-        
-        // Langkah 2: Ambil SEMUA riwayat nilai santri
-        const nilaiResponse = await fetch(CONFIG.SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'getAllKHSData', username: userData.username }),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        });
-        const nilaiResult = await nilaiResponse.json();
-        if(nilaiResult.status !== 'success') throw new Error(nilaiResult.message);
-
-        const allGrades = nilaiResult.nilai;
-        
-        // Langkah 3: Saring materi KRS hanya untuk bulan yang aktif
-        const krsForThisMonth = krsResult.data.filter(item => {
-            return subjectToMonthMap[item.code] === bulanNumber;
-        });
-
-        if (krsForThisMonth.length === 0) {
-            khsDisplay.innerHTML = `<p class="p-8 text-center text-gray-500">Tidak ada materi KRS yang terdaftar untuk Bulan ${bulan}.</p>`;
+        // === LOGIKA LAMA (Untuk santri yang melihat KRS-nya sendiri) ===
+        if (!userData) {
+            console.error("Tidak ada data pengguna untuk menampilkan KRS.");
             return;
         }
 
-        // Langkah 4: Proses data KHS dengan menggabungkan materi KRS dan nilai
-        const khsData = krsForThisMonth.map((item, index) => {
-            const nilai = allGrades[item.code] !== undefined ? allGrades[item.code] : 0;
-            let huruf = 'E';
-            let bobot = 0.00;
-            if (nilai >= 96) { huruf = 'A'; bobot = 4.00; }
-            else if (nilai >= 92) { huruf = 'A-'; bobot = 3.75; }
-            else if (nilai >= 88) { huruf = 'B+'; bobot = 3.50; }
-            else if (nilai >= 84) { huruf = 'B'; bobot = 3.00; }
-            else if (nilai >= 80) { huruf = 'B-'; bobot = 2.75; }
-            else if (nilai >= 76) { huruf = 'C+'; bobot = 2.50; }
-            else if (nilai >= 72) { huruf = 'C'; bobot = 2.00; }
-            else if (nilai >= 65) { huruf = 'D'; bobot = 1.00; }
-            
-            return {
-                no: index + 1,
-                kode: item.code,
-                materi: item.name,
-                sks: item.sks,
-                huruf: huruf,
-                bobot: bobot,
-                nilai: parseFloat(nilai).toFixed(2)
-            };
-        });
-
-        let tableRows = '', totalSks = 0, totalNilaiBobot = 0;
-        khsData.forEach(item => {
-            tableRows += `<tr><td class="border border-black text-center">${item.no}</td><td class="border border-black">${item.kode}</td><td class="border border-black">${item.materi}</td><td class="border border-black text-center">${item.sks}</td><td class="border border-black text-center">${item.huruf}</td><td class="border border-black text-center">${item.bobot.toFixed(2)}</td><td class="border border-black text-center">${item.nilai}</td></tr>`;
-            totalSks += parseInt(item.sks) || 0;
-            totalNilaiBobot += (parseInt(item.sks) || 0) * item.bobot;
-        });
-        const ip = totalSks > 0 ? (totalNilaiBobot / totalSks).toFixed(2) : "0.00";
+        const loggedInSantriName = userData.profileName;
+        const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
+        if (!santriData) {
+            alert(`Data untuk santri "${loggedInSantriName}" tidak ditemukan.`);
+            return;
+        }
         
-        // Langkah 5: Tampilkan KHS ke layar
-        khsDisplay.innerHTML = `<header class="flex items-center justify-between border-b-2 border-black pb-2"><div class="flex items-center"><img src="Logo_yayasan.png" alt="Logo Institusi" class="h-16 w-16 mr-4" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"><div class="h-16 w-16 mr-4 bg-gray-200 items-center justify-center text-gray-500 font-bold" style="display: none;">LOGO</div><div><h1 class="text-xl font-bold">MARKAZ QUR'AN AL-MAA'UN</h1><p class="text-xs">Lembaga Pendidikan Islam Terpadu</p></div></div></header><div class="text-center my-4"><h3 class="text-xl font-bold underline">KARTU HASIL STUDI (KHS)</h3></div><section id="info-santri-khs" class="grid grid-cols-2 gap-x-8 text-sm mb-4"></section><section><table id="tabel-nilai" class="w-full text-sm border-collapse border border-black"><thead class="bg-gray-200"><tr><th class="border border-black">NO</th><th class="border border-black">KODE</th><th class="border border-black text-left">MATERI</th><th class="border border-black">SKS</th><th class="border border-black">Huruf</th><th class="border border-black">Bobot</th><th class="border border-black">Nilai</th></tr></thead><tbody></tbody><tfoot></tfoot></table></section><footer class="flex justify-between items-start mt-6 text-xs" style="background-color: white; color: black;"><div><p>1 lembar untuk Santri</p><p>1 lembar untuk bid. kurikulum</p><p>1 lembar untuk Arsip</p></div><div class="text-center"><p>Sei Kamah II, ${new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p><p>Mudir,</p><div class="h-12"></div><p class="font-bold underline">Aria Atmaja</p></div></footer>`;
+        // ... (Sisa dari fungsi handleKrsClick yang sudah ada tetap sama) ...
+        document.getElementById('nama-santri-krs').textContent = `: ${santriData.nama}`;
+        document.getElementById('jurusan-krs').textContent = `: ${santriData.jurusan || santriData.jurusan}`;
+        document.getElementById('kelas-krs').textContent = `: ${santriData.kelas || santriData.kelas}`;
+        document.getElementById('kelompok-krs').textContent = `: ${santriData.grup || santriData.grup}`;
+        const activeTab = document.querySelector('.tab-btn.active');
+        const bulan = activeTab.textContent.replace('Bulan ', '');
+        document.getElementById('materi-bulan-krs').textContent = `: ${bulan}`;
 
-        khsDisplay.querySelector('tbody').innerHTML = tableRows;
-        khsDisplay.querySelector('tfoot').innerHTML = `<tr class="font-bold bg-gray-100"><td colspan="3" class="border border-black text-right pr-2">Jumlah SKS</td><td class="border border-black text-center">${totalSks}</td><td colspan="3" class="border border-black"></td></tr><tr class="font-bold bg-gray-100"><td colspan="5" class="border border-black text-right pr-2">IP Bulanan</td><td class="border border-black text-center">${ip}</td><td class="border border-black"></td></tr>`;
-        khsDisplay.querySelector('#info-santri-khs').innerHTML = `<div><div class="flex"><span class="w-32">NAMA</span><span>: ${santriData.nama}</span></div><div class="flex"><span class="w-32">Kelas / Jurusan</span><span>: ${santriData.kelas} / ${santriData.jurusan}</span></div></div><div><div class="flex"><span class="w-28">Semester / Bulan</span><span>: Ganjil / ${bulan}</span></div><div class="flex"><span class="w-28">Klaster</span><span>: ${santriData.grup}</span></div></div>`;
+        krsTableBody.innerHTML = `<tr><td colspan="8" class="text-center p-4">Memuat data KRS dari server...</td></tr>`;
+        krsContainer.classList.remove('hidden');
+        khsContainer.classList.add('hidden');
+        if(!event) { // Hanya scroll jika bukan dari klik admin
+            krsContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getKrsData', namaSantri: loggedInSantriName, bulan: bulan }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+            const savedKrsData = result.data;
+            krsTableBody.innerHTML = ''; 
+            if (savedKrsData.length > 0) {
+                savedKrsData
+                    .sort((a, b) => { 
+                        const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+                        return days.indexOf(a.Hari) - days.indexOf(b.Hari) || a.Waktu.localeCompare(b.Waktu);
+                    })
+                    .forEach((item, index) => {
+                        const tr = document.createElement('tr');
+                        tr.className = index % 2 === 0 ? 'bg-white border-b' : 'bg-gray-50 border-b';
+                        tr.innerHTML = `
+                            <td class="px-4 py-2">${item.Hari}</td>
+                            <td class="px-4 py-2">${item.Waktu}</td>
+                            <td class="px-4 py-2">${item.KodeMateri}</td>
+                            <td class="px-4 py-2">${item.NamaMateri}</td>
+                            <td class="px-4 py-2">${item.Ruang}</td>
+                            <td class="px-4 py-2 text-center">${item.SKS}</td>
+                            <td class="px-4 py-2">${item.Guru}</td>
+                            <td class="px-4 py-2 text-center">
+                                <button class="delete-krs-row text-red-500 hover:text-red-700">Hapus</button>
+                            </td>`;
+                        krsTableBody.appendChild(tr);
+                    });
+            } else {
+                 krsTableBody.innerHTML = `<tr><td colspan="8" class="text-center px-4 py-3 text-gray-500">Belum ada materi yang diambil. Klik 'Tambah Materi' untuk memulai.</td></tr>`;
+            }
+            updateKrsTotalSks();
+        } catch (error) {
+            krsTableBody.innerHTML = `<tr><td colspan="8" class="text-center p-4 text-red-500">Gagal memuat data: ${error.message}</td></tr>`;
+        }
+    };
 
-    } catch(error) {
-        khsDisplay.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat KHS: ${error.message}</p>`;
+// GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU YANG LENGKAP INI
+async function handleKhsClick(event, userData = null) {
+        // Logika ini untuk klik dari tabel Data Santri di halaman Roster
+        if (event) {
+            const santriRow = event.target.closest('tr');
+            const clickedSantriData = {
+                profileName: santriRow.dataset.santriName,
+                grup: santriRow.dataset.santriGroup,
+                kelas: santriRow.dataset.santriKelas,
+                jurusan: santriRow.dataset.santriJurusan,
+                username: (santriRow.dataset.santriName || '').toLowerCase().replace(/\s/g, '')
+            };
+
+            const session = getActiveSession();
+            const isAdmin = session && ['wawan', 'mia', 'admin'].includes(session.username);
+
+            // === LOGIKA BARU UNTUK ADMIN ===
+            if (isAdmin) {
+                document.getElementById('roster-kbm').classList.add('hidden');
+                document.getElementById('santri').classList.remove('hidden');
+
+                const selectionContainer = document.getElementById('santri-selection-container');
+                selectionContainer.classList.remove('hidden');
+                document.getElementById('santri-selector-name').textContent = `: ${clickedSantriData.profileName}`;
+                document.getElementById('santri-selector-group').textContent = `: ${clickedSantriData.grup}`;
+
+                const monthSelector = document.getElementById('santri-month-selector');
+                if (monthSelector.options.length === 0) {
+                    const months = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+                    months.forEach((month, index) => {
+                        const option = document.createElement('option');
+                        option.value = index + 1;
+                        option.textContent = month;
+                        monthSelector.appendChild(option);
+                    });
+                }
+                
+                const showReportBtn = document.getElementById('show-report-btn');
+                showReportBtn.textContent = 'Tampilkan KHS';
+                showReportBtn.dataset.reportType = 'khs';
+                showReportBtn.classList.remove('krs-btn-color');
+                showReportBtn.classList.add('khs-btn-color');
+
+                document.getElementById('krs-container').classList.add('hidden');
+                document.getElementById('khs-container').classList.add('hidden');
+                return;
+            }
+            userData = clickedSantriData;
+        }
+
+        // === LOGIKA LAMA (Untuk santri yang melihat KHS-nya sendiri) ===
+        if (!userData || !userData.username) {
+            console.error("Tidak ada data pengguna (terutama username) untuk menampilkan KHS.");
+            return;
+        }
+
+        const loggedInSantriName = userData.profileName;
+        const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
+        if (!santriData) {
+            alert(`Data untuk santri "${loggedInSantriName}" tidak ditemukan.`);
+            return;
+        }
+        
+        const khsDisplay = document.getElementById('khs-display');
+        khsDisplay.innerHTML = '<p class="p-8 text-center text-gray-500">Memuat data KHS dari KRS & Riwayat Nilai...</p>';
+        khsContainer.classList.remove('hidden');
+        krsContainer.classList.add('hidden');
+        if(!event) { // Hanya scroll jika bukan dari klik admin
+            khsContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        const activeTab = document.querySelector('.tab-btn.active');
+        const bulan = activeTab.id.replace('tab-bulan', '');
+        const bulanRomawi = activeTab.textContent.replace('Bulan ', '');
+        
+        try {
+            const [krsResponse, nilaiResponse] = await Promise.all([
+                fetch(CONFIG.SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'getKrsData', namaSantri: loggedInSantriName, bulan: bulan }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                }),
+                fetch(CONFIG.SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'getKHSData', username: userData.username, bulan: bulan }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                })
+            ]);
+
+            const krsResult = await krsResponse.json();
+            const nilaiResult = await nilaiResponse.json();
+
+            if (krsResult.status !== 'success' || nilaiResult.status !== 'success') {
+                throw new Error(krsResult.message || nilaiResult.message);
+            }
+
+            const krsForThisMonth = krsResult.data;
+            const allGrades = nilaiResult.nilai;
+
+            if (krsForThisMonth.length === 0) {
+                khsDisplay.innerHTML = `<p class="p-8 text-center text-gray-500">Tidak ada materi KRS yang terdaftar untuk Bulan ${bulanRomawi}.</p>`;
+                return;
+            }
+            
+            // ... (Sisa dari fungsi handleKhsClick yang sudah ada tetap sama) ...
+            const khsData = krsForThisMonth.map((item, index) => {
+                const nilai = allGrades[item.KodeMateri] !== undefined ? allGrades[item.KodeMateri] : 0;
+                let huruf = 'E', bobot = 0.00;
+                if (nilai >= 98) { huruf = 'A+'; bobot = 4.00; }
+                else if (nilai >= 94) { huruf = 'A'; bobot = 3.75; }
+                else if (nilai >= 90) { huruf = 'A-'; bobot = 3.50; }
+                else if (nilai >= 88) { huruf = 'B+'; bobot = 3.25; }
+                else if (nilai >= 84) { huruf = 'B'; bobot = 3.00; }
+                else if (nilai >= 80) { huruf = 'B-'; bobot = 2.75; }
+                else if (nilai >= 76) { huruf = 'C+'; bobot = 2.50; }
+                else if (nilai >= 72) { huruf = 'C'; bobot = 2.00; }
+                else if (nilai >= 65) { huruf = 'D'; bobot = 1.00; }
+                
+                return {
+                    no: index + 1,
+                    kode: item.KodeMateri,
+                    materi: item.NamaMateri,
+                    sks: item.SKS,
+                    huruf: huruf,
+                    bobot: bobot,
+                    nilai: parseFloat(nilai).toFixed(2)
+                };
+            });
+
+            let tableRows = '', totalSks = 0, totalNilaiBobot = 0;
+            khsData.forEach(item => {
+                tableRows += `<tr><td class="border border-black text-center">${item.no}</td><td class="border border-black">${item.kode}</td><td class="border border-black">${item.materi}</td><td class="border border-black text-center">${item.sks}</td><td class="border border-black text-center">${item.huruf}</td><td class="border border-black text-center">${item.bobot.toFixed(2)}</td><td class="border border-black text-center">${item.nilai}</td></tr>`;
+                totalSks += parseInt(item.sks) || 0;
+                totalNilaiBobot += (parseInt(item.sks) || 0) * item.bobot;
+            });
+            const ip = totalSks > 0 ? (totalNilaiBobot / totalSks).toFixed(2) : "0.00";
+            
+            const finalHtml = `
+                <header class="flex items-center justify-between border-b-2 border-black pb-2">
+                    <div class="flex items-center">
+                        <img src="Logo_yayasan.png" alt="Logo Institusi" class="h-16 w-16 mr-4" onerror="this.style.display='none';">
+                        <div>
+                            <h1 class="text-xl font-bold">MARKAZ QUR'AN AL-MAA'UN</h1>
+                            <p class="text-xs">Lembaga Pendidikan Islam Terpadu</p>
+                        </div>
+                    </div>
+                </header>
+                <div class="text-center my-4">
+                    <h3 class="text-xl font-bold underline">KARTU HASIL STUDI (KHS)</h3>
+                </div>
+                <section id="info-santri-khs" class="grid grid-cols-2 gap-x-8 text-sm mb-4">
+                    <div>
+                        <div class="flex"><span class="w-32">NAMA</span><span>: ${santriData.nama}</span></div>
+                        <div class="flex"><span class="w-32">Kelas / Jurusan</span><span>: ${santriData.kelas} / ${santriData.jurusan}</span></div>
+                    </div>
+                    <div>
+                        <div class="flex"><span class="w-28">Semester / Bulan</span><span>: Ganjil / ${bulanRomawi}</span></div>
+                        <div class="flex"><span class="w-28">Klaster</span><span>: ${santriData.grup}</span></div>
+                    </div>
+                </section>
+                <section>
+                    <table id="tabel-nilai" class="w-full text-sm border-collapse border border-black">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="border border-black">NO</th>
+                                <th class="border border-black">KODE</th>
+                                <th class="border border-black text-left">MATERI</th>
+                                <th class="border border-black">SKS</th>
+                                <th class="border border-black">Huruf</th>
+                                <th class="border border-black">Bobot</th>
+                                <th class="border border-black">Nilai</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                        <tfoot>
+                            <tr class="font-bold bg-gray-100">
+                                <td colspan="3" class="border border-black text-right pr-2">Jumlah SKS</td>
+                                <td class="border border-black text-center">${totalSks}</td>
+                                <td colspan="3" class="border border-black"></td>
+                            </tr>
+                            <tr class="font-bold bg-gray-100">
+                                <td colspan="5" class="border border-black text-right pr-2">IP Bulanan</td>
+                                <td class="border border-black text-center">${ip}</td>
+                                <td class="border border-black"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </section>
+                <footer class="flex justify-between items-start mt-6 text-xs" style="background-color: white; color: black;">
+                    <div>
+                        <p>1 lembar untuk Santri</p>
+                        <p>1 lembar untuk bid. kurikulum</p>
+                        <p>1 lembar untuk Arsip</p>
+                    </div>
+                    <div class="text-center">
+                        <p>Sei Kamah II, ${new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
+                        <p>Mudir,</p>
+                        <div style="height: 48px;"></div>
+                        <p class="font-bold underline">Aria Atmaja</p>
+                    </div>
+                </footer>
+            `;
+            khsDisplay.innerHTML = finalHtml;
+        } catch(error) {
+            khsDisplay.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat KHS: ${error.message}</p>`;
+        }
     }
-}   
 	
 	const updateKrsTotalSks = () => {
         const totalSksElement = document.getElementById('total-sks-diambil');
@@ -5148,189 +5423,69 @@ function initializeSistemInformasi() {
             window.print();
             setTimeout(() => { document.head.removeChild(style); }, 500);
         });
-        document.getElementById('download-schedule-pdf').addEventListener('click', function() { /* ...logic... */ });
-        
-		// FUNGSI BARU: Untuk menangani klik tombol "Input" dari dalam modal
-function handleInputMateriFromModal() {
-    const selectedCheckboxes = document.querySelectorAll('#materi-list-container input[type="checkbox"]:checked');
-    const modal = document.getElementById('add-materi-modal');
+        document.getElementById('download-schedule-pdf').addEventListener('click', function() {
+            // Ambil library jsPDF dan autoTable dari window
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'landscape', // Gunakan orientasi landscape agar tabel lebih lebar
+                unit: 'mm',
+                format: [210, 330]
+            });
 
-    // Hitung SKS saat ini di tabel
-    let currentSks = 0;
-    krsTableBody.querySelectorAll('tr td:nth-child(6)').forEach(cell => {
-        currentSks += parseInt(cell.textContent, 10) || 0;
-    });
+            // Ambil data jadwal yang sudah difilter oleh pengguna
+            const filteredData = getFilteredScheduleData();
 
-    // DIUBAH: Logika perhitungan SKS baru yang tidak akan double counting
-    let newSks = 0;
-    const itemsToAdd = [];
-    selectedCheckboxes.forEach(cb => {
-        // Karena pop-up sekarang hanya menampilkan materi yang belum diambil,
-        // kita bisa langsung menjumlahkan SKS dari semua yang diceklis.
-        const item = JSON.parse(cb.dataset.subject);
-        newSks += item.sks;
-        itemsToAdd.push(item);
-    });
+            // Ubah format data agar sesuai dengan format yang dibutuhkan oleh autoTable
+            const tableBody = filteredData.map(item => [
+                item.day,
+                item.time,
+                item.subject,
+                item.group + (item.cluster ? ` (${item.cluster})` : ''),
+                item.room,
+                item.teacher
+            ]);
 
-    // Validasi batas SKS
-    if (currentSks + newSks > 34) {
-        showMessage(`Gagal, total SKS akan menjadi ${currentSks + newSks}. Batas maksimal adalah 34 SKS.`, 'error');
-        return;
-    }
+            // Ambil judul dari tab bulan yang sedang aktif
+            // 1. Ambil nomor bulan yang aktif dari variabel state aplikasi (lebih andal)
+            const activeMonthNumber = appState.activeMonthKey.replace('bulan', '');
+            // 2. Cari elemen tombol tab berdasarkan ID-nya
+            const activeTab = document.getElementById(`tab-bulan${activeMonthNumber}`);
+            
+            // 3. Tambahkan pengecekan untuk keamanan, jika tab tidak ditemukan
+            if (!activeTab) {
+                alert("Error: Tidak dapat menemukan tab bulan yang aktif. Silakan muat ulang halaman.");
+                return; // Hentikan fungsi jika terjadi error
+            }
+			const semesterName = activeMonthNumber <= 4 ? 'Semester Ganjil' : 'Semester Genap';
+            
+            const title = `Jadwal KBM - ${activeTab.textContent.trim()} (${semesterName})`;
+            const fileName = `Jadwal_KBM_${activeTab.textContent.trim().replace(' ', '_')}_(${semesterName.replace(' ', '_')}).pdf`;
 
-    // Tambahkan baris baru ke tabel KRS
-    itemsToAdd.forEach(item => {
-        const tr = document.createElement('tr');
-        const code = item.subject.split(':')[0].trim();
-        tr.innerHTML = `
-            <td class="px-4 py-2">${item.day}</td>
-            <td class="px-4 py-2">${item.time}</td>
-            <td class="px-4 py-2">${code}</td>
-            <td class="px-4 py-2">${item.subject.substring(code.length + 1).trim()}</td>
-            <td class="px-4 py-2">${item.room}</td>
-            <td class="px-4 py-2 text-center">${item.sks}</td>
-            <td class="px-4 py-2">${item.teacher}</td>
-            <td class="px-4 py-2 text-center"><button class="delete-krs-row text-red-500 hover:text-red-700">Hapus</button></td>
-        `;
-        krsTableBody.appendChild(tr);
-    });
+            // Tambahkan judul ke PDF
+            doc.setFontSize(16);
+            doc.text(title, 14, 15);
 
-    updateKrsTotalSks();
-    modal.style.display = 'none';
-}
-
-
-// DIUBAH TOTAL: Event listener untuk tombol 'Tambah Materi'
-addKrsRowBtn.addEventListener('click', async () => {
-    const modal = document.getElementById('add-materi-modal');
-    const container = document.getElementById('materi-list-container');
-    const inputBtn = modal.querySelector('#simpan-materi-btn');
-
-    inputBtn.disabled = false;
-    inputBtn.textContent = 'Input';
-    container.innerHTML = '<p class="text-gray-500">Memeriksa riwayat nilai dan prasyarat...</p>';
-    modal.style.display = "block";
-
-    const loggedInSantriName = document.getElementById('nama-santri-krs').textContent.replace(': ', '');
-    const session = getActiveSession();
-    const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
-    if (!santriData) {
-        container.innerHTML = '<p class="text-red-500">Data santri tidak ditemukan.</p>';
-        return;
-    }
-
-    // DITAMBAHKAN: Peta untuk melacak level tertinggi yang LULUS per rumpun materi
-    const highestPassedLevel = {};
-    try {
-        const response = await fetch(CONFIG.SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'getAllKHSData', username: session.username }),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        });
-        const result = await response.json();
-        if (result.status !== 'success') throw new Error(result.message);
-
-        // DITAMBAHKAN: Proses semua nilai untuk mengisi peta 'highestPassedLevel'
-        for (const code in result.nilai) {
-            const score = result.nilai[code];
-            if (score >= 60) { // Jika nilai LULUS (minimal C)
-                const prefix = code.slice(0, -1); // Rumpun materi, cth: "MAT-10"
-                const level = parseInt(code.slice(-1), 10);
-                // Simpan level tertinggi yang lulus untuk rumpun tersebut
-                if (!highestPassedLevel[prefix] || level > highestPassedLevel[prefix]) {
-                    highestPassedLevel[prefix] = level;
+            // Buat tabel di dalam PDF
+            doc.autoTable({
+                head: [['Hari', 'Waktu', 'Mata Pelajaran / Modul', 'Kelompok', 'Ruang', 'Guru']],
+                body: tableBody,
+                startY: 20, // Posisi awal tabel di bawah judul
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [44, 94, 46] // Warna hijau tua (sesuai tema)
+                },
+                styles: {
+                    fontSize: 8,
+                    cellPadding: 2,
                 }
-            }
-        }
-    } catch (error) {
-        container.innerHTML = `<p class="p-4 text-center text-red-500">Gagal mengambil riwayat nilai: ${error.message}</p>`;
-        return;
-    }
+            });
 
-    const groupInfoParts = (santriData.grup || '').split(' ');
-    const santriGroup = groupInfoParts[0] || '';
-    const santriCluster = groupInfoParts[1] || '';
-
-    const currentlySavedCodes = Array.from(krsTableBody.querySelectorAll('tr'))
-        .map(tr => tr.querySelector('td:nth-child(3)')?.textContent)
-        .filter(Boolean);
-
-    const uniqueSubjects = new Map();
-    Object.values(appData.schedules).flat().forEach(item => {
-        if (item.subject && item.subject.includes(':')) {
-            const code = item.subject.split(':')[0].trim();
-            if (!uniqueSubjects.has(code)) {
-                uniqueSubjects.set(code, item);
-            }
-        }
-    });
-
-    const availableSubjects = Array.from(uniqueSubjects.values())
-        .filter(item => !currentlySavedCodes.includes(item.subject.split(':')[0].trim()));
-
-    container.innerHTML = '';
-    if (availableSubjects.length === 0) {
-        container.innerHTML = '<p class="p-4 text-center text-gray-500">Semua materi yang tersedia sudah diambil.</p>';
-    }
-
-    availableSubjects
-        .sort((a,b) => a.subject.localeCompare(b.subject))
-        .forEach(item => {
-            const code = item.subject.split(':')[0].trim();
-            const prefix = code.slice(0, -1);
-            const level = parseInt(code.slice(-1), 10);
-            const checkboxId = `materi-${code}`;
-
-            // DIUBAH: Logika baru untuk menentukan apakah materi bisa diambil
-            const maxPassed = highestPassedLevel[prefix] || 0; // Level tertinggi yg lulus, default 0
-            // Materi bisa diambil jika levelnya adalah level yang gagal/belum diambil (maxPassed + 1)
-            // atau level yang lebih rendah (untuk mengulang).
-            const isUnlocked = level <= maxPassed + 1;
-            const isDisabled = !isUnlocked;
-
-            let labelClass = 'other';
-            if (isDisabled) {
-                labelClass = 'prerequisite-failed';
-            } else if (item.group === santriGroup || (item.group === 'KG' && (item.cluster === santriCluster || item.cluster === 'Wajib'))) {
-                labelClass = 'recommended';
-            }
-
-            const div = document.createElement('div');
-            div.className = 'flex items-start p-2 rounded-md hover:bg-gray-100 materi-item border-b';
-            
-            const input = document.createElement('input');
-            input.id = checkboxId;
-            input.type = 'checkbox';
-            input.value = code;
-            input.className = 'h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 mt-1';
-            input.disabled = isDisabled;
-            input.dataset.subject = JSON.stringify(item);
-            
-            const label = document.createElement('label');
-            label.htmlFor = checkboxId;
-            label.className = `ml-3 text-sm flex-1 ${labelClass}`;
-            if(!isDisabled) label.classList.add('cursor-pointer');
-            
-            label.innerHTML = `
-                <div class="font-bold">${item.subject}</div>
-                <div class="text-xs text-gray-500">
-                    ${item.day}, ${item.time} | ${item.room} | ${item.sks} SKS
-                </div>
-            `;
-
-            div.appendChild(input);
-            div.appendChild(label);
-            container.appendChild(div);
+            // Simpan file PDF
+            doc.save(fileName);
         });
-    
-    const newBtn = inputBtn.cloneNode(true);
-    inputBtn.parentNode.replaceChild(newBtn, inputBtn);
-    newBtn.addEventListener('click', handleInputMateriFromModal);
+		
+		// FUNGSI BARU: Untuk menangani klik tombol "Input" dari dalam modal
 
-    modal.querySelector('.close-button').onclick = () => {
-        modal.style.display = "none";
-    };
-});
         closeKrsBtnBottom.addEventListener('click', () => krsContainer.classList.add('hidden'));
         closeKhsBtnBottom.addEventListener('click', () => khsContainer.classList.add('hidden'));
         downloadKrsBtn.addEventListener('click', () => {
@@ -5445,68 +5600,142 @@ addKrsRowBtn.addEventListener('click', async () => {
             pdf.save(`KRS_${document.getElementById('nama-santri-krs').textContent.substring(1).trim()}.pdf`);
         });
         // PERUBAHAN: Mengganti metode unduh KHS dari .html() menjadi .autoTable()
+        // GANTI SELURUH BLOK KODE LAMA DENGAN VERSI FINAL INI
         downloadKhsBtn.addEventListener('click', () => {
-            const infoSantriKhs = document.getElementById('info-santri-khs');
-            if (!infoSantriKhs || khsContainer.classList.contains('hidden')) {
+            const khsContainerNode = document.getElementById('khs-container');
+            const infoSantriNode = khsContainerNode.querySelector('#info-santri-khs');
+            const tableNode = khsContainerNode.querySelector('#tabel-nilai');
+
+            // 1. Pengecekan Awal: Pastikan semua elemen yang dibutuhkan sudah ada
+            if (!infoSantriNode || !tableNode || infoSantriNode.innerHTML.trim() === '') {
                 showMessage('Tampilkan KHS terlebih dahulu sebelum mengunduh.', 'error');
-                return; // KOMENTAR: Hentikan fungsi jika konten KHS tidak terlihat
+                return;
             }
-			
-			const { jsPDF } = window.jspdf;
+
+            // 2. Mengumpulkan semua data dinamis dari halaman
+            const santriInfo = {
+                nama: infoSantriNode.querySelector('div:nth-child(1) .flex:nth-child(1) span:last-child').textContent.trim(),
+                kelasJurusan: infoSantriNode.querySelector('div:nth-child(1) .flex:nth-child(2) span:last-child').textContent.trim(),
+                semesterBulan: infoSantriNode.querySelector('div:nth-child(2) .flex:nth-child(1) span:last-child').textContent.trim(),
+                klaster: infoSantriNode.querySelector('div:nth-child(2) .flex:nth-child(2) span:last-child').textContent.trim()
+            };
+
+            const tableRows = tableNode.querySelectorAll('tbody tr');
+            const tableBodyData = [];
+            let totalSks = 0;
+            let totalNilaiBobot = 0;
+
+            tableRows.forEach(tr => {
+                const cells = tr.querySelectorAll('td');
+                // Adaptasi: Membaca dari sel berdasarkan urutan, bukan data-label
+                const rowData = [
+                    cells[0].textContent, // NO
+                    cells[1].textContent, // KODE
+                    cells[2].textContent, // MATERI
+                    cells[3].textContent, // SKS
+                    cells[4].textContent, // Huruf
+                    cells[5].textContent, // Bobot
+                    cells[6].textContent  // Nilai
+                ];
+                tableBodyData.push(rowData);
+
+                const sks = parseFloat(rowData[3]);
+                const bobot = parseFloat(rowData[5]);
+                if (!isNaN(sks) && !isNaN(bobot)) {
+                    totalSks += sks;
+                    totalNilaiBobot += sks * bobot;
+                }
+            });
+
+            const ip = totalSks > 0 ? (totalNilaiBobot / totalSks).toFixed(2) : "0.00";
+            const fileName = `KHS - ${santriInfo.nama}.pdf`;
+            
+            // 3. Menyiapkan PDF dengan pustaka jsPDF
+            const { jsPDF } = window.jspdf;
             const doc = new jsPDF({
                 orientation: 'portrait',
                 unit: 'mm',
-                format: [210, 330] // Menggunakan format standar F4 untuk KHS
+                format: [210, 330] // Ukuran kertas F4
             });
 
-            // KOMENTAR: Ambil data dari elemen info KHS
-            
-            const santriName = infoSantriKhs.querySelector('.flex:nth-child(1) span:last-child').textContent.trim();
-            const kelasJurusan = infoSantriKhs.querySelector('.flex:nth-child(2) span:last-child').textContent.trim();
-            const semesterBulan = infoSantriKhs.querySelector('.flex:nth-child(3) span:last-child').textContent.trim();
-            const klaster = infoSantriKhs.querySelector('.flex:nth-child(4) span:last-child').textContent.trim();
-            const fileName = `KHS - ${santriName}.pdf`;
+            // 4. Inti Logika dari Kode Anda (dijadikan fungsi untuk bisa dipanggil 2x)
+            const drawKHS = (yOffset) => {
+                // Menggambar Header
+                doc.setFont('Times', 'bold');
+                doc.setFontSize(11);
+                doc.text("MARKAZ QUR'AN AL-MAA'UN", 105, yOffset + 9, { align: 'center' });
+                doc.setFont('Times', 'normal');
+                doc.setFontSize(7);
+                doc.text("Lembaga Pendidikan Islam Terpadu", 105, yOffset + 12.5, { align: 'center' });
+                doc.setLineWidth(0.5);
+                doc.line(20, yOffset + 15, 190, yOffset + 15);
 
-            doc.autoTable({
-                html: '#tabel-nilai',
-                startY: 55, // KOMENTAR: Atur posisi awal tabel agar ada ruang untuk header
-                didDrawPage: function(data) {
-                    // KOMENTAR: Fungsi untuk menggambar header PDF secara manual
-                    doc.setFontSize(16);
-                    doc.setFont("times", "bold");
-                    doc.text("KARTU HASIL STUDI (KHS)", doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
-                    
-                    doc.setFontSize(12);
-                    doc.setFont("times", "normal");
-                    doc.text("Markaz Qur'an Al-Maa'un", doc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
-                    
-                    // KOMENTAR: Menggambar informasi santri
-                    doc.setFontSize(10);
-                    let infoY = 40;
-                    doc.text(`Nama Santri: ${santriName}`, data.settings.margin.left, infoY);
-                    doc.text(`Semester / Bulan: ${semesterBulan}`, doc.internal.pageSize.getWidth() - data.settings.margin.right, infoY, { align: 'right' });
-                    infoY += 6;
-                    doc.text(`Kelas / Jurusan: ${kelasJurusan}`, data.settings.margin.left, infoY);
-                    doc.text(`Klaster: ${klaster}`, doc.internal.pageSize.getWidth() - data.settings.margin.right, infoY, { align: 'right' });
-                },
-                theme: 'grid', // KOMENTAR: Menggunakan tema 'grid' agar mirip dengan KRS
-                styles: {
-                    font: 'times',
-                    fontSize: 9,
-                    cellPadding: 2,
-                    valign: 'middle'
-                },
-                headStyles: {
-                    fillColor: [44, 94, 46], // Warna hijau primer
-                    textColor: [255, 255, 255],
-                    fontStyle: 'bold'
-                },
-                footStyles: {
-                    fillColor: [248, 249, 250], // Warna abu-abu terang
-                    textColor: [0, 0, 0],
-                    fontStyle: 'bold'
-                }
-            });
+                doc.setFont('Times', 'bold');
+                doc.setFontSize(10);
+                doc.text("KARTU HASIL STUDI (KHS)", 105, yOffset + 20, { align: 'center' });
+                doc.setLineWidth(0.2);
+                doc.line(84, yOffset + 21, 126, yOffset + 21);
+
+                // Menggambar Info Santri (menggunakan data dinamis yang sudah dikumpulkan)
+                doc.setFont('Times', 'normal');
+                doc.setFontSize(8.5);
+                doc.text("NAMA", 20, yOffset + 26);
+                doc.text(`: ${santriInfo.nama}`, 50, yOffset + 26);
+                doc.text("Kelas / Jurusan", 20, yOffset + 30);
+                doc.text(`: ${santriInfo.kelasJurusan}`, 50, yOffset + 30);
+                doc.text("Semester / Bulan", 115, yOffset + 26);
+                doc.text(`: ${santriInfo.semesterBulan}`, 140, yOffset + 26);
+                doc.text("Klaster", 115, yOffset + 30);
+                doc.text(`: ${santriInfo.klaster}`, 140, yOffset + 30);
+
+                // Menyiapkan Body Tabel (termasuk baris kalkulasi)
+                const finalTableBody = [...tableBodyData]; // Salin data asli
+                finalTableBody.push([{ content: 'Jumlah SKS', colSpan: 3, styles: { fontStyle: 'bold', halign: 'right' } }, { content: totalSks, styles: { halign: 'center', fontStyle: 'bold' } }, { content: '', colSpan: 3 }]);
+                finalTableBody.push([{ content: 'IP Bulanan', colSpan: 5, styles: { fontStyle: 'bold', halign: 'right' } }, { content: ip, styles: { halign: 'center', fontStyle: 'bold' } }, { content: '' }]);
+
+                // Menggambar Tabel Nilai
+                doc.autoTable({
+                    startY: yOffset + 34,
+                    head: [['NO', 'KODE', 'MATERI', 'SKS', 'Huruf', 'Bobot', 'Nilai']],
+                    body: finalTableBody,
+                    theme: 'grid',
+                    styles: { 
+                        fontSize: 7, 
+                        cellPadding: 1.0,
+                        lineColor: [44, 62, 80],
+                        lineWidth: 0.1,
+                    },
+                    headStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold', halign: 'center' },
+                    columnStyles: {
+                        0: { halign: 'center', cellWidth: 8 },
+                        1: { halign: 'left', cellWidth: 19 },
+                        2: { cellWidth: 83 },
+                        3: { halign: 'center', cellWidth: 10 },
+                        4: { halign: 'center', cellWidth: 12 },
+                        5: { halign: 'center', cellWidth: 15 },
+                        6: { halign: 'center', cellWidth: 15 },
+                    },
+                    margin: { left: 20, right: 20 }
+                });
+
+                // Menggambar Footer
+                let finalY = doc.autoTable.previous.finalY;
+                doc.setFontSize(7.5);
+                doc.text(`SKS Maksimal yang bisa diambil Bulan depan: 34`, 20, finalY + 4);
+                doc.text("1 lembar untuk Santri", 20, finalY + 7);
+                doc.text("1 lembar untuk bid. kurikulum", 20, finalY + 10);
+                doc.text("1 lembar untuk Arsip", 20, finalY + 13);
+                doc.setFontSize(8.5);
+                doc.text(`Sei Kamah II, ${new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`, 190, finalY + 7, { align: 'right' });
+                doc.text("Mudir,", 190, finalY + 11, { align: 'right' });
+                doc.setFont('Times', 'bold');
+                doc.text("Aria Atmaja", 190, finalY + 22, { align: 'right' });
+            };
+
+            // 5. Eksekusi Fungsi Penggambaran dan Simpan PDF
+            const pageHeight = doc.internal.pageSize.getHeight();
+            drawKHS(4); // Gambar KHS pertama di bagian atas halaman
+            drawKHS(pageHeight / 2); // Gambar KHS kedua di bagian tengah halaman
 
             doc.save(fileName);
         });
@@ -5593,7 +5822,57 @@ function handleSaveKrs() {
         saveBtn.textContent = 'Simpan KRS';
     });
 }
+function handleInputMateriFromModal() {
+    const selectedCheckboxes = document.querySelectorAll('#materi-list-container input[type="checkbox"]:checked');
+    const modal = document.getElementById('add-materi-modal');
 
+    let currentSks = 0;
+    krsTableBody.querySelectorAll('tr td:nth-child(6)').forEach(cell => {
+        currentSks += parseInt(cell.textContent, 10) || 0;
+    });
+
+    let newSks = 0;
+    const itemsToAdd = [];
+    selectedCheckboxes.forEach(cb => {
+        const item = JSON.parse(cb.dataset.subject);
+        newSks += item.sks;
+        itemsToAdd.push(item);
+    });
+
+    if (currentSks + newSks > 34) {
+        showMessage(`Gagal, total SKS akan menjadi ${currentSks + newSks}. Batas maksimal adalah 34 SKS.`, 'error');
+        return;
+    }
+
+    // Cek jika baris pertama adalah placeholder "Belum ada materi"
+    const firstRowIsPlaceholder = krsTableBody.querySelector('td[colspan="8"]');
+    if (firstRowIsPlaceholder) {
+        krsTableBody.innerHTML = ''; // Kosongkan tabel sebelum menambah baris baru
+    }
+
+    itemsToAdd.forEach(item => {
+        const tr = document.createElement('tr');
+        const code = item.subject.split(':')[0].trim();
+        const namaMateri = item.subject.substring(code.length + 1).trim();
+        const index = krsTableBody.rows.length; // Dapatkan indeks baris saat ini
+        
+        tr.className = index % 2 === 0 ? 'bg-white border-b' : 'bg-gray-50 border-b';
+        tr.innerHTML = `
+            <td class="px-4 py-2">${item.day}</td>
+            <td class="px-4 py-2">${item.time}</td>
+            <td class="px-4 py-2">${code}</td>
+            <td class="px-4 py-2">${namaMateri}</td>
+            <td class="px-4 py-2">${item.room}</td>
+            <td class="px-4 py-2 text-center">${item.sks}</td>
+            <td class="px-4 py-2">${item.teacher}</td>
+            <td class="px-4 py-2 text-center"><button class="delete-krs-row text-red-500 hover:text-red-700">Hapus</button></td>
+        `;
+        krsTableBody.appendChild(tr);
+    });
+
+    updateKrsTotalSks();
+    modal.style.display = 'none';
+}
 
     // --- BAGIAN 3: EVENT LISTENERS & INISIALISASI ---
 
@@ -5601,6 +5880,8 @@ function handleSaveKrs() {
         if (ui.donasiBtn) ui.donasiBtn.onclick = () => document.getElementById('donasiModal').style.display = "block";
         if (ui.userProfile) ui.userProfile.onclick = () => openProfileModal();
 		
+		document.getElementById('simpan-materi-btn')?.addEventListener('click', handleInputMateriFromModal);
+
 		document.getElementById('save-krs-btn')?.addEventListener('click', handleSaveKrs);
         document.querySelectorAll('.close-button').forEach(btn => { btn.onclick = () => { btn.closest('.modal').style.display = 'none'; }; });
         window.onclick = (event) => { if (event.target.classList.contains('modal')) { event.target.style.display = "none"; } }
@@ -5644,6 +5925,141 @@ function handleSaveKrs() {
             populateTeacherClasses(null, selectedDate, selectedTeacher);
         });
 		
+		// DIUBAH TOTAL: Event listener untuk tombol 'Tambah Materi'
+addKrsRowBtn.addEventListener('click', async () => {
+    const modal = document.getElementById('add-materi-modal');
+    const container = document.getElementById('materi-list-container');
+    const inputBtn = modal.querySelector('#simpan-materi-btn');
+
+    inputBtn.disabled = false;
+    inputBtn.textContent = 'Input';
+    container.innerHTML = '<p class="text-gray-500">Memeriksa riwayat nilai dan prasyarat...</p>';
+    modal.style.display = "block";
+
+    const loggedInSantriName = document.getElementById('nama-santri-krs').textContent.replace(': ', '');
+    const session = getActiveSession();
+    const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
+    if (!santriData) {
+        container.innerHTML = '<p class="text-red-500">Data santri tidak ditemukan.</p>';
+        return;
+    }
+
+    // DITAMBAHKAN: Peta untuk melacak level tertinggi yang LULUS per rumpun materi
+    const highestPassedLevel = {};
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getAllKHSData', username: session.username }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        // DITAMBAHKAN: Proses semua nilai untuk mengisi peta 'highestPassedLevel'
+        for (const code in result.nilai) {
+            const score = result.nilai[code];
+            if (score >= 70) { // Jika nilai LULUS (minimal C)
+                const prefix = code.slice(0, -1); // Rumpun materi, cth: "MAT-10"
+                const level = parseInt(code.slice(-1), 10);
+                // Simpan level tertinggi yang lulus untuk rumpun tersebut
+                if (!highestPassedLevel[prefix] || level > highestPassedLevel[prefix]) {
+                    highestPassedLevel[prefix] = level;
+                }
+            }
+        }
+    } catch (error) {
+        container.innerHTML = `<p class="p-4 text-center text-red-500">Gagal mengambil riwayat nilai: ${error.message}</p>`;
+        return;
+    }
+
+    const groupInfoParts = (santriData.grup || '').split(' ');
+    const santriGroup = groupInfoParts[0] || '';
+    const santriCluster = groupInfoParts[1] || '';
+
+    const currentlySavedCodes = Array.from(krsTableBody.querySelectorAll('tr'))
+        .map(tr => tr.querySelector('td:nth-child(3)')?.textContent)
+        .filter(Boolean);
+
+    // 1. Mendeteksi bulan mana yang sedang aktif dari tab KRS
+    const activeTab = document.querySelector('.tab-btn.active');
+    const monthKey = `bulan${activeTab.id.replace('tab-bulan', '')}`;
+
+    // 2. Mengambil data jadwal HANYA untuk bulan yang aktif tersebut
+    const scheduleForActiveMonth = appState.processedSchedules[monthKey] || [];
+
+    const uniqueSubjects = new Map();
+    // 3. Membuat daftar materi unik HANYA dari jadwal bulan aktif
+    scheduleForActiveMonth.forEach(item => {
+        if (item.subject && item.subject.includes(':')) {
+            const code = item.subject.split(':')[0].trim();
+            if (!uniqueSubjects.has(code)) {
+                uniqueSubjects.set(code, item);
+            }
+        }
+    });
+
+    const availableSubjects = Array.from(uniqueSubjects.values())
+        .filter(item => !currentlySavedCodes.includes(item.subject.split(':')[0].trim()));
+
+    container.innerHTML = '';
+    if (availableSubjects.length === 0) {
+        container.innerHTML = '<p class="p-4 text-center text-gray-500">Semua materi yang tersedia sudah diambil.</p>';
+    }
+
+    availableSubjects
+        .sort((a,b) => a.subject.localeCompare(b.subject))
+        .forEach(item => {
+            const code = item.subject.split(':')[0].trim();
+            const prefix = code.slice(0, -1);
+            const level = parseInt(code.slice(-1), 10);
+            const checkboxId = `materi-${code}`;
+
+            // DIUBAH: Logika baru untuk menentukan apakah materi bisa diambil
+            const maxPassed = highestPassedLevel[prefix] || 0; // Level tertinggi yg lulus, default 0
+            // Materi bisa diambil jika levelnya adalah level yang gagal/belum diambil (maxPassed + 1)
+            // atau level yang lebih rendah (untuk mengulang).
+            const isUnlocked = level <= maxPassed + 1;
+            const isDisabled = !isUnlocked;
+
+            let labelClass = 'other';
+            if (isDisabled) {
+                labelClass = 'prerequisite-failed';
+            } else if (item.group === santriGroup || (item.group === 'KG' && (item.cluster === santriCluster || item.cluster === 'Wajib'))) {
+                labelClass = 'recommended';
+            }
+
+            const div = document.createElement('div');
+            div.className = 'flex items-start p-2 rounded-md hover:bg-gray-100 materi-item border-b';
+            
+            const input = document.createElement('input');
+            input.id = checkboxId;
+            input.type = 'checkbox';
+            input.value = code;
+            input.className = 'h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 mt-1';
+            input.disabled = isDisabled;
+            input.dataset.subject = JSON.stringify(item);
+            
+            const label = document.createElement('label');
+            label.htmlFor = checkboxId;
+            label.className = `ml-3 text-sm flex-1 ${labelClass}`;
+            if(!isDisabled) label.classList.add('cursor-pointer');
+            
+            label.innerHTML = `
+                <div class="font-bold">${item.subject}</div>
+                <div class="text-xs text-gray-500">
+                    ${item.day}, ${item.time} | ${item.room} | ${item.sks} SKS
+                </div>
+            `;
+
+            div.appendChild(input);
+            div.appendChild(label);
+            container.appendChild(div);
+        });
+
+    modal.querySelector('.close-button').onclick = () => {
+        modal.style.display = "none";
+    };
+});
 		
     }
 
