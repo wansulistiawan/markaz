@@ -3903,7 +3903,7 @@ function setupSantriSelectorListeners() {
     }
     
     function populateTeacherClasses(session, selectedDateStr, targetTeacherName = null) {
-    const selectedDate = new Date(selectedDateStr + 'T00:00:00'); 
+    const selectedDate = new Date(selectedDateStr + 'T00:00:00');
     const dayIndex = selectedDate.getDay();
     const daysInIndonesian = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
     const currentDayName = daysInIndonesian[dayIndex];
@@ -3911,39 +3911,40 @@ function setupSantriSelectorListeners() {
     
     classNameSelect.innerHTML = '<option value="">Memuat kelas...</option>';
     
-    // --- PERUBAHAN DIMULAI DI SINI ---
-    
-    // 1. Panggil fungsi baru untuk mendapatkan bulan akademik saat ini
+    // 1. Tentukan bulan akademik saat ini (logika ini sudah benar)
     const currentAcademicMonth = getCurrentAcademicMonth();
     if (currentAcademicMonth === 0) {
          classNameSelect.innerHTML = '<option value="">Kalender akademik belum dimulai</option>';
          return;
     }
 
+    // 2. Tentukan nama guru yang akan dicari jadwalnya
     const teacherName = targetTeacherName || (session && session.userData ? session.userData.profileName : null);
     
     if (teacherName && appData.schedules) {
         let taughtClasses = new Set();
         
-        const schedulesToScan = Array.isArray(appData.schedules) 
-            ? appData.schedules 
-            : Object.values(appData.schedules).flat();
-
-        schedulesToScan.forEach(scheduleItem => {
-            // 2. Tambahkan kondisi filter untuk mencocokkan bulan akademik
+        // === BAGIAN YANG DIPERBAIKI ===
+        // 3. Ambil KUMPULAN jadwal HANYA untuk bulan yang aktif
+        const monthKey = `bulan${currentAcademicMonth}`; // Contoh: 'bulan2'
+        const scheduleForActiveMonth = appData.schedules[monthKey] || [];
+        
+        // 4. Lakukan pencarian HANYA di dalam kumpulan jadwal bulan ini
+        scheduleForActiveMonth.forEach(scheduleItem => {
+            // 5. Cek hanya berdasarkan nama guru dan hari (pengecekan bulan sudah tidak perlu di sini)
             if (
                 scheduleItem.teacher === teacherName && 
-                scheduleItem.day === currentDayName &&
-                String(scheduleItem.bulan) === String(currentAcademicMonth) // <-- KONDISI BARU
+                scheduleItem.day === currentDayName
             ) {
                 taughtClasses.add(scheduleItem.subject);
             }
         });
+        // ============================
 
+        // Sisa dari fungsi ini untuk menampilkan hasil (tidak ada perubahan)
         classNameSelect.innerHTML = '';
         if (taughtClasses.size > 0) {
             classNameSelect.innerHTML = '<option value="">Pilih Kelas...</option>';
-            // Ditambahkan .sort() agar daftar kelas urut abjad dan rapi
             Array.from(taughtClasses).sort().forEach(subject => {
                 const option = document.createElement('option');
                 option.value = subject;
@@ -5926,52 +5927,66 @@ function handleInputMateriFromModal() {
         });
 		
 		// DIUBAH TOTAL: Event listener untuk tombol 'Tambah Materi'
+// GANTI SELURUH BLOK FUNGSI LAMA DENGAN VERSI FINAL YANG SUDAH DIPERBAIKI INI
+
 addKrsRowBtn.addEventListener('click', async () => {
     const modal = document.getElementById('add-materi-modal');
     const container = document.getElementById('materi-list-container');
     const inputBtn = modal.querySelector('#simpan-materi-btn');
 
+    // Reset dan tampilkan modal
     inputBtn.disabled = false;
     inputBtn.textContent = 'Input';
     container.innerHTML = '<p class="text-gray-500">Memeriksa riwayat nilai dan prasyarat...</p>';
     modal.style.display = "block";
 
-    const loggedInSantriName = document.getElementById('nama-santri-krs').textContent.replace(': ', '');
-    const session = getActiveSession();
-    const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
-    if (!santriData) {
-        container.innerHTML = '<p class="text-red-500">Data santri tidak ditemukan.</p>';
-        return;
-    }
-
-    // DITAMBAHKAN: Peta untuk melacak level tertinggi yang LULUS per rumpun materi
+    // Dapatkan nama santri yang sedang dilihat dari halaman KRS
+    const santriNameBeingViewed = document.getElementById('nama-santri-krs').textContent.replace(': ', '');
+    
+    // Objek untuk menyimpan level tertinggi yang LULUS per keluarga materi
     const highestPassedLevel = {};
     try {
+        // === BAGIAN KRITIS YANG DIPERBAIKI ===
+        // 1. Ambil daftar semua santri beserta username asli mereka
+        const allSantriWithUsernames = await getSantriDataWithUsernames();
+        // 2. Cari data santri yang sedang kita lihat berdasarkan nama
+        const santriBeingViewedData = allSantriWithUsernames.find(s => s.profileName === santriNameBeingViewed);
+
+        if (!santriBeingViewedData || !santriBeingViewedData.username) {
+            throw new Error(`Username untuk santri ${santriNameBeingViewed} tidak ditemukan.`);
+        }
+        
+        // 3. Gunakan USERNAME SANTRI (bukan admin) untuk mengambil data nilai
         const response = await fetch(CONFIG.SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'getAllKHSData', username: session.username }),
+            body: JSON.stringify({ action: 'getAllKHSData', username: santriBeingViewedData.username }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
+        // =====================================
+
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
 
-        // DITAMBAHKAN: Proses semua nilai untuk mengisi peta 'highestPassedLevel'
+        // Iterasi melalui semua nilai yang ada (logika ini sudah benar)
         for (const code in result.nilai) {
             const score = result.nilai[code];
-            if (score >= 70) { // Jika nilai LULUS (minimal C)
-                const prefix = code.slice(0, -1); // Rumpun materi, cth: "MAT-10"
+            if (score >= 70) {
+                const prefix = code.slice(0, -1);
                 const level = parseInt(code.slice(-1), 10);
-                // Simpan level tertinggi yang lulus untuk rumpun tersebut
-                if (!highestPassedLevel[prefix] || level > highestPassedLevel[prefix]) {
-                    highestPassedLevel[prefix] = level;
+                if (!isNaN(level)) {
+                    if (!highestPassedLevel[prefix] || level > highestPassedLevel[prefix]) {
+                        highestPassedLevel[prefix] = level;
+                    }
                 }
             }
         }
     } catch (error) {
-        container.innerHTML = `<p class="p-4 text-center text-red-500">Gagal mengambil riwayat nilai: ${error.message}</p>`;
+        container.innerHTML = `<p class="p-4 text-center text-red-500">Gagal memproses prasyarat: ${error.message}</p>`;
         return;
     }
-
+    
+    // Sisa dari kode ini tidak perlu diubah karena sudah benar
+    const santriData = appData.santri.find(s => s.nama === santriNameBeingViewed);
     const groupInfoParts = (santriData.grup || '').split(' ');
     const santriGroup = groupInfoParts[0] || '';
     const santriCluster = groupInfoParts[1] || '';
@@ -5980,15 +5995,10 @@ addKrsRowBtn.addEventListener('click', async () => {
         .map(tr => tr.querySelector('td:nth-child(3)')?.textContent)
         .filter(Boolean);
 
-    // 1. Mendeteksi bulan mana yang sedang aktif dari tab KRS
     const activeTab = document.querySelector('.tab-btn.active');
     const monthKey = `bulan${activeTab.id.replace('tab-bulan', '')}`;
-
-    // 2. Mengambil data jadwal HANYA untuk bulan yang aktif tersebut
     const scheduleForActiveMonth = appState.processedSchedules[monthKey] || [];
-
     const uniqueSubjects = new Map();
-    // 3. Membuat daftar materi unik HANYA dari jadwal bulan aktif
     scheduleForActiveMonth.forEach(item => {
         if (item.subject && item.subject.includes(':')) {
             const code = item.subject.split(':')[0].trim();
@@ -6007,17 +6017,13 @@ addKrsRowBtn.addEventListener('click', async () => {
     }
 
     availableSubjects
-        .sort((a,b) => a.subject.localeCompare(b.subject))
+        .sort((a, b) => a.subject.localeCompare(b.subject))
         .forEach(item => {
             const code = item.subject.split(':')[0].trim();
             const prefix = code.slice(0, -1);
             const level = parseInt(code.slice(-1), 10);
             const checkboxId = `materi-${code}`;
-
-            // DIUBAH: Logika baru untuk menentukan apakah materi bisa diambil
-            const maxPassed = highestPassedLevel[prefix] || 0; // Level tertinggi yg lulus, default 0
-            // Materi bisa diambil jika levelnya adalah level yang gagal/belum diambil (maxPassed + 1)
-            // atau level yang lebih rendah (untuk mengulang).
+            const maxPassed = highestPassedLevel[prefix] || 0;
             const isUnlocked = level <= maxPassed + 1;
             const isDisabled = !isUnlocked;
 
@@ -6030,7 +6036,6 @@ addKrsRowBtn.addEventListener('click', async () => {
 
             const div = document.createElement('div');
             div.className = 'flex items-start p-2 rounded-md hover:bg-gray-100 materi-item border-b';
-            
             const input = document.createElement('input');
             input.id = checkboxId;
             input.type = 'checkbox';
@@ -6038,19 +6043,11 @@ addKrsRowBtn.addEventListener('click', async () => {
             input.className = 'h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 mt-1';
             input.disabled = isDisabled;
             input.dataset.subject = JSON.stringify(item);
-            
             const label = document.createElement('label');
             label.htmlFor = checkboxId;
             label.className = `ml-3 text-sm flex-1 ${labelClass}`;
-            if(!isDisabled) label.classList.add('cursor-pointer');
-            
-            label.innerHTML = `
-                <div class="font-bold">${item.subject}</div>
-                <div class="text-xs text-gray-500">
-                    ${item.day}, ${item.time} | ${item.room} | ${item.sks} SKS
-                </div>
-            `;
-
+            if (!isDisabled) label.classList.add('cursor-pointer');
+            label.innerHTML = `<div class="font-bold">${item.subject}</div><div class="text-xs text-gray-500">${item.day}, ${item.time} | ${item.room} | ${item.sks} SKS</div>`;
             div.appendChild(input);
             div.appendChild(label);
             container.appendChild(div);
