@@ -1474,6 +1474,9 @@ b. Soekarno
 
 
 document.addEventListener('DOMContentLoaded', function() {
+	let academicMonthRanges = [];
+    let isSistemInformasiInitialized = false;
+	let santriDataWithUsernames = null; // Cache untuk santri data termasuk usernames
     // --- BAGIAN 1: KONFIGURASI & DATA UTAMA ---
     const CONFIG = {
         SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec",
@@ -1486,8 +1489,23 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
 // === TAMBAHKAN BLOK KODE INI DI BAGIAN ATAS SCRIPT ANDA ===
-    let santriDataWithUsernames = null; // Cache untuk santri data termasuk usernames
+    
 
+    const ui = { messageBox: document.getElementById('messageBox'), donasiModal: document.getElementById("donasiModal"), donasiBtn: document.getElementById("donasiBtn"), loginButton: document.getElementById('loginButton'), userProfile: document.getElementById('userProfile'), userProfileName: document.getElementById('userProfileName'), navProfilePic: document.getElementById('navProfilePic'), attendanceNav: document.getElementById('attendanceNav'), sistemInformasiNav: document.getElementById('sistemInformasiNav'), kalenderPendidikan: document.getElementById('kalenderPendidikanSection'), marqueeContainer: document.getElementById('marquee-container'), marqueeText: document.getElementById('marquee-text'), dynamicCalendarGrid: document.getElementById('dynamic-calendar-grid'), slideshowContainer: document.getElementById('slideshow') };
+    
+	let appState = {
+        activeMonthKey: 'bulan1', // Kunci untuk mengakses data di appData.schedules
+        filters: {
+            group: 'all',
+            cluster: 'all',
+            teacher: 'all',
+            room: 'all'
+        },
+        // Data yang sudah diproses akan disimpan di sini
+       processedSchedules: {}
+    };
+	
+	
     /**
      * Mengambil daftar santri lengkap dengan username mereka dari server.
      * Menggunakan sistem cache sederhana untuk menghindari permintaan berulang.
@@ -1522,40 +1540,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==========================================================
 
 
-
 /**
- * Fungsi baru untuk menentukan bulan akademik yang sedang berjalan
- * berdasarkan tanggal hari ini dan data dari appData.calendarEvents.
- * @returns {number} Nomor bulan yang sedang aktif (contoh: 2 untuk Bulan II).
+ * FUNGSI PENCARIAN BARU (PENGGANTI getAcademicMonthForDate)
+ * Mencari tanggal yang diberikan di dalam daftar rentang bulan akademik.
+ * @param {string} referenceDateStr - Tanggal dalam format YYYY-MM-DD.
+ * @returns {number} Nomor bulan yang aktif.
  */
-function getCurrentAcademicMonth() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Atur waktu ke awal hari untuk perbandingan yang akurat
-
-    // 1. Ambil semua acara "Awal Materi Bulan" dari kalender dan urutkan berdasarkan tanggal
-    const monthStartEvents = appData.calendarEvents
-        .filter(event => event.title.startsWith("Awal Materi Bulan"))
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    let currentMonth = 0;
-
-    // 2. Cari acara "Awal Materi" terakhir yang sudah lewat dari tanggal hari ini
-    for (const event of monthStartEvents) {
-        const eventDate = new Date(event.date);
-        if (eventDate <= today) {
-            // Ekstrak nomor bulan dari judul acara
-            const monthMatch = event.title.match(/Bulan (I|II|III|IV|V|VI|VII|VIII)/);
-            if (monthMatch) {
-                const romanMap = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8 };
-                currentMonth = romanMap[monthMatch[1]];
-            }
-        } else {
-            // Karena sudah diurutkan, kita bisa berhenti jika menemukan acara di masa depan
-            break;
-        }
+// HAPUS FUNGSI LAMA, GUNAKAN HANYA YANG INI
+function findAcademicMonthForDate(referenceDateStr) {
+    // Pengecekan keamanan jika referenceDateStr kosong atau tidak valid
+    if (!referenceDateStr || !referenceDateStr.includes('-')) {
+        console.error("Tanggal referensi tidak valid:", referenceDateStr);
+        return 0; // Kembalikan nilai default jika tanggal tidak valid
     }
+    const refParts = referenceDateStr.split('-');
+    const referenceDate = new Date(refParts[0], refParts[1] - 1, refParts[2]);
     
-    console.log(`Bulan akademik saat ini terdeteksi: Bulan ${currentMonth}`);
+    // Pastikan academicMonthRanges sudah terisi
+    if (academicMonthRanges.length === 0) {
+        console.error("Error: Data rentang bulan akademik (academicMonthRanges) kosong.");
+        return 0;
+    }
+
+    const foundRange = academicMonthRanges.find(range => 
+        referenceDate >= range.start && referenceDate <= range.end
+    );
+
+    const currentMonth = foundRange ? foundRange.month : 0;
+    console.log(`Pengecekan untuk tanggal: ${referenceDate.toDateString()}. Bulan akademik terdeteksi: Bulan ${currentMonth}`);
     return currentMonth;
 }
 
@@ -1839,19 +1851,7 @@ function getCurrentAcademicMonth() {
         }
     };
  
-    const ui = { messageBox: document.getElementById('messageBox'), donasiModal: document.getElementById("donasiModal"), donasiBtn: document.getElementById("donasiBtn"), loginButton: document.getElementById('loginButton'), userProfile: document.getElementById('userProfile'), userProfileName: document.getElementById('userProfileName'), navProfilePic: document.getElementById('navProfilePic'), attendanceNav: document.getElementById('attendanceNav'), sistemInformasiNav: document.getElementById('sistemInformasiNav'), kalenderPendidikan: document.getElementById('kalenderPendidikanSection'), marqueeContainer: document.getElementById('marquee-container'), marqueeText: document.getElementById('marquee-text'), dynamicCalendarGrid: document.getElementById('dynamic-calendar-grid'), slideshowContainer: document.getElementById('slideshow') };
-    
-	let appState = {
-        activeMonthKey: 'bulan1', // Kunci untuk mengakses data di appData.schedules
-        filters: {
-            group: 'all',
-            cluster: 'all',
-            teacher: 'all',
-            room: 'all'
-        },
-        // Data yang sudah diproses akan disimpan di sini
-       processedSchedules: {}
-    };
+	
 	
 	const krsContainer = document.getElementById('krs-container');
     const krsDisplay = document.getElementById('krs-display');
@@ -1864,9 +1864,55 @@ function getCurrentAcademicMonth() {
     const downloadKhsBtn = document.getElementById('download-khs-btn');
     const closeKhsBtnBottom = document.getElementById('close-khs-btn-bottom');
 	
-    let isSistemInformasiInitialized = false;
 
 // --- Tempelkan semua kode di bawah ini sebelum BAGIAN 2 ---
+/**
+ * FUNGSI BARU (sesuai ide Anda)
+ * Membaca kalender dan membuat daftar objek rentang tanggal untuk setiap bulan akademik.
+ * Dijalankan sekali saat aplikasi dimuat.
+ */
+function generateAcademicMonthRanges() {
+    const monthStartEvents = appData.calendarEvents
+        .filter(event => event.title.startsWith("Awal Materi Bulan"))
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    if (monthStartEvents.length === 0) return;
+
+    academicMonthRanges = monthStartEvents.map((event, index) => {
+        const monthMatch = event.title.match(/Bulan (VIII|VII|VI|V|IV|III|II|I)/);
+        if (!monthMatch) return null;
+
+        const romanMap = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8 };
+        const monthNumber = romanMap[monthMatch[1]];
+
+        // Tanggal mulai adalah tanggal acara itu sendiri
+        const startDate = new Date(event.date + 'T00:00:00');
+
+        let endDate;
+        // Jika ada acara "Awal Materi" berikutnya, tanggal selesai adalah 1 hari sebelumnya
+        if (index + 1 < monthStartEvents.length) {
+    const nextStartDate = new Date(monthStartEvents[index + 1].date + 'T00:00:00');
+    
+    // BENAR: Buat salinan tanggal terlebih dahulu
+    const tempDate = new Date(nextStartDate);
+    // Ubah salinannya, bukan yang asli
+    tempDate.setDate(tempDate.getDate() - 1); 
+    // Gunakan salinan yang sudah diubah sebagai tanggal akhir
+    endDate = tempDate; 
+        } else {
+            // Untuk bulan terakhir, kita set tanggal selesai jauh di masa depan
+            endDate = new Date('2099-12-31T00:00:00');
+        }
+
+        return {
+            month: monthNumber,
+            start: startDate,
+            end: endDate
+        };
+    }).filter(Boolean); // Menghapus entri null jika ada yang gagal di-parse
+
+    // console.log("Rentang Bulan Akademik Berhasil Dibuat:", academicMonthRanges); // Untuk debugging
+}
 
 // =======================================================
 // === VARIABEL DAN DATA UNTUK UJIAN ONLINE ===
@@ -3903,7 +3949,7 @@ function setupSantriSelectorListeners() {
     }
     
     function populateTeacherClasses(session, selectedDateStr, targetTeacherName = null) {
-    const selectedDate = new Date(selectedDateStr + 'T00:00:00');
+    const selectedDate = new Date(selectedDateStr + 'T00:00:00'); 
     const dayIndex = selectedDate.getDay();
     const daysInIndonesian = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
     const currentDayName = daysInIndonesian[dayIndex];
@@ -3911,40 +3957,39 @@ function setupSantriSelectorListeners() {
     
     classNameSelect.innerHTML = '<option value="">Memuat kelas...</option>';
     
-    // 1. Tentukan bulan akademik saat ini (logika ini sudah benar)
-    const currentAcademicMonth = getCurrentAcademicMonth();
+    // --- PERUBAHAN DIMULAI DI SINI ---
+    
+    // 1. Panggil fungsi baru untuk mendapatkan bulan akademik saat ini
+    const currentAcademicMonth = findAcademicMonthForDate(selectedDateStr);
     if (currentAcademicMonth === 0) {
          classNameSelect.innerHTML = '<option value="">Kalender akademik belum dimulai</option>';
          return;
     }
 
-    // 2. Tentukan nama guru yang akan dicari jadwalnya
     const teacherName = targetTeacherName || (session && session.userData ? session.userData.profileName : null);
     
     if (teacherName && appData.schedules) {
         let taughtClasses = new Set();
         
-        // === BAGIAN YANG DIPERBAIKI ===
-        // 3. Ambil KUMPULAN jadwal HANYA untuk bulan yang aktif
-        const monthKey = `bulan${currentAcademicMonth}`; // Contoh: 'bulan2'
-        const scheduleForActiveMonth = appData.schedules[monthKey] || [];
-        
-        // 4. Lakukan pencarian HANYA di dalam kumpulan jadwal bulan ini
-        scheduleForActiveMonth.forEach(scheduleItem => {
-            // 5. Cek hanya berdasarkan nama guru dan hari (pengecekan bulan sudah tidak perlu di sini)
+        const schedulesToScan = Array.isArray(appData.schedules) 
+            ? appData.schedules 
+            : Object.values(appData.schedules).flat();
+
+        schedulesToScan.forEach(scheduleItem => {
+            // 2. Tambahkan kondisi filter untuk mencocokkan bulan akademik
             if (
                 scheduleItem.teacher === teacherName && 
-                scheduleItem.day === currentDayName
+                scheduleItem.day === currentDayName &&
+                String(scheduleItem.bulan) === String(currentAcademicMonth) //
             ) {
                 taughtClasses.add(scheduleItem.subject);
             }
         });
-        // ============================
 
-        // Sisa dari fungsi ini untuk menampilkan hasil (tidak ada perubahan)
         classNameSelect.innerHTML = '';
         if (taughtClasses.size > 0) {
             classNameSelect.innerHTML = '<option value="">Pilih Kelas...</option>';
+            // Ditambahkan .sort() agar daftar kelas urut abjad dan rapi
             Array.from(taughtClasses).sort().forEach(subject => {
                 const option = document.createElement('option');
                 option.value = subject;
@@ -6064,6 +6109,8 @@ addKrsRowBtn.addEventListener('click', async () => {
         updateDateTime();
         setTodayDate();
 		
+		generateAcademicMonthRanges();
+		
 		checkAndDisplayHeaderNotifications();
         setInterval(checkAndDisplayHeaderNotifications, 60 * 60 * 1000); // Cek setiap 1 jam
 
@@ -6094,7 +6141,16 @@ addKrsRowBtn.addEventListener('click', async () => {
         }
     }
     // ====================================================================
-	
+	if (appData.schedules && typeof appData.schedules === 'object') {
+        Object.keys(appData.schedules).forEach(monthKey => {
+            const monthNumber = monthKey.replace('bulan', '');
+            if (Array.isArray(appData.schedules[monthKey])) {
+                appData.schedules[monthKey].forEach(item => {
+                    item.bulan = monthNumber; // Menambahkan properti bulan ke setiap jadwal
+                });
+            }
+        });
+    }
         const session = getActiveSession();
         if (session && session.loggedIn) {
             showLoggedInView(session.userData);
