@@ -928,7 +928,7 @@
 
                 <div id="ganjil-tabs">
                     <div id="tabs-container" class="mb-4 bg-slate-200 p-1 rounded-lg flex space-x-1">
-                        <button id="tab-bulan1" class="tab-btn flex-1 p-2 rounded-md font-semibold active">Bulan I</button>
+                        <button id="tab-bulan1" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan I</button>
                         <button id="tab-bulan2" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan II</button>
                         <button id="tab-bulan3" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan III</button>
                         <button id="tab-bulan4" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan IV</button>
@@ -2196,7 +2196,7 @@ if (riwayat) { // --- LOGIKA JIKA SUDAH PERNAH UJIAN ---
         if (nilaiToShow >= 70) {
 			textColorClass = 'text-green-300 font-bold'; 
 			} else {
-			textColorClass = 'text-white';  
+			textColorClass = 'text-red-500';  
 			}
         isDisabled = true;
 
@@ -5947,8 +5947,31 @@ function initializeSistemInformasi() {
 
             doc.save(fileName);
         });
-        
     }
+
+	const setDefaultActiveTab = () => {
+    // Helper untuk mendapatkan tanggal hari ini dalam format YYYY-MM-DD
+    const getTodayString = () => new Date().toISOString().slice(0, 10);
+
+    // Menggunakan fungsi yang sudah ada untuk mencari bulan akademik saat ini
+    const currentMonthNumber = findAcademicMonthForDate(getTodayString());
+
+    // Jika bulan aktif tidak ditemukan (misal, di luar tahun ajaran), default ke bulan 1
+    const targetMonth = currentMonthNumber > 0 ? currentMonthNumber : 1;
+
+    // Nonaktifkan semua tab terlebih dahulu untuk membersihkan
+    document.querySelectorAll('.tab-btn').forEach(tab => tab.classList.remove('active'));
+
+    // Cari tombol tab yang sesuai dengan bulan saat ini
+    const targetTab = document.getElementById(`tab-bulan${targetMonth}`);
+
+    if (targetTab) {
+        // Aktifkan tab yang benar
+        targetTab.classList.add('active');
+        // PENTING: Perbarui juga state aplikasi agar data yang ditampilkan sesuai
+        appState.activeMonthKey = `bulan${targetMonth}`;
+    }
+};
 
     // --- INITIALIZATION ---
     function initializeApp() {
@@ -5959,6 +5982,7 @@ function initializeSistemInformasi() {
         renderSantriTable();
         renderTeacherTable();
         renderModuleTable();
+		setDefaultActiveTab(); // Menentukan tab aktif berdasarkan tanggal hari ini
         renderSchedule(); // Render jadwal awal (Bulan 1)
         populateTeacherFilter();
         
