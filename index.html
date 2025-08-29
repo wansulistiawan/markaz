@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Times+New+Roman&display=swap" rel="stylesheet">
-
+	
     <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -707,6 +707,7 @@
                     <a href="#beranda" class="active">Beranda</a>
                     <a href="#lembaga">Lembaga</a>
                     <a href="#tentang">Tentang</a>
+					<a href="digilib.html" style="background-color: #8B5CF6;">Digilib</a>
 					<div id="sistemInformasiDropdown" class="dropdown hidden">
 					<a href="#" id="sistemInformasiNav" class="dropbtn"><span class="nav-link-wrapper">Sistem Informasi &#9662;</span></a>
 						<div class="dropdown-content">
@@ -723,7 +724,7 @@
 						</div>
 					</div>
 					<a href="#absensi" id="attendanceNav" class="hidden">Absensi</a>
-					<a href="#halaman-ujian-admin" id="halamanUjianAdminNav" class="hidden">Ujian</a>
+					<a href="#halaman-ujian-admin" id="halamanUjianAdminNav" class="hidden" style="background-color: #000000;">Ujian</a>
 					<a href="#ujian-online" id="ujianOnlineNav" class="hidden" style="background-color: #ff69b4;">Ujian Online</a>
 					<a href="#penerimaan">Penerimaan</a>
                     <a href="#kegiatan">Kegiatan</a>
@@ -4250,7 +4251,8 @@ function handleLoginSubmit(event) {
         } else {
             data = { action: 'submitAttendance', role: 'rapat', name: session.userData.profileName, date: form.querySelector('#rapatDate').value, startTime: form.querySelector('#rapatStartTime').value, endTime: form.querySelector('#rapatEndTime').value, remarks: form.querySelector('#rapatRemarks').value };
         }
-        fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.ok ? res.json() : Promise.reject(res)).then(result => {if (result.status === "success") {
+        fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.ok ? res.json() : Promise.reject(res)).then(result => {
+		if (result.status === "success") {
     showMessage('Absensi berhasil direkam!', 'success');
     const session = getActiveSession();
     const currentName = session.userData.profileName;
@@ -4261,10 +4263,13 @@ function handleLoginSubmit(event) {
     if (role === 'guru') {
         form.querySelector('#teacherNameDisplay').value = currentName;
     } else if (role === 'staf') {
+		const currentJabatan = session.userData.jabatan; // Ambil jabatan dari sesi
         form.querySelector('#stafNameDisplay').value = currentName;
+		form.querySelector('#jabatanStaf').value = currentJabatan; // Isi kembali jabatan
     } else if (role === 'rapat') {
         form.querySelector('#rapatNameDisplay').value = currentName;
-    }setTodayDate();fetchAndRenderAttendanceHistory(session.userData.profileName);} else if (result.status === "duplicate") {showMessage(result.message, 'error');} else {showMessage(result.message || 'Gagal mengirim absensi.', 'error');}}).catch(error => { console.error('Attendance Error:', error); showMessage('Gagal terhubung.', 'error'); }).finally(() => { submitBtn.textContent = `Kirim Absensi ${role.charAt(0).toUpperCase() + role.slice(1)}`; submitBtn.disabled = false; });
+    }
+		setTodayDate();fetchAndRenderAttendanceHistory(session.userData.profileName);} else if (result.status === "duplicate") {showMessage(result.message, 'error');} else {showMessage(result.message || 'Gagal mengirim absensi.', 'error');}}).catch(error => { console.error('Attendance Error:', error); showMessage('Gagal terhubung.', 'error'); }).finally(() => { submitBtn.textContent = `Kirim Absensi ${role.charAt(0).toUpperCase() + role.slice(1)}`; submitBtn.disabled = false; });
     }
 
 // =======================================================
@@ -6193,40 +6198,35 @@ addKrsRowBtn.addEventListener('click', async () => {
     const container = document.getElementById('materi-list-container');
     const inputBtn = modal.querySelector('#simpan-materi-btn');
 
-    // Reset dan tampilkan modal
+    // DITAMBAHKAN: Pengecekan apakah pengguna saat ini adalah admin
+    const session = getActiveSession();
+    const isAdminOverride = session && ['wawan', 'mia', 'admin'].includes(session.username);
+
     inputBtn.disabled = false;
     inputBtn.textContent = 'Input';
     container.innerHTML = '<p class="text-gray-500">Memeriksa riwayat nilai dan prasyarat...</p>';
     modal.style.display = "block";
 
-    // Dapatkan nama santri yang sedang dilihat dari halaman KRS
     const santriNameBeingViewed = document.getElementById('nama-santri-krs').textContent.replace(': ', '');
-    
-    // Objek untuk menyimpan level tertinggi yang LULUS per keluarga materi
     const highestPassedLevel = {};
+
     try {
-        // === BAGIAN KRITIS YANG DIPERBAIKI ===
-        // 1. Ambil daftar semua santri beserta username asli mereka
         const allSantriWithUsernames = await getSantriDataWithUsernames();
-        // 2. Cari data santri yang sedang kita lihat berdasarkan nama
         const santriBeingViewedData = allSantriWithUsernames.find(s => s.profileName === santriNameBeingViewed);
 
         if (!santriBeingViewedData || !santriBeingViewedData.username) {
             throw new Error(`Username untuk santri ${santriNameBeingViewed} tidak ditemukan.`);
         }
         
-        // 3. Gunakan USERNAME SANTRI (bukan admin) untuk mengambil data nilai
         const response = await fetch(CONFIG.SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'getAllKHSData', username: santriBeingViewedData.username }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
-        // =====================================
 
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
 
-        // Iterasi melalui semua nilai yang ada (logika ini sudah benar)
         for (const code in result.nilai) {
             const score = result.nilai[code];
             if (score >= 70) {
@@ -6244,7 +6244,6 @@ addKrsRowBtn.addEventListener('click', async () => {
         return;
     }
     
-    // Sisa dari kode ini tidak perlu diubah karena sudah benar
     const santriData = appData.santri.find(s => s.nama === santriNameBeingViewed);
     const groupInfoParts = (santriData.grup || '').split(' ');
     const santriGroup = groupInfoParts[0] || '';
@@ -6283,15 +6282,34 @@ addKrsRowBtn.addEventListener('click', async () => {
             const level = parseInt(code.slice(-1), 10);
             const checkboxId = `materi-${code}`;
             const maxPassed = highestPassedLevel[prefix] || 0;
-            const isUnlocked = level <= maxPassed + 1;
-            const isDisabled = !isUnlocked;
+            
+            // --- AWAL DARI LOGIKA YANG DIUBAH ---
+            let isUnlocked, isDisabled, labelClass;
 
-            let labelClass = 'other';
-            if (isDisabled) {
-                labelClass = 'prerequisite-failed';
-            } else if (item.group === santriGroup || (item.group === 'KG' && (item.cluster === santriCluster || item.cluster === 'Wajib'))) {
-                labelClass = 'recommended';
+            if (isAdminOverride) {
+                // Untuk admin, semua materi dianggap bisa dipilih (unlocked) dan aktif (enabled)
+                isUnlocked = true;
+                isDisabled = false;
+                // Admin tetap bisa melihat mana materi yang direkomendasikan
+                if (item.group === santriGroup || (item.group === 'KG' && (item.cluster === santriCluster || item.cluster === 'Wajib'))) {
+                    labelClass = 'recommended';
+                } else {
+                    labelClass = 'other';
+                }
+            } else {
+                // Logika asli yang berjalan untuk santri biasa
+                isUnlocked = level <= maxPassed + 1;
+                isDisabled = !isUnlocked;
+                
+                if (isDisabled) {
+                    labelClass = 'prerequisite-failed';
+                } else if (item.group === santriGroup || (item.group === 'KG' && (item.cluster === santriCluster || item.cluster === 'Wajib'))) {
+                    labelClass = 'recommended';
+                } else {
+                    labelClass = 'other';
+                }
             }
+            // --- AKHIR DARI LOGIKA YANG DIUBAH ---
 
             const div = document.createElement('div');
             div.className = 'flex items-start p-2 rounded-md hover:bg-gray-100 materi-item border-b';
@@ -6300,7 +6318,7 @@ addKrsRowBtn.addEventListener('click', async () => {
             input.type = 'checkbox';
             input.value = code;
             input.className = 'h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 mt-1';
-            input.disabled = isDisabled;
+            input.disabled = isDisabled; // Atur status disabled berdasarkan logika di atas
             input.dataset.subject = JSON.stringify(item);
             const label = document.createElement('label');
             label.htmlFor = checkboxId;
