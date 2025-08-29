@@ -4250,7 +4250,21 @@ function handleLoginSubmit(event) {
         } else {
             data = { action: 'submitAttendance', role: 'rapat', name: session.userData.profileName, date: form.querySelector('#rapatDate').value, startTime: form.querySelector('#rapatStartTime').value, endTime: form.querySelector('#rapatEndTime').value, remarks: form.querySelector('#rapatRemarks').value };
         }
-        fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.ok ? res.json() : Promise.reject(res)).then(result => {if (result.status === "success") {showMessage('Absensi berhasil direkam!', 'success');const namaGuru = form.querySelector('#teacherNameDisplay').value;form.reset();form.querySelector('#teacherNameDisplay').value = namaGuru;setTodayDate();fetchAndRenderAttendanceHistory(session.userData.profileName);} else if (result.status === "duplicate") {showMessage(result.message, 'error');} else {showMessage(result.message || 'Gagal mengirim absensi.', 'error');}}).catch(error => { console.error('Attendance Error:', error); showMessage('Gagal terhubung.', 'error'); }).finally(() => { submitBtn.textContent = `Kirim Absensi ${role.charAt(0).toUpperCase() + role.slice(1)}`; submitBtn.disabled = false; });
+        fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.ok ? res.json() : Promise.reject(res)).then(result => {if (result.status === "success") {
+    showMessage('Absensi berhasil direkam!', 'success');
+    const session = getActiveSession();
+    const currentName = session.userData.profileName;
+
+    form.reset(); // Reset seluruh isian form
+
+    // PERBAIKAN: Isi kembali nama HANYA pada form yang sesuai
+    if (role === 'guru') {
+        form.querySelector('#teacherNameDisplay').value = currentName;
+    } else if (role === 'staf') {
+        form.querySelector('#stafNameDisplay').value = currentName;
+    } else if (role === 'rapat') {
+        form.querySelector('#rapatNameDisplay').value = currentName;
+    }setTodayDate();fetchAndRenderAttendanceHistory(session.userData.profileName);} else if (result.status === "duplicate") {showMessage(result.message, 'error');} else {showMessage(result.message || 'Gagal mengirim absensi.', 'error');}}).catch(error => { console.error('Attendance Error:', error); showMessage('Gagal terhubung.', 'error'); }).finally(() => { submitBtn.textContent = `Kirim Absensi ${role.charAt(0).toUpperCase() + role.slice(1)}`; submitBtn.disabled = false; });
     }
 
 // =======================================================
