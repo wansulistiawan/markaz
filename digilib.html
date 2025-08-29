@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perpustakaan Digital - Yayasan Markaz Yatim</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/dflip@2.1.25/dist/dflip.min.css" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0e9d8; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+        header .header-content { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; width: 90%; max-width: 1200px; margin: 0 auto; }
+        header { background-color: #ffffff; padding: 20px 0; border-bottom: 1px solid #e9ecef; }
+        header img.logo { height: 60px; margin-right: 15px; }
+        header .title-container h1 { margin: 0; font-size: 1.8em; color: #2c5e2e; }
+        header .title-container p { margin: 0; font-size: 0.9em; color: #6c757d; }
+        .nav-wrapper { position: sticky; top: 0; z-index: 1001; background-color: #2c5e2e; }
+        nav .nav-container { display: flex; align-items: center; width: 90%; max-width: 1200px; margin: 0 auto; }
+        nav a { color: #ffffff; padding: 15px 20px; text-decoration: none; font-weight: 500; }
+        .btn { display: inline-block; background-color: #4f46e5; color: white; padding: 0.5rem 1.25rem; border-radius: 6px; font-weight: 500; text-decoration: none; cursor: pointer; }
+        .btn:disabled { background-color: #9ca3af; cursor: not-allowed; }
+        .bookshelf-container { width: 100%; min-height: 80vh; background-image: url('rak-buku.jpg'); background-size: cover; background-position: center; padding: 3% 0; display: flex; flex-direction: column; justify-content: space-around; }
+        .shelf { padding: 0 5%; }
+        .book-cover { width: 120px; height: 180px; background-color: #fff; border-radius: 4px; box-shadow: 5px 5px 15px rgba(0,0,0,0.3); overflow: hidden; cursor: pointer; transition: transform 0.2s; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 10px; font-weight: 600; color: #333; background-size: cover; background-position: center; }
+        .book-cover:hover { transform: scale(1.05); }
+        .swiper-button-next, .swiper-button-prev { color: white; background-color: rgba(0, 0, 0, 0.4); width: 40px; height: 40px; border-radius: 50%; }
+        .swiper-button-next:after, .swiper-button-prev:after { font-size: 18px; font-weight: bold; }
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 900px; position: relative; border-radius: 8px; }
+        .close-button { color: #aaa; position: absolute; top: 10px; right: 25px; font-size: 35px; font-weight: bold; cursor: pointer; }
+        .content-wrapper { max-width: 900px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .paste-area { border: 2px dashed #cbd5e1; min-height: 200px; padding: 1rem; margin-top: 1rem; border-radius: 6px; }
+        .preview-section { margin-top: 1.5rem; padding: 1.5rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+             <div style="display: flex; align-items: center;">
+                <img src="Logo_yayasan.png" alt="Logo Yayasan" class="logo">
+                <div class="title-container"><h1>Yayasan Markaz Yatim Duafa Qurani</h1><p>Berdasarkan Al-Qur'an dan Sunnah Sesuai Pemahaman Salafush Shalih</p></div>
+            </div>
+             <div class="flex gap-4 items-center">
+                <button id="add-pdf-btn" class="btn bg-green-600 hover:bg-green-700" style="display: none;">+ Tambah PDF Baru</button>
+                <button id="add-rmp-btn" class="btn" style="display: none;">+ Tambah RMP Baru</button>
+            </div>
+        </div>
+    </header>
+    <div class="nav-wrapper">
+        <nav id="mainNav">
+            <div class="nav-container">
+                <a href="index.html#beranda">Beranda</a><a href="index.html#lembaga">Lembaga</a><a href="index.html#tentang">Tentang</a>
+                <a href="digilib.html" style="background-color: #8B5CF6;">Digilib</a><a href="index.html#penerimaan">Penerimaan</a>
+            </div>
+        </nav>
+    </div>
+
+    <main class="bookshelf-container">
+        <div class="shelf"><div class="swiper" id="shelf-all"><div class="swiper-wrapper" id="shelf-all-wrapper"></div><div class="swiper-button-next"></div><div class="swiper-button-prev"></div></div></div>
+        <div class="shelf"><div class="swiper" id="shelf-featured"><div class="swiper-wrapper" id="shelf-featured-wrapper"></div><div class="swiper-button-next"></div><div class="swiper-button-prev"></div></div></div>
+        <div class="shelf"><div class="swiper" id="shelf-read"><div class="swiper-wrapper" id="shelf-read-wrapper"></div><div class="swiper-button-next"></div><div class="swiper-button-prev"></div></div></div>
+    </main>
+    
+    <div id="pdf-modal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><div id="pdf-viewer" style="width:100%; height:80vh;"></div></div></div>
+    <div id="rmp-modal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><div id="rmp-viewer"></div></div></div>
+
+    <div id="add-pdf-modal" class="modal">
+        <div class="modal-content">
+    <span class="close-button">&times;</span>
+    <h2 class="text-2xl font-bold mb-4">Tambah Materi PDF Baru</h2>
+    <form id="pdf-form">
+        <div class="mb-4"><label for="pdf-judul" class="block font-semibold">Judul Buku</label><input type="text" id="pdf-judul" class="w-full p-2 border rounded mt-1" required></div>
+        <div class="mb-4"><label for="pdf-deskripsi" class="block font-semibold">Deskripsi Singkat</label><textarea id="pdf-deskripsi" class="w-full p-2 border rounded mt-1" rows="3"></textarea></div>
+        <div class="mb-4">
+            <label for="pdf-link" class="block font-semibold">Link Berbagi Google Drive</label>
+            <input type="text" id="pdf-link" class="w-full p-2 border rounded mt-1" placeholder="Tempel link 'Siapa saja yang memiliki link' di sini" required>
+        </div>
+
+        <div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-3 bg-gray-50 rounded-md border">
+                <label class="block font-semibold">Thumbnail / Gambar Sampul</label>
+                <div id="thumbnail-preview-container" class="mt-2 h-40 flex items-center justify-center bg-gray-100 relative">
+                    <span id="thumbnail-status" class="text-gray-500 text-sm text-center p-2">Tunggu link Google Drive ditempel...</span>
+                    <img id="thumbnail-preview" class="w-24 h-36 border shadow-md" style="display: none;">
+                </div>
+                <input type="hidden" id="pdf-thumbnail-url">
+                <div id="thumbnail-fallback-options" class="mt-2" style="display: none;">
+                    <p class="text-xs text-red-600 mb-2">Otomatisasi gagal. Silakan pilih cara manual:</p>
+                    <div class="space-y-2">
+                        <input type="file" id="manual-upload-input" accept="image/*" class="hidden">
+                        <button type="button" onclick="document.getElementById('manual-upload-input').click()" class="w-full text-xs p-1 border rounded bg-white hover:bg-gray-100">1. Unggah Gambar</button>
+                        <input type="text" id="manual-link-input" class="w-full text-xs p-1 border rounded" placeholder="2. Tempel Link Gambar">
+                        <div id="manual-paste-area" contenteditable="true" class="w-full text-xs p-2 border rounded bg-white text-center text-gray-400" style="min-height: 50px;">Tempel SS di sini</div>
+                        <button type="button" id="no-thumbnail-btn" class="w-full text-xs p-1 border rounded bg-white hover:bg-gray-100">4. Lanjutkan Tanpa Sampul</button>
+                    </div>
+                </div>
+            </div>
+            <div class="md:col-span-2 p-3 bg-gray-50 rounded-md border">
+                <label class="block font-semibold">Pratinjau PDF</label>
+                <div class="mt-2 h-full min-h-[200px] flex items-center justify-center bg-gray-100">
+                     <iframe id="pdf-preview-frame" class="w-full h-full" frameborder="0"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4"><label class="block font-semibold">Kategori</label><div class="flex gap-4 mt-1"><label><input type="checkbox" name="pdf-kategori" value="Guru"> Guru</label><label><input type="checkbox" name="pdf-kategori" value="Santri"> Santri</label><label><input type="checkbox" name="pdf-kategori" value="Umum"> Umum</label></div></div>
+        <div class="mb-4"><label class="block font-semibold">Jadikan Buku Pilihan?</label><div class="flex gap-4 mt-1"><label><input type="radio" name="pdf-pilihan" value="YA"> Ya</label><label><input type="radio" name="pdf-pilihan" value="TIDAK" checked> Tidak</label></div></div>
+        <button type="submit" id="simpan-pdf-btn" class="btn w-full">Simpan PDF ke Perpustakaan</button>
+    </form>
+</div>
+    </div>
+    
+    <div id="add-rmp-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="admin-view-content" style="padding:0;">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Input Rancangan Materi Pembelajaran (RMP)</h1>
+                <div class="form-group mb-6"><label for="rmp-materi-select" class="font-semibold">1. Pilih Materi</label><select id="rmp-materi-select" class="w-full p-2 border border-gray-300 rounded-md mt-2"></select></div>
+                <div class="form-group mb-6"><label class="font-semibold">2. RMP Untuk Siapa?</label><div class="flex gap-4 mt-2"><label><input type="radio" name="jenis-rmp" value="Guru" checked> Guru</label><label><input type="radio" name="jenis-rmp" value="Santri"> Santri</label></div></div>
+                <div class="form-group mb-6"><label for="paste-area" class="font-semibold">3. Salin & Tempel (Paste) Konten dari Word di Sini</label><div id="paste-area" contenteditable="true" class="paste-area" style="min-height: 200px; max-height: 40vh; overflow-y: auto;"></div></div>
+                <div class="flex justify-center gap-4"><button id="proses-btn" class="btn">Proses & Tampilkan Pratinjau</button><button id="simpan-rmp-btn" style="display: none;" class="btn bg-green-600 hover:bg-green-700">Simpan RMP</button></div>
+                <div id="preview-container" class="mt-6" style="max-height: 40vh; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dflip@2.1.25/dist/dflip.min.js"></script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;</script>
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- KONFIGURASI ---
+    const CONFIG = {
+        SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec",
+        CLOUDINARY_URL: "https://api.cloudinary.com/v1_1/deva5eknr/image/upload",
+        CLOUDINARY_UPLOAD_PRESET: "markaz",
+        ALLOWED_USERS: ['wawan', 'mia', 'admin']
+    };
+
+    // --- ELEMEN DOM ---
+    const bookshelfContainer = document.querySelector('main.bookshelf-container');
+    const addRmpBtn = document.getElementById('add-rmp-btn');
+    const addPdfBtn = document.getElementById('add-pdf-btn');
+    const modals = {
+        pdfViewer: document.getElementById('pdf-modal'),
+        rmpViewer: document.getElementById('rmp-modal'),
+        addPdf: document.getElementById('add-pdf-modal'),
+        addRmp: document.getElementById('add-rmp-modal')
+    };
+    const pdfForm = document.getElementById('pdf-form');
+    
+    // --- FUNGSI BANTUAN ---
+    const getActiveSession = () => JSON.parse(localStorage.getItem('userSession') || sessionStorage.getItem('userSession') || 'null');
+    const showMessage = (message, isSuccess = true) => alert(message);
+
+    // =======================================================
+    // BAGIAN LOGIKA PERPUSTAKAAN (RAK BUKU)
+    // =======================================================
+    const createBookElement = (book) => {
+        const bookDiv = document.createElement('div');
+        bookDiv.className = 'swiper-slide';
+        let coverStyle = book.Thumbnail ? `background-image: url('${book.Thumbnail}');` : '';
+        bookDiv.innerHTML = `<div class="book-cover" data-type="${book.Tipe}" data-link="${book.Link}" style="${coverStyle}">${!book.Thumbnail ? book.Judul : ''}</div>`;
+        return bookDiv;
+    };
+
+    const renderLibrary = async () => {
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getDigilibContent' }) });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+            
+            const allBooks = result.data;
+            const featuredBooks = allBooks.filter(book => book.Pilihan === 'YA');
+            const readBooksList = JSON.parse(localStorage.getItem('readBooks') || '[]');
+            const readBooks = allBooks.filter(book => readBooksList.includes(book.Link));
+
+            ['all', 'featured', 'read'].forEach(shelf => {
+                const wrapper = document.getElementById(`shelf-${shelf}-wrapper`);
+                if (wrapper) wrapper.innerHTML = '';
+            });
+            allBooks.forEach(book => document.getElementById('shelf-all-wrapper').appendChild(createBookElement(book)));
+            featuredBooks.forEach(book => document.getElementById('shelf-featured-wrapper').appendChild(createBookElement(book)));
+            readBooks.forEach(book => document.getElementById('shelf-read-wrapper').appendChild(createBookElement(book)));
+
+            const swiperOptions = { slidesPerView: 'auto', spaceBetween: 30, navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' } };
+            if (window.swiperInstances) { window.swiperInstances.forEach(sw => sw.destroy(true, true)); }
+            window.swiperInstances = [
+                new Swiper('#shelf-all', swiperOptions),
+                new Swiper('#shelf-featured', swiperOptions),
+                new Swiper('#shelf-read', swiperOptions)
+            ];
+        } catch (error) { console.error("Gagal memuat perpustakaan:", error); }
+    };
+
+    const handleBookClick = async (e) => {
+        const bookCover = e.target.closest('.book-cover');
+        if (!bookCover) return;
+        const type = bookCover.dataset.type;
+        const link = bookCover.dataset.link;
+        let readBooksList = JSON.parse(localStorage.getItem('readBooks') || '[]');
+        if (!readBooksList.includes(link)) {
+            readBooksList.push(link);
+            localStorage.setItem('readBooks', JSON.stringify(readBooksList));
+        }
+        if (type === 'PDF') {
+            const googleDriveLink = `https://drive.google.com/uc?export=download&id=${link}`;
+            $('#pdf-viewer').html('').DFLIP({ source: googleDriveLink });
+            modals.pdfViewer.style.display = 'block';
+        } else if (type === 'RMP') {
+            const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getSingleRMP', KodeMateri: link }) });
+            const result = await response.json();
+            if (result.status === 'success') {
+                document.getElementById('rmp-viewer').innerHTML = result.kontenHTML;
+                modals.rmpViewer.style.display = 'block';
+            } else { showMessage('Gagal memuat materi RMP: ' + result.message, false); }
+        }
+    };
+    
+    // =======================================================
+    // BAGIAN LOGIKA FORM TAMBAH PDF & THUMBNAIL OTOMATIS
+    // =======================================================
+    const uploadBlobToCloudinary = async (blob, sourceName) => {
+        const statusText = document.getElementById('thumbnail-status');
+        const previewImg = document.getElementById('thumbnail-preview');
+        const simpanPdfBtn = document.getElementById('simpan-pdf-btn');
+        const thumbnailUrlInput = document.getElementById('pdf-thumbnail-url');
+        const fallbackOptions = document.getElementById('thumbnail-fallback-options');
+
+        statusText.textContent = `Mengompres & mengunggah dari ${sourceName}...`;
+        statusText.style.display = 'inline';
+        previewImg.style.display = 'none';
+        simpanPdfBtn.disabled = true;
+        try {
+            const compressedFile = await imageCompression(blob, { maxSizeMB: 0.2, maxWidthOrHeight: 800 });
+            const formData = new FormData();
+            formData.append('file', compressedFile, 'thumbnail.jpg');
+            formData.append('upload_preset', CONFIG.CLOUDINARY_UPLOAD_PRESET);
+            const response = await fetch(CONFIG.CLOUDINARY_URL, { method: 'POST', body: formData });
+            const result = await response.json();
+            if (result.secure_url) {
+                previewImg.src = result.secure_url;
+                thumbnailUrlInput.value = result.secure_url;
+                statusText.style.display = 'none';
+                previewImg.style.display = 'block';
+                fallbackOptions.style.display = 'none';
+                showMessage('Thumbnail berhasil dibuat!', true);
+            } else { throw new Error('Gagal mengunggah ke Cloudinary.'); }
+        } catch (error) {
+            statusText.textContent = 'Upload Gagal: ' + error.message;
+        } finally {
+            simpanPdfBtn.disabled = false;
+        }
+    };
+
+    const setupThumbnailWorkflow = () => {
+        const driveLinkInput = document.getElementById('pdf-link');
+        const fallbackOptions = document.getElementById('thumbnail-fallback-options');
+        const manualUploadInput = document.getElementById('manual-upload-input');
+        const manualLinkInput = document.getElementById('manual-link-input');
+        const manualPasteArea = document.getElementById('manual-paste-area');
+        const noThumbnailBtn = document.getElementById('no-thumbnail-btn');
+        const pdfPreviewFrame = document.getElementById('pdf-preview-frame');
+        const previewImg = document.getElementById('thumbnail-preview');
+        const thumbnailUrlInput = document.getElementById('pdf-thumbnail-url');
+        const statusText = document.getElementById('thumbnail-status');
+        const simpanPdfBtn = document.getElementById('simpan-pdf-btn');
+
+        driveLinkInput.addEventListener('change', async (e) => {
+            const driveLink = e.target.value;
+            fallbackOptions.style.display = 'none';
+            const match = driveLink.match(/[-\w]{25,}/);
+            if (match) {
+                pdfPreviewFrame.src = `https://drive.google.com/file/d/${match[0]}/preview`;
+            } else {
+                pdfPreviewFrame.src = 'about:blank';
+                if (driveLink) showMessage("Link Google Drive sepertinya tidak valid.", false);
+                return;
+            }
+            statusText.textContent = "Mencoba membuat thumbnail otomatis...";
+            statusText.style.display = 'inline';
+            previewImg.style.display = 'none';
+            simpanPdfBtn.disabled = true;
+            try {
+                const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'generateThumbnailFromDrive', driveLink: driveLink }) });
+                const result = await response.json();
+                if (result.status !== 'success') throw new Error(result.message);
+                previewImg.src = result.thumbnailUrl;
+                thumbnailUrlInput.value = result.thumbnailUrl;
+                statusText.style.display = 'none';
+                previewImg.style.display = 'block';
+            } catch (error) {
+                statusText.textContent = 'Otomatis Gagal!';
+                fallbackOptions.style.display = 'block';
+                console.error(error);
+            } finally {
+                simpanPdfBtn.disabled = false;
+            }
+        });
+        manualUploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) uploadBlobToCloudinary(file, "File Lokal");
+        });
+        manualLinkInput.addEventListener('change', (e) => {
+            const imageUrl = e.target.value.trim();
+            if (imageUrl) {
+                previewImg.src = imageUrl;
+                thumbnailUrlInput.value = imageUrl;
+                statusText.style.display = 'none';
+                previewImg.style.display = 'block';
+                fallbackOptions.style.display = 'none';
+            }
+        });
+        manualPasteArea.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || window.clipboardData).items;
+            for (const item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    const blob = item.getAsFile();
+                    uploadBlobToCloudinary(blob, "Screenshot");
+                    return;
+                }
+            }
+        });
+        noThumbnailBtn.addEventListener('click', () => {
+            thumbnailUrlInput.value = '';
+            previewImg.style.display = 'none';
+            statusText.textContent = 'Tanpa Sampul';
+            statusText.style.display = 'inline';
+            fallbackOptions.style.display = 'none';
+        });
+    };
+
+    const handlePdfFormSubmit = async (e) => {
+        e.preventDefault();
+        const data = {
+            action: 'simpanPdfBaru',
+            Judul: document.getElementById('pdf-judul').value,
+            Deskripsi: document.getElementById('pdf-deskripsi').value,
+            Link: document.getElementById('pdf-link').value,
+            Kategori: Array.from(document.querySelectorAll('input[name="pdf-kategori"]:checked')).map(cb => cb.value).join(', '),
+            Pilihan: document.querySelector('input[name="pdf-pilihan"]:checked').value,
+            Thumbnail: document.getElementById('pdf-thumbnail-url').value
+        };
+        if (!data.Judul || !data.Link) { return showMessage("Judul dan Link wajib diisi.", false); }
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+            showMessage('Materi PDF baru berhasil disimpan!');
+            pdfForm.reset();
+            document.getElementById('thumbnail-preview').style.display = 'none';
+            document.getElementById('thumbnail-status').textContent = 'Tunggu link ditempel...';
+            document.getElementById('thumbnail-status').style.display = 'inline';
+            document.getElementById('pdf-thumbnail-url').value = '';
+            document.getElementById('pdf-preview-frame').src = 'about:blank';
+            modals.addPdf.style.display = 'none';
+            renderLibrary();
+        } catch (error) { showMessage('Gagal menyimpan PDF: ' + error.message, false); }
+    };
+
+    // =======================================================
+    // BAGIAN LOGIKA FORM TAMBAH RMP
+    // =======================================================
+    const setupRmpForm = () => {
+        const rmpMateriSelect = document.getElementById('rmp-materi-select');
+        const pasteArea = document.getElementById('paste-area');
+        const prosesBtn = document.getElementById('proses-btn');
+        const simpanRmpBtn = document.getElementById('simpan-rmp-btn');
+        const previewContainer = document.getElementById('preview-container');
+
+        fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getRosterData' }) })
+            .then(res => res.json()).then(result => {
+                if (result.status !== 'success') return;
+                const uniqueSubjects = new Map();
+                result.data.forEach(item => {
+                    if (item.subject && item.subject.includes(':')) {
+                        const code = item.subject.split(':')[0].trim();
+                        if (!uniqueSubjects.has(code)) uniqueSubjects.set(code, item.subject);
+                    }
+                });
+                rmpMateriSelect.innerHTML = '<option value="">-- Pilih Materi --</option>';
+                [...uniqueSubjects.entries()].sort((a, b) => a[1].localeCompare(b[1])).forEach(([code, subject]) => {
+                    const option = document.createElement('option');
+                    option.value = code;
+                    option.textContent = subject;
+                    rmpMateriSelect.appendChild(option);
+                });
+            });
+
+        pasteArea.addEventListener('paste', async (e) => {
+            e.preventDefault();
+            const items = (e.clipboardData || window.clipboardData).items;
+            for (const item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    const blob = item.getAsFile();
+                    showMessage('Gambar terdeteksi, mengunggah...');
+                    try {
+                        const compressedFile = await imageCompression(blob, { maxSizeMB: 0.5, maxWidthOrHeight: 1024 });
+                        const formData = new FormData();
+                        formData.append('file', compressedFile, compressedFile.name);
+                        formData.append('upload_preset', CONFIG.CLOUDINARY_UPLOAD_PRESET);
+                        const response = await fetch(CONFIG.CLOUDINARY_URL, { method: 'POST', body: formData });
+                        const result = await response.json();
+                        if (result.secure_url) {
+                            document.execCommand('insertImage', false, result.secure_url);
+                            showMessage('Gambar berhasil diunggah!');
+                        } else { throw new Error('Gagal mendapatkan URL dari Cloudinary.'); }
+                    } catch (error) { showMessage('Gagal mengunggah gambar: ' + error.message, false); }
+                } else if (item.type.indexOf('text/html') !== -1) {
+                    item.getAsString((s) => document.execCommand('insertHTML', false, s));
+                } else if (item.type.indexOf('text/plain') !== -1) {
+                    item.getAsString((s) => document.execCommand('insertText', false, s));
+                }
+            }
+        });
+
+        prosesBtn.addEventListener('click', () => {
+            const content = pasteArea.innerHTML;
+            const jenis = document.querySelector('input[name="jenis-rmp"]:checked').value;
+            const guruKeywords = { "Nama Modul": "nama-modul", "Pertemuan": "pertemuan", "Topik": "topik", "Tujuan Pembelajaran": "tujuan-pembelajaran", "Keterkaitan Nilai Islam": "nilai-islam", "Media dan Sumber belajar": "media-sumber", "Kegiatan Pembukaan": "kegiatan-pembukaan", "Kegiatan Inti": "kegiatan-inti", "Kegiatan Penutup": "kegiatan-penutup", "Penilaian/assessment": "penilaian" };
+            const santriKeywords = { "Nama Modul": "nama-modul", "Pertemuan": "pertemuan", "Topik": "topik", "Tujuan Pembelajaran untuk santri": "tujuan-pembelajaran-santri", "Keterkaitan Nilai Islam": "nilai-islam", "Media dan Sumber belajar": "media-sumber", "Isi lengkap materi": "isi-materi", "Soal Latihan": "soal-latihan" };
+            const keywords = jenis === 'Guru' ? guruKeywords : santriKeywords;
+            let previewHTML = '';
+            const parsedData = {};
+            const keywordRegex = new RegExp(`<b>(${Object.keys(keywords).join('|').replace(/(\/)/g, "\\$1")})</b>`, 'gi');
+            const parts = content.split(keywordRegex);
+            for (let i = 1; i < parts.length; i += 2) {
+                const keyword = parts[i].replace(/<\/?b>/g, '');
+                const value = parts[i + 1] || '';
+                const cleanValue = value.replace(/^:\s*<br>/, '').replace(/^:/, '').trim();
+                parsedData[keyword] = cleanValue;
+            }
+            for (const keyword in keywords) {
+                const elementId = keywords[keyword];
+                const data = parsedData[keyword] || '<i class="text-gray-400">Tidak ditemukan</i>';
+                previewHTML += `<div class="preview-section" id="${elementId}-section"><h3>${keyword}</h3><div class="preview-content" id="${elementId}">${data}</div></div>`;
+            }
+            previewContainer.innerHTML = previewHTML;
+            simpanRmpBtn.style.display = 'inline-block';
+            showMessage('Konten berhasil diproses. Silakan periksa pratinjau.');
+        });
+        
+        simpanRmpBtn.addEventListener('click', async () => {
+            const session = getActiveSession();
+            const jenis = document.querySelector('input[name="jenis-rmp"]:checked').value;
+            const guruKeywords = { "NamaModul": "nama-modul", "Pertemuan": "pertemuan", "Topik": "topik", "TujuanPembelajaran": "tujuan-pembelajaran", "KeterkaitanNilaiIslam": "nilai-islam", "MediaSumberBelajar": "media-sumber", "KegiatanPembukaan": "kegiatan-pembukaan", "KegiatanInti": "kegiatan-inti", "KegiatanPenutup": "kegiatan-penutup", "Penilaian": "penilaian" };
+            const santriKeywords = { "NamaModul": "nama-modul", "Pertemuan": "pertemuan", "Topik": "topik", "TujuanPembelajaranSantri": "tujuan-pembelajaran-santri", "KeterkaitanNilaiIslam": "nilai-islam", "MediaSumberBelajar": "media-sumber", "IsiMateri": "isi-materi", "SoalLatihan": "soal-latihan" };
+            const keywords = jenis === 'Guru' ? guruKeywords : santriKeywords;
+            
+            const dataToSave = {
+                action: 'simpanRMP',
+                KodeMateri: rmpMateriSelect.value,
+                Jenis: jenis,
+                DiinputOleh: session.username,
+                KontenHTML: previewContainer.innerHTML
+            };
+
+            for(const key in keywords) {
+                const element = document.getElementById(keywords[key]);
+                if(element) dataToSave[key] = element.innerHTML;
+            }
+            
+            try {
+                const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(dataToSave) });
+                const result = await response.json();
+                if (result.status !== 'success') throw new Error(result.message);
+                
+                showMessage('RMP berhasil disimpan!');
+                modals.addRmp.style.display = 'none';
+                bookshelfContainer.style.display = 'flex';
+                renderLibrary();
+            } catch (error) { showMessage('Gagal menyimpan RMP: ' + error.message, false); }
+        });
+    };
+
+    // =======================================================
+    // === PENGATUR TAMPILAN & INISIALISASI
+    // =======================================================
+    const setupAdminFeatures = () => {
+        const session = getActiveSession();
+        if (session && CONFIG.ALLOWED_USERS.includes(session.username)) {
+            if(addRmpBtn) addRmpBtn.style.display = 'inline-block';
+            if(addPdfBtn) addPdfBtn.style.display = 'inline-block';
+        }
+    };
+
+    // --- INISIALISASI HALAMAN & EVENT LISTENERS ---
+    renderLibrary();
+    setupAdminFeatures();
+    setupThumbnailWorkflow();
+    
+    bookshelfContainer.addEventListener('click', handleBookClick);
+    if(addPdfBtn) addPdfBtn.addEventListener('click', () => { if(modals.addPdf) modals.addPdf.style.display = 'block'; });
+    if(addRmpBtn) addRmpBtn.addEventListener('click', () => {
+        if(modals.addRmp) {
+            modals.addRmp.style.display = 'block';
+            setupRmpForm(); 
+        }
+    });
+    if(pdfForm) pdfForm.addEventListener('submit', handlePdfFormSubmit);
+
+    document.querySelectorAll('.modal .close-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.target.closest('.modal').style.display = 'none';
+            // Jika yang ditutup adalah modal RMP, tampilkan lagi rak buku
+            if (e.target.closest('.modal').id === 'add-rmp-modal') {
+                bookshelfContainer.style.display = 'flex';
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>
