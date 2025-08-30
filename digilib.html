@@ -25,17 +25,75 @@
         nav a { color: #ffffff; padding: 15px 20px; text-decoration: none; font-weight: 500; }
         .btn { display: inline-block; background-color: #4f46e5; color: white; padding: 0.5rem 1.25rem; border-radius: 6px; font-weight: 500; text-decoration: none; cursor: pointer; }
         .btn:disabled { background-color: #9ca3af; cursor: not-allowed; }
-        .bookshelf-container { width: 100%; min-height: 80vh; background-image: url('rak-buku.jpg'); background-size: cover; background-position: center; padding: 3% 0; display: flex; flex-direction: column; justify-content: space-around; }
+        .bookshelf-container { width: 100%; min-height: calc(100vh - 28px); background-image: url('rak-buku.jpg'); background-size: cover; background-position: center; padding: 0.001rem 9px; display: flex; flex-direction: column; justify-content: space-around; }
         .shelf { padding: 0 5%; }
-        .book-cover { width: 120px; height: 180px; background-color: #fff; border-radius: 4px; box-shadow: 5px 5px 15px rgba(0,0,0,0.3); overflow: hidden; cursor: pointer; transition: transform 0.2s; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 10px; font-weight: 600; color: #333; background-size: cover; background-position: center; }
+        .book-cover { width: 17vh; height: 25vh; background-color: #fff; border-radius: 4px; box-shadow: 8px 8px 18px rgba(0,0,0,0.3); overflow: hidden; cursor: pointer; transition: transform 0.2s; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 10px; font-weight: 600; color: #333; background-size: cover; background-position: center; }
         .book-cover:hover { transform: scale(1.05); }
         .swiper-button-next, .swiper-button-prev { color: white; background-color: rgba(0, 0, 0, 0.4); width: 40px; height: 40px; border-radius: 50%; }
         .swiper-button-next:after, .swiper-button-prev:after { font-size: 18px; font-weight: bold; }
 		.swiper-slide {
             width: auto; /* Memastikan setiap slide mengambil lebar sesuai isinya (cover buku) */
         }
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
-        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 900px; position: relative; border-radius: 8px; }
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 2000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.8);
+        }
+        .modal-content {
+            background-color: #fefefe; /* Latar belakang gelap agar fokus ke buku */
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 900px;
+			position: relative;
+            border-radius: 8px;
+        }
+		/* Style BARU untuk Punggung Buku */
+        .book-spine {
+            position: relative; /* Diperlukan untuk menumpuk teks di atas latar */
+            width: 4vh;         /* Lebar = 1/4 dari tinggi (16vh / 4) */
+            height: 27vh;       /* Tinggi disamakan dengan cover buku */
+            cursor: pointer;
+            transition: transform 0.2s;
+            overflow: hidden; /* Menyembunyikan bagian blur yang keluar dari bingkai */
+            border-radius: 2px;
+            box-shadow: 5px 5px 10px rgba(0,0,0,0.4);
+			border: 1px solid rgba(0, 0, 0, 0.3);
+        }
+        .book-spine:hover {
+            transform: scale(1.05);
+        }
+		.spine-bg {
+            position: absolute;
+            top: -10px; left: -10px; right: -10px; bottom: -10px;
+            background-size: cover;
+            background-position: center;
+            filter: blur(4px); /* INI YANG MEMBUAT EFEK BLUR */
+        }
+		.spine-title {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 10px 4px;
+            background-color: rgba(0, 0, 0, 0.4); /* Lapisan gelap agar teks terbaca */
+            color: white;
+            font-weight: 600;
+            /* font-size: 1.8vh; Ukuran font responsif */
+            text-align: center;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
         .close-button { color: #aaa; position: absolute; top: 10px; right: 25px; font-size: 35px; font-weight: bold; cursor: pointer; }
         .content-wrapper { max-width: 900px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .paste-area { border: 2px dashed #cbd5e1; min-height: 200px; padding: 1rem; margin-top: 1rem; border-radius: 6px; }
@@ -137,6 +195,23 @@
             </div>
         </div>
     </div>
+	
+	<div id="detail-modal" class="modal">
+    <div class="modal-content flex flex-col md:flex-row gap-6">
+        <span class="close-button">&times;</span>
+        <div id="detail-cover" class="w-full md:w-1/3 flex-shrink-0">
+            <img src="" alt="Cover Buku" class="w-full h-auto object-cover rounded-md shadow-lg">
+        </div>
+        <div id="detail-info" class="w-full md:w-2/3">
+            <h2 id="detail-title" class="text-3xl font-bold text-gray-800"></h2>
+            <p id="detail-category" class="mt-2 text-sm font-semibold text-indigo-600"></p>
+            <p id="detail-description" class="mt-4 text-gray-600"></p>
+            <div class="mt-6">
+                <button id="detail-read-btn" class="btn">Baca Sekarang</button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 	<script src="js/dflip.min.js"></script>
@@ -163,7 +238,8 @@ window.addEventListener('load', function() {
         pdfViewer: document.getElementById('pdf-modal'),
         rmpViewer: document.getElementById('rmp-modal'),
         addPdf: document.getElementById('add-pdf-modal'),
-        addRmp: document.getElementById('add-rmp-modal')
+        addRmp: document.getElementById('add-rmp-modal'),
+		detail: document.getElementById('detail-modal')
     };
     const pdfForm = document.getElementById('pdf-form');
     
@@ -174,7 +250,24 @@ window.addEventListener('load', function() {
     // =======================================================
     // BAGIAN LOGIKA PERPUSTAKAAN (RAK BUKU)
     // =======================================================
-    const createBookElement = (book) => {
+        let allBooksData = []; // Simpan data buku secara global
+
+    // FUNGSI BARU untuk membuat punggung buku
+    const createSpineElement = (book) => {
+    const spineDiv = document.createElement('div');
+    spineDiv.className = 'swiper-slide';
+
+    const bgStyle = book.Thumbnail ? `background-image: url('${book.Thumbnail}');` : '';
+
+    spineDiv.innerHTML = `
+        <div class="book-spine" data-link="${book.Link}">
+            <div class="spine-bg" style="${bgStyle}"></div>
+            <span class="spine-title">${book.Judul}</span>
+        </div>`;
+    return spineDiv;
+};
+	
+	const createBookElement = (book) => {
         const bookDiv = document.createElement('div');
         bookDiv.className = 'swiper-slide';
         let coverStyle = book.Thumbnail ? `background-image: url('${book.Thumbnail}');` : '';
@@ -189,58 +282,75 @@ window.addEventListener('load', function() {
             const result = await response.json();
             if (result.status !== 'success') throw new Error(result.message);
             
-            const allBooks = result.data;
-            const featuredBooks = allBooks.filter(book => book.Pilihan === 'YA');
+            allBooksData = result.data; // Simpan data ke variabel global
+            const featuredBooks = allBooksData.filter(book => book.Pilihan === 'YA');
             const readBooksList = JSON.parse(localStorage.getItem('readBooks') || '[]');
-            const readBooks = allBooks.filter(book => readBooksList.includes(book.Link));
+            const readBooks = allBooksData.filter(book => readBooksList.includes(book.Link));
 
-            ['all', 'featured', 'read'].forEach(shelf => {
-                const wrapper = document.getElementById(`shelf-${shelf}-wrapper`);
-                if (wrapper) wrapper.innerHTML = '';
-            });
-            allBooks.forEach(book => document.getElementById('shelf-all-wrapper').appendChild(createBookElement(book)));
+            // Kosongkan semua rak
+            ['all', 'featured', 'read'].forEach(shelf => document.getElementById(`shelf-${shelf}-wrapper`).innerHTML = '');
+            
+            // 1. Isi Rak Atas dengan PUNGGUNG BUKU
+            allBooksData.forEach(book => document.getElementById('shelf-all-wrapper').appendChild(createSpineElement(book)));
+
+            // 2. Isi Rak Tengah dan Bawah dengan COVER BUKU
             featuredBooks.forEach(book => document.getElementById('shelf-featured-wrapper').appendChild(createBookElement(book)));
             readBooks.forEach(book => document.getElementById('shelf-read-wrapper').appendChild(createBookElement(book)));
 
-            const swiperOptions = { slidesPerView: 'auto', spaceBetween: 30, navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' } };
+            // Hancurkan Swiper lama jika ada
             if (window.swiperInstances) { window.swiperInstances.forEach(sw => sw.destroy(true, true)); }
+            
+            // Inisialisasi carousel
             window.swiperInstances = [
-                new Swiper('#shelf-all', swiperOptions),
-                new Swiper('#shelf-featured', swiperOptions),
-                new Swiper('#shelf-read', swiperOptions)
+                new Swiper('#shelf-all', { slidesPerView: 'auto', spaceBetween: 6, navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' } }),
+                new Swiper('#shelf-featured', { slidesPerView: 'auto', spaceBetween: 30, navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' } }),
+                new Swiper('#shelf-read', { slidesPerView: 'auto', spaceBetween: 30, navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' } })
             ];
+
         } catch (error) { console.error("Gagal memuat perpustakaan:", error); }
     };
 		
 		 const handleBookClick = async (e) => {
-    const bookCover = e.target.closest('.book-cover');
-    if (!bookCover) return;
-    
-    const type = bookCover.dataset.type;
-    const link = bookCover.dataset.link;
-
-    // Logika untuk menyimpan riwayat baca (tidak berubah)
-    let readBooksList = JSON.parse(localStorage.getItem('readBooks') || '[]');
-    if (!readBooksList.includes(link)) {
-        readBooksList.push(link);
-        localStorage.setItem('readBooks', JSON.stringify(readBooksList));
-    }
-
-    if (type === 'PDF') {
-        const pdfModal = document.getElementById('pdf-modal');
-        const pdfViewer = document.getElementById('pdf-viewer');
+        const targetElement = e.target.closest('.book-cover, .book-spine');
+        if (!targetElement) return;
         
-        // --- PENGECEKAN KESELAMATAN BARU ---
-        if (!pdfModal || !pdfViewer) {
-            showMessage("Error Kritis: Elemen HTML untuk menampilkan PDF tidak ditemukan. Pastikan ada div dengan id 'pdf-modal' dan 'pdf-viewer'.", false);
-            return;
+        const link = targetElement.dataset.link;
+        const bookData = allBooksData.find(b => b.Link === link);
+        if (!bookData) return;
+
+        // Jika yang diklik adalah punggung buku, tampilkan modal detail
+        if (targetElement.classList.contains('book-spine')) {
+            document.getElementById('detail-title').textContent = bookData.Judul;
+            document.getElementById('detail-category').textContent = `${bookData.Tipe} - ${bookData.Kategori}`;
+            document.getElementById('detail-description').textContent = bookData.Deskripsi;
+            document.getElementById('detail-cover').querySelector('img').src = bookData.Thumbnail || 'https://placehold.co/300x400/cccccc/FFFFFF?text=Cover+Tidak+Tersedia';
+            
+            const readBtn = document.getElementById('detail-read-btn');
+            readBtn.dataset.type = bookData.Tipe;
+            readBtn.dataset.link = bookData.Link;
+
+            modals.detail.style.display = 'block';
+        } 
+        // Jika yang diklik adalah cover buku biasa, langsung buka
+        else if (targetElement.classList.contains('book-cover')) {
+            openBook(bookData.Tipe, bookData.Link);
         }
-        
-        // Buat iframe untuk menampilkan flipbook dari Heyzine
-        pdfViewer.innerHTML = `<iframe src="${link}" style="width:100%; height:80vh; border:0;" allowfullscreen></iframe>`;
-        pdfModal.style.display = 'block';
+    };
+    
+    // FUNGSI BARU untuk membuka buku (dipisahkan agar bisa dipanggil dari modal detail)
+    const openBook = async (type, link) => {
+        // Simpan riwayat baca
+        let readBooksList = JSON.parse(localStorage.getItem('readBooks') || '[]');
+        if (!readBooksList.includes(link)) {
+            readBooksList.push(link);
+            localStorage.setItem('readBooks', JSON.stringify(readBooksList));
+        }
 
-    } else if (type === 'RMP') {
+        if (type === 'PDF') {
+            const googleDriveLink = `https://drive.google.com/uc?export=download&id=${link}`;
+            $('#pdf-viewer').empty().flipBook(googleDriveLink, { pdfjsSrc: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js" });
+            modals.pdfViewer.style.display = 'block';
+        } else if (type === 'RMP') {
         const rmpModal = document.getElementById('rmp-modal');
         const rmpViewer = document.getElementById('rmp-viewer');
 
@@ -533,7 +643,12 @@ window.addEventListener('load', function() {
     setupAdminFeatures();
     setupThumbnailWorkflow();
     bookshelfContainer.addEventListener('click', handleBookClick); // <-- LETAKKAN DI SINI
-        
+    
+// Event listener untuk tombol "Baca Sekarang" di dalam modal detail
+    document.getElementById('detail-read-btn').addEventListener('click', (e) => {
+        openBook(e.target.dataset.type, e.target.dataset.link);
+        modals.detail.style.display = 'none'; // Tutup modal detail setelah membuka buku
+    });    
     
     if(addPdfBtn) {
             addPdfBtn.addEventListener('click', () => { 
