@@ -726,6 +726,7 @@
 					<a href="#absensi" id="attendanceNav" class="hidden">Absensi</a>
 					<a href="#halaman-ujian-admin" id="halamanUjianAdminNav" class="hidden" style="background-color: #000000;">Ujian</a>
 					<a href="#ujian-online" id="ujianOnlineNav" class="hidden" style="background-color: #ff69b4;">Ujian Online</a>
+					<a href="tabungan.html" id="tabunganNav" class="hidden" style="background-color: #0d6efd;">Tabungan</a>
 					<a href="#penerimaan">Penerimaan</a>
                     <a href="#kegiatan">Kegiatan</a>
                     <a href="#legalitas">Legalitas</a>
@@ -1499,12 +1500,12 @@ b. Soekarno
             update terbaru :
         </p>
 		<ul class="list-disc list-inside text-gray-700 text-left space-y-2 mb-6">
-            <li>Login akun santri</li>
-            <li>Pengelompokan beberapa menu ke dalam menu Sistem Informasi</li>
-            <li>Input soal untuk TU (Tata Usaha)</li>
-            <li>Akses bank soal untuk Guru</li>
-            <li>KRS dan KHS untuk Santri</li>
-            <li>Ujian online untuk Santri</li>
+            <li>Menu Digilib (Digital Library) atau Perpustakaan Digital</li>
+            <li>Menu Tabungan Santri</li>
+            <li>Slip Gaji bulan Agustus 2025 Sudah bisa dilihat</li>
+            <li>Absensi yang lebih akurat</li>
+            <li>KRS dan KHS yang lebih powerfull</li>
+            <li>Ujian online untuk Santri dengan keamanan tinggi</li>
         </ul>
         <button id="understandPopupBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
             Saya Mengerti
@@ -3848,6 +3849,7 @@ async function setupHalamanUjianAdmin() {
     if (session && session.loggedIn) {
         const username = session.username;
         const jabatan = session.userData.jabatan || '';
+		const allowedUsernames = ['wawan', 'mia', 'reza', 'yeni', 'admin'];
         const isSantri = (jabatan || '').trim().toLowerCase() === 'santri';
         const isKepalaOrWaka = jabatan === 'Kepala Rumah Anak Yatim' || jabatan === 'Kepala Rumah Tahfidz' || jabatan === 'Waka Kurikulum';
         const isMusyrif = jabatan === 'Musyrif';
@@ -3864,7 +3866,11 @@ async function setupHalamanUjianAdmin() {
 
         document.getElementById('attendanceNav').classList.toggle('hidden', isSantri);
         document.getElementById('ujianOnlineNav').classList.toggle('hidden', !isSantri);
-        
+        const tabunganNav = document.getElementById('tabunganNav');
+        if (tabunganNav) {
+            const canSeeTabungan = allowedUsernames.includes(username) || jabatan === 'santri';
+            tabunganNav.classList.toggle('hidden', !canSeeTabungan);
+        }
         const showDropdown = isSantri || isKepalaOrWaka || isMusyrif || isMusyrifah || financeUsers.includes(username) || karyawanUsers.includes(username) || isAdminUjian;
         document.getElementById('sistemInformasiDropdown').classList.toggle('hidden', !showDropdown);
         
