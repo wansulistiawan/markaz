@@ -311,61 +311,62 @@ window.addEventListener('load', function() {
     };
 		
 		 const handleBookClick = async (e) => {
-        const targetElement = e.target.closest('.book-cover, .book-spine');
-        if (!targetElement) return;
-        
-        const link = targetElement.dataset.link;
-        const bookData = allBooksData.find(b => b.Link === link);
-        if (!bookData) return;
-
-        // Jika yang diklik adalah punggung buku, tampilkan modal detail
-        if (targetElement.classList.contains('book-spine')) {
-            document.getElementById('detail-title').textContent = bookData.Judul;
-            document.getElementById('detail-category').textContent = `${bookData.Tipe} - ${bookData.Kategori}`;
-            document.getElementById('detail-description').textContent = bookData.Deskripsi;
-            document.getElementById('detail-cover').querySelector('img').src = bookData.Thumbnail || 'https://placehold.co/300x400/cccccc/FFFFFF?text=Cover+Tidak+Tersedia';
-            
-            const readBtn = document.getElementById('detail-read-btn');
-            readBtn.dataset.type = bookData.Tipe;
-            readBtn.dataset.link = bookData.Link;
-
-            modals.detail.style.display = 'block';
-        } 
-        // Jika yang diklik adalah cover buku biasa, langsung buka
-        else if (targetElement.classList.contains('book-cover')) {
-            openBook(bookData.Tipe, bookData.Link);
-        }
-    };
+    const bookCover = e.target.closest('.book-cover, .book-spine');
+    if (!bookCover) return;
     
-    // FUNGSI BARU untuk membuka buku (dipisahkan agar bisa dipanggil dari modal detail)
-    const openBook = async (type, link) => {
-        // Simpan riwayat baca
-        let readBooksList = JSON.parse(localStorage.getItem('readBooks') || '[]');
-        if (!readBooksList.includes(link)) {
-            readBooksList.push(link);
-            localStorage.setItem('readBooks', JSON.stringify(readBooksList));
-        }
+    const link = bookCover.dataset.link;
+    const bookData = allBooksData.find(b => b.Link === link);
+    if (!bookData) return;
 
-        if (type === 'PDF') {
-            const googleDriveLink = `https://drive.google.com/uc?export=download&id=${link}`;
-            $('#pdf-viewer').empty().flipBook(googleDriveLink, { pdfjsSrc: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js" });
-            modals.pdfViewer.style.display = 'block';
-        } else if (type === 'RMP') {
+    // Jika yang diklik adalah punggung buku, tampilkan modal detail
+    if (bookCover.classList.contains('book-spine')) {
+        document.getElementById('detail-title').textContent = bookData.Judul;
+        document.getElementById('detail-category').textContent = `${bookData.Tipe} - ${bookData.Kategori}`;
+        document.getElementById('detail-description').textContent = bookData.Deskripsi;
+        document.getElementById('detail-cover').querySelector('img').src = bookData.Thumbnail || 'https://placehold.co/300x400/cccccc/FFFFFF?text=Cover+Tidak+Tersedia';
+        
+        const readBtn = document.getElementById('detail-read-btn');
+        readBtn.dataset.type = bookData.Tipe;
+        readBtn.dataset.link = bookData.Link;
+
+        modals.detail.style.display = 'block';
+    } 
+    // Jika yang diklik adalah cover buku biasa, langsung buka
+    else if (bookCover.classList.contains('book-cover')) {
+        openBook(bookData.Tipe, bookData.Link);
+    }
+};
+
+// Ganti juga fungsi openBook dengan versi yang sudah disederhanakan ini
+const openBook = async (type, link) => {
+    // Simpan riwayat baca
+    let readBooksList = JSON.parse(localStorage.getItem('readBooks') || '[]');
+    if (!readBooksList.includes(link)) {
+        readBooksList.push(link);
+        localStorage.setItem('readBooks', JSON.stringify(readBooksList));
+    }
+
+    if (type === 'PDF') {
+        const pdfModal = document.getElementById('pdf-modal');
+        const pdfViewer = document.getElementById('pdf-viewer');
+        
+        // --- PERBAIKAN UTAMA DI SINI ---
+        // Langsung gunakan link Heyzine di dalam iframe
+        pdfViewer.innerHTML = `<iframe src="${link}?fullscreen=1" style="width:100%; height:100%; border:0;" allowfullscreen></iframe>`;
+        pdfModal.style.display = 'block';
+
+    } else if (type === 'RMP') {
         const rmpModal = document.getElementById('rmp-modal');
         const rmpViewer = document.getElementById('rmp-viewer');
-
-        // --- PENGECEKAN KESELAMATAN BARU ---
-        if (!rmpModal || !rmpViewer) {
-            showMessage("Error Kritis: Elemen HTML untuk menampilkan RMP tidak ditemukan.", false);
-            return;
-        }
 
         const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getSingleRMP', KodeMateri: link }) });
         const result = await response.json();
         if (result.status === 'success') {
             rmpViewer.innerHTML = result.kontenHTML;
             rmpModal.style.display = 'block';
-        } else { showMessage('Gagal memuat materi RMP: ' + result.message, false); }
+        } else { 
+            showMessage('Gagal memuat materi RMP: ' + result.message, false); 
+        }
     }
 };
     
