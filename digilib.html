@@ -54,6 +54,17 @@
 			position: relative;
             border-radius: 8px;
         }
+		.modal-fullscreen .modal-content {
+            background-color: #1a1a1a;
+            margin: 0;
+            padding: 10px;
+            border: 0;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            border-radius: 0;
+            
+        }
 		/* Style BARU untuk Punggung Buku */
         .book-spine {
             position: relative; /* Diperlukan untuk menumpuk teks di atas latar */
@@ -128,7 +139,7 @@
         <div class="shelf"><div class="swiper" id="shelf-read"><div class="swiper-wrapper" id="shelf-read-wrapper"></div><div class="swiper-button-next"></div><div class="swiper-button-prev"></div></div></div>
     </main>
     
-    <div id="pdf-modal" class="modal">
+    <div id="pdf-modal" class="modal modal-fullscreen">
     <div class="modal-content">
         <span class="close-button">&times;</span>
         <div id="pdf-viewer" style="width:100%; height:80vh;"></div>
@@ -144,7 +155,7 @@
         <div class="mb-4"><label for="pdf-judul" class="block font-semibold">Judul Buku</label><input type="text" id="pdf-judul" class="w-full p-2 border rounded mt-1" required></div>
         <div class="mb-4"><label for="pdf-deskripsi" class="block font-semibold">Deskripsi Singkat</label><textarea id="pdf-deskripsi" class="w-full p-2 border rounded mt-1" rows="3"></textarea></div>
         <div class="mb-4">
-            <label for="pdf-link" class="block font-semibold">Link Berbagi Google Drive</label>
+            <label for="pdf-link" class="block font-semibold">Link Berbagi PDF</label>
             <input type="text" id="pdf-link" class="w-full p-2 border rounded mt-1" placeholder="Tempel link 'Siapa saja yang memiliki link' di sini" required>
         </div>
 
@@ -152,7 +163,7 @@
             <div class="p-3 bg-gray-50 rounded-md border">
                 <label class="block font-semibold">Thumbnail / Gambar Sampul</label>
                 <div id="thumbnail-preview-container" class="mt-2 h-40 flex items-center justify-center bg-gray-100 relative">
-                    <span id="thumbnail-status" class="text-gray-500 text-sm text-center p-2">Tunggu link Google Drive ditempel...</span>
+                    <span id="thumbnail-status" class="text-gray-500 text-sm text-center p-2">Tunggu link PDF ditempel...</span>
                     <img id="thumbnail-preview" class="w-24 h-36 border shadow-md" style="display: none;">
                 </div>
                 <input type="hidden" id="pdf-thumbnail-url">
@@ -421,36 +432,57 @@ const openBook = async (type, link) => {
         const simpanPdfBtn = document.getElementById('simpan-pdf-btn');
 
         driveLinkInput.addEventListener('change', async (e) => {
-            const driveLink = e.target.value;
-            fallbackOptions.style.display = 'none';
-            const match = driveLink.match(/[-\w]{25,}/);
+            const link = e.target.value.trim();
+			if (!link) {
+            pdfPreviewFrame.src = 'about:blank';
+            return;
+        }
+
+        // --- LOGIKA BARU UNTUK MEMBEDAKAN LINK ---
+        if (link.includes('drive.google.com')) {
+            // Jika ini link Google Drive, gunakan metode pratinjau Google
+            const match = link.match(/[-\w]{25,}/);
             if (match) {
                 pdfPreviewFrame.src = `https://drive.google.com/file/d/${match[0]}/preview`;
             } else {
+                showMessage("Link Google Drive sepertinya tidak valid.", false);
                 pdfPreviewFrame.src = 'about:blank';
-                if (driveLink) showMessage("Link Google Drive sepertinya tidak valid.", false);
-                return;
             }
-            statusText.textContent = "Mencoba membuat thumbnail otomatis...";
-            statusText.style.display = 'inline';
-            previewImg.style.display = 'none';
-            simpanPdfBtn.disabled = true;
-            try {
-                const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'generateThumbnailFromDrive', driveLink: driveLink }) });
-                const result = await response.json();
-                if (result.status !== 'success') throw new Error(result.message);
-                previewImg.src = result.thumbnailUrl;
-                thumbnailUrlInput.value = result.thumbnailUrl;
-                statusText.style.display = 'none';
-                previewImg.style.display = 'block';
-            } catch (error) {
-                statusText.textContent = 'Otomatis Gagal!';
-                fallbackOptions.style.display = 'block';
-                console.error(error);
-            } finally {
-                simpanPdfBtn.disabled = false;
-            }
-        });
+        } else {
+            // Jika link lain, coba tampilkan langsung
+            pdfPreviewFrame.src = link;
+        }
+        
+        // --- PROSES THUMBNAIL OTOMATIS TETAP DIJALANKAN UNTUK SEMUA LINK ---
+        statusText.textContent = "Mencoba membuat thumbnail otomatis...";
+        statusText.style.display = 'inline';
+        previewImg.style.display = 'none';
+        simpanPdfBtn.disabled = true;
+        
+        try {
+            // Panggil Apps Script. Ini akan berhasil untuk link Drive & gagal untuk link lain
+            const response = await fetch(CONFIG.SCRIPT_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'generateThumbnailFromDrive', driveLink: link }) 
+            });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+            
+            // Jika berhasil, tampilkan hasilnya
+            previewImg.src = result.thumbnailUrl;
+            thumbnailUrlInput.value = result.thumbnailUrl;
+            statusText.style.display = 'none';
+            previewImg.style.display = 'block';
+
+        } catch (error) {
+            // Jika gagal (untuk link apapun), tampilkan opsi manual
+            statusText.textContent = 'Otomatis Gagal!';
+            fallbackOptions.style.display = 'block';
+            console.error(error);
+        } finally {
+            simpanPdfBtn.disabled = false;
+        }
+    });
         manualUploadInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) uploadBlobToCloudinary(file, "File Lokal");
