@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabungan Santri - Yayasan Markaz Yatim</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .header-content { display: flex; align-items: center; justify-content: space-between; width: 90%; max-width: 1200px; margin: 0 auto; }
+        header { background-color: #ffffff; padding: 20px 0; border-bottom: 1px solid #e9ecef; }
+        header img.logo { height: 60px; margin-right: 15px; }
+        header .title-container h1 { margin: 0; font-size: 1.8em; color: #2c5e2e; }
+        header .title-container p { margin: 0; font-size: 0.9em; color: #6c757d; }
+        /* WARNA MENU NAVIGASI DIUBAH MENJADI BIRU */
+        .nav-wrapper { position: sticky; top: 0; z-index: 1001; background-color: #108EE9; }
+        nav .nav-container { display: flex; align-items: center; width: 90%; max-width: 1200px; margin: 0 auto; }
+        nav a { color: #ffffff; padding: 15px 20px; text-decoration: none; font-weight: 500; }
+        
+        /* DANA-inspired Styles */
+        .dana-container { max-width: 480px; margin: 1.5rem auto; padding: 0 1rem; }
+        .balance-card { background-color: #108EE9; color: white; border-radius: 20px; padding: 24px; box-shadow: 0 10px 20px rgba(16, 142, 233, 0.3); }
+        .action-menu { display: flex; justify-content: space-around; background-color: white; border-radius: 20px; padding: 16px; margin-top: -20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        .action-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; color: #374151; }
+        .action-icon { width: 48px; height: 48px; border-radius: 12px; background-color: #eff6ff; color: #108EE9; display: flex; align-items: center; justify-content: center; }
+        .action-item span { font-size: 0.8rem; font-weight: 500; margin-top: 8px; }
+
+        .transaction-item { display: flex; align-items: center; padding: 16px 0; border-bottom: 1px solid #e5e7eb; }
+        .transaction-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px; }
+        .icon-setoran { background-color: #dcfce7; color: #16a34a; }
+        .icon-penarikan { background-color: #fee2e2; color: #dc2626; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+             <div style="display: flex; align-items: center;">
+                <img src="Logo_yayasan.png" alt="Logo Yayasan" class="logo">
+                <div class="title-container"><h1>Yayasan Markaz Yatim Duafa Qurani</h1><p>Berdasarkan Al-Qur'an dan Sunnah Sesuai Pemahaman Salafush Shalih</p></div>
+            </div>
+        </div>
+    </header>
+    <div class="nav-wrapper">
+        <nav id="mainNav">
+            <div class="nav-container">
+                <a href="index.html">Beranda</a>
+                <a href="digilib.html">Digilib</a>
+                <a href="tabungan.html" style="background-color: #0d6efd;">Tabungan</a>
+            </div>
+        </nav>
+    </div>
+
+    <main id="main-content" class="dana-container" style="display: none;">
+        <div id="admin-panel" class="mb-6 bg-white p-4 rounded-lg shadow" style="display: none;">
+            <h2 class="font-bold text-lg mb-3">Panel Admin</h2>
+            <div class="mb-3">
+                <label for="santri-select" class="block text-sm font-medium text-gray-700">Lihat Tabungan Santri:</label>
+                <select id="santri-select" class="mt-1 block w-full p-2 border border-gray-300 rounded-md"></select>
+            </div>
+            <form id="transaction-form" class="space-y-3">
+                <h3 class="font-semibold">Input Transaksi Baru</h3>
+                <div>
+                    <label for="tx-jumlah" class="block text-sm font-medium">Jumlah (Rp)</label>
+                    <input type="number" id="tx-jumlah" class="mt-1 block w-full p-2 border rounded-md" placeholder="Contoh: 50000" required>
+                </div>
+                <div>
+                    <label for="tx-keterangan" class="block text-sm font-medium">Keterangan</label>
+                    <input type="text" id="tx-keterangan" class="mt-1 block w-full p-2 border rounded-md" required>
+                </div>
+                <div class="flex gap-4">
+                    <button type="submit" data-type="Setoran" class="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600">Setoran</button>
+                    <button type="submit" data-type="Penarikan" class="w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600">Penarikan</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="balance-card" class="balance-card">
+            <p class="font-semibold" id="greeting-name">Memuat data...</p>
+            <p class="text-sm opacity-80">Saldo Saat Ini</p>
+            <p class="text-4xl font-bold mt-2" id="balance-amount">Rp 0</p>
+        </div>
+        
+        <div id="santri-menu" class="action-menu" style="display: none;">
+            <div class="action-item">
+                <div class="action-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg></div>
+                <span>Penarikan</span>
+            </div>
+            <div class="action-item">
+                <div class="action-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></div>
+                <span>Sedekah</span>
+            </div>
+            <div class="action-item">
+                <div class="action-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg></div>
+                <span>Target</span>
+            </div>
+        </div>
+        
+        <div class="mt-6 bg-white p-4 rounded-lg shadow">
+            <h2 class="font-bold text-lg mb-2">Riwayat Transaksi</h2>
+            <div id="history-list">
+                <p class="text-center text-gray-500 py-4">Memuat riwayat...</p>
+            </div>
+        </div>
+    </main>
+    
+    <div id="access-denied" class="text-center p-8" style="display: none;">
+        <h2 class="text-2xl font-bold text-red-600">Akses Ditolak</h2>
+        <p class="mt-2">Anda harus login untuk melihat halaman ini.</p>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- KONFIGURASI ---
+    const CONFIG = {
+        SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec",
+        ADMIN_USERS: ['wawan', 'mia', 'yeni', 'reza', 'admin']
+    };
+
+    // --- ELEMEN DOM ---
+    const mainContent = document.getElementById('main-content');
+    const accessDenied = document.getElementById('access-denied');
+    const adminPanel = document.getElementById('admin-panel');
+    const santriMenu = document.getElementById('santri-menu');
+    const santriSelect = document.getElementById('santri-select');
+    const transactionForm = document.getElementById('transaction-form');
+    const greetingName = document.getElementById('greeting-name');
+    const balanceAmount = document.getElementById('balance-amount');
+    const historyList = document.getElementById('history-list');
+
+    // --- FUNGSI BANTUAN ---
+    const getActiveSession = () => JSON.parse(localStorage.getItem('userSession') || sessionStorage.getItem('userSession') || 'null');
+    const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+
+    // --- FUNGSI UTAMA ---
+    const updateUI = (data, name) => {
+        greetingName.textContent = name;
+        balanceAmount.textContent = formatRupiah(data.balance);
+        historyList.innerHTML = '';
+        if (data.transactions.length === 0) {
+            historyList.innerHTML = '<p class="text-center text-gray-500 py-4">Belum ada transaksi.</p>';
+            return;
+        }
+        data.transactions.forEach(tx => {
+            const isSetoran = tx.Tipe === 'Setoran';
+            const iconClass = isSetoran ? 'icon-setoran' : 'icon-penarikan';
+            const iconSvg = isSetoran ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" /></svg>`;
+            const amountClass = isSetoran ? 'text-green-600' : 'text-red-600';
+            const amountSign = isSetoran ? '+' : '-';
+            const item = document.createElement('div');
+            item.className = 'transaction-item';
+            item.innerHTML = `<div class="transaction-icon ${iconClass}">${iconSvg}</div><div class="flex-grow"><p class="font-semibold">${tx.Keterangan}</p><p class="text-sm text-gray-500">${new Date(tx.Timestamp).toLocaleDateString('id-ID')}</p></div><p class="font-bold ${amountClass}">${amountSign} ${formatRupiah(tx.Jumlah)}</p>`;
+            historyList.appendChild(item);
+        });
+    };
+
+    const fetchSavingsData = async (username, name) => {
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST', body: JSON.stringify({ action: 'getTabunganData', username: username }),
+            });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+            updateUI(result.data, name);
+        } catch (error) {
+            console.error("Gagal mengambil data tabungan:", error);
+            historyList.innerHTML = `<p class="text-center text-red-500 py-4">${error.message}</p>`;
+        }
+    };
+    
+    // --- FUNGSI KHUSUS ADMIN ---
+    const setupAdminFeatures = async (session) => {
+        adminPanel.style.display = 'block';
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST', body: JSON.stringify({ action: 'getSantriListWithUsernames' }),
+            });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+            santriSelect.innerHTML = '<option value="">Pilih Santri...</option>';
+            result.santri.forEach(s => {
+                const option = document.createElement('option');
+                option.value = s.username;
+                option.dataset.name = s.profileName;
+                option.textContent = s.profileName;
+                santriSelect.appendChild(option);
+            });
+        } catch(error) { console.error("Gagal memuat daftar santri:", error); }
+
+        santriSelect.addEventListener('change', (e) => {
+            const selected = e.target.selectedOptions[0];
+            const username = selected.value;
+            const name = selected.dataset.name;
+            if (username) fetchSavingsData(username, name);
+        });
+
+        transactionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const type = e.submitter.dataset.type;
+            const username = santriSelect.value;
+            const name = santriSelect.selectedOptions[0].dataset.name;
+            if (!username) { alert("Pilih nama santri terlebih dahulu."); return; }
+            const data = { action: 'simpanTransaksiTabungan', UsernameSantri: username, Tipe: type, Jumlah: document.getElementById('tx-jumlah').value, Keterangan: document.getElementById('tx-keterangan').value, DiinputOleh: session.username };
+            try {
+                const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+                const result = await response.json();
+                if (result.status !== 'success') throw new Error(result.message);
+                alert(`Transaksi '${type}' berhasil disimpan.`);
+                transactionForm.reset();
+                fetchSavingsData(username, name);
+            } catch (error) { alert("Gagal menyimpan transaksi: " + error.message); }
+        });
+    };
+
+    // --- INISIALISASI HALAMAN ---
+    const init = () => {
+        const session = getActiveSession();
+        if (!session || !session.loggedIn) {
+            accessDenied.style.display = 'block';
+            return;
+        }
+        mainContent.style.display = 'block';
+
+        const isSantri = session.userData.jabatan.toLowerCase() === 'santri';
+        const isAdmin = CONFIG.ADMIN_USERS.includes(session.username);
+
+        if (isSantri || isAdmin) {
+            if (isAdmin) {
+                setupAdminFeatures(session);
+            } else { // Jika santri
+                santriMenu.style.display = 'flex';
+                fetchSavingsData(session.username, session.userData.profileName);
+            }
+        } else {
+             mainContent.innerHTML = '<p class="text-center p-8">Halaman ini hanya untuk Santri dan Admin.</p>';
+        }
+    };
+
+    init();
+});
+</script>
+
+</body>
+</html>
