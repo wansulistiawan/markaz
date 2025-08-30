@@ -9,8 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <link href="https://cdn.jsdelivr.net/npm/dflip@2.1.25/dist/dflip.min.css" rel="stylesheet" type="text/css">
-
+    
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
 
     <style>
@@ -32,6 +31,9 @@
         .book-cover:hover { transform: scale(1.05); }
         .swiper-button-next, .swiper-button-prev { color: white; background-color: rgba(0, 0, 0, 0.4); width: 40px; height: 40px; border-radius: 50%; }
         .swiper-button-next:after, .swiper-button-prev:after { font-size: 18px; font-weight: bold; }
+		.swiper-slide {
+            width: auto; /* Memastikan setiap slide mengambil lebar sesuai isinya (cover buku) */
+        }
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
         .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 900px; position: relative; border-radius: 8px; }
         .close-button { color: #aaa; position: absolute; top: 10px; right: 25px; font-size: 35px; font-weight: bold; cursor: pointer; }
@@ -68,7 +70,12 @@
         <div class="shelf"><div class="swiper" id="shelf-read"><div class="swiper-wrapper" id="shelf-read-wrapper"></div><div class="swiper-button-next"></div><div class="swiper-button-prev"></div></div></div>
     </main>
     
-    <div id="pdf-modal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><div id="pdf-viewer" style="width:100%; height:80vh;"></div></div></div>
+    <div id="pdf-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <div id="pdf-viewer" style="width:100%; height:80vh;"></div>
+    </div>
+</div>
     <div id="rmp-modal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><div id="rmp-viewer"></div></div></div>
 
     <div id="add-pdf-modal" class="modal">
@@ -132,14 +139,14 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dflip@2.1.25/dist/dflip.min.js"></script>
+	<script src="js/dflip.min.js"></script>
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;</script>
     <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
 
     <script>
-document.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('load', function() {
     // --- KONFIGURASI ---
     const CONFIG = {
         SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec",
@@ -171,7 +178,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const bookDiv = document.createElement('div');
         bookDiv.className = 'swiper-slide';
         let coverStyle = book.Thumbnail ? `background-image: url('${book.Thumbnail}');` : '';
-        bookDiv.innerHTML = `<div class="book-cover" data-type="${book.Tipe}" data-link="${book.Link}" style="${coverStyle}">${!book.Thumbnail ? book.Judul : ''}</div>`;
+        // PERUBAHAN: Menambahkan data-size
+        bookDiv.innerHTML = `<div class="book-cover" data-type="${book.Tipe}" data-link="${book.Link}" data-size="${book.UkuranFileMB || 0}" style="${coverStyle}">${!book.Thumbnail ? book.Judul : ''}</div>`;
         return bookDiv;
     };
 
@@ -203,30 +211,54 @@ document.addEventListener('DOMContentLoaded', function() {
             ];
         } catch (error) { console.error("Gagal memuat perpustakaan:", error); }
     };
+		
+		 const handleBookClick = async (e) => {
+    const bookCover = e.target.closest('.book-cover');
+    if (!bookCover) return;
+    
+    const type = bookCover.dataset.type;
+    const link = bookCover.dataset.link;
 
-    const handleBookClick = async (e) => {
-        const bookCover = e.target.closest('.book-cover');
-        if (!bookCover) return;
-        const type = bookCover.dataset.type;
-        const link = bookCover.dataset.link;
-        let readBooksList = JSON.parse(localStorage.getItem('readBooks') || '[]');
-        if (!readBooksList.includes(link)) {
-            readBooksList.push(link);
-            localStorage.setItem('readBooks', JSON.stringify(readBooksList));
+    // Logika untuk menyimpan riwayat baca (tidak berubah)
+    let readBooksList = JSON.parse(localStorage.getItem('readBooks') || '[]');
+    if (!readBooksList.includes(link)) {
+        readBooksList.push(link);
+        localStorage.setItem('readBooks', JSON.stringify(readBooksList));
+    }
+
+    if (type === 'PDF') {
+        const pdfModal = document.getElementById('pdf-modal');
+        const pdfViewer = document.getElementById('pdf-viewer');
+        
+        // --- PENGECEKAN KESELAMATAN BARU ---
+        if (!pdfModal || !pdfViewer) {
+            showMessage("Error Kritis: Elemen HTML untuk menampilkan PDF tidak ditemukan. Pastikan ada div dengan id 'pdf-modal' dan 'pdf-viewer'.", false);
+            return;
         }
-        if (type === 'PDF') {
-            const googleDriveLink = `https://drive.google.com/uc?export=download&id=${link}`;
-            $('#pdf-viewer').html('').DFLIP({ source: googleDriveLink });
-            modals.pdfViewer.style.display = 'block';
-        } else if (type === 'RMP') {
-            const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getSingleRMP', KodeMateri: link }) });
-            const result = await response.json();
-            if (result.status === 'success') {
-                document.getElementById('rmp-viewer').innerHTML = result.kontenHTML;
-                modals.rmpViewer.style.display = 'block';
-            } else { showMessage('Gagal memuat materi RMP: ' + result.message, false); }
+        
+        // Buat iframe untuk menampilkan flipbook dari Heyzine
+        pdfViewer.innerHTML = `<iframe src="${link}" style="width:100%; height:80vh; border:0;" allowfullscreen></iframe>`;
+        pdfModal.style.display = 'block';
+
+    } else if (type === 'RMP') {
+        const rmpModal = document.getElementById('rmp-modal');
+        const rmpViewer = document.getElementById('rmp-viewer');
+
+        // --- PENGECEKAN KESELAMATAN BARU ---
+        if (!rmpModal || !rmpViewer) {
+            showMessage("Error Kritis: Elemen HTML untuk menampilkan RMP tidak ditemukan.", false);
+            return;
         }
-    };
+
+        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getSingleRMP', KodeMateri: link }) });
+        const result = await response.json();
+        if (result.status === 'success') {
+            rmpViewer.innerHTML = result.kontenHTML;
+            rmpModal.style.display = 'block';
+        } else { showMessage('Gagal memuat materi RMP: ' + result.message, false); }
+    }
+};
+    
     
     // =======================================================
     // BAGIAN LOGIKA FORM TAMBAH PDF & THUMBNAIL OTOMATIS
@@ -500,9 +532,14 @@ document.addEventListener('DOMContentLoaded', function() {
     renderLibrary();
     setupAdminFeatures();
     setupThumbnailWorkflow();
+    bookshelfContainer.addEventListener('click', handleBookClick); // <-- LETAKKAN DI SINI
+        
     
-    bookshelfContainer.addEventListener('click', handleBookClick);
-    if(addPdfBtn) addPdfBtn.addEventListener('click', () => { if(modals.addPdf) modals.addPdf.style.display = 'block'; });
+    if(addPdfBtn) {
+            addPdfBtn.addEventListener('click', () => { 
+                if(modals.addPdf) modals.addPdf.style.display = 'block'; 
+            });
+        }
     if(addRmpBtn) addRmpBtn.addEventListener('click', () => {
         if(modals.addRmp) {
             modals.addRmp.style.display = 'block';
