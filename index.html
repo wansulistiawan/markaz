@@ -4485,6 +4485,7 @@ function populateEmployeeDropdown() {
 }
 
 // GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
+// GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
 function fetchAndRenderSlipGaji() {
     const slipContainer = document.getElementById('slipGajiContainer');
     const downloadContainer = document.getElementById('downloadSlipContainer');
@@ -4523,9 +4524,32 @@ function fetchAndRenderSlipGaji() {
         if (result.status === 'success') {
             const s = result.slip;
 
+            // --- MODIFIKASI DIMULAI ---
+            // 1. Hitung jumlah hari libur pada bulan yang dipilih menggunakan fungsi baru.
+            const holidaysInMonth = getHolidaysInMonth(parseInt(selectedYear), parseInt(selectedMonth));
+
+            // 2. Simpan nilai asli dari backend untuk referensi.
+            const originalHariKerja = s.kehadiran.hariKerja;
+            const originalPotonganAbsen = s.potongan.potonganAbsen;
+
+            // 3. Hitung ulang hari kerja efektif.
+            const adjustedHariKerja = Math.max(0, originalHariKerja - holidaysInMonth);
+            
+            // 4. Hitung ulang jumlah absen dan potongan absen.
+            const potonganPerHari = s.kehadiran.totalAbsen > 0 ? (originalPotonganAbsen / s.kehadiran.totalAbsen) : 0;
+            const adjustedTotalAbsen = Math.max(0, adjustedHariKerja - s.kehadiran.totalMasuk);
+            const adjustedPotonganAbsen = adjustedTotalAbsen * potonganPerHari;
+            
+            // 5. Perbarui objek 's' dengan nilai yang sudah disesuaikan.
+            //    Semua kode di bawah ini akan otomatis menggunakan data yang sudah benar.
+            s.kehadiran.hariKerja = adjustedHariKerja;
+            s.kehadiran.totalAbsen = adjustedTotalAbsen;
+            s.potongan.potonganAbsen = adjustedPotonganAbsen;
+            // --- MODIFIKASI SELESAI ---
+
             // Fungsi pembulatan
             const roundToHundred = num => Math.round(num / 100) * 100;
-
+			
             // Bangun HTML Rincian Pendapatan
             let pendapatanHTML = '';
             if (s.pendapatan.gajiPokok > 0) pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok</span> <span>${s.pendapatan.gajiPokok.toLocaleString('id-ID')}</span></div>`;
@@ -4601,8 +4625,46 @@ function fetchAndRenderSlipGaji() {
     });
 }
 
-	
-	// FUNGSI BARU UNTUK MENGAMBIL DAN MENAMPILKAN RIWAYAT
+/**
+ * FUNGSI BARU: Menghitung jumlah hari libur (selain Minggu) dalam bulan tertentu.
+ * @param {number} year - Tahun yang akan diperiksa (misal: 2025).
+ * @param {number} month - Bulan yang akan diperiksa (1 untuk Januari, 12 untuk Desember).
+ * @returns {number} - Jumlah hari libur pada bulan tersebut.
+ */
+function getHolidaysInMonth(year, month) {
+    let holidayCount = 0;
+    const targetMonth = month - 1; // Bulan di JavaScript dimulai dari 0 (0=Jan, 11=Des)
+
+    // Iterasi melalui semua event di kalender pendidikan
+    appData.calendarEvents.forEach(event => {
+        // Hanya proses event yang ditandai sebagai 'holiday'
+        if (event.color === 'holiday') {
+            const startDate = new Date(event.date + 'T00:00:00'); // Atur waktu ke awal hari untuk konsistensi
+            const span = event.span || 1; // Jika ada properti span (libur beberapa hari)
+
+            // Loop sebanyak durasi libur (span)
+            for (let i = 0; i < span; i++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + i);
+
+                // Cek apakah tanggal ini:
+                // 1. Sesuai dengan tahun dan bulan yang ditargetkan.
+                // 2. BUKAN hari Minggu (getDay() 0 adalah Minggu).
+                if (
+                    currentDate.getFullYear() === year &&
+                    currentDate.getMonth() === targetMonth &&
+                    currentDate.getDay() !== 0 
+                ) {
+                    holidayCount++;
+                }
+            }
+        }
+    });
+    
+    console.log(`Ditemukan ${holidayCount} hari libur di bulan ${month}/${year}`);
+    return holidayCount;
+}	
+	// >FUNGSI BARU UNTUK MENGAMBIL DAN MENAMPILKAN RIWAYAT
 function fetchAndRenderAttendanceHistory(profileName) {
     const historyContainer = document.getElementById('historyContainer');
     if (!historyContainer) return;
