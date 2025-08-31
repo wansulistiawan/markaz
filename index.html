@@ -753,7 +753,7 @@
     <div id="laporanContainer" class="mt-8 overflow-x-auto bg-white rounded-lg shadow">
         <p class="p-8 text-center text-gray-500">Silakan pilih tanggal untuk melihat laporan.</p>
     </div>
-	
+</div>	
 	<div id="tahfidz-chart-container" class="mt-12 pt-8 border-t hidden">
     <h3 class="text-2xl font-bold text-gray-800 mb-4">Grafik Progres Tahfidz per Santri</h3>
     
@@ -778,9 +778,7 @@
     </div>
 </div>
 
-<div id="laporanContainer" class="mt-8 overflow-x-auto bg-white rounded-lg shadow">
-    </div>
-</div>
+
 <!-- === AKHIR HALAMAN LAPORAN TAHFIDZ === -->
 
 <div id="slip-gaji" class="page-section hidden container section">
@@ -1610,31 +1608,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
 // === TAMBAHKAN BLOK KODE INI DI BAGIAN ATAS SCRIPT ANDA ===
-		const daftarSurah = [
-    "Al-Fatihah", "Al-Baqarah", "Ali 'Imran", "An-Nisa'", "Al-Ma'idah", "Al-An'am", "Al-A'raf", "Al-Anfal", "At-Tawbah", "Yunus",
-    "Hud", "Yusuf", "Ar-Ra'd", "Ibrahim", "Al-Hijr", "An-Nahl", "Al-Isra'", "Al-Kahf", "Maryam", "Taha",
-    "Al-Anbiya'", "Al-Hajj", "Al-Mu'minun", "An-Nur", "Al-Furqan", "Asy-Syu'ara'", "An-Naml", "Al-Qasas", "Al-'Ankabut", "Ar-Rum",
-    "Luqman", "As-Sajdah", "Al-Ahzab", "Saba'", "Fatir", "Yasin", "As-Saffat", "Sad", "Az-Zumar", "Ghafir",
-    "Fussilat", "Asy-Syura", "Az-Zukhruf", "Ad-Dukhan", "Al-Jasiyah", "Al-Ahqaf", "Muhammad", "Al-Fath", "Al-Hujurat", "Qaf",
-    "Az-Zariyat", "At-Tur", "An-Najm", "Al-Qamar", "Ar-Rahman", "Al-Waqi'ah", "Al-Hadid", "Al-Mujadilah", "Al-Hasyr", "Al-Mumtahanah",
-    "As-Saff", "Al-Jumu'ah", "Al-Munafiqun", "At-Taghabun", "At-Talaq", "At-Tahrim", "Al-Mulk", "Al-Qalam", "Al-Haqqah", "Al-Ma'arij",
-    "Nuh", "Al-Jinn", "Al-Muzzammil", "Al-Muddassir", "Al-Qiyamah", "Al-Insan", "Al-Mursalat", "An-Naba'", "An-Nazi'at", "'Abasa",
-    "At-Takwir", "Al-Infitar", "Al-Mutaffifin", "Al-Insyiqaq", "Al-Buruj", "At-Tariq", "Al-A'la", "Al-Ghasyiyah", "Al-Fajr", "Al-Balad",
-    "Asy-Syams", "Al-Lail", "Ad-Duha", "Asy-Syarh", "At-Tin", "Al-'Alaq", "Al-Qadr", "Al-Bayyinah", "Az-Zalzalah", "Al-'Adiyat",
-    "Al-Qari'ah", "At-Takasur", "Al-'Asr", "Al-Humazah", "Al-Fil", "Quraisy", "Al-Ma'un", "Al-Kausar", "Al-Kafirun", "An-Nasr",
-    "Al-Masad", "Al-Ikhlas", "Al-Falaq", "An-Nas"
-];
-
-function buatDropdownSurah(elementId) {
-    const select = document.getElementById(elementId);
-    if (select) {
-        select.innerHTML = '<option value="">Pilih Surah...</option>';
-        daftarSurah.forEach((surah, index) => {
-            select.innerHTML += `<option value="${surah}">${index + 1}. ${surah}</option>`;
-        });
-    }
-}
-
+    
 
     const ui = { messageBox: document.getElementById('messageBox'), donasiModal: document.getElementById("donasiModal"), donasiBtn: document.getElementById("donasiBtn"), loginButton: document.getElementById('loginButton'), userProfile: document.getElementById('userProfile'), userProfileName: document.getElementById('userProfileName'), navProfilePic: document.getElementById('navProfilePic'), attendanceNav: document.getElementById('attendanceNav'), sistemInformasiNav: document.getElementById('sistemInformasiNav'), kalenderPendidikan: document.getElementById('kalenderPendidikanSection'), marqueeContainer: document.getElementById('marquee-container'), marqueeText: document.getElementById('marquee-text'), dynamicCalendarGrid: document.getElementById('dynamic-calendar-grid'), slideshowContainer: document.getElementById('slideshow') };
     
@@ -3064,18 +3038,7 @@ function getClientDateString() {
 	
     function showMessage(message, type = 'error') { ui.messageBox.textContent = message; ui.messageBox.className = `message-box ${type} show`; setTimeout(() => { ui.messageBox.classList.remove('show'); }, 3500); }
     function getActiveSession() { return JSON.parse(localStorage.getItem('userSession') || sessionStorage.getItem('userSession') || 'null'); }
-	function buatDropdownSurah(elementId) {
-        const select = document.getElementById(elementId);
-        if (select) {
-            select.innerHTML = '<option value="">Pilih Surah...</option>';
-            daftarSurah.forEach((surah, index) => {
-                const option = document.createElement('option');
-                option.value = surah;
-                option.textContent = `${index + 1}. ${surah}`;
-                select.appendChild(option);
-            });
-        }
-    }
+	
 	const handleBackToSantriList = () => {
     // Sembunyikan semua kontainer yang mungkin terbuka
     
@@ -3633,7 +3596,7 @@ function downloadSlipPDF() {
 function showPage(hash) {
     // Selalu sembunyikan semua bagian dulu
     document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
-	
+	document.getElementById('tahfidz-chart-container').classList.add('hidden');
 	
     // =======================================================
     // === BLOK PRIORITAS KHUSUS UNTUK KRS & KHS ===
@@ -3724,72 +3687,79 @@ function showPage(hash) {
                 fetchAndRenderAttendanceHistory(session.userData.profileName);
             }
         } else if (targetHash === '#musyrif') {
-             const session = getActiveSession();
-    if (session && session.loggedIn && session.userData.jabatan === 'Musyrif') {
-        document.getElementById('musyrif').classList.remove('hidden');
-        populateSantriDropdowns('musyrif');
-        setupMusyrifEventListeners('musyrif');
-        fetchAndRenderDailyReports('musyrif');
-        document.querySelectorAll('#musyrif input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
-        
-        // Panggil fungsi yang benar untuk mengisi dropdown surah
-        buatDropdownSurah('ziyadahPSurahMusyrif');
-        buatDropdownSurah('ziyadahSSurahMusyrif');
-        buatDropdownSurah('murajaahSurahAwalMusyrif');
-        buatDropdownSurah('murajaahSurahAkhirMusyrif');
+            const session = getActiveSession();
+            if (session && session.loggedIn && session.userData.jabatan === 'Musyrif') {
+                populateSantriDropdowns('musyrif');
+				buatDropdownSurah('ziyadahPSurahMusyrif');
+				buatDropdownSurah('ziyadahSSurahMusyrif');
+				buatDropdownSurah('murajaahSurahAwalMusyrif');
+				buatDropdownSurah('murajaahSurahAkhirMusyrif');
+                setupMusyrifEventListeners('musyrif');
+                fetchAndRenderDailyReports('musyrif');
+                document.querySelectorAll('#musyrif input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
             }
         } else if (targetHash === '#musyrifah') {
              const session = getActiveSession();
-    if (session && session.loggedIn && session.userData.jabatan === 'Musyrifah') {
-        document.getElementById('musyrifah').classList.remove('hidden');
-        populateSantriDropdowns('musyrifah');
-        setupMusyrifEventListeners('musyrifah');
-        fetchAndRenderDailyReports('musyrifah');
-        document.querySelectorAll('#musyrifah input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
-        
-        // Panggil fungsi yang benar untuk mengisi dropdown surah
-        buatDropdownSurah('ziyadahPSurahMusyrifah');
-        buatDropdownSurah('ziyadahSSurahMusyrifah');
-        buatDropdownSurah('murajaahSurahAwalMusyrifah');
-        buatDropdownSurah('murajaahSurahAkhirMusyrifah');
-    }
+            if (session && session.loggedIn && session.userData.jabatan === 'Musyrifah') {
+                populateSantriDropdowns('musyrifah');
+				buatDropdownSurah('ziyadahPSurahMusyrifah');
+				buatDropdownSurah('ziyadahSSurahMusyrifah');
+				buatDropdownSurah('murajaahSurahAwalMusyrifah');
+				buatDropdownSurah('murajaahSurahAkhirMusyrifah');
+                setupMusyrifEventListeners('musyrifah');
+                fetchAndRenderDailyReports('musyrifah');
+                document.querySelectorAll('#musyrifah input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
+            }
         } else if (targetHash === '#laporan') {
     const session = getActiveSession();
-    const userJabatan = (session && session.userData) ? session.userData.jabatan : '';
-    const allowedJabatan = ['Waka Kurikulum', 'Kepala Rumah Tahfidz Quran', 'Kepala Rumah Anak Yatim'];
+    const userJabatan = (session && session.userData) ? (session.userData.jabatan || '').toLowerCase().trim() : '';
+    
+    // Jabatan yang diizinkan melihat laporan & grafik
+    const allowedJabatan = ['waka kurikulum', 'kepala rumah tahfidz quran', 'kepala rumah anak yatim'];
 
-    if (session && session.loggedIn && allowedJabatan.includes(userJabatan)) {
-        // Tampilkan semua elemen
-        document.getElementById('laporan').classList.remove('hidden');
-        document.getElementById('tahfidz-chart-container').classList.remove('hidden');
+    if (session && session.loggedIn) {
+        // --- BAGIAN INI MENGEMBALIKAN FUNGSI TABEL LAPORAN HARIAN ---
+        const datePicker = document.getElementById('laporanTanggal');
+        if (!datePicker.dataset.listenerAttached) {
+            datePicker.addEventListener('change', (e) => {
+                fetchAndRenderTahfidzReport(e.target.value);
+            });
+            datePicker.dataset.listenerAttached = 'true';
+        }
+        // Secara default, tampilkan laporan untuk hari ini saat halaman dibuka
+        datePicker.value = new Date().toISOString().slice(0, 10);
+        fetchAndRenderTahfidzReport(datePicker.value);
+        // --- AKHIR BAGIAN YANG HILANG ---
 
-        // Isi dropdown santri
-        const santriList = [...appData.santriMusyrif, ...appData.santriMusyrifah];
-        const uniqueSantri = [...new Set(santriList)].sort();
-        const santriSelect = document.getElementById('chart-santri-select');
-        santriSelect.innerHTML = '<option value="">-- Pilih Santri --</option>';
-        uniqueSantri.forEach(name => {
-            santriSelect.innerHTML += `<option value="${name}">${name}</option>`;
-        });
+        // --- BAGIAN INI UNTUK MENAMPILKAN GRAFIK (TETAP SAMA) ---
+        if (allowedJabatan.includes(userJabatan)) {
+            document.getElementById('tahfidz-chart-container').classList.remove('hidden');
+            
+            const santriList = [...new Set([...appData.santriMusyrif, ...appData.santriMusyrifah])].sort();
+            const santriSelect = document.getElementById('chart-santri-select');
+            santriSelect.innerHTML = '<option value="">-- Pilih Santri --</option>';
+            santriList.forEach(name => {
+                santriSelect.innerHTML += `<option value="${name}">${name}</option>`;
+            });
 
-        // Set tanggal default
-        const endDateInput = document.getElementById('chart-end-date');
-        const startDateInput = document.getElementById('chart-start-date');
-        const today = new Date();
-        endDateInput.value = today.toISOString().slice(0, 10);
-        today.setDate(today.getDate() - 30);
-        startDateInput.value = today.toISOString().slice(0, 10);
-        
-        // Event listener untuk tombol
-        document.getElementById('show-chart-btn').onclick = () => {
-            const santriName = santriSelect.value;
-            if (!santriName) {
-                alert("Silakan pilih nama santri.");
-                return;
-            }
-            renderTahfidzChart(santriName, startDateInput.value, endDateInput.value);
-        };
+            const endDateInput = document.getElementById('chart-end-date');
+            const startDateInput = document.getElementById('chart-start-date');
+            const today = new Date();
+            endDateInput.value = today.toISOString().slice(0, 10);
+            today.setDate(today.getDate() - 30);
+            startDateInput.value = today.toISOString().slice(0, 10);
+
+            document.getElementById('show-chart-btn').onclick = () => {
+                const santriName = santriSelect.value;
+                if (!santriName) {
+                    alert("Silakan pilih nama santri.");
+                    return;
+                }
+                renderTahfidzChart(santriName, startDateInput.value, endDateInput.value);
+            };
+        }
     }
+
         } else if (targetHash === '#slip-gaji') {
             const session = getActiveSession();
             if (session && session.loggedIn) {
@@ -4765,12 +4735,10 @@ const subMenuHashes = ['#roster-kbm', '#krs', '#khs', '#santri', '#slip-gaji', '
 // === FUNGSI-FUNGSI BARU UNTUK FITUR MUSYRIF/AH ===
 // =======================================================
 
-
 function populateSantriDropdowns(role) {
     const santriList = (role === 'musyrif') ? appData.santriMusyrif : appData.santriMusyrifah;
     const pageSelector = `#${role}`;
-    // PERBAIKAN: Selector diubah agar HANYA mencari <select> yang ID-nya diawali dengan "santri"
-    const selects = document.querySelectorAll(`${pageSelector} select[id^="santri"]`); 
+    const selects = document.querySelectorAll(`${pageSelector} select`);
     
     selects.forEach(select => {
         select.innerHTML = '<option value="">Pilih Nama Santri...</option>'; // Opsi default
@@ -4783,6 +4751,30 @@ function populateSantriDropdowns(role) {
     });
 }
 
+const daftarSurah = [
+    "Al-Fatihah", "Al-Baqarah", "Ali 'Imran", "An-Nisa'", "Al-Ma'idah", "Al-An'am", "Al-A'raf", "Al-Anfal", "At-Tawbah", "Yunus",
+    "Hud", "Yusuf", "Ar-Ra'd", "Ibrahim", "Al-Hijr", "An-Nahl", "Al-Isra'", "Al-Kahf", "Maryam", "Taha",
+    "Al-Anbiya'", "Al-Hajj", "Al-Mu'minun", "An-Nur", "Al-Furqan", "Asy-Syu'ara'", "An-Naml", "Al-Qasas", "Al-'Ankabut", "Ar-Rum",
+    "Luqman", "As-Sajdah", "Al-Ahzab", "Saba'", "Fatir", "Yasin", "As-Saffat", "Sad", "Az-Zumar", "Ghafir",
+    "Fussilat", "Asy-Syura", "Az-Zukhruf", "Ad-Dukhan", "Al-Jasiyah", "Al-Ahqaf", "Muhammad", "Al-Fath", "Al-Hujurat", "Qaf",
+    "Az-Zariyat", "At-Tur", "An-Najm", "Al-Qamar", "Ar-Rahman", "Al-Waqi'ah", "Al-Hadid", "Al-Mujadilah", "Al-Hasyr", "Al-Mumtahanah",
+    "As-Saff", "Al-Jumu'ah", "Al-Munafiqun", "At-Taghabun", "At-Talaq", "At-Tahrim", "Al-Mulk", "Al-Qalam", "Al-Haqqah", "Al-Ma'arij",
+    "Nuh", "Al-Jinn", "Al-Muzzammil", "Al-Muddassir", "Al-Qiyamah", "Al-Insan", "Al-Mursalat", "An-Naba'", "An-Nazi'at", "'Abasa",
+    "At-Takwir", "Al-Infitar", "Al-Mutaffifin", "Al-Insyiqaq", "Al-Buruj", "At-Tariq", "Al-A'la", "Al-Ghasyiyah", "Al-Fajr", "Al-Balad",
+    "Asy-Syams", "Al-Lail", "Ad-Duha", "Asy-Syarh", "At-Tin", "Al-'Alaq", "Al-Qadr", "Al-Bayyinah", "Az-Zalzalah", "Al-'Adiyat",
+    "Al-Qari'ah", "At-Takasur", "Al-'Asr", "Al-Humazah", "Al-Fil", "Quraisy", "Al-Ma'un", "Al-Kausar", "Al-Kafirun", "An-Nasr",
+    "Al-Masad", "Al-Ikhlas", "Al-Falaq", "An-Nas"
+];
+
+function buatDropdownSurah(elementId) {
+    const select = document.getElementById(elementId);
+    if (select) {
+        select.innerHTML = '<option value="">Pilih Surah...</option>';
+        daftarSurah.forEach((surah, index) => {
+            select.innerHTML += `<option value="${surah}">${index + 1}. ${surah}</option>`;
+        });
+    }
+}
 
 function setupMusyrifEventListeners(role) {
     const pageSelector = `#${role}`;
