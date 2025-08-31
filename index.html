@@ -753,6 +753,33 @@
     <div id="laporanContainer" class="mt-8 overflow-x-auto bg-white rounded-lg shadow">
         <p class="p-8 text-center text-gray-500">Silakan pilih tanggal untuk melihat laporan.</p>
     </div>
+	
+	<div id="tahfidz-chart-container" class="mt-12 pt-8 border-t hidden">
+    <h3 class="text-2xl font-bold text-gray-800 mb-4">Grafik Progres Tahfidz per Santri</h3>
+    
+    <div class="bg-gray-100 p-4 rounded-lg shadow-sm flex flex-wrap items-end gap-4 mb-4">
+        <div class="flex-grow">
+            <label for="chart-santri-select" class="block text-sm font-semibold">Pilih Santri</label>
+            <select id="chart-santri-select" class="w-full p-2 mt-1 border rounded"></select>
+        </div>
+        <div>
+            <label for="chart-start-date" class="block text-sm font-semibold">Tanggal Awal</label>
+            <input type="date" id="chart-start-date" class="w-full p-2 mt-1 border rounded">
+        </div>
+        <div>
+            <label for="chart-end-date" class="block text-sm font-semibold">Tanggal Akhir</label>
+            <input type="date" id="chart-end-date" class="w-full p-2 mt-1 border rounded">
+        </div>
+        <button id="show-chart-btn" class="bg-blue-600 text-white py-2 px-4 rounded-md">Tampilkan Grafik</button>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow">
+        <canvas id="tahfidzChart"></canvas>
+    </div>
+</div>
+
+<div id="laporanContainer" class="mt-8 overflow-x-auto bg-white rounded-lg shadow">
+    </div>
 </div>
 <!-- === AKHIR HALAMAN LAPORAN TAHFIDZ === -->
 
@@ -1212,16 +1239,29 @@
                  <div class="form-group"><label for="tanggalTahfidzMusyrif">Tanggal</label><input type="date" id="tanggalTahfidzMusyrif" readonly style="background-color: #e9ecef;"></div>
              </div>
              <!-- GANTI BLOK LAMA DENGAN YANG BARU INI -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
-    <!-- Ziyadah P -->
-    <div class="form-group md:col-span-2"><label>Ziyadah (P) - Surat & Ayat</label><input type="text" id="ziyadahPTextMusyrif" placeholder="Cth: Al-Baqarah 1-5"></div>
-    <div class="form-group"><label>Poin</label><input type="text" id="ziyadahPoinMusyrif" placeholder="Cth: 7"></div>
-    <!-- Ziyadah S -->
-    <div class="form-group md:col-span-2"><label>Ziyadah (S) - Surat & Ayat</label><input type="text" id="ziyadahSTextMusyrif" placeholder="Cth: An-Nisa 10-15"></div>
-    <div class="form-group"><label>Poin</label><input type="text" id="ziyadahSoinMusyrif" placeholder="Cth: 8"></div>
-    <!-- Muraja'ah -->
-    <div class="form-group md:col-span-2"><label>Muraja'ah - Surat/Juz</label><input type="text" id="murajaahTextMusyrif" placeholder="Cth: Juz 30"></div>
-    <div class="form-group"><label>Poin</label><input type="text" id="murajaahPoinMusyrif" placeholder="Cth: 9"></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 border p-4 rounded-md">
+    <h4 class="md:col-span-2 font-semibold text-lg">Ziyadah (Pagi)</h4>
+    <div class="form-group"><label>Surah</label><select id="ziyadahPSurahMusyrif"></select></div>
+    <div class="form-group grid grid-cols-2 gap-2">
+        <div><label>Ayat Awal</label><input type="number" id="ziyadahPAyatAwalMusyrif"></div>
+        <div><label>Ayat Akhir</label><input type="number" id="ziyadahPAyatAkhirMusyrif"></div>
+    </div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahPoinMusyrif"></div>
+
+    <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Ziyadah (Sore)</h4>
+    <div class="form-group"><label>Surah</label><select id="ziyadahSSurahMusyrif"></select></div>
+    <div class="form-group grid grid-cols-2 gap-2">
+        <div><label>Ayat Awal</label><input type="number" id="ziyadahSAyatAwalMusyrif"></div>
+        <div><label>Ayat Akhir</label><input type="number" id="ziyadahSAyatAkhirMusyrif"></div>
+    </div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahSoinMusyrif"></div>
+
+    <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Muraja'ah</h4>
+    <div class="form-group"><label>Surah Awal</label><select id="murajaahSurahAwalMusyrif"></select></div>
+    <div class="form-group"><label>Ayat Awal</label><input type="number" id="murajaahAyatAwalMusyrif"></div>
+    <div class="form-group"><label>Surah Akhir</label><select id="murajaahSurahAkhirMusyrif"></select></div>
+    <div class="form-group"><label>Ayat Akhir</label><input type="number" id="murajaahAyatAkhirMusyrif"></div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="murajaahPoinMusyrif"></div>
 </div>
             <button type="submit" class="submit-btn">Simpan Nilai Tahfidz</button>
         </form>
@@ -1291,16 +1331,29 @@
                  <div class="form-group"><label for="tanggalTahfidzMusyrifah">Tanggal</label><input type="date" id="tanggalTahfidzMusyrifah" readonly style="background-color: #e9ecef;"></div>
              </div>
              <!-- GANTI BLOK LAMA DENGAN YANG BARU INI (UNTUK MUSYRIFAH) -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
-    <!-- Ziyadah P -->
-    <div class="form-group md:col-span-2"><label>Ziyadah (P) - Surat & Ayat</label><input type="text" id="ziyadahPTextMusyrifah" placeholder="Cth: Al-Baqarah 1-5"></div>
-    <div class="form-group"><label>Poin</label><input type="text" id="ziyadahPoinMusyrifah" placeholder="Cth: 7"></div>
-    <!-- Ziyadah S -->
-    <div class="form-group md:col-span-2"><label>Ziyadah (S) - Surat & Ayat</label><input type="text" id="ziyadahSTextMusyrifah" placeholder="Cth: An-Nisa 10-15"></div>
-    <div class="form-group"><label>Poin</label><input type="text" id="ziyadahSoinMusyrifah" placeholder="Cth: 8"></div>
-    <!-- Muraja'ah -->
-    <div class="form-group md:col-span-2"><label>Muraja'ah - Surat/Juz</label><input type="text" id="murajaahTextMusyrifah" placeholder="Cth: Juz 30"></div>
-    <div class="form-group"><label>Poin</label><input type="text" id="murajaahPoinMusyrifah" placeholder="Cth: 9"></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 border p-4 rounded-md">
+    <h4 class="md:col-span-2 font-semibold text-lg">Ziyadah (Pagi)</h4>
+    <div class="form-group"><label>Surah</label><select id="ziyadahPSurahMusyrifah"></select></div>
+    <div class="form-group grid grid-cols-2 gap-2">
+        <div><label>Ayat Awal</label><input type="number" id="ziyadahPAyatAwalMusyrifah"></div>
+        <div><label>Ayat Akhir</label><input type="number" id="ziyadahPAyatAkhirMusyrifah"></div>
+    </div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahPoinMusyrifah"></div>
+
+    <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Ziyadah (Sore)</h4>
+    <div class="form-group"><label>Surah</label><select id="ziyadahSSurahMusyrifah"></select></div>
+    <div class="form-group grid grid-cols-2 gap-2">
+        <div><label>Ayat Awal</label><input type="number" id="ziyadahSAyatAwalMusyrifah"></div>
+        <div><label>Ayat Akhir</label><input type="number" id="ziyadahSAyatAkhirMusyrifah"></div>
+    </div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahSoinMusyrifah"></div>
+
+    <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Muraja'ah</h4>
+    <div class="form-group"><label>Surah Awal</label><select id="murajaahSurahAwalMusyrifah"></select></div>
+    <div class="form-group"><label>Ayat Awal</label><input type="number" id="murajaahAyatAwalMusyrifah"></div>
+    <div class="form-group"><label>Surah Akhir</label><select id="murajaahSurahAkhirMusyrifah"></select></div>
+    <div class="form-group"><label>Ayat Akhir</label><input type="number" id="murajaahAyatAkhirMusyrifah"></div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="murajaahPoinMusyrifah"></div>
 </div>
             <button type="submit" class="submit-btn">Simpan Nilai Tahfidz</button>
         </form>
@@ -1557,7 +1610,31 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
 // === TAMBAHKAN BLOK KODE INI DI BAGIAN ATAS SCRIPT ANDA ===
-    
+		const daftarSurah = [
+    "Al-Fatihah", "Al-Baqarah", "Ali 'Imran", "An-Nisa'", "Al-Ma'idah", "Al-An'am", "Al-A'raf", "Al-Anfal", "At-Tawbah", "Yunus",
+    "Hud", "Yusuf", "Ar-Ra'd", "Ibrahim", "Al-Hijr", "An-Nahl", "Al-Isra'", "Al-Kahf", "Maryam", "Taha",
+    "Al-Anbiya'", "Al-Hajj", "Al-Mu'minun", "An-Nur", "Al-Furqan", "Asy-Syu'ara'", "An-Naml", "Al-Qasas", "Al-'Ankabut", "Ar-Rum",
+    "Luqman", "As-Sajdah", "Al-Ahzab", "Saba'", "Fatir", "Yasin", "As-Saffat", "Sad", "Az-Zumar", "Ghafir",
+    "Fussilat", "Asy-Syura", "Az-Zukhruf", "Ad-Dukhan", "Al-Jasiyah", "Al-Ahqaf", "Muhammad", "Al-Fath", "Al-Hujurat", "Qaf",
+    "Az-Zariyat", "At-Tur", "An-Najm", "Al-Qamar", "Ar-Rahman", "Al-Waqi'ah", "Al-Hadid", "Al-Mujadilah", "Al-Hasyr", "Al-Mumtahanah",
+    "As-Saff", "Al-Jumu'ah", "Al-Munafiqun", "At-Taghabun", "At-Talaq", "At-Tahrim", "Al-Mulk", "Al-Qalam", "Al-Haqqah", "Al-Ma'arij",
+    "Nuh", "Al-Jinn", "Al-Muzzammil", "Al-Muddassir", "Al-Qiyamah", "Al-Insan", "Al-Mursalat", "An-Naba'", "An-Nazi'at", "'Abasa",
+    "At-Takwir", "Al-Infitar", "Al-Mutaffifin", "Al-Insyiqaq", "Al-Buruj", "At-Tariq", "Al-A'la", "Al-Ghasyiyah", "Al-Fajr", "Al-Balad",
+    "Asy-Syams", "Al-Lail", "Ad-Duha", "Asy-Syarh", "At-Tin", "Al-'Alaq", "Al-Qadr", "Al-Bayyinah", "Az-Zalzalah", "Al-'Adiyat",
+    "Al-Qari'ah", "At-Takasur", "Al-'Asr", "Al-Humazah", "Al-Fil", "Quraisy", "Al-Ma'un", "Al-Kausar", "Al-Kafirun", "An-Nasr",
+    "Al-Masad", "Al-Ikhlas", "Al-Falaq", "An-Nas"
+];
+
+function buatDropdownSurah(elementId) {
+    const select = document.getElementById(elementId);
+    if (select) {
+        select.innerHTML = '<option value="">Pilih Surah...</option>';
+        daftarSurah.forEach((surah, index) => {
+            select.innerHTML += `<option value="${surah}">${index + 1}. ${surah}</option>`;
+        });
+    }
+}
+
 
     const ui = { messageBox: document.getElementById('messageBox'), donasiModal: document.getElementById("donasiModal"), donasiBtn: document.getElementById("donasiBtn"), loginButton: document.getElementById('loginButton'), userProfile: document.getElementById('userProfile'), userProfileName: document.getElementById('userProfileName'), navProfilePic: document.getElementById('navProfilePic'), attendanceNav: document.getElementById('attendanceNav'), sistemInformasiNav: document.getElementById('sistemInformasiNav'), kalenderPendidikan: document.getElementById('kalenderPendidikanSection'), marqueeContainer: document.getElementById('marquee-container'), marqueeText: document.getElementById('marquee-text'), dynamicCalendarGrid: document.getElementById('dynamic-calendar-grid'), slideshowContainer: document.getElementById('slideshow') };
     
@@ -2562,6 +2639,62 @@ function setupExamSecurityListeners() {
     });
 }
 
+let tahfidzChartInstance = null;
+
+async function renderTahfidzChart(santriName, startDate, endDate) {
+    const ctx = document.getElementById('tahfidzChart').getContext('2d');
+    
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getSantriTahfidzDetail', santriName, startDate, endDate })
+        });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+        
+        const labels = result.data.map(item => item.label);
+        const points = result.data.map(item => item.points);
+
+        if (tahfidzChartInstance) {
+            tahfidzChartInstance.destroy();
+        }
+
+        tahfidzChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    type: 'line',
+                    label: 'Poin',
+                    data: points,
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    yAxisID: 'y_poin',
+                }, {
+                    type: 'bar',
+                    label: 'Setoran',
+                    data: points,
+                    backgroundColor: 'rgba(44, 94, 46, 0.7)',
+                    yAxisID: 'y_poin',
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y_poin: {
+                        beginAtZero: true,
+                        position: 'left',
+                        title: { display: true, text: 'Poin' }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Gagal membuat grafik:", error);
+    }
+}
+
 /**
  * Fungsi untuk membuat atau menghapus titik notifikasi di navigasi.
  */
@@ -2931,7 +3064,18 @@ function getClientDateString() {
 	
     function showMessage(message, type = 'error') { ui.messageBox.textContent = message; ui.messageBox.className = `message-box ${type} show`; setTimeout(() => { ui.messageBox.classList.remove('show'); }, 3500); }
     function getActiveSession() { return JSON.parse(localStorage.getItem('userSession') || sessionStorage.getItem('userSession') || 'null'); }
-	
+	function buatDropdownSurah(elementId) {
+        const select = document.getElementById(elementId);
+        if (select) {
+            select.innerHTML = '<option value="">Pilih Surah...</option>';
+            daftarSurah.forEach((surah, index) => {
+                const option = document.createElement('option');
+                option.value = surah;
+                option.textContent = `${index + 1}. ${surah}`;
+                select.appendChild(option);
+            });
+        }
+    }
 	const handleBackToSantriList = () => {
     // Sembunyikan semua kontainer yang mungkin terbuka
     
@@ -3580,35 +3724,72 @@ function showPage(hash) {
                 fetchAndRenderAttendanceHistory(session.userData.profileName);
             }
         } else if (targetHash === '#musyrif') {
-            const session = getActiveSession();
-            if (session && session.loggedIn && session.userData.jabatan === 'Musyrif') {
-                populateSantriDropdowns('musyrif');
-                setupMusyrifEventListeners('musyrif');
-                fetchAndRenderDailyReports('musyrif');
-                document.querySelectorAll('#musyrif input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
+             const session = getActiveSession();
+    if (session && session.loggedIn && session.userData.jabatan === 'Musyrif') {
+        document.getElementById('musyrif').classList.remove('hidden');
+        populateSantriDropdowns('musyrif');
+        setupMusyrifEventListeners('musyrif');
+        fetchAndRenderDailyReports('musyrif');
+        document.querySelectorAll('#musyrif input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
+        
+        // Panggil fungsi yang benar untuk mengisi dropdown surah
+        buatDropdownSurah('ziyadahPSurahMusyrif');
+        buatDropdownSurah('ziyadahSSurahMusyrif');
+        buatDropdownSurah('murajaahSurahAwalMusyrif');
+        buatDropdownSurah('murajaahSurahAkhirMusyrif');
             }
         } else if (targetHash === '#musyrifah') {
              const session = getActiveSession();
-            if (session && session.loggedIn && session.userData.jabatan === 'Musyrifah') {
-                populateSantriDropdowns('musyrifah');
-                setupMusyrifEventListeners('musyrifah');
-                fetchAndRenderDailyReports('musyrifah');
-                document.querySelectorAll('#musyrifah input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
-            }
+    if (session && session.loggedIn && session.userData.jabatan === 'Musyrifah') {
+        document.getElementById('musyrifah').classList.remove('hidden');
+        populateSantriDropdowns('musyrifah');
+        setupMusyrifEventListeners('musyrifah');
+        fetchAndRenderDailyReports('musyrifah');
+        document.querySelectorAll('#musyrifah input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
+        
+        // Panggil fungsi yang benar untuk mengisi dropdown surah
+        buatDropdownSurah('ziyadahPSurahMusyrifah');
+        buatDropdownSurah('ziyadahSSurahMusyrifah');
+        buatDropdownSurah('murajaahSurahAwalMusyrifah');
+        buatDropdownSurah('murajaahSurahAkhirMusyrifah');
+    }
         } else if (targetHash === '#laporan') {
-            const session = getActiveSession();
-            const userJabatan = (session && session.userData) ? session.userData.jabatan : '';
-            if (session && session.loggedIn && (userJabatan === 'Kepala' || userJabatan === 'Waka Kurikulum' || userJabatan === 'Kepala Rumah Anak Yatim' || userJabatan === 'Kepala Rumah Tahfidz Quran')) {
-                const datePicker = document.getElementById('laporanTanggal');
-                if (!datePicker.dataset.listenerAttached) {
-                    datePicker.addEventListener('change', (e) => {
-                        fetchAndRenderTahfidzReport(e.target.value);
-                    });
-                    datePicker.dataset.listenerAttached = 'true';
-                }
-                datePicker.value = new Date().toISOString().slice(0, 10);
-                fetchAndRenderTahfidzReport(datePicker.value);
+    const session = getActiveSession();
+    const userJabatan = (session && session.userData) ? session.userData.jabatan : '';
+    const allowedJabatan = ['Waka Kurikulum', 'Kepala Rumah Tahfidz Quran', 'Kepala Rumah Anak Yatim'];
+
+    if (session && session.loggedIn && allowedJabatan.includes(userJabatan)) {
+        // Tampilkan semua elemen
+        document.getElementById('laporan').classList.remove('hidden');
+        document.getElementById('tahfidz-chart-container').classList.remove('hidden');
+
+        // Isi dropdown santri
+        const santriList = [...appData.santriMusyrif, ...appData.santriMusyrifah];
+        const uniqueSantri = [...new Set(santriList)].sort();
+        const santriSelect = document.getElementById('chart-santri-select');
+        santriSelect.innerHTML = '<option value="">-- Pilih Santri --</option>';
+        uniqueSantri.forEach(name => {
+            santriSelect.innerHTML += `<option value="${name}">${name}</option>`;
+        });
+
+        // Set tanggal default
+        const endDateInput = document.getElementById('chart-end-date');
+        const startDateInput = document.getElementById('chart-start-date');
+        const today = new Date();
+        endDateInput.value = today.toISOString().slice(0, 10);
+        today.setDate(today.getDate() - 30);
+        startDateInput.value = today.toISOString().slice(0, 10);
+        
+        // Event listener untuk tombol
+        document.getElementById('show-chart-btn').onclick = () => {
+            const santriName = santriSelect.value;
+            if (!santriName) {
+                alert("Silakan pilih nama santri.");
+                return;
             }
+            renderTahfidzChart(santriName, startDateInput.value, endDateInput.value);
+        };
+    }
         } else if (targetHash === '#slip-gaji') {
             const session = getActiveSession();
             if (session && session.loggedIn) {
@@ -4584,10 +4765,12 @@ const subMenuHashes = ['#roster-kbm', '#krs', '#khs', '#santri', '#slip-gaji', '
 // === FUNGSI-FUNGSI BARU UNTUK FITUR MUSYRIF/AH ===
 // =======================================================
 
+
 function populateSantriDropdowns(role) {
     const santriList = (role === 'musyrif') ? appData.santriMusyrif : appData.santriMusyrifah;
     const pageSelector = `#${role}`;
-    const selects = document.querySelectorAll(`${pageSelector} select`);
+    // PERBAIKAN: Selector diubah agar HANYA mencari <select> yang ID-nya diawali dengan "santri"
+    const selects = document.querySelectorAll(`${pageSelector} select[id^="santri"]`); 
     
     selects.forEach(select => {
         select.innerHTML = '<option value="">Pilih Nama Santri...</option>'; // Opsi default
@@ -4599,6 +4782,7 @@ function populateSantriDropdowns(role) {
         });
     });
 }
+
 
 function setupMusyrifEventListeners(role) {
     const pageSelector = `#${role}`;
@@ -4656,12 +4840,26 @@ function handleMusyrifFormSubmit(event, role, type) {
         data.status = form.querySelector(`input[name="statusKegiatan${roleCapitalized}"]:checked`).value;
         data.keterangan = form.querySelector(`#keteranganKegiatan${roleCapitalized}`).value || '-';
     } else if (type === 'Tahfidz') {
-        data.ziyadahP = document.getElementById(`ziyadahPoin${roleCapitalized}`).value || '0';
-        data.ziyadahPText = document.getElementById(`ziyadahPText${roleCapitalized}`).value || '-';
-        data.ziyadahS = document.getElementById(`ziyadahSoin${roleCapitalized}`).value || '0';
-        data.ziyadahSText = document.getElementById(`ziyadahSText${roleCapitalized}`).value || '-';
-        data.murajaah = document.getElementById(`murajaahPoin${roleCapitalized}`).value || '0';
-        data.murajaahText = document.getElementById(`murajaahText${roleCapitalized}`).value || '-';
+        const zPAwal = document.getElementById(`ziyadahPAyatAwal${roleCapitalized}`).value;
+        const zPAkhir = document.getElementById(`ziyadahPAyatAkhir${roleCapitalized}`).value;
+        const zSAwal = document.getElementById(`ziyadahSAyatAwal${roleCapitalized}`).value;
+        const zSAkhir = document.getElementById(`ziyadahSAyatAkhir${roleCapitalized}`).value;
+        const mSAwal = document.getElementById(`murajaahSurahAwal${roleCapitalized}`).value;
+        const mAAwal = document.getElementById(`murajaahAyatAwal${roleCapitalized}`).value;
+        const mSAkhir = document.getElementById(`murajaahSurahAkhir${roleCapitalized}`).value;
+        const mAAkhir = document.getElementById(`murajaahAyatAkhir${roleCapitalized}`).value;
+
+        // Mengambil poin dan menggabungkan teks untuk Ziyadah Pagi
+        data.ziyadahPoin = document.getElementById(`ziyadahPoin${roleCapitalized}`).value || '0';
+        data.ziyadahPText = zPAwal ? `${document.getElementById(`ziyadahPSurah${roleCapitalized}`).value}: ${zPAwal}-${zPAkhir}` : '-';
+        
+        // Mengambil poin dan menggabungkan teks untuk Ziyadah Sore
+        data.ziyadahSoin = document.getElementById(`ziyadahSoin${roleCapitalized}`).value || '0';
+        data.ziyadahSText = zSAwal ? `${document.getElementById(`ziyadahSSurah${roleCapitalized}`).value}: ${zSAwal}-${zSAkhir}` : '-';
+        
+        // Mengambil poin dan menggabungkan teks untuk Muraja'ah
+        data.murajaahPoin = document.getElementById(`murajaahPoin${roleCapitalized}`).value || '0';
+        data.murajaahText = mSAwal ? `${mSAwal}: ${mAAwal} - ${mSAkhir}: ${mAAkhir}` : '-';
     } else if (type === 'Pelanggaran') {
         data.pelanggaran = document.getElementById(`isiPelanggaran${roleCapitalized}`).value;
         data.solusi = document.getElementById(`solusiPelanggaran${roleCapitalized}`).value;
