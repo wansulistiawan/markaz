@@ -4433,6 +4433,7 @@ function handleLoginSubmit(event) {
 // === FUNGSI-FUNGSI BARU UNTUK FITUR SLIP GAJI ===
 // =======================================================
 
+// --- AWAL KODE PENGGANTI ---
 function populateMonthYearDropdowns(monthSelect, yearSelect) {
     monthSelect.innerHTML = '';
     yearSelect.innerHTML = '';
@@ -4446,16 +4447,19 @@ function populateMonthYearDropdowns(monthSelect, yearSelect) {
     });
 
     const currentYear = new Date().getFullYear();
-    for (let y = 2025; y <= currentYear; y++) {
+    // Loop sekarang dimulai dari tahun 2026 hingga 2050
+    for (let y = 2025; y <= 2050; y++) { 
         const option = document.createElement('option');
         option.value = y;
         option.textContent = y;
         yearSelect.appendChild(option);
     }
 
+    // >Mengatur nilai default ke bulan dan tahun saat ini
     monthSelect.value = (new Date().getMonth() + 1).toString().padStart(2, '0');
     yearSelect.value = currentYear;
 }
+// --- AKHIR KODE PENGGANTI ---
 
 function populateEmployeeDropdown() {
     const employeeSelect = document.getElementById('employeeSelect');
@@ -4552,7 +4556,15 @@ function fetchAndRenderSlipGaji() {
 			
             // Bangun HTML Rincian Pendapatan
             let pendapatanHTML = '';
-            if (s.pendapatan.gajiPokok > 0) pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok</span> <span>${s.pendapatan.gajiPokok.toLocaleString('id-ID')}</span></div>`;
+            if (s.pendapatan.gajiPokokRinci) {
+  // Jika ada objek rincian (untuk jabatan rangkap), tampilkan per jabatan
+  for (const [jabatan, gaji] of Object.entries(s.pendapatan.gajiPokokRinci)) {
+    pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok (${jabatan})</span> <span>${gaji.toLocaleString('id-ID')}</span></div>`;
+  }
+} else if (s.pendapatan.gajiPokok > 0) {
+  // Jika tidak ada objek rincian (untuk jabatan tunggal), tampilkan seperti biasa
+  pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok</span> <span>${s.pendapatan.gajiPokok.toLocaleString('id-ID')}</span></div>`;
+}
             if (s.pendapatan.honorMengajar > 0) pendapatanHTML += `<div class="flex justify-between"><span>Honor Mengajar</span> <span>${s.pendapatan.honorMengajar.toLocaleString('id-ID')}</span></div>`;
             if (s.pendapatan.tunjanganMakan > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan Makan</span> <span>${s.pendapatan.tunjanganMakan.toLocaleString('id-ID')}</span></div>`;
             if (s.pendapatan.tunjanganBPJS > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan BPJamsostek</span> <span>${s.pendapatan.tunjanganBPJS.toLocaleString('id-ID')}</span></div>`;
@@ -4575,7 +4587,17 @@ function fetchAndRenderSlipGaji() {
             if (s.kehadiran.totalMengajar > 0) kehadiranHTML += `<li>Total Mengajar: ${s.kehadiran.totalMengajar} sesi</li>`;
             if (s.kehadiran.hariKerja > 0) kehadiranHTML += `<li>Kehadiran Staf: ${s.kehadiran.totalMasuk} dari ${s.kehadiran.hariKerja} hari kerja</li>`;
 
-            const totalPendapatan = Object.values(s.pendapatan).reduce((a, b) => a + b, 0);
+            // --- AWAL KODE PENGGANTI ---
+// Menjumlahkan pendapatan secara manual untuk menghindari error NaN dari objek rincian
+const totalPendapatan = (s.pendapatan.gajiPokok || 0) +
+                        (s.pendapatan.honorMengajar || 0) +
+                        (s.pendapatan.tunjanganMakan || 0) +
+                        (s.pendapatan.tunjanganBPJS || 0) +
+                        (s.pendapatan.tunjanganFasilitas || 0) +
+                        (s.pendapatan.bonusRapat || 0) +
+                        (s.pendapatan.bonusLain || 0) +
+                        (s.pendapatan.lembur || 0);
+// --- AKHIR KODE PENGGANTI ---
             const totalPotongan = Object.values(s.potongan).reduce((a, b) => a + b, 0);
             const gajiBersih = totalPendapatan - totalPotongan;
 
