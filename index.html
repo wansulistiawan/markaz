@@ -670,7 +670,107 @@
 #loading-overlay.hidden {
     display: none;
 }
+/* === GAYA UNTUK PENGGALANGAN DANA === */
+.fundraising-wrapper {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto; /* Memungkinkan scroll horizontal */
+    padding-bottom: 20px; /* Memberi ruang untuk scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) #e9ecef;
+}
 
+.fundraising-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+.fundraising-wrapper::-webkit-scrollbar-track {
+    background: #e9ecef;
+    border-radius: 4px;
+}
+.fundraising-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+    border-radius: 4px;
+}
+
+.fundraising-card {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+    flex: 0 0 320px; /* Lebar kartu tetap, tidak menyusut */
+    transition: box-shadow 0.3s;
+    cursor: pointer;
+}
+.fundraising-card:hover {
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+.fundraising-card .image-container {
+    position: relative;
+    width: 100%;
+    height: 180px;
+}
+
+.fundraising-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.deadline-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+.fundraising-card .card-body {
+    padding: 15px;
+}
+
+.organizer-info {
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-bottom: 8px;
+}
+
+.fundraising-card h3 {
+    font-size: 1.1em;
+    font-weight: 700;
+    margin: 0 0 15px 0;
+    line-height: 1.4;
+}
+
+.progress-info {
+    font-size: 0.9em;
+    font-weight: 500;
+    color: var(--dark-gray);
+    margin-bottom: 8px;
+}
+
+.progress-info .amount {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background-color: var(--info-color);
+    border-radius: 4px;
+    transition: width 0.5s ease-in-out;
+}
     </style>
 </head>
 <body>
@@ -836,6 +936,19 @@
                 <h2>Berita & Pengumuman Terbaru</h2>
                 <div id="news-container" class="grid-container"></div>
             </section>
+			<div id="create-fundraising-btn-container" class="hidden text-right mb-4">
+    <button id="btn-create-fundraising" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md">
+        Buat Penggalangan Dana
+    </button>
+</div>
+
+<section id="fundraising" class="section">
+    </section>
+			<section id="fundraising" class="section">
+    <h2>Penggalangan Dana Mendesak</h2>
+    <div id="fundraising-container" class="fundraising-wrapper">
+        </div>
+</section>
             <section id="kalenderPendidikanSection" class="section hidden">
                 <h2>Kalender Pendidikan Madrasah 2025/2026</h2>
                 <div id="dynamic-calendar-grid" class="calendar-grid"></div>
@@ -1586,7 +1699,46 @@ b. Soekarno
 <div id="loading-overlay" class="hidden">
     <div class="loader"></div>
 </div>
-
+<div id="fundraising-modal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <span class="close-button">&times;</span>
+        <h2 class="text-2xl font-bold mb-6">Buat Penggalangan Dana Baru</h2>
+        <form id="form-fundraising">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <div class="form-group">
+                    <label for="input-fund-title">Judul Penggalangan Dana</label>
+                    <input type="text" id="input-fund-title" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="input-fund-goal">Total Dana Dibutuhkan (hanya angka)</label>
+                <input type="number" id="input-fund-goal" required>
+            </div>
+            <div class="form-group">
+                <label for="input-fund-deadline">Batas Waktu</label>
+                <input type="date" id="input-fund-deadline" required>
+            </div>
+            <div class="form-group">
+    <label>Gambar Utama</label>
+    <div class="mt-2 p-4 border-2 border-dashed rounded-md text-center">
+        <img id="fundraising-image-preview" src="https://placehold.co/400x200/e9ecef/6c757d?text=Pilih+Gambar" class="mx-auto mb-4 max-h-48 rounded cursor-pointer" title="Klik untuk pilih gambar">
+        <input type="file" id="input-fund-image-file" class="hidden" accept="image/*">
+        <label for="input-fund-image-file" class="cursor-pointer bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded">
+            Pilih File Gambar
+        </label>
+    </div>
+</div>
+            <div class="form-group">
+                <label for="input-fund-desc">Deskripsi Lengkap (HTML didukung)</label>
+                <textarea id="input-fund-desc" rows="8" class="w-full p-3 border rounded-md"></textarea>
+            </div>
+            <div class="flex gap-4 mt-8">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">Simpan & Publikasikan</button>
+            </div>
+        </form>
+    </div>
+</div>
 	<footer><div class="container"><p>&copy; 2025 Yayasan Markaz Yatim Duafa Qurani. Semua Hak Cipta Dilindungi.</p><p>Jl. Protokol Desa Sei Kamah II, Sei Dadap, Asahan, Sumut | <a href="mailto:markazyatimduafaqurani@gmail.com">markazyatimduafaqurani@gmail.com</a> | 085261804096</p></div></footer>
 
 <script>
@@ -1604,15 +1756,17 @@ document.addEventListener('DOMContentLoaded', function() {
 	let santriDataWithUsernames = null; // Cache untuk santri data termasuk usernames
     // --- BAGIAN 1: KONFIGURASI & DATA UTAMA ---
     const CONFIG = {
-        SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec",
+        
+		SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec",
         CLOUDINARY_URL: "https://api.cloudinary.com/v1_1/deva5eknr/image/upload",
         CLOUDINARY_UPLOAD_PRESET: "markaz",
         ICONS: {
             eye: `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
             eyeOff: `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
         }
+		
     };
-
+			let selectedFundraisingFile = null; // Variabel untuk menyimpan file gambar yang dipilih
 // === TAMBAHKAN BLOK KODE INI DI BAGIAN ATAS SCRIPT ANDA ===
     
 
@@ -1664,7 +1818,143 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     // ==========================================================
 
+// GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
+async function renderFundraisingCards() {
+    const section = document.getElementById('fundraising');
+    const container = document.getElementById('fundraising-container');
+    if (!container || !section) return;
 
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getFundraisingCampaigns' })
+        });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        const campaigns = result.data;
+        if (campaigns.length === 0) {
+            section.classList.add('hidden');
+            return;
+        }
+
+        container.innerHTML = '';
+        campaigns.forEach(item => {
+            const cardLink = document.createElement('a');
+            cardLink.href = `donasi.html?id=${item.ID}`; // Link ke halaman detail
+            cardLink.className = 'fundraising-card';
+
+            const now = new Date();
+            const deadline = new Date(item.Deadline);
+            const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+            const progressPercent = Math.min((item.DanaMasuk / item.DanaDibutuhkan) * 100, 100);
+
+            let deadlineText = daysLeft > 0 ? `${daysLeft} hari lagi` : 'Selesai';
+            if (daysLeft < 0) deadlineText = 'Berakhir';
+
+            cardLink.innerHTML = `
+                <div class="image-container">
+                    <img src="${item.GambarUtama}" alt="${item.Judul}">
+                    <div class="deadline-badge">${deadlineText}</div>
+                </div>
+                <div class="card-body">
+                    <p class="organizer-info">${item.Pembuat}</p>
+                    <h3>${item.Judul}</h3>
+                    <p class="progress-info">
+                        Terkumpul <span class="amount">Rp${item.DanaMasuk.toLocaleString('id-ID')}</span>
+                    </p>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: ${progressPercent}%;"></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(cardLink);
+        });
+
+    } catch (error) {
+        console.error("Gagal memuat data penggalangan dana:", error);
+        section.classList.add('hidden');
+    }
+}
+
+// TAMBAHKAN FUNGSI BARU INI DI DALAM <script>
+async function handleFundraisingSubmit(event) {
+    event.preventDefault();
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+
+    // Cek apakah file gambar sudah dipilih
+    if (!selectedFundraisingFile) {
+        showMessage('Harap pilih gambar utama untuk penggalangan dana.', 'error');
+        return;
+    }
+
+    showLoading();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Mengompres Gambar...';
+
+    let imageUrl = '';
+    try {
+        // 1. Kompres Gambar
+        const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280, useWebWorker: true };
+        const compressedFile = await imageCompression(selectedFundraisingFile, options);
+        
+        submitBtn.textContent = 'Mengunggah Gambar...';
+
+        // 2. Unggah ke Cloudinary
+        const formData = new FormData();
+        formData.append('file', compressedFile, selectedFundraisingFile.name);
+        formData.append('upload_preset', CONFIG.CLOUDINARY_UPLOAD_PRESET);
+
+        const cloudinaryResponse = await fetch(CONFIG.CLOUDINARY_URL, { method: 'POST', body: formData });
+        if (!cloudinaryResponse.ok) throw new Error('Gagal mengunggah gambar.');
+        
+        const cloudinaryData = await cloudinaryResponse.json();
+        imageUrl = cloudinaryData.secure_url;
+
+    } catch (error) {
+        showMessage(`Error pada gambar: ${error.message}`, 'error');
+        hideLoading();
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Simpan & Publikasikan';
+        return;
+    }
+
+    submitBtn.textContent = 'Menyimpan Data...';
+
+    // 3. Kirim URL Cloudinary ke Google Sheet
+    const session = getActiveSession();
+    const data = {
+        action: 'createFundraisingCampaign',
+        Judul: document.getElementById('input-fund-title').value,
+        Pembuat: session.userData.profileName,
+        DanaDibutuhkan: document.getElementById('input-fund-goal').value,
+        Deadline: document.getElementById('input-fund-deadline').value,
+        GambarUtama: imageUrl, // <-- Menggunakan URL dari Cloudinary
+        DeskripsiHTML: document.getElementById('input-fund-desc').value
+    };
+
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+        
+        showMessage('Penggalangan dana berhasil dibuat!', 'success');
+        document.getElementById('fundraising-modal').style.display = 'none';
+        event.target.reset(); // Reset form
+
+        // Reset file input dan pratinjau gambar
+        selectedFundraisingFile = null;
+        document.getElementById('fundraising-image-preview').src = 'https://placehold.co/400x200/e9ecef/6c757d?text=Pilih+Gambar';
+        
+        renderFundraisingCards(); // Muat ulang kartu di beranda
+    } catch (error) {
+        showMessage(`Gagal menyimpan: ${error.message}`, 'error');
+    } finally {
+        hideLoading();
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Simpan & Publikasikan';
+    }
+}
 /**
  * FUNGSI PENCARIAN BARU (PENGGANTI getAcademicMonthForDate)
  * Mencari tanggal yang diberikan di dalam daftar rentang bulan akademik.
@@ -1701,7 +1991,26 @@ function findAcademicMonthForDate(referenceDateStr) {
         heroImages: ["anakdidik.jpg", "anakdidik01.jpg", "anakdidik02.jpg", "anakdidik03.jpg", "anakdidik04.jpg"],
         news: [{ img: 'https://placehold.co/400x200/28a745/FFFFFF?text=Penerimaan+Santri', title: 'Penerimaan Santri Baru Telah Dibuka!', meta: '30 Juli 2025 | Pendidikan', desc: 'Pendaftaran santri baru untuk program Tahfidz di Markaz Qur\'an Al-Maa\'un telah resmi dibuka.' }, { img: 'https://placehold.co/400x200/17a2b8/FFFFFF?text=Santunan+Yatim', title: 'Santunan Rutin Anak Yatim', meta: '25 Juli 2025 | Sosial', desc: 'Kegiatan santunan bulanan untuk anak-anak yatim binaan Rumah Anak Yatim Abu Darda.' }, { img: 'https://placehold.co/400x200/ffc107/FFFFFF?text=Kajian+Umum', title: 'Kajian Umum Bulanan', meta: '22 Juli 2025 | Dakwah', desc: 'Yayasan akan mengadakan kajian umum terbuka untuk masyarakat. Informasi lokasi akan diumumkan segera.' }],
         gallery: [{ img: 'https://placehold.co/400x250/6f42c1/FFFFFF?text=Halaqah+Tahfidz', title: 'Halaqah Tahfidz Pagi', desc: 'Para santri sedang menyetorkan hafalan Al-Qur\'an kepada Musyrif.' }, { img: 'https://placehold.co/400x250/fd7e14/FFFFFF?text=Buka+Puasa+Bersama', title: 'Buka Puasa Bersama', desc: 'Kegiatan buka puasa bersama anak-anak yatim dan dhuafa di bulan Ramadhan.' }, { img: 'https://placehold.co/400x250/20c997/FFFFFF?text=Penyaluran+Bantuan', title: 'Penyaluran Bantuan', desc: 'Distribusi bantuan sembako dari para donatur kepada masyarakat sekitar.' }],
-        calendarEvents: [
+        fundraising: [
+        {
+            img: 'https://images.unsplash.com/photo-1593113646773-ae18c6422d75?q=80&w=2070&auto=format&fit=crop', // Ganti dengan URL gambar Anda
+            deadline: '2025-12-31', // Format: YYYY-MM-DD
+            organizer: 'Penghubung Kebaikan',
+            title: 'Hadiahkan Suara: Donasi Alat Bantu Dengar',
+            current: 27614492,
+            goal: 50000000 
+        },
+        {
+            img: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?q=80&w=2070&auto=format&fit=crop', // Ganti dengan URL gambar Anda
+            deadline: '2025-09-25', // Format: YYYY-MM-DD
+            organizer: 'Yana Sutisna',
+            title: 'Diintai Gizi Buruk & Gagal Hati, Bantu Rafasha!',
+            current: 25950330,
+            goal: 40000000
+        }
+        // Anda bisa menambahkan item penggalangan dana lainnya di sini
+    ],
+	calendarEvents: [
             // --- Semester Ganjil 2025 ---
             { date: "2025-07-7", title: "Pengenalan Lingkungan Madrasah", color: "event-lightgreen", span: 3 }, 
 			{ date: "2025-07-14", title: "Awal Materi Bulan I", color: "event-green" },
@@ -1750,7 +2059,7 @@ function findAcademicMonthForDate(referenceDateStr) {
             { no: 1, name: "Sulistiawan, S.Kom", username: "wawan", major: "Pelajaran Umum & Keterampilan", hari: "Semua hari & jam", schedule: "Guru Cadangan" }, 
             { no: 2, name: "Zhofri F. Majdi, S.Sos", username: "zhofri", major: "Diniyah", hari: "Kamis, Jumat, Sabtu", schedule: "Kamis (08-10), Jumat & Sabtu (Semua Jam)" }, 
             { no: 3, name: "M. Ryza Anshori, S.Pd", username: "ryza", major: "Diniyah", hari: "Jumat", schedule: "Semua Jam" }, 
-            { no: 4, name: "Erwan Syahputra, S.Pd", username: "erwan", major: "Diniyah", hari: "Selasa, Rabu, Sabtu", schedule: "Selasa (Semua Jam), Rabu & Sabtu (sampai 10.00)" }, 
+            { no: 4, name: "Erwan SyahPutra, S.Pd", username: "erwan", major: "Diniyah", hari: "Selasa, Rabu, Sabtu", schedule: "Selasa (Semua Jam), Rabu & Sabtu (sampai 10.00)" }, 
             { no: 5, name: "Ariyanti R. Siregar, S.Kom", username: "yanti", major: "Pelajaran Umum", hari: "Senin, Rabu, Kamis", schedule: "12.45 - 14.15" }, 
             { no: 6, name: "Mia A. Lubis, S.Kom", username: "mia", major: "Pelajaran Umum", hari: "Semua Hari", schedule: "10.00 - 12.15 (Guru Cadangan)" }, 
             { no: 7, name: "Mahadi Sentosa, S.Sos", username: "mahadi", major: "Diniyah", hari: "Sabtu", schedule: "13.00-14.30" }, 
@@ -1765,13 +2074,13 @@ function findAcademicMonthForDate(referenceDateStr) {
                     { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-201: Pengantar Thibbun Nabawi", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1ZjmZkzVknCL8sNPz4nWwaARTN62AN1qG/view" },
                     { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-101: Greetings & Introductions", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/1LYRMv43xr0ei9aHJ4Rm8VVGEZv2LMoJT/view?usp=drive_link" },
                     { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-201: Riset Pasar & Analisis Kompetitor", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1ibVSjYmLhxxAhmAm_EGJ-qowFDPy3aZ_/view?usp=drive_link" },
-                    { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-101: ABY Jilid 1A Unit 1-2 (Perkenalan & Keluarga)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1KNuZMEsYPEznGzEcyhTR5GDb5J3gUwM5/view?usp=drive_link" },
+                    { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-101: ABY Jilid 1A Unit 1-2 (Perkenalan & Keluarga)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/1KNuZMEsYPEznGzEcyhTR5GDb5J3gUwM5/view?usp=drive_link" },
                     { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "PANC-201: Implementasi nilai-nilai Pancasila Dalam Kehidupan", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1V0ZYiN9sYr5ZYXR3yfk5p80uLFNlbv9g/view?usp=drive_link" },
-                    { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-201: ABY Jilid 1B Unit 7-8 (Pendidikan & Pekerjaan)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/19dfcrahHUBSjFQx0bNvcGDxm2gJw35Tt/view?usp=drive_link" },
+                    { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-201: ABY Jilid 1B Unit 7-8 (Pendidikan & Pekerjaan)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/19dfcrahHUBSjFQx0bNvcGDxm2gJw35Tt/view?usp=drive_link" },
                     { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KTR-101: Pertolongan Pertama Pada Kecelakaan (P3K)", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1X7OG1Z2rdwVPn4B8VqZM--wV7zDddOFw/view?usp=drive_link" },
-                    { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-101: Makna & Konsekuensi 2 Kalimat Syahadat", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/11yClAXt_5YcDrzyZ9-Ee4fJOSIwGQWcK/view?usp=drive_link" },
+                    { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-101: Makna & Konsekuensi 2 Kalimat Syahadat", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/11yClAXt_5YcDrzyZ9-Ee4fJOSIwGQWcK/view?usp=drive_link" },
                     { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-201: Gerak Lurus dan Gaya", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/170mKM_vLYEeO0tIUOP063-k1wMW1a1jD/view?usp=drive_link" },
-                    { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-201: Pengantar Ilmu Hadits (Definisi & Sejarah)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1b839aBuE0qPkPX5TISgiloV3qGljV2EF/view?usp=drive_link" },
+                    { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-201: Pengantar Ilmu Hadits (Definisi & Sejarah)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/1b839aBuE0qPkPX5TISgiloV3qGljV2EF/view?usp=drive_link" },
                     { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KWU-101: Pengantar Mindset Wirausaha Muslim", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1OY6JWCfKPjxgKECTDUoWadrY_eoMMdCj/view?usp=drive_link" },
                     { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-201: Pengenalan Alat-Alat Servis", teacher: "Aria Atmaja", downloadLink: "https://drive.google.com/file/d/1tgiZzRH8P-WWtoNdtRWkJW8qGDBcrU8b/view?usp=drive_link" },
                     { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "IPS-101: Aku & Lingkungan Sekitarku", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/1FlPhTpeWb9ARmQRa8g-dV74_tabkmwFI/view?usp=drive_link" },
@@ -1789,7 +2098,7 @@ function findAcademicMonthForDate(referenceDateStr) {
                     { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "SIR-101: Kondisi Dunia Sebelum Kenabian & Masa Kecil Nabi", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1uULQr6lFC2YylJ4ZdcktlUXbgKEPzdp-/view?usp=drive_link" },
                     { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-101: Pengantar Ilmu Balaghah", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "https://drive.google.com/file/d/1UyC0-W-l-Xfli8SSvpMcihgiuFc1zYS0/view?usp=drive_link" },
                     { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-201: Tafsir & Tadabbur Surat Al-Maa'un & Al-Kafirun", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1uy5pOjhibrZbLUOUfRJHNKtqV4AT6obY/view?usp=drive_link" },
-                    { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-101: Adab Kepada Allah", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1bXBq9UzfDsnIxEnh1cMHZchqlEHB8etK/view?usp=drive_link" },
+                    { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-101: Adab Kepada Allah", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/1bXBq9UzfDsnIxEnh1cMHZchqlEHB8etK/view?usp=drive_link" },
                     { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAF-101: Tafsir & Tadabbur Surat Al-Fatihah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1XyXIN1bsnIKVeGX3_H9MkaGlgrB2dhCu/view?usp=drive_link" },
                     { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-201: Membaca 3 (Membedakan Fakta & Opini dalam Teks)", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/12D_Sk1hB2q5e3BdNX1-Iw8kIjTrm6UId/view?usp=drive_link" },
                     { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-201: Peristiwa Boikot & Wafatnya Khadijah dan Abu Thalib", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1vJCQq48tCQNX_S5X8NF3DqTE9weOhGse/view?usp=drive_link" },
@@ -1810,13 +2119,13 @@ function findAcademicMonthForDate(referenceDateStr) {
                     { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "AKH-202: Adab kepada Orang Tua & Guru (Gabungan)", teacher: "SupraSojo, S.Pd.I., M.Pd.", downloadLink: "https://drive.google.com/file/d/1k_P5RN0TS25K_3K3yc4yMNGsOj1qOtE2/view?usp=drive_link" },
                     { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-102: Classroom Objects & Instructions", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/1q2btB5Fv1-ifXl9n7tOLT9bk1CmpsMYt/view?usp=drive_link" },
                     { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-202: Validasi Ide & Model Bisnis Sederhana", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1rR-udDxso8F9x2pExZTfemJoiZQDknDn/view?usp=drive_link" },
-                    { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-102: ABY Jilid 1A: Unit 3-4 (Tempat Tinggal & Kehidupan Harian)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1_YO9Z4NlH6JjtycqQCZC7i26IZdS_K3M/view?usp=drive_link" },
+                    { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-102: ABY Jilid 1A: Unit 3-4 (Tempat Tinggal & Kehidupan Harian)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/1_YO9Z4NlH6JjtycqQCZC7i26IZdS_K3M/view?usp=drive_link" },
                     { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-202: Hifzhu Shihhah (Pola Hidup Sehat Rasulullah ﷺ)", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/10qcUn-Ycfqfw03SiS2F2zZg8TbGHu4_E/view?usp=drive_link" },
-                    { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-202: ABY Jilid 1B: Unit 9-10 (Berbelanja & Cuaca)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/14EF5H4lZaA-Kx4WHvIqL3_WxDNhtEj3F/view?usp=drive_link" },
+                    { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-202: ABY Jilid 1B: Unit 9-10 (Berbelanja & Cuaca)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/14EF5H4lZaA-Kx4WHvIqL3_WxDNhtEj3F/view?usp=drive_link" },
                     { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KTR-102: Manajemen Kesehatan Dasar & Penyakit Umum", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1ROzqQ6HtB3t4UwQLVuGGZBwE6uZO8_Zc/view?usp=drive_link" },
-                    { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-102: Studi Kitab Tauhid 1", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1qjYbEFYXgoJa5oBrE8-D3-8XcpML3qfc/view?usp=drive_link" },
+                    { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-102: Studi Kitab Tauhid 1", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/1qjYbEFYXgoJa5oBrE8-D3-8XcpML3qfc/view?usp=drive_link" },
                     { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-202: Sistem Gerak pada Manusia (Rangka & Sendi)", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/16GiZXYA0pLnivjI-AgZxa0cs1bm5onLt/view?usp=drive_link" },
-                    { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-202: Klasifikasi Hadits (Shahih, Hasan, Dha'if)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/15Wdnf8x9oqPhjhurjqJC8eEN5VlG51uY/view?usp=drive_link" },
+                    { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-202: Klasifikasi Hadits (Shahih, Hasan, Dha'if)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/15Wdnf8x9oqPhjhurjqJC8eEN5VlG51uY/view?usp=drive_link" },
                     // DIUBAH: MAT-102 sekarang di sini dengan guru baru.
                     { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "MAT-102: Pecahan & Desimal", teacher: "Suprasojo, S.Pd.I., M.Pd.", downloadLink: "https://drive.google.com/file/d/14mAyOGGZXxbiC0OM9lUWFkY3xzkpDCD2/view?usp=drive_link" },
                     { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-202: Praktik Menggunakan Alat Tangan & Solder", teacher: "Aria Atmaja", downloadLink: "https://drive.google.com/file/d/1g6ZMvLvlZz5ML1wFJla4tEsd8Thi6ixr/view?usp=drive_link" },
@@ -1837,7 +2146,7 @@ function findAcademicMonthForDate(referenceDateStr) {
                     { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "SIR-102: Masa Kenabian & Dakwah di Mekah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1ru17RARAr5mBS8fXP_tD_2HE3KH41ZeW/view?usp=drive_link" },
                     { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-102: Ilmu Ma'ani: Kalam Khabari & Insya'i", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "https://drive.google.com/file/d/1_sbsi-bfwpLPjzgR7G00yOCRj-4fZIIK/view?usp=drive_link" },
                     { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-202: Tafsir & Tadabbur Surat Al-'Asr & Al-Humazah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/14DD1UeZQ-_1UojKNOZ6n_-8Z1BXQlMms/view?usp=drive_link" },
-                    { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-102: Adab kepada Sesama & Lingkungan", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1j_-GAHn0VUbq3pjBHRvo2tajQUMcvIyM/view?usp=drive_link" },
+                    { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-102: Adab kepada Sesama & Lingkungan", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/1j_-GAHn0VUbq3pjBHRvo2tajQUMcvIyM/view?usp=drive_link" },
                     { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAF-102: Tafsir & Tadabbur Ayat Kursi", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/18T2MoUIgArVl5bpl62IiX-lbMa4Xz5Wr/view?usp=drive_link" },
                     { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-202: Menulis 3: Membuat Ringkasan & Peta Konsep", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/1EX9Suwx3tz13lBY6ZDl8WbBoh4d925zp/view?usp=drive_link" },
                     { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-202: Peristiwa Isra' Mi'raj & Perintah Shalat", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1bWBklTc9RNC0TC-X2S_4paK5nyU_BrjA/view?usp=drive_link" },
@@ -1852,14 +2161,14 @@ function findAcademicMonthForDate(referenceDateStr) {
             { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-103: Alphabet, Numbers, & Telling Time", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "" },
             { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-202: Analisis Kompetitor & SWOT Sederhana", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             // Selasa
-            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-103: ABY Jilid 1A: Unit 5-6 (Makanan & Shalat)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-103: ABY Jilid 1A: Unit 5-6 (Makanan & Shalat)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-203: Makanan & Minuman Penyembuh Sesuai Wahyu", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-203: ABY Jilid 1B: Unit 11-12 (Manusia, Tempat & Hobi)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-203: ABY Jilid 1B: Unit 11-12 (Manusia, Tempat & Hobi)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KTR-103: Penanganan Luka & Pendarahan", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-103: Rukun Iman & Pembagian Tauhid", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-103: Rukun Iman & Pembagian Tauhid", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-203: Sistem Pencernaan Manusia", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             // Rabu
-            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-203: Pengantar Sanad & Matan Hadits", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-203: Pengantar Sanad & Matan Hadits", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KWU-103: Menemukan Ide Bisnis dari Masalah Sekitar", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-203: Praktik Menggunakan Alat Ukur & Perawatan Alat", teacher: "Aria Atmaja", downloadLink: "" },
             { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "IPS-103: Interaksi Sosial & Adab", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
@@ -1880,7 +2189,7 @@ function findAcademicMonthForDate(referenceDateStr) {
             { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-103: Ilmu Bayan: Seni Perumpamaan (Tasybih)", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "" },
             // Sabtu
             { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-203: Tafsir & Tadabbur Surat At-Takatsur & Al-'Adiyat", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
-            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-103: Adab Menuntut Ilmu", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-103: Adab Menuntut Ilmu", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAF-103: Tafsir & Tadabbur Surat Al-Ikhlas, Al-Falaq, An-Nas", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
             { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-203: Berbicara 3: Menyampaikan Pendapat dalam Diskusi", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
             { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-203: Bai'at 'Aqabah & Rencana Hijrah ke Madinah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
@@ -1895,14 +2204,14 @@ function findAcademicMonthForDate(referenceDateStr) {
             { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-104: My Family & My Friends", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "" },
             { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-204: Analisis SWOT Sederhana", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             // Selasa
-            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-104: Mufrodat 1: Kosakata Benda di Kelas & Rumah", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-104: Mufrodat 1: Kosakata Benda di Kelas & Rumah", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-204: Terapi Pengobatan Nabawi (Bekam & Ruqyah)", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-204: Kitabah 2: Menulis Paragraf Sederhana & Imla' Lanjutan", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-204: Kitabah 2: Menulis Paragraf Sederhana & Imla' Lanjutan", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KTR-104: Penanganan Kasus Umum & Simulasi P3K", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-104: Hadits Arba'in 4 (Hafalan & Makna Hadits #16-20)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-104: Hadits Arba'in 4 (Hafalan & Makna Hadits #16-20)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-204: Usaha & Pesawat Sederhana", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             // Rabu
-            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-204: Studi Sanad & Matan Sederhana", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-204: Studi Sanad & Matan Sederhana", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KWU-104: Menyusun Rencana Bisnis Sederhana", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-204: Praktik Menggunakan Alat Ukur & Perawatan Alat", teacher: "Aria Atmaja", downloadLink: "" },
             { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "IPS-104: Peta & Kompas", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
@@ -1923,7 +2232,7 @@ function findAcademicMonthForDate(referenceDateStr) {
             { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-104: Ilmu Badi': Keindahan Lafaz (Jinas & Thibaq)", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "" },
             // Sabtu
             { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-204: Tafsir & Tadabbur Surat Al-'Adiyat & Al-Qari'ah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
-            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-104: Adab Menuntut Ilmu", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-104: Adab Menuntut Ilmu", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAF-104: Tafsir & Tadabbur Surat Al-Ikhlas, Al-Falaq, An-Nas", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
             { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-204: Kaidah Bahasa 3: Imbuhan Dasar (me-, di-, ber-)", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
             { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-204: Dakwah Terang-terangan & Reaksi Kafir Quraisy", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
@@ -1938,14 +2247,14 @@ function findAcademicMonthForDate(referenceDateStr) {
             { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-105: Daily Activities", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "" },
             { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-205: Pemasaran Digital Dasar", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             // Selasa
-            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-105: Mufrodat 2: Anggota Tubuh & Pakaian", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-105: Mufrodat 2: Anggota Tubuh & Pakaian", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-205: Studi Kasus Pengobatan Nabawi", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-205: Muhadatsah 1: Praktik Percakapan Harian", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-205: Muhadatsah 1: Praktik Percakapan Harian", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KTR-105: Dasar-dasar Menjahit & Kerajinan Tangan", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-105: Pembatal Keislaman", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-105: Pembatal Keislaman", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-205: Sistem Pernapasan Manusia", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             // Rabu
-            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-205: Takhrij Hadits Sederhana", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-205: Takhrij Hadits Sederhana", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KWU-105: Praktik Membuat Rencana Bisnis", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-205: Proyek Elektronika Sederhana", teacher: "Aria Atmaja", downloadLink: "" },
             { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "IPS-105: Sejarah Lokal & Pahlawan", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
@@ -1966,7 +2275,7 @@ function findAcademicMonthForDate(referenceDateStr) {
             { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-105: Praktik Analisis Balaghah", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "" },
             // Sabtu
             { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-205: Tafsir & Tadabbur Surat Al-Qari'ah & Al-Zalzalah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
-            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-105: Akhlak Terpuji (Mahmudah)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-105: Akhlak Terpuji (Mahmudah)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAF-105: Tafsir & Tadabbur Juz 'Amma Pilihan", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
             { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-205: Menulis Kreatif: Cerpen & Puisi", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
             { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-205: Hijrah ke Madinah & Pembangunan Masjid Nabawi", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
@@ -4058,7 +4367,13 @@ function showLoggedInView(userData) {
         document.getElementById('musyrifahNav').classList.toggle('hidden', !isMusyrifah);
         document.getElementById('halamanGuruNav').classList.toggle('hidden', !canAccessBankSoal);
         document.getElementById('inputSoalNav').classList.toggle('hidden', !isAdminUjian);
-
+		
+		const createFundraisingContainer = document.getElementById('create-fundraising-btn-container');
+        if (createFundraisingContainer) {
+            const canCreate = ['mia', 'wawan', 'admin'].includes(username);
+            createFundraisingContainer.classList.toggle('hidden', !canCreate);
+        }
+		
         // --- KODE YANG DIPINDAHKAN, DITEMPEL DI SINI ---
         const tugasNav = document.getElementById('tugasNav');
         if (tugasNav) {
@@ -6533,7 +6848,40 @@ function handleInputMateriFromModal() {
             const selectedDate = document.getElementById('attendanceDateGuru').value;
             populateTeacherClasses(null, selectedDate, selectedTeacher);
         });
-		
+
+		const fundImageInput = document.getElementById('input-fund-image-file');
+    const fundImagePreview = document.getElementById('fundraising-image-preview');
+
+    if (fundImageInput && fundImagePreview) {
+        // Buat agar gambar pratinjau juga bisa diklik untuk memilih file
+        fundImagePreview.addEventListener('click', () => fundImageInput.click());
+
+        fundImageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                selectedFundraisingFile = file; // Simpan file ke variabel
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    fundImagePreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+		const fundraisingModal = document.getElementById('fundraising-modal');
+    const createFundraisingBtn = document.getElementById('btn-create-fundraising');
+    const fundraisingForm = document.getElementById('form-fundraising');
+
+    if (createFundraisingBtn) {
+        createFundraisingBtn.onclick = () => {
+            fundraisingModal.style.display = 'block';
+        };
+    }
+
+    if (fundraisingForm) {
+        fundraisingForm.addEventListener('submit', handleFundraisingSubmit);
+    }
 		// DIUBAH TOTAL: Event listener untuk tombol 'Tambah Materi'
 // GANTI SELURUH BLOK FUNGSI LAMA DENGAN VERSI FINAL YANG SUDAH DIPERBAIKI INI
 
@@ -6744,6 +7092,7 @@ addKrsRowBtn.addEventListener('click', async () => {
 		setupAdvancedDropdown(); 
         renderNewsCards();
         renderGalleryCards();
+		renderFundraisingCards();
         fetchMarqueeText();
         renderDynamicCalendar(2025, 7, 12);
         setupSlideshow();
