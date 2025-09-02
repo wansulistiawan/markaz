@@ -725,6 +725,7 @@
 					</div>
 					<a href="#absensi" id="attendanceNav" class="hidden">Absensi</a>
 					<a href="#halaman-ujian-admin" id="halamanUjianAdminNav" class="hidden" style="background-color: #000000;">Ujian</a>
+					<a href="tugas.html" id="tugasNav" class="hidden" style="background-color: #F59E0B;"><span class="nav-link-wrapper">Tugas</span></a>
 					<a href="#ujian-online" id="ujianOnlineNav" class="hidden" style="background-color: #ff69b4;">Ujian Online</a>
 					<a href="tabungan.html" id="tabunganNav" class="hidden" style="background-color: #0d6efd;">Tabungan</a>
 					<a href="#penerimaan">Penerimaan</a>
@@ -3997,7 +3998,9 @@ async function setupHalamanUjianAdmin() {
     renderUnlockedExamsList();
 }
 
-    function showLoggedInView(userData) {
+    // GANTI SELURUH FUNGSI showLoggedInView ANDA DENGAN VERSI DI BAWAH INI
+
+function showLoggedInView(userData) {
     ui.loginButton.classList.add('hidden');
     ui.attendanceNav.classList.remove('hidden');
     ui.sistemInformasiNav.classList.remove('hidden');
@@ -4028,8 +4031,8 @@ async function setupHalamanUjianAdmin() {
         const isAdminUjian = ['wawan', 'mia', 'admin'].includes(username);
 
 		if (isGuru) {
-        fetchAndShowTeacherNotifications();
-    }
+            fetchAndShowTeacherNotifications();
+        }
 
         document.getElementById('attendanceNav').classList.toggle('hidden', isSantri);
         document.getElementById('ujianOnlineNav').classList.toggle('hidden', !isSantri);
@@ -4041,7 +4044,6 @@ async function setupHalamanUjianAdmin() {
         const showDropdown = isSantri || isKepalaOrWaka || isMusyrif || isMusyrifah || financeUsers.includes(username) || karyawanUsers.includes(username) || isAdminUjian;
         document.getElementById('sistemInformasiDropdown').classList.toggle('hidden', !showDropdown);
         
-        // Cek ID 'halamanUjianAdminNav' di dalam dropdown navigasi Anda
         const halamanUjianAdminNav = document.getElementById('halamanUjianAdminNav');
         if(halamanUjianAdminNav) {
             halamanUjianAdminNav.classList.toggle('hidden', !isAdminUjian);
@@ -4056,6 +4058,20 @@ async function setupHalamanUjianAdmin() {
         document.getElementById('musyrifahNav').classList.toggle('hidden', !isMusyrifah);
         document.getElementById('halamanGuruNav').classList.toggle('hidden', !canAccessBankSoal);
         document.getElementById('inputSoalNav').classList.toggle('hidden', !isAdminUjian);
+
+        // --- KODE YANG DIPINDAHKAN, DITEMPEL DI SINI ---
+        const tugasNav = document.getElementById('tugasNav');
+        if (tugasNav) {
+            // Tampilkan tombol Tugas untuk Santri dan Guru/Admin
+            const canAccessTugas = isSantri || isGuru || ['wawan', 'mia', 'aria', 'admin'].includes(username);
+            tugasNav.classList.toggle('hidden', !canAccessTugas);
+
+            // Jika yang login adalah Santri, panggil fungsi untuk cek notifikasi
+            if (isSantri) {
+                fetchTugasNotifications();
+            }
+        }
+        // --- AKHIR DARI KODE YANG DIPINDAHKAN ---
     }
     
     if (window.location.hash === '#login') { window.location.hash = '#beranda'; }
@@ -4079,7 +4095,9 @@ async function setupHalamanUjianAdmin() {
         const protectedHashes = ['#absensi', '#profile', '#sistem-informasi'];
         if (protectedHashes.includes(window.location.hash)) { window.location.hash = '#beranda'; }
     }
-
+	
+	
+	
     function logUserVisit() {
         const session = getActiveSession();
         if (session && session.loggedIn) {
@@ -5228,6 +5246,36 @@ const handleKrsClick = async (event, userData = null) => {
             krsTableBody.innerHTML = `<tr><td colspan="8" class="text-center p-4 text-red-500">Gagal memuat data: ${error.message}</td></tr>`;
         }
     };
+async function fetchTugasNotifications() {
+    try {
+        const session = getActiveSession();
+        
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: 'getTugasNotifications',
+                username: session.username,
+                namaSantri: session.userData.profileName
+                // Parameter 'bulan' sudah dihapus
+            })
+        });
+        const result = await response.json();
+        if (result.status === 'success' && result.count > 0) {
+            const wrapper = document.querySelector('#tugasNav .nav-link-wrapper');
+            if (wrapper) {
+                const oldDot = wrapper.querySelector('.notification-dot');
+                if (oldDot) oldDot.remove();
+                
+                const dot = document.createElement('span');
+                dot.className = 'notification-dot';
+                dot.textContent = result.count;
+                wrapper.appendChild(dot);
+            }
+        }
+    } catch (error) {
+        console.error("Gagal mengambil notifikasi tugas:", error);
+    }
+}
 
 // GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU YANG LENGKAP INI
 async function handleKhsClick(event, userData = null) {
