@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Penggalangan Dana</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root { /* (Salin semua CSS dari <style> di index.html Anda ke sini) */
+            --primary-color: #2c5e2e; --secondary-color: #ffc107; --light-gray: #f8f9fa;
+            --dark-gray: #343a40; --info-color: #0d6efd; --success-color: #28a745;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--light-gray); color: var(--dark-gray); }
+        .container { width: 90%; max-width: 800px; margin: 20px auto; }
+        .btn { padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; border: none; }
+        .btn-primary { background-color: var(--success-color); color: white; }
+        .btn-secondary { background-color: var(--info-color); color: white; }
+        .main-image { width: 100%; height: 400px; object-fit: cover; border-radius: 12px; margin-bottom: 20px; }
+        .content-section { background-color: white; padding: 25px; border-radius: 8px; margin-bottom: 20px; }
+        .progress-bar-bg { width: 100%; height: 10px; background-color: #e9ecef; border-radius: 5px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background-color: var(--primary-color); border-radius: 5px; }
+        .donatur-item { border-bottom: 1px solid #e9ecef; padding: 15px 0; }
+        .donatur-item:last-child { border-bottom: none; }
+        .doa-teks { font-style: italic; color: #6c757d; background-color: #f8f9fa; padding: 10px; border-radius: 6px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container" id="campaign-container">
+        <div class="content-section text-center"><p>Memuat detail penggalangan dana...</p></div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const CONFIG = { SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec", };
+    const container = document.getElementById('campaign-container');
+
+    async function fetchCampaignDetails(id) {
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getFundraisingDetail', campaignId: id })
+            });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+            renderCampaignDetails(result.data);
+        } catch (error) {
+            container.innerHTML = `<div class="content-section text-center text-red-500">Gagal memuat data: ${error.message}</div>`;
+        }
+    }
+
+    function renderCampaignDetails(data) {
+        const danaDibutuhkan = data.DanaDibutuhkan || 0;
+        const danaMasuk = data.DanaMasuk || 0;
+        const kekurangan = Math.max(0, danaDibutuhkan - danaMasuk);
+        const progressPercent = Math.min((danaMasuk / danaDibutuhkan) * 100, 100);
+        const deadline = new Date(data.Deadline);
+        const daysLeft = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
+        let deadlineText = daysLeft > 0 ? `${daysLeft} hari lagi` : (daysLeft === 0 ? 'Hari ini terakhir' : 'Telah Berakhir');
+
+        let donaturHtml = data.donatur.map(d => `
+            <div class="donatur-item">
+                <div class="flex justify-between items-center">
+                    <p class="font-bold">${d.NamaDonatur}</p>
+                    <p class="font-semibold text-green-600">Rp${(parseFloat(d.Jumlah) || 0).toLocaleString('id-ID')}</p>
+                </div>
+                ${d.Doa ? `<p class="doa-teks">"${d.Doa}"</p>` : ''}
+            </div>
+        `).join('');
+
+        container.innerHTML = `
+            <a href="index.html#fundraising" class="text-sm font-semibold text-gray-600 mb-4 inline-block">&larr; Kembali ke semua penggalangan dana</a>
+            <div class="content-section">
+                <h1 class="text-3xl font-bold mb-2">${data.Judul}</h1>
+                <p class="text-gray-500">Oleh: ${data.Pembuat}</p>
+            </div>
+            
+            <img src="${data.GambarUtama}" alt="${data.Judul}" class="main-image">
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="md:col-span-2">
+                    <div class="content-section">
+                        <h2 class="text-xl font-bold mb-4">Deskripsi</h2>
+                        <div class="prose">${data.DeskripsiHTML}</div>
+                    </div>
+                     <div class="content-section">
+                        <h2 class="text-xl font-bold mb-4">Donatur (${data.donatur.length})</h2>
+                        <div id="donor-list">${donaturHtml || '<p>Jadilah donatur pertama!</p>'}</div>
+                    </div>
+                </div>
+                <div class="md:col-span-1">
+                    <div class="content-section">
+                         <div class="mb-4">
+                            <p class="text-lg">Terkumpul</p>
+                            <p class="text-2xl font-bold text-green-600">Rp${danaMasuk.toLocaleString('id-ID')}</p>
+                        </div>
+                        <div class="progress-bar-bg mb-2">
+                            <div class="progress-bar-fill" style="width: ${progressPercent}%"></div>
+                        </div>
+                        <div class="flex justify-between text-sm mb-4">
+                            <span>dari Rp${danaDibutuhkan.toLocaleString('id-ID')}</span>
+                            <span>${Math.round(progressPercent)}%</span>
+                        </div>
+                        <hr class="my-4">
+                        <div class="flex justify-between text-center mb-4">
+                            <div>
+                                <p class="font-bold text-lg">${data.donatur.length}</p>
+                                <p class="text-sm text-gray-500">Donatur</p>
+                            </div>
+                             <div>
+                                <p class="font-bold text-lg">${kekurangan > 0 ? `Rp${kekurangan.toLocaleString('id-ID')}` : '✓'}</p>
+                                <p class="text-sm text-gray-500">${kekurangan > 0 ? 'Kekurangan' : 'Tercapai'}</p>
+                            </div>
+                            <div>
+                                <p class="font-bold text-lg">${deadlineText}</p>
+                                <p class="text-sm text-gray-500">Sisa Waktu</p>
+                            </div>
+                        </div>
+                        <a href="index.html#donasi" class="btn btn-primary w-full">Donasi Sekarang</a>
+                        <button class="btn btn-secondary w-full mt-2">Bagikan</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const campaignId = params.get('id');
+
+    if (campaignId) {
+        fetchCampaignDetails(campaignId);
+    } else {
+        container.innerHTML = '<div class="content-section text-center">ID penggalangan dana tidak ditemukan.</div>';
+    }
+});
+</script>
+</body>
+</html>
