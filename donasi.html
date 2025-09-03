@@ -16,14 +16,69 @@
             --dark-gray: #343a40; --info-color: #0d6efd; --success-color: #28a745;
         }
         body { font-family: 'Inter', sans-serif; background-color: var(--light-gray); color: var(--dark-gray); }
+		.summary-box { background-color: #f8f9fa;  padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;}
         .container { width: 90%; max-width: 800px; margin: 20px auto; }
+        .page-header { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .btn { padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; border: none; }
         .btn-primary { background-color: var(--success-color); color: white; }
         .btn-secondary { background-color: var(--info-color); color: white; }
         .main-image { width: 100%; height: 400px; object-fit: cover; border-radius: 12px; margin-bottom: 20px; }
         .content-section { background-color: white; padding: 25px; border-radius: 8px; margin-bottom: 20px; }
-        .progress-bar-bg { width: 100%; height: 10px; background-color: #e9ecef; border-radius: 5px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; background-color: var(--primary-color); border-radius: 5px; }
+        .progress-bar-bg {
+    width: 100%;
+    height: 12px; /* Sedikit lebih tebal */
+    background-color: #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+	position: relative; 
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.8s ease-in-out;
+    /* Efek gradasi warna bergerak */
+    background: linear-gradient(90deg, #2c5e2e, #4caf50, #8bc34a, #ffeb3b, #2c5e2e);
+    background-size: 300% 100%;
+    animation: color-shift 3s linear infinite;
+}
+
+/* Keyframes untuk animasi pergerakan warna */
+@keyframes color-shift {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Efek percikan api di ujung progress bar */
+.progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: green-600;
+	border-radius: 50%;
+	box-shadow: 0 0 10px 5px rgba(255, 165, 0, 0.7), 
+				0 0 20px 10px rgba(255, 165, 0, 0.5);
+    opacity: 0;
+    animation: sparkle 0.2s ease-out infinite;
+}
+
+/* Keyframes untuk animasi percikan api */
+@keyframes sparkle {
+    0%, 100% {
+        transform: translateY(-50%) scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: translateY(-50%) scale(1);
+        opacity: 1;
+    }
+	80% {
+		opacity: 0;
+	}
+}
         .donatur-item { border-bottom: 1px solid #e9ecef; padding: 15px 0; }
         .donatur-item:last-child { border-bottom: none; }
         .doa-teks { font-style: italic; color: #6c757d; background-color: #f8f9fa; padding: 10px; border-radius: 6px; margin-top: 8px; }
@@ -229,6 +284,23 @@
 
     </div>
 </div>
+			<div id="kabar-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="text-2xl font-bold mb-6">Buat Kabar Terbaru</h2>
+            <form id="form-kabar">
+                <div class="form-group">
+                    <label for="input-kabar-judul">Judul Kabar</label>
+                    <input type="text" id="input-kabar-judul" required class="border border-gray-300">
+                </div>
+                <div class="form-group">
+                    <label for="input-kabar-isi">Isi Kabar</label>
+                    <textarea id="input-kabar-isi" rows="6" class="w-full p-2 border border-gray-300 rounded-md" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Publikasikan Kabar</button>
+            </form>
+        </div>
+    </div>
 <script>
 // SALIN DAN TEMPEL SELURUH KODE INI UNTUK MENGGANTIKAN ISI <script> LAMA ANDA
 document.addEventListener('DOMContentLoaded', () => {
@@ -421,7 +493,9 @@ continueBtn.addEventListener('click', () => {
         const closeModalBtn = donationModal.querySelector('.close-button');
         if (closeModalBtn) { closeModalBtn.onclick = () => donationModal.style.display = 'none'; }
     }
-    
+    const kabarModal = document.getElementById('kabar-modal');
+	const kabarForm = document.getElementById('form-kabar');
+
     // ===================================================================
     // === SEMUA EVENT LISTENER UNTUK TOMBOL DINAMIS DIGABUNG DI SINI ===
     // ===================================================================
@@ -454,7 +528,48 @@ continueBtn.addEventListener('click', () => {
                 alert('Fitur bagikan tidak didukung di browser ini. Silakan salin link halaman ini secara manual.');
             }
         }
+		if (event.target.id === 'btn-add-update') {
+        kabarModal.style.display = 'block';
+    }
+});
+
+// Event listener untuk menutup modal
+if (kabarModal) {
+    const closeModalBtn = kabarModal.querySelector('.close-button');
+    if (closeModalBtn) {
+        closeModalBtn.onclick = () => {
+            kabarModal.style.display = 'none';
+        }
+    }
+}
+
+// Event listener untuk submit form
+if (kabarForm) {
+    kabarForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const params = new URLSearchParams(window.location.search);
+        const campaignId = params.get('id');
+
+        const dataToSubmit = {
+            action: 'postKabarTerbaru',
+            IDDonasi: campaignId,
+            JudulKabar: document.getElementById('input-kabar-judul').value,
+            IsiKabar: document.getElementById('input-kabar-isi').value
+        };
+
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(dataToSubmit) });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+
+            alert('Kabar terbaru berhasil dipublikasikan!');
+            location.reload(); // Muat ulang halaman untuk melihat kabar baru
+        } catch (error) {
+            alert(`Gagal: ${error.message}`);
+        }
     });
+}
+    
 
     // =======================================================
     // === FUNGSI UTAMA UNTUK MEMUAT DAN MERENDER HALAMAN ===
@@ -479,41 +594,77 @@ continueBtn.addEventListener('click', () => {
         const daysLeft = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
         let deadlineText = daysLeft > 0 ? `${daysLeft} hari lagi` : (daysLeft === 0 ? 'Hari ini terakhir' : 'Telah Berakhir');
 
-        let donaturHtml = (data.donatur || []).map(d => `
-            <div class="donatur-item">
-                <div class="flex justify-between items-center">
-                    <p class="font-bold">${d.NamaDonatur}</p>
-                    <p class="font-semibold text-green-600">Rp${(parseFloat(d.Jumlah) || 0).toLocaleString('id-ID')}</p>
-                </div>
-                ${d.Doa ? `<p class="doa-teks">"${d.Doa}"</p>` : ''}
-            </div>`).join('');
+		const session = JSON.parse(localStorage.getItem('userSession') || sessionStorage.getItem('userSession') || 'null');
+		const isAdmin = session && session.loggedIn && ['mia', 'wawan', 'aria', 'admin'].includes(session.username);
 
+console.log("Mencoba menampilkan tombol admin...");
+console.log("Data Sesi yang terbaca:", session);
+console.log("Hasil pengecekan isAdmin:", isAdmin);
+
+		let adminButtonHtml = '';
+if (isAdmin) {
+    adminButtonHtml = `<button id="btn-add-update" class="btn btn-primary text-sm py-2 px-3">Tambah Kabar Baru</button>`;
+}
+		let kabarHtml = (data.kabarTerbaru || []).map(k => `
+    <div class="donatur-item">
+        <p class="font-bold">${k.JudulKabar}</p>
+        <p class="text-sm text-gray-500">${new Date(k.Timestamp).toLocaleDateString('id-ID')}</p>
+        <p class="mt-2">${k.IsiKabar}</p>
+    </div>
+`).join('');
+		
+         let donaturHtml = (data.donatur || []).map(d => `
+        <div class="donatur-item">
+            <div class="flex justify-between items-center">
+                <p class="font-bold">${d.NamaDonatur}</p>
+                <p class="font-semibold text-green-600">Rp${(parseFloat(d.Jumlah) || 0).toLocaleString('id-ID')}</p>
+            </div>
+            ${d.Doa ? `<p class="doa-teks">"${d.Doa}"</p>` : ''}
+        </div>`).join('');
+		
         mainContainer.innerHTML = `
-            <a href="index.html#fundraising" class="text-sm font-semibold text-gray-600 mb-4 inline-block">&larr; Kembali ke semua penggalangan dana</a>
+            <a href="index.html#beranda?scroll=fundraising" class="text-sm font-semibold text-gray-600 mb-4 inline-block">&larr; Kembali ke semua penggalangan dana</a>
             <div class="content-section"><h1 class="text-3xl font-bold mb-2">${data.Judul}</h1><p class="text-gray-500">Oleh: ${data.Pembuat}</p></div>
             <img src="${data.GambarUtama}" alt="${data.Judul}" class="main-image">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div class="md:col-span-2">
                     <div class="content-section"><h2 class="text-xl font-bold mb-4">Deskripsi</h2><div class="prose">${data.DeskripsiHTML}</div></div>
-                    <div class="content-section"><h2 class="text-xl font-bold mb-4">Donatur (${(data.donatur || []).length})</h2><div id="donor-list">${donaturHtml || '<p>Jadilah donatur pertama!</p>'}</div></div>
+						 <div class="content-section">
+        <div class="flex justify-between items-center mb-4">
+    <h2 class="text-xl font-bold">Kabar Terbaru (${(data.kabarTerbaru || []).length})</h2>
+    <div id="add-update-btn-container">**${adminButtonHtml}**</div>
+</div>
+        <div id="kabar-list">${kabarHtml || '<p>Belum ada kabar terbaru.</p>'}</div>
+    </div>
+					<div class="content-section"><h2 class="text-xl font-bold mb-4">Donatur (${(data.donatur || []).length})</h2><div id="donor-list">${donaturHtml || '<p>Jadilah donatur pertama!</p>'}</div></div>
                 </div>
                 <div class="md:col-span-1">
-                    <div class="content-section">
+                    <div class="content-section sticky top-5">
                         <div class="mb-4"><p class="text-lg">Terkumpul</p><p class="text-2xl font-bold text-green-600">Rp${danaMasuk.toLocaleString('id-ID')}</p></div>
                         <div class="progress-bar-bg mb-2"><div class="progress-bar-fill" style="width: ${progressPercent}%"></div></div>
                         <div class="flex justify-between text-sm mb-4"><span>dari Rp${danaDibutuhkan.toLocaleString('id-ID')}</span><span>${Math.round(progressPercent)}%</span></div>
                         <hr class="my-4">
-                        <div class="flex justify-between text-center mb-4">
-                            <div><p class="font-bold text-lg">${(data.donatur || []).length}</p><p class="text-sm text-gray-500">Donatur</p></div>
-                            <div><p class="font-bold text-lg">${kekurangan > 0 ? `Rp${kekurangan.toLocaleString('id-ID')}` : '✓'}</p><p class="text-sm text-gray-500">${kekurangan > 0 ? 'Kekurangan' : 'Tercapai'}</p></div>
-                            <div><p class="font-bold text-lg">${deadlineText}</p><p class="text-sm text-gray-500">Sisa Waktu</p></div>
-                        </div>
+                        <div class="summary-box space-y-3">
+    <div class="flex justify-between items-center">
+        <span class="text-gray-600 font-medium">Donatur</span>
+        <span class="font-bold text-lg">${(data.donatur || []).length}</span>
+    </div>
+    <div class="flex justify-between items-center">
+        <span class="text-gray-600 font-medium">Kekurangan</span>
+        <span class="font-bold text-lg text-red-600">${kekurangan > 0 ? `Rp${kekurangan.toLocaleString('id-ID')}` : '✓'}</span>
+    </div>
+    <div class="flex justify-between items-center">
+        <span class="text-gray-600 font-medium">Sisa Waktu</span>
+        <span class="font-bold text-lg">${deadlineText}</span>
+    </div>
+</div>
                         <button id="btn-show-donation-modal" class="btn btn-primary w-full">Donasi Sekarang</button>
                         <button class="btn btn-secondary w-full mt-2 btn-share">Bagikan</button>
                     </div>
                 </div>
             </div>`;
-    }
+    
+	}
 
     // --- Inisialisasi Halaman ---
     const params = new URLSearchParams(window.location.search);
