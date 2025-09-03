@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detail Penggalangan Dana</title>
     <script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,29 +27,446 @@
         .donatur-item { border-bottom: 1px solid #e9ecef; padding: 15px 0; }
         .donatur-item:last-child { border-bottom: none; }
         .doa-teks { font-style: italic; color: #6c757d; background-color: #f8f9fa; padding: 10px; border-radius: 6px; margin-top: 8px; }
-    </style>
+		
+		/* Tambahkan gaya ini di dalam <style> */
+.amount-btn {
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    background-color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+.amount-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+.amount-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+#payment-details.hidden {
+    display: none;
+}
+	/* === GAYA UNTUK MODAL/POPUP (YANG HILANG) === */
+.modal {
+    display: none; /* Awalnya disembunyikan */
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px; /* Lebar maksimal popup */
+    position: relative;
+}
+
+.close-button {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover {
+    color: black;
+}
+
+.payment-method-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+.payment-method-item:hover {
+    border-color: var(--primary-color);
+    background-color: #f8f9fa;
+}
+.payment-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+/* Tambahkan gaya ini di dalam <style> */
+.download-btn {
+    display: block;
+    width: fit-content;
+    margin: 10px auto 0 auto;
+    padding: 10px 25px;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+.download-btn:hover {
+    background-color: #1e4220;
+}
+
+
+	</style>
 </head>
 <body>
     <div class="container" id="campaign-container">
         <div class="content-section text-center"><p>Memuat detail penggalangan dana...</p></div>
     </div>
+<div id="donation-process-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        
+        <div id="step1-amount">
+            <h2 class="text-2xl font-bold mb-6 text-center">Pilih Jumlah Donasi</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <button class="amount-btn" data-amount="10000">Rp 10.000</button>
+                <button class="amount-btn" data-amount="20000">Rp 20.000</button>
+                <button class="amount-btn" data-amount="50000">Rp 50.000</button>
+                <button class="amount-btn" data-amount="100000">Rp 100.000</button>
+            </div>
+            <div class="form-group">
+    <label for="custom-amount" class="text-center">Atau masukkan jumlah lain</label>
+    <input type="number" id="custom-amount" placeholder="Rp" class="text-center text-xl font-bold" min="10000" step="5000">
+</div>
 
+<div class="mt-8">
+    <button id="btn-continue-to-payment" class="btn btn-primary w-full" disabled>Lanjutkan</button>
+</div>
+        </div>
+
+        <div id="step2-payment-method" class="hidden">
+            <h2 class="text-2xl font-bold mb-6 text-center">Pilih Metode Pembayaran</h2>
+            <div class="space-y-3">
+                <div class="payment-method-item" data-method="QRIS">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/QRIS_logo.svg/1200px-QRIS_logo.svg.png" class="payment-logo">
+                    <span>QRIS (Semua E-Wallet & M-Banking)</span>
+                </div>
+                <div class="payment-method-item" data-method="Transfer Bank">
+                    <img src="https://upload.wikimedia.org/wikipedia/id/thumb/5/5b/Perbankan.svg/1200px-Perbankan.svg.png" class="payment-logo">
+                    <span>Transfer Bank</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="step3-donor-info" class="hidden">
+            <h2 class="text-2xl font-bold mb-4 text-center">Lengkapi Data</h2>
+            <div class="p-4 bg-gray-100 rounded-lg text-center mb-6">
+                <p>Jumlah Donasi: <strong id="summary-amount" class="text-xl"></strong></p>
+                <p>Metode: <strong id="summary-method"></strong></p>
+            </div>
+            <form id="donor-form">
+                <div class="form-group">
+                    <label for="donor-name">Nama Lengkap</label>
+                    <input type="text" id="donor-name" required class="border border-gray-300">
+                </div>
+                <div class="form-group">
+                    <label for="donor-phone">Nomor Ponsel (WhatsApp)</label>
+                    <input type="tel" id="donor-phone" required class="border border-gray-300">
+                </div>
+				<div id="whatsapp-consent-container" class="hidden form-group flex items-center gap-2">
+					<input type="checkbox" id="whatsapp-consent" class="w-5 h-5">
+					<label for="whatsapp-consent" class="font-normal">Saya bersedia dihubungi melalui WhatsApp</label>
+				</div>
+                <div class="form-group flex items-center gap-2">
+                    <input type="checkbox" id="donor-anonymous" class="w-5 h-5">
+                    <label for="donor-anonymous" class="font-normal">Sembunyikan nama saya (Tampilkan sebagai Hamba Allah)</label>
+                </div>
+                <div class="form-group">
+                    <label for="donor-message">Doa & Dukungan (Opsional)</label>
+                    <textarea id="donor-message" rows="3" class="w-full p-2 border rounded-md"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Lanjut Pembayaran</button>
+            </form>
+        </div>
+
+        <div id="step4-payment-instruction" class="hidden">
+            <h2 class="text-2xl font-bold mb-4 text-center">Selesaikan Pembayaran</h2>
+            <div id="qris-instruction" class="hidden text-center">
+				<p>Silakan scan QRIS di bawah ini menggunakan E-Wallet atau M-Banking Anda.</p>
+				<img src="qrisdonasi.png" alt="QRIS Donasi" class="mx-auto my-4 w-64 h-64">
+				<a href="qrisdonasi.png" class="download-btn" target="_blank" rel="noopener noreferrer">Unduh QRIS</a>
+			</div>
+            <div id="bank-instruction" class="hidden text-center">
+                <p>Silakan transfer ke rekening berikut:</p>
+                <p class="font-bold text-xl my-2">Bank BRI: 7040-0102-7168535</p>
+                <p>a/n <strong>Markaz Yatim Duafa Qurani</strong></p>
+            </div>
+            <hr class="my-6">
+            <p class="text-center font-semibold">Jika Anda sudah berhasil mengirimkan donasi, kirimkan buktinya melalui kolom di bawah.</p>
+            <div class="form-group mt-4 text-center">
+                <input type="file" id="input-proof-file" class="hidden" accept="image/*">
+                <label for="input-proof-file" class="cursor-pointer bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded">
+                    Pilih Bukti Pembayaran
+                </label>
+                <img id="proof-preview" class="hidden mx-auto mt-4 max-h-48 rounded">
+            </div>
+            <button id="btn-send-proof" class="btn btn-primary w-full" disabled>Kirim Bukti</button>
+        </div>
+
+        <div id="step5-thank-you" class="hidden text-center py-8">
+            <h2 class="text-3xl font-bold text-green-600">Terima Kasih atas Donasinya</h2>
+            <p class="text-xl mt-2">Jazakumullahu Khairan.</p>
+        </div>
+
+    </div>
+</div>
 <script>
+// SALIN DAN TEMPEL SELURUH KODE INI UNTUK MENGGANTIKAN ISI <script> LAMA ANDA
 document.addEventListener('DOMContentLoaded', () => {
-    const CONFIG = { SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec", };
-    const container = document.getElementById('campaign-container');
+    const CONFIG = { SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec" };
+    const mainContainer = document.getElementById('campaign-container');
+    const donationModal = document.getElementById('donation-process-modal');
+    
+    // Objek untuk menyimpan data donasi selama proses
+    let donationData = {};
 
+    // Fungsi loading
+    const showLoading = () => {
+        let overlay = document.getElementById('loading-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'loading-overlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(255,255,255,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;';
+            overlay.innerHTML = '<div style="border:8px solid #f3f3f3;border-top:8px solid #2c5e2e;border-radius:50%;width:60px;height:60px;animation:spin 1s linear infinite;"></div>';
+            document.body.appendChild(overlay);
+        }
+        overlay.style.display = 'flex';
+    };
+    const hideLoading = () => {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) overlay.style.display = 'none';
+    };
+
+    // =======================================================
+    // === LOGIKA UNTUK MODAL DONASI MULTI-LANGKAH ===
+    // =======================================================
+    if (donationModal) {
+        const steps = {
+            amount: donationModal.querySelector('#step1-amount'),
+            method: donationModal.querySelector('#step2-payment-method'),
+            info: donationModal.querySelector('#step3-donor-info'),
+            instruction: donationModal.querySelector('#step4-payment-instruction'),
+            thanks: donationModal.querySelector('#step5-thank-you'),
+        };
+
+        const goToStep = (stepName) => {
+            Object.values(steps).forEach(step => step && step.classList.add('hidden'));
+            if (steps[stepName]) steps[stepName].classList.remove('hidden');
+        };
+		
+		const donorPhoneInput = donationModal.querySelector('#donor-phone');
+        const whatsappConsentContainer = donationModal.querySelector('#whatsapp-consent-container');
+
+        if (donorPhoneInput && whatsappConsentContainer) {
+            donorPhoneInput.addEventListener('input', () => {
+                whatsappConsentContainer.classList.toggle('hidden', donorPhoneInput.value.length === 0);
+            });
+        }
+		
+        // --- GANTI SELURUH BLOK "Logika Langkah 1" DENGAN INI ---
+const amountButtons = steps.amount.querySelectorAll('.amount-btn');
+const customAmountInput = steps.amount.querySelector('#custom-amount');
+const continueBtn = steps.amount.querySelector('#btn-continue-to-payment');
+let selectedAmount = 0;
+
+// Fungsi untuk mengaktifkan/menonaktifkan tombol Lanjutkan
+const enableContinueButton = (amount) => {
+    selectedAmount = amount;
+    if (selectedAmount >= 10000) {
+        continueBtn.disabled = false;
+    } else {
+        continueBtn.disabled = true;
+    }
+};
+
+// Saat tombol nominal diklik
+amountButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        amountButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        customAmountInput.value = '';
+        enableContinueButton(parseInt(button.dataset.amount));
+    });
+});
+
+// Saat pengguna mengetik di input custom
+customAmountInput.addEventListener('input', () => {
+    amountButtons.forEach(btn => btn.classList.remove('active'));
+    enableContinueButton(parseInt(customAmountInput.value) || 0);
+});
+
+// Saat tombol "Lanjutkan" yang sudah aktif diklik
+continueBtn.addEventListener('click', () => {
+    donationData.amount = selectedAmount;
+    goToStep('method'); // Pindah ke langkah selanjutnya
+});
+// --- AKHIR BLOK PENGGANTI ---
+        const paymentMethodItems = steps.method.querySelectorAll('.payment-method-item');
+        paymentMethodItems.forEach(item => {
+            item.addEventListener('click', () => {
+                donationData.method = item.dataset.method;
+                donationModal.querySelector('#summary-amount').textContent = `Rp${donationData.amount.toLocaleString('id-ID')}`;
+                donationModal.querySelector('#summary-method').textContent = donationData.method;
+                goToStep('info');
+            });
+        });
+
+        const donorForm = donationModal.querySelector('#donor-form');
+        donorForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            donationData.name = donationModal.querySelector('#donor-name').value;
+            donationData.phone = donationModal.querySelector('#donor-phone').value;
+            donationData.isAnonymous = donationModal.querySelector('#donor-anonymous').checked;
+            donationData.message = donationModal.querySelector('#donor-message').value;
+            const qris = steps.instruction.querySelector('#qris-instruction');
+            const bank = steps.instruction.querySelector('#bank-instruction');
+            donationData.method === 'QRIS' ? (qris.classList.remove('hidden'), bank.classList.add('hidden')) : (qris.classList.add('hidden'), bank.classList.remove('hidden'));
+            goToStep('instruction');
+        });
+
+        const proofInput = steps.instruction.querySelector('#input-proof-file');
+        const proofPreview = steps.instruction.querySelector('#proof-preview');
+        const sendProofBtn = steps.instruction.querySelector('#btn-send-proof');
+        let proofFile = null;
+
+        proofInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                proofFile = file;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    proofPreview.src = e.target.result;
+                    proofPreview.classList.remove('hidden');
+                    sendProofBtn.disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        sendProofBtn.addEventListener('click', async () => {
+            if (!proofFile) {
+                alert("Mohon pilih file bukti pembayaran.");
+                return;
+            }
+            showLoading();
+            sendProofBtn.disabled = true;
+            sendProofBtn.textContent = 'Mengompres Gambar...';
+
+            let proofImageUrl = '';
+            try {
+                const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1024 };
+                const compressedFile = await imageCompression(proofFile, options);
+                sendProofBtn.textContent = 'Mengunggah Bukti...';
+                const formData = new FormData();
+                formData.append('file', compressedFile, proofFile.name);
+                formData.append('upload_preset', 'markaz');
+                const cloudinaryResponse = await fetch("https://api.cloudinary.com/v1_1/deva5eknr/image/upload", { method: 'POST', body: formData });
+                if (!cloudinaryResponse.ok) throw new Error('Gagal mengunggah gambar bukti.');
+                const cloudinaryData = await cloudinaryResponse.json();
+                proofImageUrl = cloudinaryData.secure_url;
+            } catch (error) {
+                alert(`Error pada gambar: ${error.message}`);
+                hideLoading();
+                sendProofBtn.disabled = false;
+                sendProofBtn.textContent = 'Kirim Bukti';
+                return;
+            }
+
+            sendProofBtn.textContent = 'Menyimpan Donasi...';
+            const params = new URLSearchParams(window.location.search);
+            const campaignId = params.get('id');
+            const finalData = {
+                action: 'submitDonation', IDDonasi: campaignId, NamaDonatur: donationData.isAnonymous ? 'Hamba Allah' : donationData.name,
+                Jumlah: donationData.amount, Doa: donationData.message, NomorPonsel: donationData.phone,
+                Anonim: donationData.isAnonymous ? 'Ya' : 'Tidak', BuktiPembayaranURL: proofImageUrl
+            };
+
+            try {
+                const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(finalData) });
+                const result = await response.json();
+                if (result.status !== 'success') throw new Error(result.message);
+                goToStep('thanks');
+                setTimeout(() => {
+                    donationModal.style.display = 'none';
+                    location.reload();
+                }, 3000);
+            } catch (error) {
+                alert(`Gagal menyimpan donasi: ${error.message}`);
+                sendProofBtn.disabled = false;
+                sendProofBtn.textContent = 'Kirim Bukti';
+            } finally {
+                hideLoading();
+            }
+        });
+
+        const closeModalBtn = donationModal.querySelector('.close-button');
+        if (closeModalBtn) { closeModalBtn.onclick = () => donationModal.style.display = 'none'; }
+    }
+    
+    // ===================================================================
+    // === SEMUA EVENT LISTENER UNTUK TOMBOL DINAMIS DIGABUNG DI SINI ===
+    // ===================================================================
+    mainContainer.addEventListener('click', (event) => {
+        const target = event.target;
+        const btnShowModal = target.closest('#btn-show-donation-modal');
+        const btnShare = target.closest('.btn-share');
+
+        if (btnShowModal) {
+            if (donationModal) {
+                const goToStep = (stepName) => {
+                    const steps = { amount: donationModal.querySelector('#step1-amount'), method: donationModal.querySelector('#step2-payment-method'), info: donationModal.querySelector('#step3-donor-info'), instruction: donationModal.querySelector('#step4-payment-instruction'), thanks: donationModal.querySelector('#step5-thank-you') };
+                    Object.values(steps).forEach(step => step.classList.add('hidden'));
+                    if (steps[stepName]) steps[stepName].classList.remove('hidden');
+                };
+                goToStep('amount');
+                donationModal.style.display = 'block';
+            }
+        }
+        
+        if (btnShare) {
+            const campaignTitle = mainContainer.querySelector('h1')?.textContent || document.title;
+            if (navigator.share) {
+                navigator.share({
+                    title: `Bantu Donasi: ${campaignTitle}`,
+                    text: `Ayo ikut berdonasi untuk "${campaignTitle}". Lihat detailnya di sini:`,
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                alert('Fitur bagikan tidak didukung di browser ini. Silakan salin link halaman ini secara manual.');
+            }
+        }
+    });
+
+    // =======================================================
+    // === FUNGSI UTAMA UNTUK MEMUAT DAN MERENDER HALAMAN ===
+    // =======================================================
     async function fetchCampaignDetails(id) {
         try {
-            const response = await fetch(CONFIG.SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'getFundraisingDetail', campaignId: id })
-            });
+            const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getFundraisingDetail', campaignId: id }) });
             const result = await response.json();
             if (result.status !== 'success') throw new Error(result.message);
             renderCampaignDetails(result.data);
         } catch (error) {
-            container.innerHTML = `<div class="content-section text-center text-red-500">Gagal memuat data: ${error.message}</div>`;
+            mainContainer.innerHTML = `<div class="content-section text-center text-red-500">Gagal memuat data: ${error.message}</div>`;
         }
     }
 
@@ -56,84 +474,54 @@ document.addEventListener('DOMContentLoaded', () => {
         const danaDibutuhkan = data.DanaDibutuhkan || 0;
         const danaMasuk = data.DanaMasuk || 0;
         const kekurangan = Math.max(0, danaDibutuhkan - danaMasuk);
-        const progressPercent = Math.min((danaMasuk / danaDibutuhkan) * 100, 100);
+        const progressPercent = danaDibutuhkan > 0 ? Math.min((danaMasuk / danaDibutuhkan) * 100, 100) : 0;
         const deadline = new Date(data.Deadline);
         const daysLeft = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
         let deadlineText = daysLeft > 0 ? `${daysLeft} hari lagi` : (daysLeft === 0 ? 'Hari ini terakhir' : 'Telah Berakhir');
 
-        let donaturHtml = data.donatur.map(d => `
+        let donaturHtml = (data.donatur || []).map(d => `
             <div class="donatur-item">
                 <div class="flex justify-between items-center">
                     <p class="font-bold">${d.NamaDonatur}</p>
                     <p class="font-semibold text-green-600">Rp${(parseFloat(d.Jumlah) || 0).toLocaleString('id-ID')}</p>
                 </div>
                 ${d.Doa ? `<p class="doa-teks">"${d.Doa}"</p>` : ''}
-            </div>
-        `).join('');
+            </div>`).join('');
 
-        container.innerHTML = `
+        mainContainer.innerHTML = `
             <a href="index.html#fundraising" class="text-sm font-semibold text-gray-600 mb-4 inline-block">&larr; Kembali ke semua penggalangan dana</a>
-            <div class="content-section">
-                <h1 class="text-3xl font-bold mb-2">${data.Judul}</h1>
-                <p class="text-gray-500">Oleh: ${data.Pembuat}</p>
-            </div>
-            
+            <div class="content-section"><h1 class="text-3xl font-bold mb-2">${data.Judul}</h1><p class="text-gray-500">Oleh: ${data.Pembuat}</p></div>
             <img src="${data.GambarUtama}" alt="${data.Judul}" class="main-image">
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div class="md:col-span-2">
-                    <div class="content-section">
-                        <h2 class="text-xl font-bold mb-4">Deskripsi</h2>
-                        <div class="prose">${data.DeskripsiHTML}</div>
-                    </div>
-                     <div class="content-section">
-                        <h2 class="text-xl font-bold mb-4">Donatur (${data.donatur.length})</h2>
-                        <div id="donor-list">${donaturHtml || '<p>Jadilah donatur pertama!</p>'}</div>
-                    </div>
+                    <div class="content-section"><h2 class="text-xl font-bold mb-4">Deskripsi</h2><div class="prose">${data.DeskripsiHTML}</div></div>
+                    <div class="content-section"><h2 class="text-xl font-bold mb-4">Donatur (${(data.donatur || []).length})</h2><div id="donor-list">${donaturHtml || '<p>Jadilah donatur pertama!</p>'}</div></div>
                 </div>
                 <div class="md:col-span-1">
                     <div class="content-section">
-                         <div class="mb-4">
-                            <p class="text-lg">Terkumpul</p>
-                            <p class="text-2xl font-bold text-green-600">Rp${danaMasuk.toLocaleString('id-ID')}</p>
-                        </div>
-                        <div class="progress-bar-bg mb-2">
-                            <div class="progress-bar-fill" style="width: ${progressPercent}%"></div>
-                        </div>
-                        <div class="flex justify-between text-sm mb-4">
-                            <span>dari Rp${danaDibutuhkan.toLocaleString('id-ID')}</span>
-                            <span>${Math.round(progressPercent)}%</span>
-                        </div>
+                        <div class="mb-4"><p class="text-lg">Terkumpul</p><p class="text-2xl font-bold text-green-600">Rp${danaMasuk.toLocaleString('id-ID')}</p></div>
+                        <div class="progress-bar-bg mb-2"><div class="progress-bar-fill" style="width: ${progressPercent}%"></div></div>
+                        <div class="flex justify-between text-sm mb-4"><span>dari Rp${danaDibutuhkan.toLocaleString('id-ID')}</span><span>${Math.round(progressPercent)}%</span></div>
                         <hr class="my-4">
                         <div class="flex justify-between text-center mb-4">
-                            <div>
-                                <p class="font-bold text-lg">${data.donatur.length}</p>
-                                <p class="text-sm text-gray-500">Donatur</p>
-                            </div>
-                             <div>
-                                <p class="font-bold text-lg">${kekurangan > 0 ? `Rp${kekurangan.toLocaleString('id-ID')}` : '✓'}</p>
-                                <p class="text-sm text-gray-500">${kekurangan > 0 ? 'Kekurangan' : 'Tercapai'}</p>
-                            </div>
-                            <div>
-                                <p class="font-bold text-lg">${deadlineText}</p>
-                                <p class="text-sm text-gray-500">Sisa Waktu</p>
-                            </div>
+                            <div><p class="font-bold text-lg">${(data.donatur || []).length}</p><p class="text-sm text-gray-500">Donatur</p></div>
+                            <div><p class="font-bold text-lg">${kekurangan > 0 ? `Rp${kekurangan.toLocaleString('id-ID')}` : '✓'}</p><p class="text-sm text-gray-500">${kekurangan > 0 ? 'Kekurangan' : 'Tercapai'}</p></div>
+                            <div><p class="font-bold text-lg">${deadlineText}</p><p class="text-sm text-gray-500">Sisa Waktu</p></div>
                         </div>
-                        <a href="index.html#donasi" class="btn btn-primary w-full">Donasi Sekarang</a>
-                        <button class="btn btn-secondary w-full mt-2">Bagikan</button>
+                        <button id="btn-show-donation-modal" class="btn btn-primary w-full">Donasi Sekarang</button>
+                        <button class="btn btn-secondary w-full mt-2 btn-share">Bagikan</button>
                     </div>
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
+    // --- Inisialisasi Halaman ---
     const params = new URLSearchParams(window.location.search);
     const campaignId = params.get('id');
-
     if (campaignId) {
         fetchCampaignDetails(campaignId);
     } else {
-        container.innerHTML = '<div class="content-section text-center">ID penggalangan dana tidak ditemukan.</div>';
+        mainContainer.innerHTML = '<div class="content-section text-center">ID penggalangan dana tidak ditemukan.</div>';
     }
 });
 </script>
