@@ -774,6 +774,49 @@
     </style>
 </head>
 <body>
+<div id="fundraising-modal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <span class="close-button">&times;</span>
+        <h2 id="form-title" class="text-2xl font-bold mb-6">Buat Penggalangan Dana Baru</h2>
+        <form id="form-fundraising">
+			<input type="hidden" id="input-fund-id">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <div class="form-group">
+                    <label for="input-fund-title">Judul Penggalangan Dana</label>
+                    <input type="text" id="input-fund-title" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="input-fund-goal">Total Dana Dibutuhkan (hanya angka)</label>
+                <input type="number" id="input-fund-goal" required>
+            </div>
+            <div class="form-group">
+                <label for="input-fund-deadline">Batas Waktu</label>
+                <input type="date" id="input-fund-deadline" required>
+            </div>
+            <div class="form-group">
+    <label>Gambar Utama</label>
+    <div class="mt-2 p-4 border-2 border-dashed rounded-md text-center">
+        <img id="fundraising-image-preview" src="https://placehold.co/400x200/e9ecef/6c757d?text=Pilih+Gambar" class="mx-auto mb-4 max-h-48 rounded cursor-pointer" title="Klik untuk pilih gambar">
+        <input type="file" id="input-fund-image-file" class="hidden" accept="image/*">
+        <label for="input-fund-image-file" class="cursor-pointer bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded">
+            Pilih File Gambar
+        </label>
+    </div>
+</div>
+            <div class="form-group">
+                <label for="input-fund-desc">Deskripsi Lengkap (HTML didukung)</label>
+                <textarea id="input-fund-desc" rows="8" class="w-full p-3 border rounded-md"></textarea>
+            </div>
+            <div class="flex gap-4 mt-8">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">Simpan & Publikasikan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
     <div id="messageBox" class="message-box"></div>
 
     <header>
@@ -1699,46 +1742,7 @@ b. Soekarno
 <div id="loading-overlay" class="hidden">
     <div class="loader"></div>
 </div>
-<div id="fundraising-modal" class="modal">
-    <div class="modal-content" style="max-width: 800px;">
-        <span class="close-button">&times;</span>
-        <h2 class="text-2xl font-bold mb-6">Buat Penggalangan Dana Baru</h2>
-        <form id="form-fundraising">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                <div class="form-group">
-                    <label for="input-fund-title">Judul Penggalangan Dana</label>
-                    <input type="text" id="input-fund-title" required>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="input-fund-goal">Total Dana Dibutuhkan (hanya angka)</label>
-                <input type="number" id="input-fund-goal" required>
-            </div>
-            <div class="form-group">
-                <label for="input-fund-deadline">Batas Waktu</label>
-                <input type="date" id="input-fund-deadline" required>
-            </div>
-            <div class="form-group">
-    <label>Gambar Utama</label>
-    <div class="mt-2 p-4 border-2 border-dashed rounded-md text-center">
-        <img id="fundraising-image-preview" src="https://placehold.co/400x200/e9ecef/6c757d?text=Pilih+Gambar" class="mx-auto mb-4 max-h-48 rounded cursor-pointer" title="Klik untuk pilih gambar">
-        <input type="file" id="input-fund-image-file" class="hidden" accept="image/*">
-        <label for="input-fund-image-file" class="cursor-pointer bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded">
-            Pilih File Gambar
-        </label>
-    </div>
-</div>
-            <div class="form-group">
-                <label for="input-fund-desc">Deskripsi Lengkap (HTML didukung)</label>
-                <textarea id="input-fund-desc" rows="8" class="w-full p-3 border rounded-md"></textarea>
-            </div>
-            <div class="flex gap-4 mt-8">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">Simpan & Publikasikan</button>
-            </div>
-        </form>
-    </div>
-</div>
+
 	<footer><div class="container"><p>&copy; 2025 Yayasan Markaz Yatim Duafa Qurani. Semua Hak Cipta Dilindungi.</p><p>Jl. Protokol Desa Sei Kamah II, Sei Dadap, Asahan, Sumut | <a href="mailto:markazyatimduafaqurani@gmail.com">markazyatimduafaqurani@gmail.com</a> | 085261804096</p></div></footer>
 
 <script>
@@ -1818,17 +1822,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     // ==========================================================
 
-// GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
-async function renderFundraisingCards() {
+// GANTI TOTAL FUNGSI LAMA DENGAN VERSI FINAL INI
+async function renderFundraisingCards(session) {
     const section = document.getElementById('fundraising');
     const container = document.getElementById('fundraising-container');
     if (!container || !section) return;
 
+    const isAdmin = session && session.loggedIn && ['mia', 'wawan', 'admin'].includes(session.username);
+
     try {
-        const response = await fetch(CONFIG.SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'getFundraisingCampaigns' })
-        });
+        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getFundraisingCampaigns' }) });
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
 
@@ -1840,35 +1843,52 @@ async function renderFundraisingCards() {
 
         container.innerHTML = '';
         campaigns.forEach(item => {
-            const cardLink = document.createElement('a');
-            cardLink.href = `donasi.html?id=${item.ID}`; // Link ke halaman detail
-            cardLink.className = 'fundraising-card';
+            const itemDataString = JSON.stringify(item);
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = 'relative';
+
+            let editButtonHtml = isAdmin ? `<button class="btn-edit-fundraising absolute top-2 left-2 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold py-1 px-3 rounded-full z-10" data-campaign='${itemDataString}'>Edit</button>` : '';
 
             const now = new Date();
             const deadline = new Date(item.Deadline);
             const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
             const progressPercent = Math.min((item.DanaMasuk / item.DanaDibutuhkan) * 100, 100);
+            let deadlineText = daysLeft > 0 ? `${daysLeft} hari lagi` : (daysLeft <= 0 ? 'Berakhir' : 'Selesai');
 
-            let deadlineText = daysLeft > 0 ? `${daysLeft} hari lagi` : 'Selesai';
-            if (daysLeft < 0) deadlineText = 'Berakhir';
-
-            cardLink.innerHTML = `
-                <div class="image-container">
-                    <img src="${item.GambarUtama}" alt="${item.Judul}">
-                    <div class="deadline-badge">${deadlineText}</div>
-                </div>
-                <div class="card-body">
-                    <p class="organizer-info">${item.Pembuat}</p>
-                    <h3>${item.Judul}</h3>
-                    <p class="progress-info">
-                        Terkumpul <span class="amount">Rp${item.DanaMasuk.toLocaleString('id-ID')}</span>
-                    </p>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" style="width: ${progressPercent}%;"></div>
+            cardWrapper.innerHTML = `
+                ${editButtonHtml}
+                <a href="donasi.html?id=${item.ID}" class="fundraising-card">
+                    <div class="image-container"><img src="${item.GambarUtama}" alt="${item.Judul}"><div class="deadline-badge">${deadlineText}</div></div>
+                    <div class="card-body">
+                        <p class="organizer-info">${item.Pembuat}</p>
+                        <h3>${item.Judul}</h3>
+                        <p class="progress-info">Terkumpul <span class="amount">Rp${item.DanaMasuk.toLocaleString('id-ID')}</span></p>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${progressPercent}%;"></div></div>
                     </div>
-                </div>
-            `;
-            container.appendChild(cardLink);
+                </a>`;
+            container.appendChild(cardWrapper);
+        });
+
+        // --- LOGIKA TOMBOL EDIT DIPINDAHKAN KE SINI ---
+        container.querySelectorAll('.btn-edit-fundraising').forEach(button => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const campaignData = JSON.parse(button.dataset.campaign);
+                const modal = document.getElementById('fundraising-modal');
+
+                modal.querySelector('#form-title').textContent = 'Edit Penggalangan Dana';
+                modal.querySelector('#input-fund-id').value = campaignData.ID;
+                modal.querySelector('#input-fund-title').value = campaignData.Judul;
+                modal.querySelector('#input-fund-goal').value = campaignData.DanaDibutuhkan;
+                modal.querySelector('#input-fund-deadline').value = new Date(campaignData.Deadline).toISOString().split('T')[0];
+                modal.querySelector('#input-fund-image-file').value = '';
+                modal.querySelector('#fundraising-image-preview').src = campaignData.GambarUtama;
+                modal.querySelector('#input-fund-desc').value = campaignData.DeskripsiHTML;
+
+                modal.style.display = 'block';
+            });
         });
 
     } catch (error) {
@@ -1878,81 +1898,78 @@ async function renderFundraisingCards() {
 }
 
 // TAMBAHKAN FUNGSI BARU INI DI DALAM <script>
+// GANTI SELURUH FUNGSI INI
 async function handleFundraisingSubmit(event) {
     event.preventDefault();
-    const submitBtn = event.target.querySelector('button[type="submit"]');
-
-    // Cek apakah file gambar sudah dipilih
-    if (!selectedFundraisingFile) {
-        showMessage('Harap pilih gambar utama untuk penggalangan dana.', 'error');
-        return;
-    }
-
     showLoading();
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Mengompres Gambar...';
 
-    let imageUrl = '';
-    try {
-        // 1. Kompres Gambar
-        const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280, useWebWorker: true };
-        const compressedFile = await imageCompression(selectedFundraisingFile, options);
-        
-        submitBtn.textContent = 'Mengunggah Gambar...';
-
-        // 2. Unggah ke Cloudinary
-        const formData = new FormData();
-        formData.append('file', compressedFile, selectedFundraisingFile.name);
-        formData.append('upload_preset', CONFIG.CLOUDINARY_UPLOAD_PRESET);
-
-        const cloudinaryResponse = await fetch(CONFIG.CLOUDINARY_URL, { method: 'POST', body: formData });
-        if (!cloudinaryResponse.ok) throw new Error('Gagal mengunggah gambar.');
-        
-        const cloudinaryData = await cloudinaryResponse.json();
-        imageUrl = cloudinaryData.secure_url;
-
-    } catch (error) {
-        showMessage(`Error pada gambar: ${error.message}`, 'error');
-        hideLoading();
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Simpan & Publikasikan';
-        return;
-    }
-
-    submitBtn.textContent = 'Menyimpan Data...';
-
-    // 3. Kirim URL Cloudinary ke Google Sheet
     const session = getActiveSession();
+    const campaignId = document.getElementById('input-fund-id').value;
+
+    // Tentukan aksi: jika ada ID, maka 'update', jika tidak maka 'create'
+    const action = campaignId ? 'updateFundraisingCampaign' : 'createFundraisingCampaign';
+
     const data = {
-        action: 'createFundraisingCampaign',
+        action: action,
+        ID: campaignId, // Akan kosong jika membuat baru
         Judul: document.getElementById('input-fund-title').value,
         Pembuat: session.userData.profileName,
         DanaDibutuhkan: document.getElementById('input-fund-goal').value,
         Deadline: document.getElementById('input-fund-deadline').value,
-        GambarUtama: imageUrl, // <-- Menggunakan URL dari Cloudinary
-        DeskripsiHTML: document.getElementById('input-fund-desc').value
+        
+        DeskripsiHTML: document.getElementById('input-fund-desc').value,
+        // Status hanya relevan saat membuat baru, di backend tidak akan diubah saat update
+        Status: "Aktif" 
     };
 
+    // Jika tidak ada file gambar baru yang dipilih saat edit, jangan kirim properti GambarUtama
+    // Ini agar backend tidak menimpa gambar yang sudah ada dengan string kosong.
+    if (action === 'updateFundraisingCampaign' && !selectedFundraisingFile) {
+        delete data.GambarUtama;
+    }
+
+    // Logika upload gambar (jika ada file baru dipilih)
+    if (selectedFundraisingFile) {
+        try {
+            const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280 };
+            const compressedFile = await imageCompression(selectedFundraisingFile, options);
+
+            const formData = new FormData();
+            formData.append('file', compressedFile, selectedFundraisingFile.name);
+            formData.append('upload_preset', 'markaz');
+
+            const cloudinaryResponse = await fetch(CONFIG.CLOUDINARY_URL, { method: 'POST', body: formData });
+            if (!cloudinaryResponse.ok) throw new Error('Gagal mengunggah gambar.');
+
+            const cloudinaryData = await cloudinaryResponse.json();
+            data.GambarUtama = cloudinaryData.secure_url;
+
+        } catch (error) {
+            showMessage(`Error pada gambar: ${error.message}`, 'error');
+            hideLoading();
+            return;
+        }
+    }
+
+    // Kirim data ke backend
     try {
         const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
-        
-        showMessage('Penggalangan dana berhasil dibuat!', 'success');
-        document.getElementById('fundraising-modal').style.display = 'none';
-        event.target.reset(); // Reset form
 
-        // Reset file input dan pratinjau gambar
+        showMessage(result.message || `Penggalangan dana berhasil ${action === 'updateFundraisingCampaign' ? 'diperbarui' : 'dibuat'}!`, 'success');
+        document.getElementById('fundraising-modal').style.display = 'none';
+        document.getElementById('form-fundraising').reset();
+
+        // Reset file input & pratinjau
         selectedFundraisingFile = null;
         document.getElementById('fundraising-image-preview').src = 'https://placehold.co/400x200/e9ecef/6c757d?text=Pilih+Gambar';
-        
-        renderFundraisingCards(); // Muat ulang kartu di beranda
+
+        renderFundraisingCards(session);
     } catch (error) {
         showMessage(`Gagal menyimpan: ${error.message}`, 'error');
     } finally {
         hideLoading();
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Simpan & Publikasikan';
     }
 }
 /**
@@ -6788,20 +6805,18 @@ function handleInputMateriFromModal() {
 
     function setupMainEventListeners() {
         if (ui.donasiBtn) ui.donasiBtn.onclick = () => document.getElementById('donasiModal').style.display = "block";
-        
-		document.body.addEventListener('click', function(event) {
-    // Cek apakah elemen yang diklik atau salah satu induknya adalah tombol kembali KRS
-    if (event.target.closest('#back-to-santri-krs')) {
-        handleBackToSantriList();
-        return; // Hentikan pengecekan lebih lanjut
-    }
+    
+    document.body.addEventListener('click', function(event) {
+        // Cek jika tombol kembali KRS/KHS diklik
+        if (event.target.closest('#back-to-santri-krs') || event.target.closest('#back-to-santri-khs')) {
+            handleBackToSantriList();
+            return;
+        }
 
-    // Cek apakah elemen yang diklik atau salah satu induknya adalah tombol kembali KHS
-    if (event.target.closest('#back-to-santri-khs')) {
-        handleBackToSantriList();
-        return; // Hentikan pengecekan lebih lanjut
-    }
-});
+        // Cek jika tombol edit penggalangan dana yang diklik
+        const editButton = event.target.closest('.btn-edit-fundraising');
+        
+    });
 
 		if (ui.userProfile) ui.userProfile.onclick = () => openProfileModal();
 		
@@ -7092,7 +7107,7 @@ addKrsRowBtn.addEventListener('click', async () => {
 		setupAdvancedDropdown(); 
         renderNewsCards();
         renderGalleryCards();
-		renderFundraisingCards();
+		renderFundraisingCards(session);
         fetchMarqueeText();
         renderDynamicCalendar(2025, 7, 12);
         setupSlideshow();
