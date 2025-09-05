@@ -958,6 +958,58 @@
 #jadwal-sholat #tanggal-display div {
     margin: 0; /* Hapus margin default antar div tanggal */
 }
+
+/* === GAYA UNTUK TOMBOL SHOLAT MENGAMBANG (KODE BARU) === */
+#floating-prayer-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    visibility: hidden; /* Mulai dengan tersembunyi */
+}
+
+#floating-prayer-btn.visible {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+#floating-prayer-btn:hover {
+    background-color: #1e4220;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+
+#floating-prayer-icon::before {
+    content: '🕌'; /* Ikon default */
+    font-size: 1.2em;
+}
+
+#floating-prayer-btn.highlight #floating-prayer-icon::before {
+    content: '⏰'; /* Ikon saat countdown aktif */
+    animation: pulse-icon 1.5s infinite;
+}
+
+@keyframes pulse-icon {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+/* === AKHIR KODE BARU === */
+
     </style>
 </head>
 <body>
@@ -1231,8 +1283,7 @@
             <button id="test-adhan-btn">🔊 Tes Suara Adzan</button>
         </div>
     </div>
-    <div id="lembaga" class="page-section hidden container section">
-        </div>
+    
     <footer>
         </footer>
 
@@ -2014,6 +2065,11 @@ b. Soekarno
 <div id="loading-overlay" class="hidden">
     <div class="loader"></div>
 </div>
+
+<a href="#jadwal-sholat" id="floating-prayer-btn">
+    <span id="floating-prayer-icon"></span>
+    <span id="floating-prayer-text">Memuat jadwal...</span>
+</a>
 
 	<footer><div class="container"><p>&copy; 2025 Yayasan Markaz Yatim Duafa Qurani. Semua Hak Cipta Dilindungi.</p><p>Jl. Protokol Desa Sei Kamah II, Sei Dadap, Asahan, Sumut | <a href="mailto:markazyatimduafaqurani@gmail.com">markazyatimduafaqurani@gmail.com</a> | 085261804096</p></div></footer>
 
@@ -4453,11 +4509,45 @@ let isJadwalSholatInitialized = false; // Penanda agar tidak diinisialisasi beru
                 js_el.nextPrayerCountdown.innerHTML = "Waktu sholat hari ini telah selesai.";
             }
         }
+		
+		// FUNGSI BARU UNTUK UPDATE TOMBOL MENGAMBANG
+        function updateFloatingPrayerButton() {
+            const btn = document.getElementById('floating-prayer-btn');
+            const btnText = document.getElementById('floating-prayer-text');
+            if (!btn || !btnText) return;
+
+            // Cari item jadwal yang sedang di-highlight (berwarna hijau)
+            const highlightedItem = document.querySelector('.jadwal-item.highlight');
+
+            if (highlightedItem) {
+                const prayerNameEl = highlightedItem.querySelector('.prayer-name');
+                const countdownEl = highlightedItem.querySelector('.prayer-countdown');
+                
+                if (prayerNameEl) {
+                    const prayerName = prayerNameEl.textContent;
+                    // Cek apakah countdown (misal: "dalam 15 menit") sedang tampil
+                    if (countdownEl && countdownEl.style.display !== 'none') {
+                        btn.classList.add('highlight');
+                        btnText.textContent = `${prayerName} ${countdownEl.textContent}`;
+                    } else {
+                        // Jika tidak, tampilkan nama sholat yang sedang berlangsung
+                        btn.classList.remove('highlight');
+                        btnText.textContent = `Waktu ${prayerName} sedang berlangsung`;
+                    }
+                    btn.classList.add('visible'); // Tampilkan tombol
+                }
+            } else {
+                btn.classList.remove('visible'); // Sembunyikan tombol jika tidak ada jadwal highlight
+            }
+        }
+		
+		
         function tick(forceSkyUpdate = false) {
             const now = new Date();
             js_el.liveClock.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             if (Object.keys(js_todayPrayerTimes).length > 0) {
                 updateCountdownAndHighlights();
+				updateFloatingPrayerButton();
             }
             if (now.getMinutes() !== js_lastMinute || forceSkyUpdate) {
                 const dateString = `${js_currentDate.getDate()}-${js_currentDate.getMonth() + 1}-${js_currentDate.getFullYear()}`;
@@ -4631,7 +4721,7 @@ function showPage(hash) {
             const section = document.querySelector(hash);
             if (section) {
                 section.classList.remove('hidden');
-                initializeJadwalSholat(); // Panggil fungsi inisialisasi di sini
+                
             }
             return; // Hentikan agar tidak menjalankan kode di bawahnya
         }
@@ -7894,6 +7984,7 @@ addKrsRowBtn.addEventListener('click', async () => {
         setTodayDate();
 		
 		generateAcademicMonthRanges();
+		initializeJadwalSholat(); 
 		
 		checkAndDisplayHeaderNotifications();
         setInterval(checkAndDisplayHeaderNotifications, 60 * 60 * 1000); // Cek setiap 1 jam
