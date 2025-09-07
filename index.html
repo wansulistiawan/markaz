@@ -1022,6 +1022,47 @@
 }
 /* === AKHIR KODE BARU === */
 
+
+/* === KODE UNTUK VIDEO FLOATING (PICTURE-IN-PICTURE) === */
+
+#youtube-wrapper.is-floating {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;  /* Lebar video saat melayang */
+    height: 180px; /* Tinggi video saat melayang */
+    z-index: 2000; /* Pastikan selalu di lapisan paling atas */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    border: 2px solid white;
+    overflow: hidden; /* Penting agar sudutnya tetap tumpul */
+}
+
+/* Mengatur tombol close */
+#close-floating-video {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 28px;
+    height: 28px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 24px;
+    line-height: 28px;
+    text-align: center;
+    cursor: pointer;
+    display: none; /* Tombol close hanya tampil saat mode floating */
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+#close-floating-video:hover {
+    opacity: 1;
+}
+
+/* Saat mode floating aktif, tampilkan tombol close */
+#youtube-wrapper.is-floating #close-floating-video {
+    display: block;
+}
     </style>
 </head>
 <body>
@@ -2115,7 +2156,7 @@ function startSlideshow() {
         if (player && typeof player.cueVideoById === 'function') {
             player.cueVideoById(nextVideoId);
         }
-    }, 7000); // Pindah video setiap 5 detik
+    }, 8000); // Pindah video setiap 8 detik
 }
 
 // Fungsi untuk MENGHENTIKAN slideshow
@@ -5467,13 +5508,12 @@ function renderNewsCards() {
         // Cek jika item adalah playlist YouTube
         if (item.type === 'youtube_playlist') {
     return `
-        <div class="card">
-            <div class="video-responsive">
-                <div id="youtube-player"></div> 
+        <div class="card" id="youtube-card-container">
+            <div id="youtube-wrapper" class="video-responsive">
+                <div id="youtube-player"></div>
+                <div id="close-floating-video">&times;</div>
             </div>
-            
             <p id="youtube-title" class="text-sm text-center font-semibold mt-2 text-gray-700 p-2">Memuat judul...</p>
-            
             <div class="card-content">
                 <h3>${item.title}</h3>
                 <p class="meta">${item.meta}</p>
@@ -8218,10 +8258,69 @@ function setupAdvancedDropdown() {
 	
 }
     
+let isVideoPlaying = false; // Penanda apakah video sedang diputar
 
+    // Fungsi untuk mengontrol logika floating
+    function setupFloatingPlayer() {
+        const youtubeWrapper = document.getElementById('youtube-wrapper');
+        const youtubeCardContainer = document.getElementById('youtube-card-container');
+        const closeBtn = document.getElementById('close-floating-video');
+
+        // Jika elemen-elemen ini tidak ada, hentikan fungsi
+        if (!youtubeWrapper || !youtubeCardContainer || !closeBtn) return;
+
+        // Atur event untuk tombol close
+        closeBtn.addEventListener('click', () => {
+            player.stopVideo(); // Hentikan video
+            youtubeWrapper.classList.remove('is-floating'); // Hapus mode floating
+        });
+
+        // Buat "pengamat" untuk kartu video yang asli
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const entry = entries[0];
+                // Cek apakah video sedang diputar DAN kartu video asli sudah tidak terlihat di layar
+                if (isVideoPlaying && !entry.isIntersecting) {
+                    youtubeWrapper.classList.add('is-floating'); // Aktifkan mode floating
+                } else {
+                    youtubeWrapper.classList.remove('is-floating'); // Nonaktifkan mode floating
+                }
+            },
+            { threshold: 0.5 } // Picu saat 50% kartu video hilang/muncul dari layar
+        );
+
+        // Mulai amati kartu video
+        observer.observe(youtubeCardContainer);
+    }
+    
+    // Kita akan memodifikasi onPlayerStateChange yang sudah ada sedikit
+    // Jadi, kita timpa fungsi yang lama
+    window.onPlayerStateChange = function(event) {
+        if (event.data === YT.PlayerState.CUED) {
+            const titleElement = document.getElementById('youtube-title');
+            const videoData = player.getVideoData();
+            if (titleElement && videoData && videoData.title) {
+                titleElement.textContent = videoData.title;
+            }
+        }
+        
+        if (event.data === YT.PlayerState.PLAYING) {
+            isVideoPlaying = true;
+            stopSlideshow();
+        } else {
+            // Jika video dijeda, selesai, atau status lainnya, anggap tidak sedang diputar
+            isVideoPlaying = false;
+            // Jika video selesai, mulai lagi slideshow
+            if (event.data === YT.PlayerState.ENDED) {
+                startSlideshow();
+            }
+        }
+    };
 
     // --- MULAI APLIKASI ---
     initializeApp();
+
+	setupFloatingPlayer();
 });
 </script>
 </body>
