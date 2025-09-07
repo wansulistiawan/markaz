@@ -66,7 +66,19 @@
         .nav-arrow.visible { opacity: 1; pointer-events: auto; }
         #nav-arrow-left { left: -15px; }
         #nav-arrow-right { right: -15px; }
-        @media (max-width: 768px) { .nav-arrow { background-color: rgba(44, 94, 46, 0.5); } }
+        @media (max-width: 768px) { 
+		.fundraising-wrapper {
+        flex-direction: column; /* Mengubah arah item menjadi vertikal */
+        align-items: center;    /* Memusatkan kartu-kartu di tengah */
+        overflow-x: visible;    /* Menonaktifkan scroll horizontal */
+        gap: 25px;              /* Menambah jarak vertikal antar kartu */
+    }
+
+    .fundraising-card {
+        flex: 0 0 90%;          /* Kartu tidak menyusut/melebar, dengan lebar 90% dari kontainer */
+        max-width: 400px;       /* Mencegah kartu menjadi terlalu lebar di tablet */
+    }
+	.nav-arrow { background-color: rgba(44, 94, 46, 0.5); } }
 
 /* Tambahkan selector ini ke CSS Anda */
 #pengunjung-hari-ini {
@@ -2072,12 +2084,107 @@ b. Soekarno
 </a>
 
 	<footer><div class="container"><p>&copy; 2025 Yayasan Markaz Yatim Duafa Qurani. Semua Hak Cipta Dilindungi.</p><p>Jl. Protokol Desa Sei Kamah II, Sei Dadap, Asahan, Sumut | <a href="mailto:markazyatimduafaqurani@gmail.com">markazyatimduafaqurani@gmail.com</a> | 085261804096</p></div></footer>
-
+	
+	<script src="https://www.youtube.com/iframe_api"></script>
+	
 <script>
 
+	// =======================================================
+// === KODE KONTROL YOUTUBE (VERSI FINAL YANG SEBENARNYA) ===
+// =======================================================
+let player;
+let videoSlideshowInterval;
+const playlistId = 'PLCkk8QVJzkuQBH-p2kHcTTG_4gzibc93v';
 
+let isYouTubeApiReady = false;
+let isPlayerInitialized = false;
+let playlistVideoIds = []; // Variabel untuk menyimpan semua ID video
+let currentVideoIndex = -1; // Kita mulai dari -1 agar putaran pertama menjadi 0
+
+// Fungsi untuk MEMULAI slideshow (perpindahan otomatis)
+function startSlideshow() {
+    stopSlideshow(); // Selalu hentikan timer lama untuk mencegah tumpuk
+    videoSlideshowInterval = setInterval(() => {
+        if (!player || playlistVideoIds.length === 0) return;
+
+        // Pindah ke indeks video berikutnya, kembali ke 0 jika sudah di akhir
+        currentVideoIndex = (currentVideoIndex + 1) % playlistVideoIds.length;
+        const nextVideoId = playlistVideoIds[currentVideoIndex];
+        
+        // Menggunakan cueVideoById untuk HANYA MENYIAPKAN video, BUKAN memutarnya
+        if (player && typeof player.cueVideoById === 'function') {
+            player.cueVideoById(nextVideoId);
+        }
+    }, 7000); // Pindah video setiap 5 detik
+}
+
+// Fungsi untuk MENGHENTIKAN slideshow
+function stopSlideshow() {
+    clearInterval(videoSlideshowInterval);
+}
+
+// Fungsi ini dipanggil oleh YouTube API
+window.onYouTubeIframeAPIReady = function() {
+    isYouTubeApiReady = true;
+    initializePlayer();
+};
+
+// Fungsi ini dipanggil saat pemutar video sudah benar-benar siap
+function onPlayerReady(event) {
+    // Ambil daftar semua ID video di dalam playlist
+    playlistVideoIds = player.getPlaylist();
+    // Dapatkan indeks video yang dimuat pertama kali (biasanya 0)
+    currentVideoIndex = player.getPlaylistIndex();
+    // Mulai slideshow untuk pertama kalinya
+    startSlideshow();
+}
+
+// Fungsi ini dipanggil saat status video berubah
+function onPlayerStateChange(event) {
+    // Saat video baru disiapkan (CUED), perbarui judulnya
+    if (event.data === YT.PlayerState.CUED) {
+        const titleElement = document.getElementById('youtube-title');
+        const videoData = player.getVideoData(); // Ambil data video saat ini
+        if (titleElement && videoData && videoData.title) {
+            titleElement.textContent = videoData.title; // Tampilkan judulnya
+        }
+    }
+
+    // Jika video DIPUTAR atau DIJEDA oleh pengguna, hentikan slideshow
+    if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED) {
+        stopSlideshow();
+    } 
+    // Jika video yang ditonton SELESAI, mulai lagi slideshow
+    else if (event.data === YT.PlayerState.ENDED) {
+        startSlideshow();
+    }
+}
+
+// Fungsi untuk membuat player
+function initializePlayer() {
+    if (isYouTubeApiReady && document.getElementById('youtube-player') && !isPlayerInitialized) {
+        isPlayerInitialized = true;
+        player = new YT.Player('youtube-player', {
+            height: '100%',
+            width: '100%',
+            playerVars: {
+                'playsinline': 1,
+                'autoplay': 0, // Nilai ini HARUS 0
+                'controls': 1,
+                'listType': 'playlist',
+                'list': playlistId
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
+	
+	
 	
 	const loadingOverlay = document.getElementById('loading-overlay');
     const showLoading = () => loadingOverlay.classList.remove('hidden');
@@ -2226,7 +2333,7 @@ async function renderFundraisingCards(session) {
                     <div class="card-body">
                         <p class="organizer-info">${item.Pembuat}</p>
                         <h3>${item.Judul}</h3>
-                        <p class="progress-info">Terkumpul <span class="amount">Rp${item.DanaMasuk.toLocaleString('id-ID')}</span></p>
+                        <p class="progress-info">Terkumpul <span class="amount">Rp${item.DanaMasuk.toLocaleString('id-ID')}</span> dari Rp${item.DanaDibutuhkan.toLocaleString('id-ID')}</p>
                         <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${progressPercent}%;"></div></div>
                     </div>
                 </a>`;
@@ -5359,28 +5466,22 @@ function renderNewsCards() {
     container.innerHTML = appData.news.map(item => {
         // Cek jika item adalah playlist YouTube
         if (item.type === 'youtube_playlist') {
-            // Jika ya, buat HTML untuk video responsif
-            return `
-                <div class="card">
-                    <div class="video-responsive" style="padding-bottom: 56.25%;">
-                        <iframe 
-                            width="100%" 
-                            height="315" 
-                            src="${item.embedUrl}" 
-                            title="YouTube video player" 
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-                    <div class="card-content">
-                        <h3>${item.title}</h3>
-						<p class="meta">${item.meta}</p>
+    return `
+        <div class="card">
+            <div class="video-responsive">
+                <div id="youtube-player"></div> 
+            </div>
+            
+            <p id="youtube-title" class="text-sm text-center font-semibold mt-2 text-gray-700 p-2">Memuat judul...</p>
+            
+            <div class="card-content">
+                <h3>${item.title}</h3>
+                <p class="meta">${item.meta}</p>
                 <p>${item.desc}</p>
-                    </div>
-                </div>
-            `;
-        } else {
+            </div>
+        </div>
+    `;
+} else {
             // Jika tidak (berita biasa), buat HTML untuk kartu berita seperti biasa
             return `
                 <div class="card">
@@ -8054,6 +8155,7 @@ addKrsRowBtn.addEventListener('click', async () => {
 	setupResultModalListeners();
 	setupExamSecurityListeners();
 	setupInputSoalPage();
+	initializePlayer(); 
     }
 
 // HAPUS FUNGSI LAMA setupDropdownMobile() DAN GANTI DENGAN INI
@@ -8112,6 +8214,8 @@ function setupAdvancedDropdown() {
 
     // Tambahkan event listener untuk menutup menu jika mengklik di tempat lain
     window.addEventListener('click', closeMenu);
+	
+	
 }
     
 
