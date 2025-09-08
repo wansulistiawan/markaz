@@ -2130,73 +2130,73 @@ b. Soekarno
 	
 <script>
 
-	// =======================================================
-// === KODE KONTROL YOUTUBE (VERSI FINAL YANG SEBENARNYA) ===
+// =======================================================
+// === KODE KONTROL YOUTUBE (VERSI UNTUK LIVE SERVER) ===
 // =======================================================
 let player;
 let videoSlideshowInterval;
 const playlistId = 'PLCkk8QVJzkuQBH-p2kHcTTG_4gzibc93v';
 
 let isYouTubeApiReady = false;
-let isPlayerInitialized = false;
-let playlistVideoIds = []; // Variabel untuk menyimpan semua ID video
-let currentVideoIndex = -1; // Kita mulai dari -1 agar putaran pertama menjadi 0
+let isPlayerInitialized = false; // Mencegah player dibuat berulang kali
 
-// Fungsi untuk MEMULAI slideshow (perpindahan otomatis)
-function startSlideshow() {
-    stopSlideshow(); // Selalu hentikan timer lama untuk mencegah tumpuk
-    videoSlideshowInterval = setInterval(() => {
-        if (!player || playlistVideoIds.length === 0) return;
-
-        // Pindah ke indeks video berikutnya, kembali ke 0 jika sudah di akhir
-        currentVideoIndex = (currentVideoIndex + 1) % playlistVideoIds.length;
-        const nextVideoId = playlistVideoIds[currentVideoIndex];
+// Fungsi ini akan dipanggil oleh YouTube API dan juga oleh kode kita
+function tryToCreatePlayer() {
+    // Fungsi ini hanya akan berjalan jika SEMUA syarat terpenuhi:
+    // 1. Skrip YouTube sudah siap (isYouTubeApiReady = true)
+    // 2. Wadah video <div id="youtube-player"> sudah ada di halaman
+    // 3. Player belum pernah dibuat sebelumnya (isPlayerInitialized = false)
+    if (isYouTubeApiReady && document.getElementById('youtube-player') && !isPlayerInitialized) {
         
-        // Menggunakan cueVideoById untuk HANYA MENYIAPKAN video, BUKAN memutarnya
-        if (player && typeof player.cueVideoById === 'function') {
-            player.cueVideoById(nextVideoId);
-        }
-    }, 8000); // Pindah video setiap 8 detik
+        isPlayerInitialized = true; // Tandai bahwa player akan dibuat, agar fungsi ini tidak berjalan lagi 
+        
+        player = new YT.Player('youtube-player', {
+            height: '100%',
+            width: '100%',
+            playerVars: { 'playsinline': 1, 'autoplay': 0, 'controls': 1, 'listType': 'playlist', 'list': playlistId },
+            events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
+        });
+    }
 }
 
-// Fungsi untuk MENGHENTIKAN slideshow
+// Fungsi ini dipanggil oleh YouTube API setelah skripnya siap
+window.onYouTubeIframeAPIReady = function() {
+    isYouTubeApiReady = true; // 1. Tandai bahwa API YouTube siap
+    tryToCreatePlayer();      // 2. Coba buat player
+};
+
+// Fungsi untuk memulai slideshow (perpindahan otomatis)
+function startSlideshow() {
+    stopSlideshow();
+    videoSlideshowInterval = setInterval(() => {
+        if (player && typeof player.nextVideo === 'function') {
+            player.nextVideo();
+        }
+    }, 8000); // Durasi 8 detik
+}
+
+// Fungsi untuk menghentikan slideshow
 function stopSlideshow() {
     clearInterval(videoSlideshowInterval);
 }
 
-// Fungsi ini dipanggil oleh YouTube API
-window.onYouTubeIframeAPIReady = function() {
-    isYouTubeApiReady = true;
-    initializePlayer();
-};
-
-// Fungsi ini dipanggil saat pemutar video sudah benar-benar siap
+// Fungsi ini dipanggil saat pemutar video sudah siap
 function onPlayerReady(event) {
-    // Ambil daftar semua ID video di dalam playlist
-    playlistVideoIds = player.getPlaylist();
-    // Dapatkan indeks video yang dimuat pertama kali (biasanya 0)
-    currentVideoIndex = player.getPlaylistIndex();
-    // Mulai slideshow untuk pertama kalinya
     startSlideshow();
 }
 
 // Fungsi ini dipanggil saat status video berubah
 function onPlayerStateChange(event) {
-    // Saat video baru disiapkan (CUED), perbarui judulnya
     if (event.data === YT.PlayerState.CUED) {
         const titleElement = document.getElementById('youtube-title');
-        const videoData = player.getVideoData(); // Ambil data video saat ini
+        const videoData = player.getVideoData();
         if (titleElement && videoData && videoData.title) {
-            titleElement.textContent = videoData.title; // Tampilkan judulnya
+            titleElement.textContent = videoData.title;
         }
     }
-
-    // Jika video DIPUTAR atau DIJEDA oleh pengguna, hentikan slideshow
     if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED) {
         stopSlideshow();
-    } 
-    // Jika video yang ditonton SELESAI, mulai lagi slideshow
-    else if (event.data === YT.PlayerState.ENDED) {
+    } else if (event.data === YT.PlayerState.ENDED) {
         startSlideshow();
     }
 }
