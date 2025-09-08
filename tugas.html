@@ -12,6 +12,10 @@
     
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+	
+	<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.css" />
+	<script src="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.js"></script>
 
     <style>
         :root {
@@ -154,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const getActiveSession = () => JSON.parse(localStorage.getItem('userSession') || sessionStorage.getItem('userSession') || 'null');
     
     function showView(viewId) { Object.values(views).forEach(v => v.classList.add('hidden')); if(views[viewId]) views[viewId].classList.remove('hidden'); }
-    function initializeEditor(containerId) { return new Quill(containerId, { theme: 'snow', modules: { toolbar: [[{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline', 'strike'], ['link', 'image'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] } }); }
+    function initializeEditor(containerId) { return new Quill(containerId, { theme: 'snow', modules: { toolbar: [[{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline', 'strike'], ['link', 'image', 'formula'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] } }); }
     
     function findAcademicMonthForDate(referenceDateStr) {
         if (!referenceDateStr || !referenceDateStr.includes('-')) return 0;
@@ -208,6 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p class="text-sm text-gray-500">Untuk: ${tugas.KodeMateri || 'Umum'} | Batas Waktu: ${deadline}</p>
                     </div>
                     <div class="flex gap-2">
+						<button class="btn btn-secondary btn-edit-tugas" data-id="${tugas.ID}">Edit</button>
                         <button class="btn btn-info btn-grade" data-id="${tugas.ID}">Lihat & Nilai (${tugas.JumlahKiriman || 0})</button>
                     </div>`;
                 container.appendChild(div);
@@ -255,36 +260,109 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function handleSaveTugas(event) {
-        event.preventDefault(); showLoading();
-        const session = getActiveSession();
-        const data = {
-            action: 'createTugas',
-            Judul: document.getElementById('input-judul').value,
-            KodeMateri: document.getElementById('input-materi').value,
-            Deadline: document.getElementById('input-deadline').value,
-            KontenHTML: editor.root.innerHTML,
-            DibuatOleh: session.userData.profileName
-        };
+    event.preventDefault();
+    showLoading();
+    
+    const form = event.target;
+    const tugasIdInput = form.querySelector('input[name="tugasId"]');
+    const isEditing = tugasIdInput && tugasIdInput.value;
 
-        if (data.KontenHTML === '<p><br></p>') { showMessage('Instruksi tugas tidak boleh kosong.', 'error'); hideLoading(); return; }
+    const session = getActiveSession();
+    const data = {
+        action: isEditing ? 'updateTugas' : 'createTugas', // <-- Logika cerdas di sini
+        Judul: document.getElementById('input-judul').value,
+        KodeMateri: document.getElementById('input-materi').value,
+        Deadline: document.getElementById('input-deadline').value,
+        KontenHTML: editor.root.innerHTML,
+        DibuatOleh: session.userData.profileName
+    };
 
-        try {
-            const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
-            const result = await response.json();
-            if (result.status !== 'success') throw new Error(result.message);
-            showMessage('Tugas berhasil disimpan!', 'success');
-            await loadTeacherDashboard();
-            showView('teacher');
-        } catch (error) { showMessage(`Gagal menyimpan: ${error.message}`, 'error'); } 
-        finally { hideLoading(); }
+    // Jika sedang mengedit, tambahkan ID tugas ke data yang dikirim
+    if (isEditing) {
+        data.tugasId = tugasIdInput.value;
     }
+
+    if (data.KontenHTML === '<p><br></p>') {
+        showMessage('Instruksi tugas tidak boleh kosong.', 'error');
+        hideLoading();
+        return;
+    }
+
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+        
+        showMessage(`Tugas berhasil ${isEditing ? 'diperbarui' : 'disimpan'}!`, 'success');
+        
+        // Hapus ID tugas dari form agar form kembali ke mode 'buat baru'
+        if (tugasIdInput) {
+            tugasIdInput.value = '';
+        }
+
+        await loadTeacherDashboard();
+        showView('teacher');
+    } catch (error) {
+        showMessage(`Gagal menyimpan: ${error.message}`, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+	
+	async function showEditForm(tugasId) {
+    showLoading();
+    showView('form');
+    document.getElementById('form-tugas').reset();
+    
+    // Tambahkan input tersembunyi untuk menyimpan ID tugas
+    const form = document.getElementById('form-tugas');
+    let idInput = form.querySelector('input[name="tugasId"]');
+    if (!idInput) {
+        idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'tugasId';
+        form.appendChild(idInput);
+    }
+    idInput.value = tugasId;
+
+    try {
+        // Panggil backend untuk ambil detail tugas yang spesifik
+        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getTugasDetail', tugasId: tugasId }) });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+        
+        const tugas = result.data;
+        document.getElementById('form-title').textContent = 'Edit Tugas';
+        document.getElementById('input-judul').value = tugas.Judul;
+        
+        // Format tanggal agar sesuai dengan input type="date" (YYYY-MM-DD)
+        document.getElementById('input-deadline').value = new Date(tugas.Deadline).toISOString().split('T')[0];
+        
+        // Panggil fungsi showCreateForm untuk mengisi dropdown materi
+        await showCreateForm();
+        
+        // Beri jeda sedikit agar dropdown terisi penuh, lalu pilih materi yang sesuai
+        setTimeout(() => {
+            document.getElementById('input-materi').value = tugas.KodeMateri;
+        }, 500);
+
+        if (!editor) editor = initializeEditor('#editor-container');
+        editor.root.innerHTML = tugas.KontenHTML;
+
+    } catch (error) {
+        showMessage(`Gagal memuat data tugas: ${error.message}`, 'error');
+        showView('teacher');
+    } finally {
+        hideLoading();
+    }
+}
+
 
     async function loadStudentDashboard() {
     const container = document.getElementById('tugas-list-student');
     container.innerHTML = '<p>Memuat daftar tugas...</p>';
     try {
         const session = getActiveSession();
-        // HAPUS parameter 'bulan' dari data yang dikirim ke backend
         const response = await fetch(CONFIG.SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({ 
@@ -298,19 +376,41 @@ document.addEventListener('DOMContentLoaded', function() {
         if (result.status !== 'success') throw new Error(result.message);
         
         container.innerHTML = result.data.length === 0 ? '<p class="text-gray-500">Tidak ada tugas yang relevan untuk Anda saat ini.</p>' : '';
+        
+        const now = new Date(); // Ambil waktu saat ini
+
         result.data.forEach(tugas => {
-            const deadline = new Date(tugas.Deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-            let statusHtml = `<button class="btn btn-info btn-work" data-id="${tugas.ID}">Kerjakan</button>`;
+            const deadlineDate = new Date(tugas.Deadline);
+            deadlineDate.setHours(23, 59, 59, 999); // Set deadline ke akhir hari
+
+            const deadlineString = deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            let statusHtml = '';
+
             if (tugas.Status === 'Terkirim') {
-                const nilaiText = tugas.Nilai ? `Nilai: ${tugas.Nilai}` : 'Belum Dinilai';
-                statusHtml = `<div class="text-sm font-semibold text-green-600">Terkirim (${nilaiText})</div>`;
+                const sudahDinilai = tugas.Nilai && tugas.Nilai !== '';
+                const lewatBatasWaktu = now > deadlineDate;
+
+                if (sudahDinilai) {
+                    // 1. Jika sudah ada nilai, tidak bisa edit.
+                    statusHtml = `<div class="text-sm font-semibold text-green-600">Selesai (Nilai: ${tugas.Nilai})</div>`;
+                } else if (lewatBatasWaktu) {
+                    // 2. Jika lewat batas waktu dan belum dinilai, tidak bisa edit.
+                    statusHtml = `<div class="text-sm font-semibold text-red-500">Batas Waktu Habis</div>`;
+                } else {
+                    // 3. Jika belum dinilai DAN belum lewat batas waktu, BISA EDIT.
+                    statusHtml = `<button class="btn btn-secondary btn-edit-jawaban" data-id="${tugas.ID}" data-submission-id="${tugas.SubmissionID}">Edit Jawaban</button>`;
+                }
+            } else {
+                // Jika belum dikerjakan sama sekali
+                statusHtml = `<button class="btn btn-info btn-work" data-id="${tugas.ID}">Kerjakan</button>`;
             }
+
             const div = document.createElement('div');
             div.className = 'border p-4 rounded-lg flex justify-between items-center';
             div.innerHTML = `
                 <div>
                     <p class="font-bold">${tugas.Judul}</p>
-                    <p class="text-sm text-gray-500">Untuk: ${tugas.KodeMateri} | Batas Waktu: ${deadline}</p>
+                    <p class="text-sm text-gray-500">Untuk: ${tugas.KodeMateri} | Batas Waktu: ${deadlineString}</p>
                 </div>
                 <div>${statusHtml}</div>`;
             container.appendChild(div);
@@ -319,6 +419,51 @@ document.addEventListener('DOMContentLoaded', function() {
         container.innerHTML = `<p class="text-red-500">Gagal memuat tugas: ${error.message}</p>`; 
     }
 }
+
+async function showEditJawabanForm(tugasId, submissionId) {
+    showView('submission');
+    showLoading();
+    document.getElementById('form-submission').reset();
+
+    // Simpan ID tugas dan ID jawaban di form
+    document.getElementById('submission-tugas-id').value = tugasId;
+    
+    const form = document.getElementById('form-submission');
+    let submissionIdInput = form.querySelector('input[name="submissionId"]');
+    if (!submissionIdInput) {
+        submissionIdInput = document.createElement('input');
+        submissionIdInput.type = 'hidden';
+        submissionIdInput.name = 'submissionId';
+        form.appendChild(submissionIdInput);
+    }
+    submissionIdInput.value = submissionId;
+
+    try {
+        // Ambil detail instruksi tugas DAN jawaban lama dari backend
+        const response = await fetch(CONFIG.SCRIPT_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ action: 'getTugasDanJawabanDetail', tugasId: tugasId, submissionId: submissionId }) 
+        });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        // Tampilkan instruksi
+        document.getElementById('submission-title').textContent = result.data.tugas.Judul;
+        document.getElementById('submission-deadline').textContent = `Batas Waktu: ${new Date(result.data.tugas.Deadline).toLocaleDateString('id-ID')}`;
+        document.getElementById('submission-instruction').innerHTML = result.data.tugas.KontenHTML;
+        
+        // Tampilkan jawaban lama di editor
+        if(!submissionEditor) submissionEditor = initializeEditor('#submission-editor-container');
+        submissionEditor.root.innerHTML = result.data.jawaban.KontenHTML;
+
+    } catch (error) {
+        showMessage(`Gagal memuat data: ${error.message}`, 'error');
+        showView('student');
+    } finally {
+        hideLoading();
+    }
+}
+
     
 	async function showGradingView(tugasId) { showView('grading'); showLoading(); const container = document.getElementById('submission-list'); container.innerHTML = '<p>Memuat jawaban santri...</p>'; try { const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getSubmissions', tugasId: tugasId }) }); const result = await response.json(); if (result.status !== 'success') throw new Error(result.message); document.getElementById('grading-title').textContent = `Kiriman untuk Tugas: ${result.tugasJudul || ''}`; container.innerHTML = ''; if (result.data.length === 0) { container.innerHTML = '<p class="text-gray-500">Belum ada santri yang mengirimkan tugas ini.</p>'; return; } result.data.forEach(sub => { const div = document.createElement('div'); div.className = 'border-t pt-6'; div.innerHTML = ` <div class="flex justify-between items-start"> <p class="font-bold">${sub.NamaSantri}</p> <p class="text-sm text-gray-500">Dikirim: ${new Date(sub.Timestamp).toLocaleString('id-ID')}</p> </div> <div class="prose content-display mt-2 p-3 border bg-gray-50 rounded-md">${sub.KontenHTML}</div> <div class="mt-3 flex items-center gap-3"> <label class="font-semibold">Nilai:</label> <input type="number" min="0" max="100" class="w-24 p-2 border rounded" value="${sub.Nilai || ''}" placeholder="0-100"> <button class="btn btn-primary btn-save-grade" data-id="${sub.ID}">Simpan Nilai</button> </div>`; container.appendChild(div); }); } catch (error) { container.innerHTML = `<p class="text-red-500">Gagal memuat kiriman: ${error.message}</p>`; } finally { hideLoading(); } }
      async function handleGradeSubmission(submissionId, nilai, button) { showLoading(); button.disabled = true; try { const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'gradeTugas', submissionId: submissionId, nilai: nilai }) }); const result = await response.json(); if (result.status !== 'success') throw new Error(result.message); showMessage('Nilai berhasil disimpan!', 'success'); } catch (error) { showMessage(`Gagal menyimpan nilai: ${error.message}`, 'error'); } finally { hideLoading(); button.disabled = false; } }
@@ -354,37 +499,52 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function handleSubmitTugas(event) {
-        event.preventDefault();
-        showLoading();
-        
-        const session = getActiveSession();
-        const data = {
-            action: 'submitTugas',
-            TugasID: document.getElementById('submission-tugas-id').value,
-            UsernameSantri: session.username,
-            NamaSantri: session.userData.profileName,
-            KontenHTML: submissionEditor.root.innerHTML
-        };
+    event.preventDefault();
+    showLoading();
 
-        if (data.KontenHTML === '<p><br></p>') {
-            showMessage('Jawaban tidak boleh kosong.', 'error');
-            hideLoading();
-            return;
-        }
+    const form = event.target;
+    const submissionIdInput = form.querySelector('input[name="submissionId"]');
+    const isEditing = submissionIdInput && submissionIdInput.value;
+    
+    const session = getActiveSession();
+    const data = {
+        action: isEditing ? 'updateJawaban' : 'submitTugas', // <-- Logika cerdas
+        TugasID: document.getElementById('submission-tugas-id').value,
+        UsernameSantri: session.username,
+        NamaSantri: session.userData.profileName,
+        KontenHTML: submissionEditor.root.innerHTML
+    };
 
-        try {
-            const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
-            const result = await response.json();
-            if (result.status !== 'success') throw new Error(result.message);
-            showMessage('Tugas berhasil dikirim!', 'success');
-            await loadStudentDashboard();
-            showView('student');
-        } catch (error) {
-            showMessage(`Gagal mengirim: ${error.message}`, 'error');
-        } finally {
-            hideLoading();
-        }
+    // Jika mengedit, kirim ID jawabannya
+    if (isEditing) {
+        data.submissionId = submissionIdInput.value;
     }
+
+    if (data.KontenHTML === '<p><br></p>') {
+        showMessage('Jawaban tidak boleh kosong.', 'error');
+        hideLoading();
+        return;
+    }
+
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+        
+        showMessage(`Jawaban berhasil ${isEditing ? 'diperbarui' : 'dikirim'}!`, 'success');
+        
+        if (submissionIdInput) { // Kosongkan lagi setelah selesai
+            submissionIdInput.value = '';
+        }
+
+        await loadStudentDashboard();
+        showView('student');
+    } catch (error) {
+        showMessage(`Gagal mengirim: ${error.message}`, 'error');
+    } finally {
+        hideLoading();
+    }
+}
 
 
     // === Event Listeners ===
@@ -401,18 +561,26 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Event listener untuk tombol kerjakan/nilai (event delegation)
     document.body.addEventListener('click', function(event) {
-        if (event.target.classList.contains('btn-grade')) {
-            showGradingView(event.target.dataset.id);
-        }
-        if (event.target.classList.contains('btn-work')) {
-            showSubmissionView(event.target.dataset.id);
-        }
-        if (event.target.classList.contains('btn-save-grade')) {
-            const submissionId = event.target.dataset.id;
-            const nilaiInput = event.target.previousElementSibling;
-            handleGradeSubmission(submissionId, nilaiInput.value, event.target);
-        }
-    });
+    if (event.target.classList.contains('btn-edit-tugas')) { // <-- BLOK BARU
+        showEditForm(event.target.dataset.id);
+    }
+	if (event.target.classList.contains('btn-edit-jawaban')) { // <-- BLOK BARU
+        const tugasId = event.target.dataset.id;
+        const submissionId = event.target.dataset.submissionId;
+        showEditJawabanForm(tugasId, submissionId);
+    }
+    if (event.target.classList.contains('btn-grade')) {
+        showGradingView(event.target.dataset.id);
+    }
+    if (event.target.classList.contains('btn-work')) {
+        showSubmissionView(event.target.dataset.id);
+    }
+    if (event.target.classList.contains('btn-save-grade')) {
+        const submissionId = event.target.dataset.id;
+        const nilaiInput = event.target.previousElementSibling;
+        handleGradeSubmission(submissionId, nilaiInput.value, event.target);
+    }
+});
 
     // Event listener untuk form kirim tugas (santri)
     document.getElementById('form-submission')?.addEventListener('submit', handleSubmitTugas);
