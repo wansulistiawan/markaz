@@ -1700,7 +1700,7 @@
         <div><label>Ayat Awal</label><input type="number" id="ziyadahPAyatAwalMusyrif"></div>
         <div><label>Ayat Akhir</label><input type="number" id="ziyadahPAyatAkhirMusyrif"></div>
     </div>
-    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahPoinMusyrif"></div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahPoinMusyrif" required></div>
 
     <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Ziyadah (Sore)</h4>
     <div class="form-group"><label>Surah</label><select id="ziyadahSSurahMusyrif"></select></div>
@@ -1708,7 +1708,7 @@
         <div><label>Ayat Awal</label><input type="number" id="ziyadahSAyatAwalMusyrif"></div>
         <div><label>Ayat Akhir</label><input type="number" id="ziyadahSAyatAkhirMusyrif"></div>
     </div>
-    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahSoinMusyrif"></div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahSoinMusyrif" required></div>
 
     <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Muraja'ah</h4>
     
@@ -1733,7 +1733,7 @@
         <div class="form-group"><label>Ayat Akhir</label><input type="number" id="murajaahAyatAkhirMusyrif"></div>
     </div>
 
-    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="murajaahPoinMusyrif"></div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="murajaahPoinMusyrif" required></div>
 </div>
             <button type="submit" class="submit-btn">Simpan Nilai Tahfidz</button>
         </form>
@@ -1810,7 +1810,7 @@
         <div><label>Ayat Awal</label><input type="number" id="ziyadahPAyatAwalMusyrifah"></div>
         <div><label>Ayat Akhir</label><input type="number" id="ziyadahPAyatAkhirMusyrifah"></div>
     </div>
-    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahPoinMusyrifah"></div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahPoinMusyrifah" required></div>
 
     <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Ziyadah (Sore)</h4>
     <div class="form-group"><label>Surah</label><select id="ziyadahSSurahMusyrifah"></select></div>
@@ -1818,7 +1818,7 @@
         <div><label>Ayat Awal</label><input type="number" id="ziyadahSAyatAwalMusyrifah"></div>
         <div><label>Ayat Akhir</label><input type="number" id="ziyadahSAyatAkhirMusyrifah"></div>
     </div>
-    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahSoinMusyrifah"></div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahSoinMusyrifah" required></div>
 
     <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Muraja'ah</h4>
 
@@ -1843,7 +1843,7 @@
         <div class="form-group"><label>Ayat Akhir</label><input type="number" id="murajaahAyatAkhirMusyrifah"></div>
     </div>
 
-    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="murajaahPoinMusyrifah"></div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="murajaahPoinMusyrifah" required></div>
 </div>
             <button type="submit" class="submit-btn">Simpan Nilai Tahfidz</button>
         </form>
@@ -3766,13 +3766,13 @@ function renderSoalUntukGuru(filterKodeMateri) {
             <tr class="soal-row-guru" data-kode-materi="${soal.kodemateri}" data-nomor-soal="${soal.nomorsoal}">
                 <td class="px-4 py-3 align-top">${index + 1}</td>
                 <td class="px-4 py-3 text-sm text-gray-800">
-                    <textarea class="w-full p-2 border rounded-md" rows="4">${soal.isisoal}</textarea>
+                    <textarea class="w-full p-2 border rounded-md" style="resize: vertical;">${soal.isisoal}</textarea>
                 </td>
                 <td class="px-4 py-3 align-top">
                     <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md uppercase" maxlength="1" value="${soal.kuncijawaban || ''}" placeholder="Cth: A">
                 </td>
                 <td class="px-4 py-3 align-top">
-                    <input type="number" class="poin-soal-input w-full p-2 border rounded-md" value="${soal.poin || 0}" placeholder="Cth: A">
+                    <input type="number" class="poin-soal-input w-full p-2 border rounded-md" value="${soal.poin || 0}">
                 </td>
             </tr>
         `;
@@ -3781,6 +3781,21 @@ function renderSoalUntukGuru(filterKodeMateri) {
     tableHTML += `</tbody></table>`;
     soalContainer.innerHTML = tableHTML;
     updateBtn.classList.remove('hidden');
+
+    // --- KODE BARU DITAMBAHKAN DI SINI ---
+    // Menerapkan auto-resize ke semua textarea yang baru dibuat
+    soalContainer.querySelectorAll('textarea').forEach(textarea => {
+        // Panggil fungsi sekali saat pertama kali ditampilkan
+        autoResizeTextarea(textarea);
+        // Tambahkan event listener agar textarea menyesuaikan diri saat guru mengedit soal
+        textarea.addEventListener('input', () => autoResizeTextarea(textarea));
+    });
+    // --- AKHIR DARI KODE BARU ---
+}
+
+function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto'; // Reset tinggi untuk mendapatkan scrollHeight yang benar
+    textarea.style.height = textarea.scrollHeight + 'px'; // Atur tinggi sesuai dengan konten
 }
 
 function handleUpdateSoal() {
@@ -4815,91 +4830,70 @@ let isJadwalSholatInitialized = false; // Penanda agar tidak diinisialisasi beru
         isJadwalSholatInitialized = true; // Tandai sudah diinisialisasi
     }
 
-// GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
+// // GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
 function showPage(hash) {
     // Selalu sembunyikan semua bagian dulu
     document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
 	document.getElementById('tahfidz-chart-container').classList.add('hidden');
 	
 	const targetHash = (hash === '' || hash === '#') ? '#beranda' : hash;
-
 	
 	if (targetHash === '#jadwal-sholat') {
             const section = document.querySelector(hash);
             if (section) {
                 section.classList.remove('hidden');
-                
             }
-            return; // Hentikan agar tidak menjalankan kode di bawahnya
+            return;
         }
-
-        
-       
-	
-	
+    
     // =======================================================
     // === BLOK PRIORITAS KHUSUS UNTUK KRS & KHS ===
     // =======================================================
     if (hash === '#krs' || hash === '#khs') {
-	
-	// Cek apakah fungsi-fungsi penting (seperti handleKrsClick) sudah siap.
-    // Jika belum, jalankan inisialisasi satu kali.
-    if (!isSistemInformasiInitialized) {
-        initializeSistemInformasi();
-    }
-    // --- AKHIR PENAMBAHAN KODE ---
-	
+		if (!isSistemInformasiInitialized) {
+			initializeSistemInformasi();
+		}
         const santriSection = document.getElementById('santri');
         if (santriSection) {
-            // 1. Tampilkan kontainer utama untuk santri
             santriSection.classList.remove('hidden');
-
-            // 2. Jalankan logika untuk menampilkan form pilihan
             const session = getActiveSession();
             if (session && session.userData && (session.userData.jabatan || '').trim().toLowerCase() === 'santri') {
-                if (session && session.userData && (session.userData.jabatan || '').trim().toLowerCase() === 'santri') {
-    const loggedInSantriName = session.userData.profileName;
-    
-    // Cari data lengkap santri di dalam appData berdasarkan nama
-    const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
-    
-    // Ambil data kelompok dari hasil pencarian
-    const kelompokSantri = santriData ? santriData.grup : 'Data tidak ditemukan';
+                const loggedInSantriName = session.userData.profileName;
+				const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
+				const kelompokSantri = santriData ? santriData.grup : 'Data tidak ditemukan';
 
-    document.getElementById('santri-selection-container').classList.remove('hidden');
-    document.getElementById('santri-selector-name').textContent = `: ${loggedInSantriName}`;
-    document.getElementById('santri-selector-group').textContent = `: ${kelompokSantri}`; // Tampilkan data kelompok yang benar
+				document.getElementById('santri-selection-container').classList.remove('hidden');
+				document.getElementById('santri-selector-name').textContent = `: ${loggedInSantriName}`;
+				document.getElementById('santri-selector-group').textContent = `: ${kelompokSantri}`;
 
-    const monthSelector = document.getElementById('santri-month-selector');
-    if (monthSelector.options.length === 0) {
-        const months = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
-        months.forEach((month, index) => {
-            const option = document.createElement('option');
-            option.value = index + 1;
-            option.textContent = month;
-            monthSelector.appendChild(option);
-        });
-    }
-    
-    const showReportBtn = document.getElementById('show-report-btn');
-    showReportBtn.classList.remove('krs-btn-color', 'khs-btn-color');
-    if (hash === '#krs') {
-        showReportBtn.textContent = 'Tampilkan KRS';
-        showReportBtn.dataset.reportType = 'krs';
-        showReportBtn.classList.add('krs-btn-color');
-    } else {
-        showReportBtn.textContent = 'Tampilkan KHS';
-        showReportBtn.dataset.reportType = 'khs';
-        showReportBtn.classList.add('khs-btn-color');
-    }
-}
+				const monthSelector = document.getElementById('santri-month-selector');
+				if (monthSelector.options.length === 0) {
+					const months = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+					months.forEach((month, index) => {
+						const option = document.createElement('option');
+						option.value = index + 1;
+						option.textContent = month;
+						monthSelector.appendChild(option);
+					});
+				}
+				
+				const showReportBtn = document.getElementById('show-report-btn');
+				showReportBtn.classList.remove('krs-btn-color', 'khs-btn-color');
+				if (hash === '#krs') {
+					showReportBtn.textContent = 'Tampilkan KRS';
+					showReportBtn.dataset.reportType = 'krs';
+					showReportBtn.classList.add('krs-btn-color');
+				} else {
+					showReportBtn.textContent = 'Tampilkan KHS';
+					showReportBtn.dataset.reportType = 'khs';
+					showReportBtn.classList.add('khs-btn-color');
+				}
                 
-                // 3. Pastikan kontainer hasil disembunyikan pada awalnya
                 document.getElementById('krs-container').classList.add('hidden');
                 document.getElementById('khs-container').classList.add('hidden');
             }
         }
-        return; // PENTING: Hentikan fungsi di sini agar tidak menjalankan kode lain di bawah
+        return;
     }
 
     // =======================================================
@@ -4910,7 +4904,6 @@ function showPage(hash) {
 
     if (sectionToShow) {
         sectionToShow.classList.remove('hidden');
-        // Kode asli Anda untuk menangani halaman lain (absensi, sistem-informasi, dll.)
         if (targetHash === '#roster-kbm' && !isSistemInformasiInitialized) {
             initializeSistemInformasi();
         } else if (targetHash === '#absensi') {
@@ -4926,8 +4919,12 @@ function showPage(hash) {
                 fetchAndRenderAttendanceHistory(session.userData.profileName);
             }
         } else if (targetHash === '#musyrif') {
+            // --- AWAL PERBAIKAN ---
             const session = getActiveSession();
-            if (session && session.loggedIn && session.userData.jabatan === 'Musyrif') {
+            const username = session ? session.username : '';
+            const jabatan = (session && session.userData) ? session.userData.jabatan : '';
+            // Logika pengecekan disamakan dengan logika di menu nav
+            if (session && session.loggedIn && (jabatan === 'Musyrif' || ['wawan', 'admin'].includes(username))) {
                 populateSantriDropdowns('musyrif');
 				buatDropdownSurah('ziyadahPSurahMusyrif');
 				buatDropdownSurah('ziyadahSSurahMusyrif');
@@ -4937,9 +4934,14 @@ function showPage(hash) {
                 fetchAndRenderDailyReports('musyrif');
                 document.querySelectorAll('#musyrif input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
             }
+            // --- AKHIR PERBAIKAN ---
         } else if (targetHash === '#musyrifah') {
-             const session = getActiveSession();
-            if (session && session.loggedIn && session.userData.jabatan === 'Musyrifah') {
+            // --- AWAL PERBAIKAN ---
+            const session = getActiveSession();
+            const username = session ? session.username : '';
+            const jabatan = (session && session.userData) ? session.userData.jabatan : '';
+            // Logika pengecekan disamakan dengan logika di menu nav
+            if (session && session.loggedIn && (jabatan === 'Musyrifah' || ['wawan', 'admin'].includes(username))) {
                 populateSantriDropdowns('musyrifah');
 				buatDropdownSurah('ziyadahPSurahMusyrifah');
 				buatDropdownSurah('ziyadahSSurahMusyrifah');
@@ -4949,56 +4951,47 @@ function showPage(hash) {
                 fetchAndRenderDailyReports('musyrifah');
                 document.querySelectorAll('#musyrifah input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
             }
+            // --- AKHIR PERBAIKAN ---
         } else if (targetHash === '#laporan') {
-    const session = getActiveSession();
-    const userJabatan = (session && session.userData) ? (session.userData.jabatan || '').toLowerCase().trim() : '';
-    
-    // Jabatan yang diizinkan melihat laporan & grafik
-    const allowedJabatan = ['waka kurikulum', 'kepala rumah tahfidz quran', 'kepala rumah anak yatim'];
+			const session = getActiveSession();
+			const userJabatan = (session && session.userData) ? (session.userData.jabatan || '').toLowerCase().trim() : '';
+			const allowedJabatan = ['waka kurikulum', 'kepala rumah tahfidz quran', 'kepala rumah anak yatim', 'admin', 'wawan'];
 
-    if (session && session.loggedIn) {
-        // --- BAGIAN INI MENGEMBALIKAN FUNGSI TABEL LAPORAN HARIAN ---
-        const datePicker = document.getElementById('laporanTanggal');
-        if (!datePicker.dataset.listenerAttached) {
-            datePicker.addEventListener('change', (e) => {
-                fetchAndRenderTahfidzReport(e.target.value);
-            });
-            datePicker.dataset.listenerAttached = 'true';
-        }
-        // Secara default, tampilkan laporan untuk hari ini saat halaman dibuka
-        datePicker.value = new Date().toISOString().slice(0, 10);
-        fetchAndRenderTahfidzReport(datePicker.value);
-        // --- AKHIR BAGIAN YANG HILANG ---
+			if (session && session.loggedIn) {
+				const datePicker = document.getElementById('laporanTanggal');
+				if (!datePicker.dataset.listenerAttached) {
+					datePicker.addEventListener('change', (e) => {
+						fetchAndRenderTahfidzReport(e.target.value);
+					});
+					datePicker.dataset.listenerAttached = 'true';
+				}
+				datePicker.value = new Date().toISOString().slice(0, 10);
+				fetchAndRenderTahfidzReport(datePicker.value);
 
-        // --- BAGIAN INI UNTUK MENAMPILKAN GRAFIK (TETAP SAMA) ---
-        if (allowedJabatan.includes(userJabatan)) {
-            document.getElementById('tahfidz-chart-container').classList.remove('hidden');
-            
-            const santriList = [...new Set([...appData.santriMusyrif, ...appData.santriMusyrifah])].sort();
-            const santriSelect = document.getElementById('chart-santri-select');
-            santriSelect.innerHTML = '<option value="">-- Pilih Santri --</option>';
-            santriList.forEach(name => {
-                santriSelect.innerHTML += `<option value="${name}">${name}</option>`;
-            });
-
-            const endDateInput = document.getElementById('chart-end-date');
-            const startDateInput = document.getElementById('chart-start-date');
-            const today = new Date();
-            endDateInput.value = today.toISOString().slice(0, 10);
-            today.setDate(today.getDate() - 30);
-            startDateInput.value = today.toISOString().slice(0, 10);
-
-            document.getElementById('show-chart-btn').onclick = () => {
-                const santriName = santriSelect.value;
-                if (!santriName) {
-                    alert("Silakan pilih nama santri.");
-                    return;
-                }
-                renderTahfidzChart(santriName, startDateInput.value, endDateInput.value);
-            };
-        }
-    }
-
+				if (allowedJabatan.includes(userJabatan) || session.username === 'wawan' || session.username === 'admin') {
+					document.getElementById('tahfidz-chart-container').classList.remove('hidden');
+					const santriList = [...new Set([...appData.santriMusyrif, ...appData.santriMusyrifah])].sort();
+					const santriSelect = document.getElementById('chart-santri-select');
+					santriSelect.innerHTML = '<option value="">-- Pilih Santri --</option>';
+					santriList.forEach(name => {
+						santriSelect.innerHTML += `<option value="${name}">${name}</option>`;
+					});
+					const endDateInput = document.getElementById('chart-end-date');
+					const startDateInput = document.getElementById('chart-start-date');
+					const today = new Date();
+					endDateInput.value = today.toISOString().slice(0, 10);
+					today.setDate(today.getDate() - 30);
+					startDateInput.value = today.toISOString().slice(0, 10);
+					document.getElementById('show-chart-btn').onclick = () => {
+						const santriName = santriSelect.value;
+						if (!santriName) {
+							alert("Silakan pilih nama santri.");
+							return;
+						}
+						renderTahfidzChart(santriName, startDateInput.value, endDateInput.value);
+					};
+				}
+			}
         } else if (targetHash === '#slip-gaji') {
             const session = getActiveSession();
             if (session && session.loggedIn) {
@@ -5060,14 +5053,12 @@ function showPage(hash) {
                 document.getElementById('tampilkanLaporanKeuanganBtn').click();
             }
         }
-else if (targetHash === '#halaman-guru') {
-    setupHalamanGuru();
-} else if (targetHash === '#halaman-ujian-admin') {
-            setupHalamanUjianAdmin();
-        }
-
+		else if (targetHash === '#halaman-guru') {
+			setupHalamanGuru();
+		} else if (targetHash === '#halaman-ujian-admin') {
+					setupHalamanUjianAdmin();
+				}
     } else {
-        // Jika tidak ada hash atau hash tidak ditemukan, tampilkan beranda
         document.getElementById('beranda').classList.remove('hidden');
     }
 }
