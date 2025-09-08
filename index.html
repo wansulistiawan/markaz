@@ -1022,47 +1022,6 @@
 }
 /* === AKHIR KODE BARU === */
 
-
-/* === KODE UNTUK VIDEO FLOATING (PICTURE-IN-PICTURE) === */
-
-#youtube-wrapper.is-floating {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 320px;  /* Lebar video saat melayang */
-    height: 180px; /* Tinggi video saat melayang */
-    z-index: 2000; /* Pastikan selalu di lapisan paling atas */
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
-    border: 2px solid white;
-    overflow: hidden; /* Penting agar sudutnya tetap tumpul */
-}
-
-/* Mengatur tombol close */
-#close-floating-video {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 28px;
-    height: 28px;
-    background-color: rgba(0, 0, 0, 0.6);
-    color: white;
-    font-size: 24px;
-    line-height: 28px;
-    text-align: center;
-    cursor: pointer;
-    display: none; /* Tombol close hanya tampil saat mode floating */
-    opacity: 0.7;
-    transition: opacity 0.3s;
-}
-#close-floating-video:hover {
-    opacity: 1;
-}
-
-/* Saat mode floating aktif, tampilkan tombol close */
-#youtube-wrapper.is-floating #close-floating-video {
-    display: block;
-}
     </style>
 </head>
 <body>
@@ -2130,97 +2089,75 @@ b. Soekarno
 	
 <script>
 
+	// =======================================================
+// === KODE KONTROL YOUTUBE (VERSI FINAL YANG SEBENARNYA) ===
 // =======================================================
-// === BLOK FINAL KODE YOUTUBE (MENGGANTIKAN SEMUA YANG LAMA) ===
-// =======================================================
-
-// --- Variabel Global ---
 let player;
 let videoSlideshowInterval;
 const playlistId = 'PLCkk8QVJzkuQBH-p2kHcTTG_4gzibc93v';
+
 let isYouTubeApiReady = false;
 let isPlayerInitialized = false;
+let playlistVideoIds = []; // Variabel untuk menyimpan semua ID video
+let currentVideoIndex = -1; // Kita mulai dari -1 agar putaran pertama menjadi 0
 
-// --- Fungsi Logika Inti ---
+// Fungsi untuk MEMULAI slideshow (perpindahan otomatis)
 function startSlideshow() {
-    stopSlideshow();
+    stopSlideshow(); // Selalu hentikan timer lama untuk mencegah tumpuk
     videoSlideshowInterval = setInterval(() => {
-        if (player && typeof player.nextVideo === 'function') player.nextVideo();
-    }, 8000);
+        if (!player || playlistVideoIds.length === 0) return;
+
+        // Pindah ke indeks video berikutnya, kembali ke 0 jika sudah di akhir
+        currentVideoIndex = (currentVideoIndex + 1) % playlistVideoIds.length;
+        const nextVideoId = playlistVideoIds[currentVideoIndex];
+        
+        // Menggunakan cueVideoById untuk HANYA MENYIAPKAN video, BUKAN memutarnya
+        if (player && typeof player.cueVideoById === 'function') {
+            player.cueVideoById(nextVideoId);
+        }
+    }, 8000); // Pindah video setiap 8 detik
 }
 
+// Fungsi untuk MENGHENTIKAN slideshow
 function stopSlideshow() {
     clearInterval(videoSlideshowInterval);
 }
 
-// --- Fungsi yang Dipanggil oleh API & Kode Kita ---
+// Fungsi ini dipanggil oleh YouTube API
 window.onYouTubeIframeAPIReady = function() {
     isYouTubeApiReady = true;
-    tryToCreatePlayer();
+    initializePlayer();
 };
 
+// Fungsi ini dipanggil saat pemutar video sudah benar-benar siap
 function onPlayerReady(event) {
+    // Ambil daftar semua ID video di dalam playlist
+    playlistVideoIds = player.getPlaylist();
+    // Dapatkan indeks video yang dimuat pertama kali (biasanya 0)
+    currentVideoIndex = player.getPlaylistIndex();
+    // Mulai slideshow untuk pertama kalinya
     startSlideshow();
 }
 
-// --- SATU-SATUNYA FUNGSI onPlayerStateChange ---
+// Fungsi ini dipanggil saat status video berubah
 function onPlayerStateChange(event) {
-    const titleElement = document.getElementById('youtube-title');
-    // Update judul saat video siap atau mulai diputar
-    if (event.data === YT.PlayerState.CUED || event.data === YT.PlayerState.PLAYING) {
-        const videoData = player.getVideoData();
+    // Saat video baru disiapkan (CUED), perbarui judulnya
+    if (event.data === YT.PlayerState.CUED) {
+        const titleElement = document.getElementById('youtube-title');
+        const videoData = player.getVideoData(); // Ambil data video saat ini
         if (titleElement && videoData && videoData.title) {
-            titleElement.textContent = videoData.title;
+            titleElement.textContent = videoData.title; // Tampilkan judulnya
         }
     }
-    // Kontrol slideshow
+
+    // Jika video DIPUTAR atau DIJEDA oleh pengguna, hentikan slideshow
     if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED) {
         stopSlideshow();
-    } else if (event.data === YT.PlayerState.ENDED) {
+    } 
+    // Jika video yang ditonton SELESAI, mulai lagi slideshow
+    else if (event.data === YT.PlayerState.ENDED) {
         startSlideshow();
     }
-}
-
-// --- Fungsi Inisialisasi Player ---
-function tryToCreatePlayer() {
-    if (isYouTubeApiReady && document.getElementById('youtube-player') && !isPlayerInitialized) {
-        isPlayerInitialized = true;
-        player = new YT.Player('youtube-player', {
-            height: '100%', width: '100%',
-            playerVars: { 'playsinline': 1, 'autoplay': 0, 'controls': 1, 'listType': 'playlist', 'list': playlistId },
-            events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
-        });
-    }
-}
-
-// --- Fungsi Setup untuk Floating Player ---
-function setupFloatingPlayer() {
-    const youtubeWrapper = document.getElementById('youtube-wrapper');
-    const youtubeCardContainer = document.getElementById('youtube-card-container');
-    const closeBtn = document.getElementById('close-floating-video');
-
-    if (!youtubeWrapper || !youtubeCardContainer || !closeBtn) return;
-
-    closeBtn.addEventListener('click', () => {
-        if (player && typeof player.stopVideo === 'function') player.stopVideo();
-        youtubeWrapper.classList.remove('is-floating');
-    });
-
-    const observer = new IntersectionObserver(
-        (entries) => {
-            const entry = entries[0];
-            const playerState = (player && typeof player.getPlayerState === 'function') ? player.getPlayerState() : -1;
-            const isCurrentlyPlaying = (playerState === YT.PlayerState.PLAYING);
-
-            if (isCurrentlyPlaying && !entry.isIntersecting) {
-                youtubeWrapper.classList.add('is-floating');
-            } else {
-                youtubeWrapper.classList.remove('is-floating');
-            }
-        },
-        { threshold: 0.5 }
-    );
-    observer.observe(youtubeCardContainer);
 }
 
 // Fungsi untuk membuat player
@@ -5530,12 +5467,13 @@ function renderNewsCards() {
         // Cek jika item adalah playlist YouTube
         if (item.type === 'youtube_playlist') {
     return `
-        <div class="card" id="youtube-card-container">
-            <div id="youtube-wrapper" class="video-responsive">
-                <div id="youtube-player"></div>
-                <div id="close-floating-video">&times;</div>
+        <div class="card">
+            <div class="video-responsive">
+                <div id="youtube-player"></div> 
             </div>
+            
             <p id="youtube-title" class="text-sm text-center font-semibold mt-2 text-gray-700 p-2">Memuat judul...</p>
+            
             <div class="card-content">
                 <h3>${item.title}</h3>
                 <p class="meta">${item.meta}</p>
@@ -8275,12 +8213,15 @@ function setupAdvancedDropdown() {
     });
 
     // Tambahkan event listener untuk menutup menu jika mengklik di tempat lain
-    window.addEventListener('click', closeMenu);	
+    window.addEventListener('click', closeMenu);
+	
+	
 }
+    
+
+
     // --- MULAI APLIKASI ---
     initializeApp();
-
-	setupFloatingPlayer();
 });
 </script>
 </body>
