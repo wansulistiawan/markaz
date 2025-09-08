@@ -2131,74 +2131,96 @@ b. Soekarno
 <script>
 
 // =======================================================
-// === KODE KONTROL YOUTUBE (VERSI UNTUK LIVE SERVER) ===
+// === BLOK FINAL KODE YOUTUBE (MENGGANTIKAN SEMUA YANG LAMA) ===
 // =======================================================
+
+// --- Variabel Global ---
 let player;
 let videoSlideshowInterval;
 const playlistId = 'PLCkk8QVJzkuQBH-p2kHcTTG_4gzibc93v';
-
 let isYouTubeApiReady = false;
-let isPlayerInitialized = false; // Mencegah player dibuat berulang kali
+let isPlayerInitialized = false;
 
-// Fungsi ini akan dipanggil oleh YouTube API dan juga oleh kode kita
+// --- Fungsi Logika Inti ---
+function startSlideshow() {
+    stopSlideshow();
+    videoSlideshowInterval = setInterval(() => {
+        if (player && typeof player.nextVideo === 'function') player.nextVideo();
+    }, 8000);
+}
+
+function stopSlideshow() {
+    clearInterval(videoSlideshowInterval);
+}
+
+// --- Fungsi yang Dipanggil oleh API & Kode Kita ---
+window.onYouTubeIframeAPIReady = function() {
+    isYouTubeApiReady = true;
+    tryToCreatePlayer();
+};
+
+function onPlayerReady(event) {
+    startSlideshow();
+}
+
+// --- SATU-SATUNYA FUNGSI onPlayerStateChange ---
+function onPlayerStateChange(event) {
+    const titleElement = document.getElementById('youtube-title');
+    // Update judul saat video siap atau mulai diputar
+    if (event.data === YT.PlayerState.CUED || event.data === YT.PlayerState.PLAYING) {
+        const videoData = player.getVideoData();
+        if (titleElement && videoData && videoData.title) {
+            titleElement.textContent = videoData.title;
+        }
+    }
+    // Kontrol slideshow
+    if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED) {
+        stopSlideshow();
+    } else if (event.data === YT.PlayerState.ENDED) {
+        startSlideshow();
+    }
+}
+
+// --- Fungsi Inisialisasi Player ---
 function tryToCreatePlayer() {
-    // Fungsi ini hanya akan berjalan jika SEMUA syarat terpenuhi:
-    // 1. Skrip YouTube sudah siap (isYouTubeApiReady = true)
-    // 2. Wadah video <div id="youtube-player"> sudah ada di halaman
-    // 3. Player belum pernah dibuat sebelumnya (isPlayerInitialized = false)
     if (isYouTubeApiReady && document.getElementById('youtube-player') && !isPlayerInitialized) {
-        
-        isPlayerInitialized = true; // Tandai bahwa player akan dibuat, agar fungsi ini tidak berjalan lagi 
-        
+        isPlayerInitialized = true;
         player = new YT.Player('youtube-player', {
-            height: '100%',
-            width: '100%',
+            height: '100%', width: '100%',
             playerVars: { 'playsinline': 1, 'autoplay': 0, 'controls': 1, 'listType': 'playlist', 'list': playlistId },
             events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
         });
     }
 }
 
-// Fungsi ini dipanggil oleh YouTube API setelah skripnya siap
-window.onYouTubeIframeAPIReady = function() {
-    isYouTubeApiReady = true; // 1. Tandai bahwa API YouTube siap
-    tryToCreatePlayer();      // 2. Coba buat player
-};
+// --- Fungsi Setup untuk Floating Player ---
+function setupFloatingPlayer() {
+    const youtubeWrapper = document.getElementById('youtube-wrapper');
+    const youtubeCardContainer = document.getElementById('youtube-card-container');
+    const closeBtn = document.getElementById('close-floating-video');
 
-// Fungsi untuk memulai slideshow (perpindahan otomatis)
-function startSlideshow() {
-    stopSlideshow();
-    videoSlideshowInterval = setInterval(() => {
-        if (player && typeof player.nextVideo === 'function') {
-            player.nextVideo();
-        }
-    }, 8000); // Durasi 8 detik
-}
+    if (!youtubeWrapper || !youtubeCardContainer || !closeBtn) return;
 
-// Fungsi untuk menghentikan slideshow
-function stopSlideshow() {
-    clearInterval(videoSlideshowInterval);
-}
+    closeBtn.addEventListener('click', () => {
+        if (player && typeof player.stopVideo === 'function') player.stopVideo();
+        youtubeWrapper.classList.remove('is-floating');
+    });
 
-// Fungsi ini dipanggil saat pemutar video sudah siap
-function onPlayerReady(event) {
-    startSlideshow();
-}
+    const observer = new IntersectionObserver(
+        (entries) => {
+            const entry = entries[0];
+            const playerState = (player && typeof player.getPlayerState === 'function') ? player.getPlayerState() : -1;
+            const isCurrentlyPlaying = (playerState === YT.PlayerState.PLAYING);
 
-// Fungsi ini dipanggil saat status video berubah
-function onPlayerStateChange(event) {
-    if (event.data === YT.PlayerState.CUED) {
-        const titleElement = document.getElementById('youtube-title');
-        const videoData = player.getVideoData();
-        if (titleElement && videoData && videoData.title) {
-            titleElement.textContent = videoData.title;
-        }
-    }
-    if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED) {
-        stopSlideshow();
-    } else if (event.data === YT.PlayerState.ENDED) {
-        startSlideshow();
-    }
+            if (isCurrentlyPlaying && !entry.isIntersecting) {
+                youtubeWrapper.classList.add('is-floating');
+            } else {
+                youtubeWrapper.classList.remove('is-floating');
+            }
+        },
+        { threshold: 0.5 }
+    );
+    observer.observe(youtubeCardContainer);
 }
 
 // Fungsi untuk membuat player
@@ -8253,70 +8275,8 @@ function setupAdvancedDropdown() {
     });
 
     // Tambahkan event listener untuk menutup menu jika mengklik di tempat lain
-    window.addEventListener('click', closeMenu);
-	
-	
+    window.addEventListener('click', closeMenu);	
 }
-    
-let isVideoPlaying = false; // Penanda apakah video sedang diputar
-
-    // Fungsi untuk mengontrol logika floating
-    function setupFloatingPlayer() {
-        const youtubeWrapper = document.getElementById('youtube-wrapper');
-        const youtubeCardContainer = document.getElementById('youtube-card-container');
-        const closeBtn = document.getElementById('close-floating-video');
-
-        // Jika elemen-elemen ini tidak ada, hentikan fungsi
-        if (!youtubeWrapper || !youtubeCardContainer || !closeBtn) return;
-
-        // Atur event untuk tombol close
-        closeBtn.addEventListener('click', () => {
-            player.stopVideo(); // Hentikan video
-            youtubeWrapper.classList.remove('is-floating'); // Hapus mode floating
-        });
-
-        // Buat "pengamat" untuk kartu video yang asli
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const entry = entries[0];
-                // Cek apakah video sedang diputar DAN kartu video asli sudah tidak terlihat di layar
-                if (isVideoPlaying && !entry.isIntersecting) {
-                    youtubeWrapper.classList.add('is-floating'); // Aktifkan mode floating
-                } else {
-                    youtubeWrapper.classList.remove('is-floating'); // Nonaktifkan mode floating
-                }
-            },
-            { threshold: 0.5 } // Picu saat 50% kartu video hilang/muncul dari layar
-        );
-
-        // Mulai amati kartu video
-        observer.observe(youtubeCardContainer);
-    }
-    
-    // Kita akan memodifikasi onPlayerStateChange yang sudah ada sedikit
-    // Jadi, kita timpa fungsi yang lama
-    window.onPlayerStateChange = function(event) {
-        if (event.data === YT.PlayerState.CUED) {
-            const titleElement = document.getElementById('youtube-title');
-            const videoData = player.getVideoData();
-            if (titleElement && videoData && videoData.title) {
-                titleElement.textContent = videoData.title;
-            }
-        }
-        
-        if (event.data === YT.PlayerState.PLAYING) {
-            isVideoPlaying = true;
-            stopSlideshow();
-        } else {
-            // Jika video dijeda, selesai, atau status lainnya, anggap tidak sedang diputar
-            isVideoPlaying = false;
-            // Jika video selesai, mulai lagi slideshow
-            if (event.data === YT.PlayerState.ENDED) {
-                startSlideshow();
-            }
-        }
-    };
-
     // --- MULAI APLIKASI ---
     initializeApp();
 
