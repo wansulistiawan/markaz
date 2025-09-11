@@ -586,6 +586,9 @@
 #fullscreenWarningModal {
     /* DITAMBAHKAN: Atur z-index lebih tinggi dari halaman ujian (5000) agar muncul di atas */
     z-index: 9001;
+	display: none; /* Ubah dari 'block' saat ditampilkan menjadi 'flex' */
+    align-items: center;
+    justify-content: center;
 }
 
 /* --- Tambahkan kode ini untuk membuat notifikasi meriah --- */
@@ -1022,6 +1025,40 @@
 }
 /* === AKHIR KODE BARU === */
 
+#fullscreenWarningModal .modal-content h2 {
+    font-size: 2.25rem; /* Diperbesar */
+    line-height: 2.5rem; /* Menyesuaikan tinggi baris */
+}
+#fullscreenWarningModal .modal-content p {
+    font-size: 1.25rem; /* Diperbesar */
+    line-height: 1.75rem; /* Menyesuaikan tinggi baris */
+}
+
+/* === CSS BARU UNTUK HALAMAN PENGAWAS UJIAN === */
+.santri-proctor-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    height: 450px; /* Tinggi tetap untuk setiap kartu */
+}
+
+.santri-proctor-card .header {
+    padding: 12px;
+    font-weight: bold;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+}
+
+.santri-proctor-card .log-container {
+    flex-grow: 1; /* Membuat area log mengisi sisa ruang */
+    overflow-y: auto; /* Membuat area ini bisa di-scroll */
+    padding: 12px;
+    font-size: 0.8rem; /* Ukuran font lebih kecil untuk log */
+    line-height: 1.5;
+}
     </style>
 </head>
 <body>
@@ -1117,6 +1154,7 @@
 						<a href="#input-soal" id="inputSoalNav">Input Soal Ujian</a>
 						<a href="#halaman-guru" id="halamanGuruNav"><span class="nav-link-wrapper">Bank Soal Guru</span></a>
 						<a href="#halaman-ujian-admin" id="halamanUjianAdminNav" class="hidden" style="background-color: #F59E0B;">Buka Ujian Manual</a>
+						<a href="#pengawas-ujian" id="pengawasUjianNav" class="hidden" style="background-color: #ef4444; color: white;">Pengawas Ujian</a>
 						<a href="tabungan.html" id="tabunganNav" class="hidden" style="background-color: #0d6efd;">Tabungan</a>
 						</div>
 					</div>
@@ -1907,6 +1945,14 @@
             <button id="tutup-ujian-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">Tutup Ujian Terpilih</button>
         </div>
     </div>
+</div>
+
+<div id="pengawas-ujian" class="page-section hidden container section">
+    <h2 class="text-3xl font-bold text-gray-800">Dasbor Pengawas Ujian</h2>
+    <p class="mb-8 text-gray-600">Pantau aktivitas santri yang sedang melaksanakan ujian secara real-time.</p>
+
+    <div id="proctor-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        </div>
 </div>
 
 <!-- === AKHIR HALAMAN MUSYRIFAH === -->
@@ -3190,6 +3236,7 @@ function setupResultModalListeners() {
 
 async function startExam() {
     isExamInProgress = true;
+	logAction('UJIAN_DIMULAI', currentExamData.title);
     const examContainer = document.getElementById('exam-container');
     const questionsContainer = document.getElementById('exam-questions');
     
@@ -3261,13 +3308,14 @@ async function startExam() {
         `;
     });
     
-    questionsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            examAnswers[e.target.name] = e.target.value;
-            document.querySelectorAll(`label[for^="${e.target.name}"]`).forEach(label => label.classList.remove('selected'));
-            document.querySelector(`label[for="${e.target.id}"]`).classList.add('selected');
-        });
+    questionsContainer.querySelectorAll('input[type="radio"]').forEach((radio, questionIndex) => { // <-- TAMBAHKAN TANDA KURUNG DI SINI
+    radio.addEventListener('change', (e) => {
+        examAnswers[e.target.name] = e.target.value;
+        logAction('JAWAB_SOAL', `Menjawab soal no. ${questionIndex + 1}`);
+        document.querySelectorAll(`label[for^="${e.target.name}"]`).forEach(label => label.classList.remove('selected'));
+        document.querySelector(`label[for="${e.target.id}"]`).classList.add('selected');
     });
+});
 }
 
 function calculateAndShowResult() {
@@ -3303,7 +3351,12 @@ function calculateAndShowResult() {
         finalScore = score;
     }
     // --- AKHIR LOGIKA BARU ---
-    
+    if(isForceSubmit) {
+        logAction('UJIAN_DIAKHIRI_PAKSA', `Pelanggaran ke-${fullscreenExitCount}`);
+    } else {
+        logAction('UJIAN_SELESAI', `Skor Akhir: ${finalScore}`);
+    }
+	
     const resultScoreEl = document.getElementById('result-score');
     const resultMessageEl = document.getElementById('result-message');
     const resultActionsEl = document.getElementById('result-actions');
@@ -3392,40 +3445,74 @@ function playAlarm() {
     if (isExamInProgress) {
         alarmSound.play().catch(error => {
             console.error("Gagal memutar audio:", error);
-            // Fallback jika audio gagal diputar
-          
         });
-        document.getElementById('fullscreenWarningModal').style.display = 'block';
+        const warningModal = document.getElementById('fullscreenWarningModal');
+        warningModal.style.display = 'flex';
+        // TAMBAHKAN BARIS INI untuk membuat peringatan menjadi fullscreen
+        enterFullscreen(warningModal);
     }
 }
 
+/**
+ * Fungsi baru untuk admin keluar paksa dari mode ujian.
+ */
+function forceExitExamByAdmin() {
+    console.log("Shortcut admin terdeteksi. Menghentikan ujian.");
+    isExamInProgress = false; // Hentikan status ujian untuk mencegah peringatan lain
+    exitFullscreen(); // Keluar dari mode fullscreen
+    alarmSound.pause(); // Matikan alarm jika berbunyi
+    alarmSound.currentTime = 0;
+    
+    // Sembunyikan semua elemen terkait ujian
+    document.getElementById('exam-container').classList.add('hidden');
+    document.getElementById('fullscreenWarningModal').style.display = 'none';
+
+    showMessage('Ujian dihentikan paksa oleh Admin.', 'success');
+    
+    // Arahkan kembali ke halaman daftar ujian
+    window.location.hash = '#ujian-online';
+    renderExamSchedule();
+}
+
 function setupExamSecurityListeners() {
-    // DIUBAH: Listener fullscreen sekarang menangani saat masuk dan keluar
     document.addEventListener('fullscreenchange', () => {
         if (document.fullscreenElement) {
-            // Jika santri berhasil masuk lagi ke fullscreen
             alarmSound.pause();
             alarmSound.currentTime = 0;
             document.getElementById('fullscreenWarningModal').style.display = 'none';
         } else if (isExamInProgress) {
-            // Jika santri keluar dari fullscreen saat ujian berlangsung
+			logAction('PELANGGARAN', 'Keluar dari mode layar penuh.');
             playAlarm();
         }
     });
 
-    // Listener untuk pindah tab (tetap sama)
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && isExamInProgress) {
+		logAction('PELANGGARAN', 'Pindah tab atau aplikasi lain.');
             playAlarm();
         }
     });
 
-    // DITAMBAHKAN: Event listener untuk tombol "Kembali ke Ujian" di dalam pop-up
     document.getElementById('reenterFullscreenBtn').addEventListener('click', () => {
-        // Fungsi ini hanya memicu permintaan fullscreen, sisanya akan ditangani
-        // oleh listener 'fullscreenchange' di atas.
         enterFullscreen(document.documentElement);
     });
+
+    // --- BLOK BARU DITAMBAHKAN DI SINI ---
+    // Listener untuk mendeteksi shortcut admin
+    document.addEventListener('keydown', function(e) {
+        const session = getActiveSession();
+        
+
+        // Cek jika ujian sedang berlangsung DAN user adalah admin
+        if (isExamInProgress) {
+            // Cek kombinasi tombol: CTRL + SHIFT + ALT + X
+            if (e.ctrlKey && e.shiftKey && e.altKey && e.key.toLowerCase() === 'x') {
+                e.preventDefault(); // Mencegah aksi default browser
+                forceExitExamByAdmin();
+            }
+        }
+    });
+    // --- AKHIR BLOK BARU ---
 }
 
 let tahfidzChartInstance = null;
@@ -3529,6 +3616,100 @@ async function fetchAndShowTeacherNotifications() {
         console.error("Gagal mengambil notifikasi:", error);
     }
 }
+
+// =======================================================
+// === FUNGSI-FUNGSI BARU UNTUK HALAMAN PENGAWAS UJIAN ===
+// =======================================================
+let proctorInterval = null; // Variabel untuk menyimpan interval refresh
+
+function setupPengawasUjianPage() {
+    if (proctorInterval) clearInterval(proctorInterval);
+
+    const proctorGridContainer = document.getElementById('proctor-grid-container');
+
+    const refreshProctorView = async () => {
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getSantriActivityLogs' }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+
+            const allLogs = result.data;
+
+            // 1. Kelompokkan semua log berdasarkan username santri
+            const logsBySantri = allLogs.reduce((acc, log) => {
+                if (!acc[log.Username]) {
+                    acc[log.Username] = {
+                        profileName: log.ProfileName,
+                        logs: []
+                    };
+                }
+                acc[log.Username].logs.push(log);
+                return acc;
+            }, {});
+
+            // 2. Tentukan santri mana yang sedang aktif ujian
+            let activeSantriUsernames = [];
+            for (const username in logsBySantri) {
+                const userLogs = logsBySantri[username].logs;
+                const lastLog = userLogs.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp))[0];
+                if (lastLog && lastLog.ActionType === 'UJIAN_DIMULAI' || (lastLog.ActionType !== 'UJIAN_SELESAI' && lastLog.ActionType !== 'UJIAN_DIAKHIRI_PAKSA')) {
+                    const lastActionTime = new Date(lastLog.Timestamp);
+                    // Anggap santri masih aktif jika log terakhirnya kurang dari 2 jam yang lalu
+                    if ((new Date() - lastActionTime) < (2 * 60 * 60 * 1000)) {
+                        activeSantriUsernames.push(username);
+                    }
+                }
+            }
+
+            // 3. Render ulang seluruh grid
+            proctorGridContainer.innerHTML = '';
+            if (activeSantriUsernames.length === 0) {
+                proctorGridContainer.innerHTML = '<p class="col-span-full text-center text-gray-500">Tidak ada santri yang sedang ujian saat ini.</p>';
+            } else {
+                activeSantriUsernames.forEach(username => {
+                    const santriData = logsBySantri[username];
+                    const santriCard = document.createElement('div');
+                    santriCard.className = 'santri-proctor-card';
+
+                    // Urutkan log dari yang terbaru ke terlama
+                    const sortedLogs = santriData.logs.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp));
+                    const logHTML = sortedLogs.map(log => {
+                        const time = new Date(log.Timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        let color = 'text-gray-700';
+                        if (log.ActionType.includes('PELANGGARAN')) color = 'text-red-600 font-bold';
+                        if (log.ActionType.includes('SELESAI')) color = 'text-green-600 font-bold';
+                        return `<p class="${color}"><span class="text-gray-400 mr-2">${time}</span>${log.ActionDetail}</p>`;
+                    }).join('');
+
+                    santriCard.innerHTML = `
+                        <div class="header">${santriData.profileName}</div>
+                        <div class="log-container">${logHTML}</div>
+                    `;
+                    proctorGridContainer.appendChild(santriCard);
+                });
+            }
+
+        } catch (error) {
+            proctorGridContainer.innerHTML = `<p class="col-span-full text-center text-red-500">${error.message}</p>`;
+        }
+    };
+    
+    refreshProctorView();
+    proctorInterval = setInterval(refreshProctorView, 7000); // Refresh setiap 7 detik
+}
+
+// Fungsi untuk membersihkan interval saat pindah halaman
+function cleanupPengawasUjianPage() {
+    if (proctorInterval) {
+        clearInterval(proctorInterval);
+        proctorInterval = null;
+    }
+}
+
 // =======================================================
 // === FUNGSI-FUNGSI UNTUK INPUT SOAL ===
 // =======================================================
@@ -3868,7 +4049,30 @@ function getClientDateString() {
 	
     function showMessage(message, type = 'error') { ui.messageBox.textContent = message; ui.messageBox.className = `message-box ${type} show`; setTimeout(() => { ui.messageBox.classList.remove('show'); }, 3500); }
     function getActiveSession() { return JSON.parse(localStorage.getItem('userSession') || sessionStorage.getItem('userSession') || 'null'); }
-	
+/**
+ * Fungsi baru untuk mengirim log aktivitas ke backend.
+ */
+function logAction(actionType, actionDetail) {
+    // Hanya kirim log jika yang login adalah santri dan ujian sedang berlangsung
+    const session = getActiveSession();
+    if (session && session.userData.jabatan === 'santri' && isExamInProgress) {
+        const data = {
+            action: 'logUserActivity',
+            username: session.username,
+            profileName: session.userData.profileName,
+            actionType: actionType,
+            actionDetail: actionDetail
+        };
+
+        // Kirim data ke backend tanpa menunggu respons (kirim dan lupakan)
+        fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            keepalive: true // Penting agar log tetap terkirim meski tab ditutup
+        });
+    }
+}	
 	const handleBackToSantriList = () => {
     // Sembunyikan semua kontainer yang mungkin terbuka
     
@@ -4838,6 +5042,8 @@ let isJadwalSholatInitialized = false; // Penanda agar tidak diinisialisasi beru
 
 // // GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
 function showPage(hash) {
+	
+	cleanupPengawasUjianPage();
     // Selalu sembunyikan semua bagian dulu
     document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
 	document.getElementById('tahfidz-chart-container').classList.add('hidden');
@@ -5064,6 +5270,9 @@ function showPage(hash) {
 		} else if (targetHash === '#halaman-ujian-admin') {
 					setupHalamanUjianAdmin();
 				}
+				 else if (targetHash === '#pengawas-ujian') {
+            setupPengawasUjianPage();
+        }
     } else {
         document.getElementById('beranda').classList.remove('hidden');
     }
@@ -5259,6 +5468,7 @@ function showLoggedInView(userData) {
         const isGuru = (jabatan || '').trim().toLowerCase() === 'guru' || appData.teachers.some(t => t.name === session.userData.profileName);
         const canAccessBankSoal = isGuru || userData.username === 'mia' || userData.username === 'wawan' || userData.username === 'admin';
         const isAdminUjian = ['wawan', 'mia', 'admin'].includes(username);
+		const canSupervise = isGuru || ['wawan', 'mia', 'aria', 'zhofri', 'admin'].includes(username);
 
 		if (isGuru) {
             fetchAndShowTeacherNotifications();
@@ -5278,6 +5488,10 @@ function showLoggedInView(userData) {
         if(halamanUjianAdminNav) {
             halamanUjianAdminNav.classList.toggle('hidden', !isAdminUjian);
         }
+		const pengawasUjianNav = document.getElementById('pengawasUjianNav');
+		if (pengawasUjianNav) {
+			pengawasUjianNav.classList.toggle('hidden', !canSupervise);
+		}
         
         document.getElementById('krsNav').classList.toggle('hidden', !isSantri);
         document.getElementById('khsNav').classList.toggle('hidden', !isSantri);
