@@ -2009,7 +2009,8 @@ b. Soekarno
 
 <div id="halaman-guru" class="page-section hidden container section">
     <h2 class="text-3xl font-bold text-gray-800">Bank Soal Anda</h2>
-    <p class="mb-8 text-gray-600">Di halaman ini, Anda dapat melihat dan melengkapi kunci jawaban serta poin untuk soal-soal dari materi yang Anda ajar. Anda juga bisa merubah isi soal jika dirasa soal tersebut kurang cocok untuk diujikan ke anak-anak.</p>
+    <div id="admin-soal-notification" class="hidden my-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md"></div>
+	<p class="mb-8 text-gray-600">Di halaman ini, Anda dapat melihat dan melengkapi kunci jawaban serta poin untuk soal-soal dari materi yang Anda ajar. Anda juga bisa merubah isi soal jika dirasa soal tersebut kurang cocok untuk diujikan ke anak-anak.</p>
 
     <div class="bg-white p-6 rounded-xl shadow-md">
         <div class="form-group max-w-md mb-6">
@@ -3008,6 +3009,62 @@ function checkAndDisplayHeaderNotifications() {
     }
 }
 
+/**
+ * Fungsi baru untuk mengambil dan menampilkan notifikasi khusus admin.
+ */
+// GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
+async function fetchAndShowAdminNotification() {
+    const notifContainer = document.getElementById('admin-soal-notification');
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'handleGetMissingKeysDetail' }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const result = await response.json();
+
+        if (result.status === 'success' && result.data.length > 0) {
+            
+            // 1. Urutkan data berdasarkan nama guru
+            const sortedData = result.data.sort((a, b) => a.guru.localeCompare(b.guru));
+
+            // 2. Kelompokkan materi berdasarkan nama guru
+            const groupedByTeacher = sortedData.reduce((acc, item) => {
+                const teacher = item.guru;
+                if (!acc[teacher]) {
+                    acc[teacher] = [];
+                }
+                acc[teacher].push(item);
+                return acc;
+            }, {});
+
+            // 3. Buat daftar (list) HTML dari data yang sudah dikelompokkan
+            let listItemsHTML = '';
+            for (const teacher in groupedByTeacher) {
+                listItemsHTML += `<p class="font-bold mt-3">${teacher}:</p>`;
+                const materias = groupedByTeacher[teacher].map(item => 
+                    `<li><span class="font-semibold">${item.kode}:</span> ${item.namaMateri}</li>`
+                ).join('');
+                listItemsHTML += `<ul class="list-disc list-inside ml-4 text-sm">${materias}</ul>`;
+            }
+
+            notifContainer.innerHTML = `
+                <p class="font-bold">Pemberitahuan: Materi Berikut Belum Memiliki Kunci Jawaban Lengkap</p>
+				<p class="font-bold"><i>(Pemberitahuan ini hanya bisa dilihat oleh Waka Kurikulum, TU dan admin)</i></p>
+                <div class="mt-2">
+                    ${listItemsHTML}
+                </div>
+            `;
+            notifContainer.classList.remove('hidden');
+        } else {
+            notifContainer.classList.add('hidden');
+        }
+    } catch (error) {
+        console.error("Gagal mengambil notifikasi admin:", error);
+        notifContainer.classList.add('hidden');
+    }
+}
+
 
 // === FUNGSI UTAMA UJIAN ONLINE (VERSI BARU YANG LENGKAP) ===
 async function renderExamSchedule() {
@@ -3873,7 +3930,12 @@ let soalGuruData = []; // Untuk menyimpan data soal yang diambil
 async function setupHalamanGuru() {
     const session = getActiveSession();
     if (!session || !session.loggedIn) return;
-
+	
+	// Cek jika user adalah admin, panggil fungsi notifikasi khusus
+    if (['mia', 'wawan', 'admin', 'zhofri'].includes(session.username)) {
+        fetchAndShowAdminNotification();
+    }
+	
     const guruMateriSelect = document.getElementById('guru-materi-select');
     const soalContainer = document.getElementById('guru-soal-container');
     const updateBtn = document.getElementById('update-soal-btn');
@@ -6014,7 +6076,7 @@ function populateEmployeeDropdown() {
 function fetchAndRenderSlipGaji() {
     const slipContainer = document.getElementById('slipGajiContainer');
     const downloadContainer = document.getElementById('downloadSlipContainer');
-    downloadContainer.classList.add('hidden'); // Sembunyikan tombol setiap kali memuat
+    downloadContainer.classList.add('hidden');
 
     const session = getActiveSession();
     const userJabatan = (session && session.userData) ? session.userData.jabatan : '';
@@ -6048,44 +6110,28 @@ function fetchAndRenderSlipGaji() {
     .then(result => {
         if (result.status === 'success') {
             const s = result.slip;
-
-            // --- MODIFIKASI DIMULAI ---
-            // 1. Hitung jumlah hari libur pada bulan yang dipilih menggunakan fungsi baru.
             const holidaysInMonth = getHolidaysInMonth(parseInt(selectedYear), parseInt(selectedMonth));
-
-            // 2. Simpan nilai asli dari backend untuk referensi.
             const originalHariKerja = s.kehadiran.hariKerja;
             const originalPotonganAbsen = s.potongan.potonganAbsen;
-
-            // 3. Hitung ulang hari kerja efektif.
             const adjustedHariKerja = Math.max(0, originalHariKerja - holidaysInMonth);
-            
-            // 4. Hitung ulang jumlah absen dan potongan absen.
             const potonganPerHari = s.kehadiran.totalAbsen > 0 ? (originalPotonganAbsen / s.kehadiran.totalAbsen) : 0;
             const adjustedTotalAbsen = Math.max(0, adjustedHariKerja - s.kehadiran.totalMasuk);
             const adjustedPotonganAbsen = adjustedTotalAbsen * potonganPerHari;
             
-            // 5. Perbarui objek 's' dengan nilai yang sudah disesuaikan.
-            //    Semua kode di bawah ini akan otomatis menggunakan data yang sudah benar.
             s.kehadiran.hariKerja = adjustedHariKerja;
             s.kehadiran.totalAbsen = adjustedTotalAbsen;
             s.potongan.potonganAbsen = adjustedPotonganAbsen;
-            // --- MODIFIKASI SELESAI ---
 
-            // Fungsi pembulatan
             const roundToHundred = num => Math.round(num / 100) * 100;
 			
-            // Bangun HTML Rincian Pendapatan
             let pendapatanHTML = '';
             if (s.pendapatan.gajiPokokRinci) {
-  // Jika ada objek rincian (untuk jabatan rangkap), tampilkan per jabatan
-  for (const [jabatan, gaji] of Object.entries(s.pendapatan.gajiPokokRinci)) {
-    pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok (${jabatan})</span> <span>${gaji.toLocaleString('id-ID')}</span></div>`;
-  }
-} else if (s.pendapatan.gajiPokok > 0) {
-  // Jika tidak ada objek rincian (untuk jabatan tunggal), tampilkan seperti biasa
-  pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok</span> <span>${s.pendapatan.gajiPokok.toLocaleString('id-ID')}</span></div>`;
-}
+              for (const [jabatan, gaji] of Object.entries(s.pendapatan.gajiPokokRinci)) {
+                pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok (${jabatan})</span> <span>${gaji.toLocaleString('id-ID')}</span></div>`;
+              }
+            } else if (s.pendapatan.gajiPokok > 0) {
+              pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok</span> <span>${s.pendapatan.gajiPokok.toLocaleString('id-ID')}</span></div>`;
+            }
             if (s.pendapatan.honorMengajar > 0) pendapatanHTML += `<div class="flex justify-between"><span>Honor Mengajar</span> <span>${s.pendapatan.honorMengajar.toLocaleString('id-ID')}</span></div>`;
             if (s.pendapatan.tunjanganMakan > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan Makan</span> <span>${s.pendapatan.tunjanganMakan.toLocaleString('id-ID')}</span></div>`;
             if (s.pendapatan.tunjanganBPJS > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan BPJamsostek</span> <span>${s.pendapatan.tunjanganBPJS.toLocaleString('id-ID')}</span></div>`;
@@ -6094,11 +6140,10 @@ function fetchAndRenderSlipGaji() {
             if (s.pendapatan.bonusLain > 0) pendapatanHTML += `<div class="flex justify-between"><span>Bonus Lain</span> <span>${s.pendapatan.bonusLain.toLocaleString('id-ID')}</span></div>`;
             if (s.pendapatan.bonusRapat > 0) pendapatanHTML += `<div class="flex justify-between"><span>Bonus Rapat</span> <span>${Math.round(s.pendapatan.bonusRapat).toLocaleString('id-ID')}</span></div>`;
 
-            // Bangun HTML Rincian Potongan
             let potonganHTML = '';
             if (s.potongan.potonganMakan > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Makan</span> <span>${s.potongan.potonganMakan.toLocaleString('id-ID')}</span></div>`;
             if (s.potongan.potonganBPJS > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan BPJamsostek</span> <span>${s.potongan.potonganBPJS.toLocaleString('id-ID')}</span></div>`;
-            if (s.potongan.potonganFasilitas > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Fasilitas (Rumah, Listrik, Air, Internet, dll.)</span> <span>${s.potongan.potonganFasilitas.toLocaleString('id-ID')}</span></div>`;
+            if (s.potongan.potonganFasilitas > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Fasilitas</span> <span>${s.potongan.potonganFasilitas.toLocaleString('id-ID')}</span></div>`;
             if (s.potongan.potonganAbsen > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Absen (${s.kehadiran.totalAbsen} hari)</span> <span>${roundToHundred(s.potongan.potonganAbsen).toLocaleString('id-ID')}</span></div>`;
             if (s.potongan.potonganTerlambat > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Terlambat</span> <span>${s.potongan.potonganTerlambat.toLocaleString('id-ID')}</span></div>`;
             if (s.potongan.hutang > 0) potonganHTML += `<div class="flex justify-between"><span>Hutang</span> <span>${s.potongan.hutang.toLocaleString('id-ID')}</span></div>`;
@@ -6108,17 +6153,21 @@ function fetchAndRenderSlipGaji() {
             if (s.kehadiran.totalMengajar > 0) kehadiranHTML += `<li>Total Mengajar: ${s.kehadiran.totalMengajar} sesi</li>`;
             if (s.kehadiran.hariKerja > 0) kehadiranHTML += `<li>Kehadiran Staf: ${s.kehadiran.totalMasuk} dari ${s.kehadiran.hariKerja} hari kerja</li>`;
 
-            // --- AWAL KODE PENGGANTI ---
-// Menjumlahkan pendapatan secara manual untuk menghindari error NaN dari objek rincian
-const totalPendapatan = (s.pendapatan.gajiPokok || 0) +
-                        (s.pendapatan.honorMengajar || 0) +
-                        (s.pendapatan.tunjanganMakan || 0) +
-                        (s.pendapatan.tunjanganBPJS || 0) +
-                        (s.pendapatan.tunjanganFasilitas || 0) +
-                        (s.pendapatan.bonusRapat || 0) +
-                        (s.pendapatan.bonusLain || 0) +
-                        (s.pendapatan.lembur || 0);
-// --- AKHIR KODE PENGGANTI ---
+            // BLOK BARU UNTUK CATATAN PENJELASAN
+            let catatanKeterlambatanHTML = '';
+            if (s.kehadiran.totalSesiTerlambat > 0) {
+                catatanKeterlambatanHTML = `
+                <div class="text-xs text-gray-500 mt-6 border-t pt-2">
+                    <b>Catatan Potongan Keterlambatan:</b>
+                    <ul>
+                        <li>Anda terlambat di <b>${s.kehadiran.totalSesiTerlambat} sesi</b> mengajar dari total ${s.kehadiran.totalMengajar} sesi bulan ini.</li>
+                        <li>Total akumulasi keterlambatan Anda adalah <b>${s.kehadiran.totalMenitTerlambat} menit</b>.</li>
+                        <li>Aturan: Potongan Rp 8.000 untuk keterlambatan >= 10 menit, ditambah Rp 5.000 untuk setiap kelipatan 5 menit berikutnya per sesi.</li>
+                    </ul>
+                </div>`;
+            }
+
+            const totalPendapatan = Object.values(s.pendapatan).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0);
             const totalPotongan = Object.values(s.potongan).reduce((a, b) => a + b, 0);
             const gajiBersih = totalPendapatan - totalPotongan;
 
@@ -6152,11 +6201,11 @@ const totalPendapatan = (s.pendapatan.gajiPokok || 0) +
                            </div>
                         </div>
                         ${kehadiranHTML ? `<div class="text-xs text-gray-500 mt-6 border-t pt-2"><b>Rincian Kehadiran:</b><ul>${kehadiranHTML}</ul></div>` : ''}
-                    </div>
+                        ${catatanKeterlambatanHTML} </div>
                 </div>`;
             slipContainer.innerHTML = slipHTML;
-            downloadContainer.classList.remove('hidden'); // Tampilkan tombol unduh
-            document.getElementById('downloadSlipBtn').onclick = downloadSlipPDF; // Pasang event listener
+            downloadContainer.classList.remove('hidden');
+            document.getElementById('downloadSlipBtn').onclick = downloadSlipPDF;
         } else if (result.status === 'pending') {
             slipContainer.innerHTML = `<p class="p-8 text-center text-blue-600 bg-blue-50 rounded-lg">${result.message}</p>`;
         } else {
