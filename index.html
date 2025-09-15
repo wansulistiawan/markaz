@@ -3089,7 +3089,6 @@ async function renderExamSchedule() {
         return;
     }
 
-    // DITAMBAHKAN: Cek apakah user yang melihat adalah admin
     const isAdmin = ['wawan', 'mia', 'admin'].includes(session.username);
 
     if (Object.keys(subjectToMonthMap).length === 0 && appState.processedSchedules) {
@@ -3110,7 +3109,6 @@ async function renderExamSchedule() {
             fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllKrsSubjectsForSantri', namaSantri: session.userData.profileName }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }}),
             fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAvailableExams' }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }}),
             fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getNilaiUjian', username: session.username }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }}),
-            // DITAMBAHKAN: Ambil daftar ujian yang dibuka manual
             fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getUnlockedExams', username: session.username }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }})
         ]);
         
@@ -3141,6 +3139,12 @@ async function renderExamSchedule() {
         const grid = document.createElement('div');
         grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
 
+        // --- AWAL PERUBAHAN ---
+        // Siapkan dua wadah sementara untuk kartu aktif dan tidak aktif
+        const activeCardsFragment = document.createDocumentFragment();
+        const inactiveCardsFragment = document.createDocumentFragment();
+        // --- AKHIR PERUBAHAN ---
+
         savedKrsSubjects.forEach(item => {
             const subjectCode = item.code;
             if (!availableExams.includes(subjectCode)) return;
@@ -3150,83 +3154,58 @@ async function renderExamSchedule() {
             const riwayat = nilaiUjian[subjectCode];
 
             let statusText = 'Ujian belum tersedia';
-let statusColor = 'bg-gray-400';
-let isDisabled = true;
-let textColorClass = 'text-white';
+            let statusColor = 'bg-gray-400';
+            let isDisabled = true;
+            let textColorClass = 'text-white';
 
-const isExamWeekOver = now > examWeekEnd;
-const isSpeciallyUnlocked = unlockedExams.includes(subjectCode);
-const isExamWindowActive = (now >= examWeekStart && now <= examWeekEnd) && days[now.getDay()] === item.day && isTimeInSlot(now, item.time);
+            const isExamWeekOver = now > examWeekEnd;
+            const isSpeciallyUnlocked = unlockedExams.includes(subjectCode);
+            const isExamWindowActive = (now >= examWeekStart && now <= examWeekEnd) && days[now.getDay()] === item.day && isTimeInSlot(now, item.time);
 
-if (riwayat) { // --- LOGIKA JIKA SUDAH PERNAH UJIAN ---
-
-    const nilaiToShow = riwayat.skorAkhir ?? riwayat.skor;
-
-    // PRIORITAS #1: Kunci permanen jika sudah 3x atau lebih.
-    if (riwayat.percobaan >= 3 && !isAdmin) {
-        statusText = `Selesai (Nilai Akhir: ${nilaiToShow})`;
-        statusColor = 'bg-gray-500';
-        isDisabled = true;
-
-    // PRIORITAS #2: Cek apakah waktu ujian sudah habis. INI YANG DIPINDAHKAN KE ATAS.
-    } else if (isExamWeekOver && !isSpeciallyUnlocked && !isAdmin) {
-        statusText = `Waktu Habis (Nilai: ${nilaiToShow})`;
-		statusColor = 'bg-gray-500';
-        // Logika warna berdasarkan nilai
-        if (nilaiToShow >= 70) {
-			textColorClass = 'text-green-300 font-bold'; 
-			} else {
-			textColorClass = 'text-red-500';  
-			}
-        isDisabled = true;
-
-    // PRIORITAS #3: Kunci permanen jika sudah LULUS (dan waktu belum habis).
-    } else if (nilaiToShow >= 75 && !isAdmin) {
-        statusText = `Lulus (Nilai Akhir: ${nilaiToShow})`;
-        statusColor = 'bg-green-600';
-        isDisabled = true;
-
-    // PRIORITAS #4: JIKA JATAH REMEDIAL NORMAL (2X) HABIS, TUNGGU ADMIN
-    } else if (riwayat.percobaan >= 2 && !isSpeciallyUnlocked && !isAdmin) {
-        statusText = `Remedial Selesai (Nilai: ${nilaiToShow})`;
-        statusColor = 'bg-gray-500';
-        isDisabled = true;
-
-    // PRIORITAS #5: JIKA SEMUA KONDISI DI ATAS TIDAK TERPENUHI, UJIAN BISA DIAKSES
-    } else { 
-        isDisabled = false;
-        statusText = 'Kerjakan Ulang';
-        statusColor = 'bg-red-600 hover:bg-red-700';
-    }
-
-} else { // --- LOGIKA JIKA BELUM PERNAH UJIAN SAMA SEKALI ---
-    if (isExamWindowActive || isSpeciallyUnlocked || isAdmin) {
-        statusText = 'Mulai Ujian';
-        statusColor = 'bg-blue-600 hover:bg-blue-700';
-        isDisabled = false;
-    } else if (isExamWeekOver && !isAdmin) {
-        statusText = 'Terlewat';
-        statusColor = 'bg-gray-500';
-        isDisabled = true;
-    } else {
-        statusText = 'Ujian Belum Aktif';
-        statusColor = 'bg-gray-400';
-        isDisabled = true;
-    }
-}
-
-// ATURAN #5: AKSES MANUAL DARI ADMIN (Override)
-// Logika ini hanya akan berjalan jika tombolnya belum dikunci permanen oleh ATURAN #1 dan #2
-if (isSpeciallyUnlocked && !isDisabled) {
-    statusColor = 'bg-orange-500 hover:bg-orange-600';
-    statusText = `Ujian Manual (Sisa: ${3 - (riwayat ? riwayat.percobaan : 0)})`;
-}
-
-// ATURAN #6: AKSES KHUSUS UNTUK ADMIN (Override paling tinggi)
-if (isAdmin) {
-    isDisabled = false;
-    statusColor = 'bg-purple-600 hover:bg-purple-700';
-}
+            if (riwayat) {
+                const nilaiToShow = riwayat.skorAkhir ?? riwayat.skor;
+                if (riwayat.percobaan >= 3 && !isAdmin) {
+                    statusText = `Selesai (Nilai Akhir: ${nilaiToShow})`;
+                    statusColor = 'bg-gray-500';
+                    isDisabled = true;
+                } else if (isExamWeekOver && !isSpeciallyUnlocked && !isAdmin) {
+                    statusText = `Waktu Habis (Nilai: ${nilaiToShow})`;
+                    statusColor = 'bg-gray-500';
+                    isDisabled = true;
+                } else if (nilaiToShow >= 75 && !isAdmin) {
+                    statusText = `Lulus (Nilai Akhir: ${nilaiToShow})`;
+                    statusColor = 'bg-green-600';
+                    isDisabled = true;
+                } else if (riwayat.percobaan >= 2 && !isSpeciallyUnlocked && !isAdmin) {
+                    statusText = `Remedial Selesai (Nilai: ${nilaiToShow})`;
+                    statusColor = 'bg-gray-500';
+                    isDisabled = true;
+                } else { 
+                    isDisabled = false;
+                    statusText = `Kerjakan Ulang (Nilai: ${nilaiToShow})`;
+                    statusColor = 'bg-red-600 hover:bg-red-700';
+                }
+            } else {
+                if (isExamWindowActive || isSpeciallyUnlocked || isAdmin) {
+                    statusText = 'Mulai Ujian';
+                    statusColor = 'bg-blue-600 hover:bg-blue-700';
+                    isDisabled = false;
+                } else if (isExamWeekOver && !isAdmin) {
+                    statusText = 'Terlewat';
+                    statusColor = 'bg-gray-500';
+                    isDisabled = true;
+                } else {
+                    statusText = 'Ujian Belum Aktif';
+                    statusColor = 'bg-gray-400';
+                    isDisabled = true;
+                }
+            }
+            
+            if (isAdmin) {
+                isDisabled = false;
+                statusColor = 'bg-purple-600 hover:bg-purple-700';
+            }
+            
             const card = document.createElement('div');
             card.className = 'schedule-cell p-4 border rounded-lg flex flex-col';
             card.innerHTML = `
@@ -3244,8 +3223,22 @@ if (isAdmin) {
                     ${statusText}
                 </button>
             `;
-            grid.appendChild(card);
+
+            // --- AWAL PERUBAHAN ---
+            // Masukkan kartu ke wadah yang sesuai berdasarkan statusnya
+            if (isDisabled) {
+                inactiveCardsFragment.appendChild(card);
+            } else {
+                activeCardsFragment.appendChild(card);
+            }
+            // --- AKHIR PERUBAHAN ---
         });
+
+        // --- AWAL PERUBAHAN ---
+        // Gabungkan kedua wadah, dengan kartu aktif di bagian atas
+        grid.appendChild(activeCardsFragment);
+        grid.appendChild(inactiveCardsFragment);
+        // --- AKHIR PERUBAHAN ---
 
         if (grid.children.length === 0) {
              container.innerHTML = '<p class="p-8 text-center text-gray-500">Tidak ada ujian yang tersedia untuk materi di KRS Anda saat ini.</p>';
