@@ -1042,7 +1042,16 @@
     border: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
-    height: 450px; /* Tinggi tetap untuk setiap kartu */
+    /* Properti 'height' dihapus agar tinggi kartu fleksibel */
+}
+
+.santri-proctor-card .log-container {
+    flex-grow: 1; 
+    overflow-y: auto; 
+    padding: 12px;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    max-height: 120px; /* DITAMBAHKAN: Batasi tinggi area log sekitar 5 baris */
 }
 
 .santri-proctor-card .header {
@@ -3303,7 +3312,6 @@ async function startExam() {
 
     try {
         const session = getActiveSession();
-        // Ambil soal dan riwayat nilai secara bersamaan untuk efisiensi
         const [soalResponse, nilaiResponse] = await Promise.all([
             fetch(CONFIG.SCRIPT_URL, {
                 method: 'POST',
@@ -3324,7 +3332,6 @@ async function startExam() {
         if (nilaiResult.status !== 'success') throw new Error(nilaiResult.message);
         
         currentQuestions = soalResult.questions;
-        // Simpan riwayat nilai untuk materi ini ke variabel yang sudah kita buat
         currentAttemptHistory = nilaiResult.nilai[currentExamData.code] || null;
 
         if (currentQuestions.length === 0) {
@@ -3365,14 +3372,30 @@ async function startExam() {
         `;
     });
     
-    questionsContainer.querySelectorAll('input[type="radio"]').forEach((radio, questionIndex) => { // <-- TAMBAHKAN TANDA KURUNG DI SINI
-    radio.addEventListener('change', (e) => {
-        examAnswers[e.target.name] = e.target.value;
-        logAction('JAWAB_SOAL', `Menjawab soal no. ${questionIndex + 1}`);
-        document.querySelectorAll(`label[for^="${e.target.name}"]`).forEach(label => label.classList.remove('selected'));
-        document.querySelector(`label[for="${e.target.id}"]`).classList.add('selected');
+    currentQuestions.forEach((q, index) => {
+        const questionBlock = document.getElementById(`q${index}_block`);
+        if (questionBlock) {
+            const radioButtons = questionBlock.querySelectorAll('input[type="radio"]');
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    examAnswers[e.target.name] = e.target.value;
+                    
+                    // --- AWAL BAGIAN YANG DIPERBAIKI ---
+                    // Ambil label yang sesuai dengan radio button yang diklik
+                    const correspondingLabel = document.querySelector(`label[for="${e.target.id}"]`);
+                    // Ambil karakter pertama dari teks label (yaitu huruf A, B, C, atau D)
+                    const answerLetter = correspondingLabel ? correspondingLabel.textContent.trim().charAt(0) : '?';
+                    
+                    // Tambahkan huruf jawaban ke dalam detail log
+                    logAction('JAWAB_SOAL', `Menjawab soal no. ${index + 1} : ${answerLetter}`);
+                    // --- AKHIR BAGIAN YANG DIPERBAIKI ---
+                    
+                    document.querySelectorAll(`label[for^="${e.target.name}"]`).forEach(label => label.classList.remove('selected'));
+                    document.querySelector(`label[for="${e.target.id}"]`).classList.add('selected');
+                });
+            });
+        }
     });
-});
 }
 
 function calculateAndShowResult() {
