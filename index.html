@@ -28,6 +28,13 @@
             --error-color: #dc3545;
             --info-color: #0d6efd; 
             --info-color-hover: #0b5ed7;
+			/* Variabel CSS dari jadwalsholat.html */
+            --sky-day: linear-gradient(to top, #87CEEB 0%, #3a94c4 100%);
+            --sky-night: linear-gradient(to top, #465270 0%, #191d2e 100%);
+            --danger-color: #dc3545;
+            --highlight-bg: #e6ffed;
+            --highlight-border: #a3d9b1;
+            --highlight-text: #28a745;
         }
         html { scroll-behavior: smooth; }
         body {
@@ -59,7 +66,19 @@
         .nav-arrow.visible { opacity: 1; pointer-events: auto; }
         #nav-arrow-left { left: -15px; }
         #nav-arrow-right { right: -15px; }
-        @media (max-width: 768px) { .nav-arrow { background-color: rgba(44, 94, 46, 0.5); } }
+        @media (max-width: 768px) { 
+		.fundraising-wrapper {
+        flex-direction: column; /* Mengubah arah item menjadi vertikal */
+        align-items: center;    /* Memusatkan kartu-kartu di tengah */
+        overflow-x: visible;    /* Menonaktifkan scroll horizontal */
+        gap: 25px;              /* Menambah jarak vertikal antar kartu */
+    }
+
+    .fundraising-card {
+        flex: 0 0 90%;          /* Kartu tidak menyusut/melebar, dengan lebar 90% dari kontainer */
+        max-width: 400px;       /* Mencegah kartu menjadi terlalu lebar di tablet */
+    }
+	.nav-arrow { background-color: rgba(44, 94, 46, 0.5); } }
 
 /* Tambahkan selector ini ke CSS Anda */
 #pengunjung-hari-ini {
@@ -567,6 +586,9 @@
 #fullscreenWarningModal {
     /* DITAMBAHKAN: Atur z-index lebih tinggi dari halaman ujian (5000) agar muncul di atas */
     z-index: 9001;
+	display: none; /* Ubah dari 'block' saat ditampilkan menjadi 'flex' */
+    align-items: center;
+    justify-content: center;
 }
 
 /* --- Tambahkan kode ini untuk membuat notifikasi meriah --- */
@@ -670,10 +692,419 @@
 #loading-overlay.hidden {
     display: none;
 }
+/* === GAYA UNTUK PENGGALANGAN DANA === */
+.fundraising-wrapper {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto; /* Memungkinkan scroll horizontal */
+    padding-bottom: 20px; /* Memberi ruang untuk scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) #e9ecef;
+	padding: 10px;
+}
 
+.fundraising-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+.fundraising-wrapper::-webkit-scrollbar-track {
+    background: #e9ecef;
+    border-radius: 4px;
+}
+.fundraising-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+    border-radius: 4px;
+}
+
+.fundraising-card {
+    display: block; /* Memastikan tag <a> berperilaku seperti block */
+    background-color: white;
+    border: 1px solid #e2e8f0; /* Border abu-abu lembut */
+    border-radius: 12px;
+    overflow: hidden;
+    flex: 0 0 320px;
+    transition: box-shadow 0.3s, transform 0.3s;
+    cursor: pointer;
+    /* Shadow yang lebih terlihat */
+    box-shadow: 0 4px 12px rgba(255, 0, 0, 0.15);
+}
+.fundraising-card:hover {
+    /* Shadow yang lebih kuat & efek terangkat saat disentuh */
+    box-shadow: 0 8px 20px rgba(255, 0, 0, 0.2);
+    transform: translateY(-4px);
+}
+
+.fundraising-card .image-container {
+    position: relative;
+    width: 100%;
+    height: 180px;
+}
+
+.fundraising-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.deadline-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+.fundraising-card .card-body {
+    padding: 15px;
+}
+
+.organizer-info {
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-bottom: 8px;
+}
+
+.fundraising-card h3 {
+    font-size: 1.1em;
+    font-weight: 700;
+    margin: 0 0 15px 0;
+    line-height: 1.4;
+}
+
+.progress-info {
+    font-size: 0.9em;
+    font-weight: 500;
+    color: var(--dark-gray);
+    margin-bottom: 8px;
+}
+
+.progress-info .amount {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 12px; /* Sedikit lebih tebal */
+    background-color: #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+	position: relative; 
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.8s ease-in-out;
+    /* Efek gradasi warna bergerak */
+    background: linear-gradient(90deg, #2c5e2e, #4caf50, #8bc34a, #ffeb3b, #2c5e2e);
+    background-size: 300% 100%;
+    animation: color-shift 3s linear infinite;
+}
+
+/* Keyframes untuk animasi pergerakan warna */
+@keyframes color-shift {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Efek percikan api di ujung progress bar */
+.progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: green-600;
+	border-radius: 50%;
+	box-shadow: 0 0 10px 5px rgba(255, 165, 0, 0.7), 
+				0 0 20px 10px rgba(255, 165, 0, 0.5);
+    opacity: 0;
+    animation: sparkle 0.2s ease-out infinite;
+}
+
+/* Keyframes untuk animasi percikan api */
+@keyframes sparkle {
+    0%, 100% {
+        transform: translateY(-50%) scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: translateY(-50%) scale(1);
+        opacity: 1;
+    }
+	80% {
+		opacity: 0;
+	}
+}
+
+.video-responsive {
+    overflow: hidden;
+    padding-bottom: 56.25%; /* Aspect Ratio 16:9 */
+    position: relative;
+    height: 0;
+    margin-top: 20px;
+    border-radius: 12px; /* Membuat sudutnya tumpul */
+}
+
+.video-responsive iframe {
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+}
+
+
+ .jadwal-sholat-container { color: var(--text-dark, #333); text-align: center; max-width: 450px; margin: 20px auto; padding: 20px; background: var(--card-bg); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        #sky-container { position: relative; width: 100%; max-width: 320px; height: 185px; margin: 10px auto 0; overflow: hidden; background: var(--sky-day); transition: background 1s ease; }
+        #sky-container.night { background: var(--sky-night); }
+        #sky-path { position: absolute; width: 100%; height: 320px; border-radius: 50%; bottom: -160px; left: 0; border-top: 2px dashed rgba(255, 255, 255, 0.6); box-sizing: border-box; }
+        .celestial-object-wrapper { position: absolute; bottom: 0; left: 50%; width: 0; height: 0; transform-origin: 0 0; transition: transform 1s linear; }
+        .celestial-body { position: absolute; top: -20px; left: -20px; width: 40px; height: 40px; transform: translateY(-160px); font-size: 36px; line-height: 40px; }
+        #timeline-labels { display: flex; justify-content: space-between; max-width: 340px; margin: 10px auto 25px; padding: 0 10px; transition: opacity 0.5s ease; }
+        .label-item { display: flex; flex-direction: column; font-size: 11px; font-weight: 600; color: #777; }
+        .label-item span:first-child { font-weight: normal; }
+        #live-clock { font-size: 1.8em; font-weight: 700; color: var(--text-dark); margin-top: 10px; }
+        #next-prayer-countdown { font-size: 1em; font-weight: 600; color: #555; margin-bottom: 10px; height: 1.5em; }
+        #countdown-timer { font-size: 1.2em; color: var(--primary-color); }
+        #tanggal-container button { background: none; border: 2px solid #ccc; border-radius: 50%; width: 35px; height: 35px; font-size: 1.2em; cursor: pointer; transition: all 0.2s ease; }
+        .jadwal-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #eee; border-radius: 8px; transition: all 0.3s ease; border: 1px solid transparent; }
+        .jadwal-item:last-child { border-bottom: none; }
+        .prayer-details { display: flex; align-items: center; gap: 12px; text-align: left; }
+        .notification-btn { background: none; border: none; cursor: pointer; font-size: 1.4em; padding: 0; line-height: 1; }
+        .prayer-info .prayer-name { font-size: 1.1em; }
+        .prayer-info .prayer-countdown { font-size: 0.8em; font-weight: 600; color: var(--highlight-text); display: none; }
+        .jadwal-item .waktu { font-weight: 600; font-size: 1.1em; }
+        .jadwal-item.highlight { background-color: var(--highlight-bg); border-color: var(--highlight-border); }
+        .jadwal-item.highlight .prayer-countdown { display: block; }
+        #test-adhan-btn { background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 8px; padding: 10px; margin-top: 20px; width: 100%; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        #test-adhan-btn:hover { background-color: #e0e0e0; }
+        #test-adhan-btn.playing { background-color: var(--danger-color); border-color: var(--danger-color); color: white; }
+        #adhan-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        #adhan-popup { background-color: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); max-width: 350px; width: 90%; }
+        #adhan-popup h2 { margin-top: 0; font-size: 1.5em; }
+        #adhan-popup p { font-size: 1.1em; margin-bottom: 25px; }
+        #stop-adhan-btn { background-color: var(--danger-color); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 1em; cursor: pointer; width: 100%; }
+        #notif-prompt { background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; padding: 15px; margin-top: 20px; display: none; position: relative; }
+        #notif-prompt p { margin: 0 0 10px 0; }
+        #notif-prompt button { background-color: var(--primary-color); color: white; border: none; padding: 8px 16px; border-radius: 5px; font-weight: 600; cursor: pointer; }
+        #close-notif-prompt { position: absolute; top: 5px; right: 10px; font-size: 1.5em; cursor: pointer; color: #aaa; }
+    #js-header-info {
+    margin-bottom: 20px; /* Sedikit lebih kecil dari header utama */
+}
+
+/* Penyesuaian untuk lokasi dan tombol reset */
+#jadwal-sholat #lokasi-container { 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 8px; /* Jarak antar elemen */
+    margin-bottom: 10px; /* Ruang bawah */
+}
+#jadwal-sholat #lokasi { 
+    font-size: 1.2em; 
+    font-weight: 600; 
+    color: var(--primary-color); 
+    line-height: 1.2; /* Mengurangi tinggi baris */
+}
+#jadwal-sholat #reset-lokasi { 
+    background: none; 
+    border: none; 
+    font-size: 1.2em; 
+    cursor: pointer; 
+    opacity: 0.6; 
+    padding: 0; /* Pastikan tidak ada padding berlebih */
+    width: auto; /* Biarkan lebar mengikuti konten */
+    height: auto; /* Biarkan tinggi mengikuti konten */
+    border-radius: 0; /* Hilangkan border-radius jika tidak diperlukan */
+}
+
+/* Penyesuaian untuk jam live */
+#jadwal-sholat #live-clock {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-top: 5px; /* Kurangi margin atas */
+    margin-bottom: 5px; /* Kurangi margin bawah */
+    line-height: 1.2;
+}
+
+/* Penyesuaian untuk countdown */
+#jadwal-sholat #next-prayer-countdown {
+    font-size: 1em;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 15px; /* Sedikit ruang di bawah countdown */
+    height: auto; /* Biarkan tinggi fleksibel */
+    line-height: 1.3;
+}
+#jadwal-sholat #countdown-timer { 
+    font-size: 1.2em; 
+    color: var(--primary-color); 
+}
+
+/* Penyesuaian untuk kontainer tanggal */
+#jadwal-sholat #tanggal-container { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 25px; /* Ruang di bawah kontainer tanggal */
+}
+#jadwal-sholat #tanggal-container button {
+    border: 1px solid #ccc; /* Border lebih tipis dari 2px */
+    width: 30px; /* Ukuran tombol lebih kecil */
+    height: 30px;
+    font-size: 1em; /* Ukuran font tombol lebih kecil */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+#jadwal-sholat #tanggal-display {
+    line-height: 1.3; /* Mengurangi jarak antar baris tanggal */
+    text-align: center;
+    flex-grow: 1; /* Agar tanggal mengambil ruang di tengah */
+}
+#jadwal-sholat #tanggal-display div {
+    margin: 0; /* Hapus margin default antar div tanggal */
+}
+
+/* === GAYA UNTUK TOMBOL SHOLAT MENGAMBANG (KODE BARU) === */
+#floating-prayer-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    visibility: hidden; /* Mulai dengan tersembunyi */
+}
+
+#floating-prayer-btn.visible {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+#floating-prayer-btn:hover {
+    background-color: #1e4220;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+
+#floating-prayer-icon::before {
+    content: '🕌'; /* Ikon default */
+    font-size: 1.2em;
+}
+
+#floating-prayer-btn.highlight #floating-prayer-icon::before {
+    content: '⏰'; /* Ikon saat countdown aktif */
+    animation: pulse-icon 1.5s infinite;
+}
+
+@keyframes pulse-icon {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+/* === AKHIR KODE BARU === */
+
+#fullscreenWarningModal .modal-content h2 {
+    font-size: 2.25rem; /* Diperbesar */
+    line-height: 2.5rem; /* Menyesuaikan tinggi baris */
+}
+#fullscreenWarningModal .modal-content p {
+    font-size: 1.25rem; /* Diperbesar */
+    line-height: 1.75rem; /* Menyesuaikan tinggi baris */
+}
+
+/* === CSS BARU UNTUK HALAMAN PENGAWAS UJIAN === */
+.santri-proctor-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    height: 450px; /* Tinggi tetap untuk setiap kartu */
+}
+
+.santri-proctor-card .header {
+    padding: 12px;
+    font-weight: bold;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+}
+
+.santri-proctor-card .log-container {
+    flex-grow: 1; /* Membuat area log mengisi sisa ruang */
+    overflow-y: auto; /* Membuat area ini bisa di-scroll */
+    padding: 12px;
+    font-size: 0.8rem; /* Ukuran font lebih kecil untuk log */
+    line-height: 1.5;
+}
     </style>
 </head>
 <body>
+<div id="fundraising-modal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <span class="close-button">&times;</span>
+        <h2 id="form-title" class="text-2xl font-bold mb-6">Buat Penggalangan Dana Baru</h2>
+        <form id="form-fundraising">
+			<input type="hidden" id="input-fund-id">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <div class="form-group">
+                    <label for="input-fund-title">Judul Penggalangan Dana</label>
+                    <input type="text" id="input-fund-title" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="input-fund-goal">Total Dana Dibutuhkan (hanya angka)</label>
+                <input type="number" id="input-fund-goal" required>
+            </div>
+            <div class="form-group">
+                <label for="input-fund-deadline">Batas Waktu</label>
+                <input type="date" id="input-fund-deadline" required>
+            </div>
+            <div class="form-group">
+    <label>Gambar Utama</label>
+    <div class="mt-2 p-4 border-2 border-dashed rounded-md text-center">
+        <img id="fundraising-image-preview" src="https://placehold.co/400x200/e9ecef/6c757d?text=Pilih+Gambar" class="mx-auto mb-4 max-h-48 rounded cursor-pointer" title="Klik untuk pilih gambar">
+        <input type="file" id="input-fund-image-file" class="hidden" accept="image/*">
+        <label for="input-fund-image-file" class="cursor-pointer bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded">
+            Pilih File Gambar
+        </label>
+    </div>
+</div>
+            <div class="form-group">
+                <label for="input-fund-desc">Deskripsi Lengkap (HTML didukung)</label>
+                <textarea id="input-fund-desc" rows="8" class="w-full p-3 border rounded-md"></textarea>
+            </div>
+            <div class="flex gap-4 mt-8">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">Simpan & Publikasikan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
     <div id="messageBox" class="message-box"></div>
 
     <header>
@@ -705,8 +1136,10 @@
             <nav id="mainNav">
                 <div class="nav-container">
                     <a href="#beranda" class="active">Beranda</a>
+					<a href="#jadwal-sholat">Jadwal Sholat</a>
                     <a href="#lembaga">Lembaga</a>
                     <a href="#tentang">Tentang</a>
+					<a href="digilib.html" style="background-color: #8B5CF6;">Digilib</a>
 					<div id="sistemInformasiDropdown" class="dropdown hidden">
 					<a href="#" id="sistemInformasiNav" class="dropbtn"><span class="nav-link-wrapper">Sistem Informasi &#9662;</span></a>
 						<div class="dropdown-content">
@@ -720,10 +1153,13 @@
 						<a href="#musyrifah" id="musyrifahNav">Halaman Musyrifah</a>
 						<a href="#input-soal" id="inputSoalNav">Input Soal Ujian</a>
 						<a href="#halaman-guru" id="halamanGuruNav"><span class="nav-link-wrapper">Bank Soal Guru</span></a>
+						<a href="#halaman-ujian-admin" id="halamanUjianAdminNav" class="hidden" style="background-color: #F59E0B;">Buka Ujian Manual</a>
+						<a href="#pengawas-ujian" id="pengawasUjianNav" class="hidden" style="background-color: #ef4444; color: white;">Pengawas Ujian</a>
+						<a href="tabungan.html" id="tabunganNav" class="hidden" style="background-color: #0d6efd;">Tabungan</a>
 						</div>
 					</div>
 					<a href="#absensi" id="attendanceNav" class="hidden">Absensi</a>
-					<a href="#halaman-ujian-admin" id="halamanUjianAdminNav" class="hidden">Ujian</a>
+					<a href="tugas.html" id="tugasNav" class="hidden" style="background-color: #F59E0B;"><span class="nav-link-wrapper">Tugas</span></a>
 					<a href="#ujian-online" id="ujianOnlineNav" class="hidden" style="background-color: #ff69b4;">Ujian Online</a>
 					<a href="#penerimaan">Penerimaan</a>
                     <a href="#kegiatan">Kegiatan</a>
@@ -751,7 +1187,32 @@
     <div id="laporanContainer" class="mt-8 overflow-x-auto bg-white rounded-lg shadow">
         <p class="p-8 text-center text-gray-500">Silakan pilih tanggal untuk melihat laporan.</p>
     </div>
+</div>	
+	<div id="tahfidz-chart-container" class="mt-12 pt-8 border-t hidden">
+    <h3 class="text-2xl font-bold text-gray-800 mb-4">Grafik Progres Tahfidz per Santri</h3>
+    
+    <div class="bg-gray-100 p-4 rounded-lg shadow-sm flex flex-wrap items-end gap-4 mb-4">
+        <div class="flex-grow">
+            <label for="chart-santri-select" class="block text-sm font-semibold">Pilih Santri</label>
+            <select id="chart-santri-select" class="w-full p-2 mt-1 border rounded"></select>
+        </div>
+        <div>
+            <label for="chart-start-date" class="block text-sm font-semibold">Tanggal Awal</label>
+            <input type="date" id="chart-start-date" class="w-full p-2 mt-1 border rounded">
+        </div>
+        <div>
+            <label for="chart-end-date" class="block text-sm font-semibold">Tanggal Akhir</label>
+            <input type="date" id="chart-end-date" class="w-full p-2 mt-1 border rounded">
+        </div>
+        <button id="show-chart-btn" class="bg-blue-600 text-white py-2 px-4 rounded-md">Tampilkan Grafik</button>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow">
+        <canvas id="tahfidzChart"></canvas>
+    </div>
 </div>
+
+
 <!-- === AKHIR HALAMAN LAPORAN TAHFIDZ === -->
 
 <div id="slip-gaji" class="page-section hidden container section">
@@ -807,7 +1268,19 @@
             <section id="berita" class="section">
                 <h2>Berita & Pengumuman Terbaru</h2>
                 <div id="news-container" class="grid-container"></div>
+				
             </section>
+			
+			<div id="create-fundraising-btn-container" class="hidden text-right mb-4">
+    <button id="btn-create-fundraising" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md">
+        Buat Penggalangan Dana
+    </button>
+</div>
+			<section id="fundraising" class="section">
+    <h2>Penggalangan Dana Mendesak</h2>
+    <div id="fundraising-container" class="fundraising-wrapper">
+        </div>
+</section>
             <section id="kalenderPendidikanSection" class="section hidden">
                 <h2>Kalender Pendidikan Madrasah 2025/2026</h2>
                 <div id="dynamic-calendar-grid" class="calendar-grid"></div>
@@ -824,6 +1297,54 @@
 
         </main>
     </div>
+	<div id="jadwal-sholat" class="page-section hidden">
+        <div class="jadwal-sholat-container">
+            <div id="js-header-info">
+                <div id="lokasi-container">
+                    <div id="lokasi">Mencari lokasi Anda...</div>
+                    <button id="reset-lokasi" title="Reset Lokasi">🔄</button>
+                </div>
+                <div id="live-clock"></div>
+                <div id="next-prayer-countdown"></div>
+                <div id="tanggal-container">
+                    <button id="prev-day">&lt;</button>
+                    <div id="tanggal-display">
+                        <div id="tanggal-masehi"></div>
+                        <div id="tanggal-hijriah"></div>
+                    </div>
+                    <button id="next-day">&gt;</button>
+                </div>
+            </div>
+
+            <div id="notif-prompt">
+                <span id="close-notif-prompt">&times;</span>
+                <p>Aktifkan notifikasi pengingat sholat?</p>
+                <button id="enable-notif-btn">Aktifkan Notifikasi</button>
+            </div>
+
+            <div id="sky-container">
+                <div id="sky-path"></div>
+                <div id="celestial-object-wrapper" class="celestial-object-wrapper">
+                    <div id="celestial-body" class="celestial-body"></div>
+                </div>
+            </div>
+            <div id="timeline-labels"></div>
+            <div id="jadwal-container"></div>
+            <button id="test-adhan-btn">🔊 Tes Suara Adzan</button>
+        </div>
+    </div>
+    
+    <footer>
+        </footer>
+
+    <div id="adhan-popup-overlay">
+        <div id="adhan-popup">
+            <h2>Telah Masuk Waktu Sholat</h2>
+            <p id="popup-prayer-name"></p>
+            <button id="stop-adhan-btn">🔇 Matikan Suara Adzan</button>
+        </div>
+    </div>
+    <audio id="adhan-audio" preload="auto" src="azan.mp3"></audio>
     <div id="lembaga" class="page-section hidden container section"><h2>Lembaga di Bawah Naungan Kami</h2><div class="grid-container"><div class="card"><div class="card-content"><h3>Lembaga Pendidikan: Rumah Tahfidz Qur'an Markaz Qur'an Al-Maa'un</h3><p>Fokus pada pendidikan dan pembinaan generasi muda untuk menjadi penghafal Al-Qur'an yang berakhlak mulia.</p></div></div><div class="card"><div class="card-content"><h3>Lembaga Sosial: Rumah Anak Yatim Abu Darda</h3><p>Memberikan perlindungan, kasih sayang, dan pemenuhan kebutuhan hidup bagi anak-anak yatim dan dhuafa.</p></div></div></div></div>
     <div id="tentang" class="page-section hidden container section"><h2>Tentang Yayasan</h2><p><strong>Yayasan Markaz Yatim Duafa Qurani</strong> adalah organisasi nirlaba berlandaskan Al-Qur'an dan Sunnah dengan pemahaman Salafus Shalih.</p><h3>Visi & Misi</h3><p>Menjadi yayasan Islam yang unggul dan amanah dalam mencetak generasi Qur'ani serta menjadi pelopor dalam kesejahteraan sosial umat.</p></div>
     <div id="absensi" class="page-section hidden container section">
@@ -836,7 +1357,7 @@
         </div>
         <form id="attendanceFormGuru" class="custom-form">
             <div class="form-group"><label for="teacherNameDisplay">Nama Guru</label><input type="text" id="teacherNameDisplay" readonly style="background-color: #e9ecef;"></div>
-            <div class="form-group"><label for="attendanceDateGuru">Tanggal</label><input type="date" id="attendanceDateGuru" required></div>
+            <div class="form-group"><label for="attendanceDateGuru">Tanggal</label><input type="date" id="attendanceDateGuru" required readonly style="background-color: #e9ecef;"></div>
             <div class="form-group"><label for="className">Kelas</label><select id="className" class="w-full p-3 border border-gray-300 rounded-md" required><option value="">Pilih Kelas...</option></select></div>
             <div class="form-group"><label for="lateMinutesGuru">Menit Terlambat</label><input type="number" id="lateMinutesGuru" min="0" placeholder="Isi hanya jika terlambat"></div>
             
@@ -861,7 +1382,7 @@
         </form>
         <form id="attendanceFormStaf" class="custom-form hidden">
             <div class="form-group"><label for="stafNameDisplay">Nama Staf</label><input type="text" id="stafNameDisplay" readonly style="background-color: #e9ecef;"></div>
-            <div class="form-group"><label for="attendanceDateStaf">Tanggal</label><input type="date" id="attendanceDateStaf" required></div>
+            <div class="form-group"><label for="attendanceDateStaf">Tanggal</label><input type="date" id="attendanceDateStaf" required readonly style="background-color: #e9ecef;"></div>
             <div class="form-group"><label for="jabatanStaf">Jabatan</label><input type="text" id="jabatanStaf" readonly required style="background-color: #e9ecef;"></div>
             <div class="form-group"><label for="lateMinutesStaf">Menit Izin</label><input type="number" id="lateMinutesStaf" min="0" placeholder="Isi hanya jika Izin"></div>
             <div class="form-group"><label for="remarksStaf">Keterangan</label><textarea id="remarksStaf" rows="3"></textarea></div>
@@ -1184,7 +1705,7 @@
         <form id="formKegiatanMusyrif" class="custom-form p-0 shadow-none max-w-full">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="form-group"><label for="santriKegiatanMusyrif">Nama Santri</label><select id="santriKegiatanMusyrif" required></select></div>
-                <div class="form-group"><label for="tanggalKegiatanMusyrif">Tanggal</label><input type="date" id="tanggalKegiatanMusyrif" readonly style="background-color: #e9ecef;"></div>
+                <div class="form-group"><label for="tanggalKegiatanMusyrif">Tanggal</label><input type="date" id="tanggalKegiatanMusyrif" style="background-color: #e9ecef;"></div>
             </div>
             <div class="form-group">
                 <label>Status Pelaksanaan</label>
@@ -1207,19 +1728,50 @@
         <form id="formTahfidzMusyrif" class="custom-form p-0 shadow-none max-w-full">
              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <div class="form-group"><label for="santriTahfidzMusyrif">Nama Santri</label><select id="santriTahfidzMusyrif" required></select></div>
-                 <div class="form-group"><label for="tanggalTahfidzMusyrif">Tanggal</label><input type="date" id="tanggalTahfidzMusyrif" readonly style="background-color: #e9ecef;"></div>
+                 <div class="form-group"><label for="tanggalTahfidzMusyrif">Tanggal</label><input type="date" id="tanggalTahfidzMusyrif" style="background-color: #e9ecef;"></div>
              </div>
              <!-- GANTI BLOK LAMA DENGAN YANG BARU INI -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
-    <!-- Ziyadah P -->
-    <div class="form-group md:col-span-2"><label>Ziyadah (P) - Surat & Ayat</label><input type="text" id="ziyadahPTextMusyrif" placeholder="Cth: Al-Baqarah 1-5"></div>
-    <div class="form-group"><label>Poin</label><input type="text" id="ziyadahPoinMusyrif" placeholder="Cth: 7"></div>
-    <!-- Ziyadah S -->
-    <div class="form-group md:col-span-2"><label>Ziyadah (S) - Surat & Ayat</label><input type="text" id="ziyadahSTextMusyrif" placeholder="Cth: An-Nisa 10-15"></div>
-    <div class="form-group"><label>Poin</label><input type="text" id="ziyadahSoinMusyrif" placeholder="Cth: 8"></div>
-    <!-- Muraja'ah -->
-    <div class="form-group md:col-span-2"><label>Muraja'ah - Surat/Juz</label><input type="text" id="murajaahTextMusyrif" placeholder="Cth: Juz 30"></div>
-    <div class="form-group"><label>Poin</label><input type="text" id="murajaahPoinMusyrif" placeholder="Cth: 9"></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 border p-4 rounded-md">
+    <h4 class="md:col-span-2 font-semibold text-lg">Ziyadah (Pagi)</h4>
+    <div class="form-group"><label>Surah</label><select id="ziyadahPSurahMusyrif"></select></div>
+    <div class="form-group grid grid-cols-2 gap-2">
+        <div><label>Ayat Awal</label><input type="number" id="ziyadahPAyatAwalMusyrif"></div>
+        <div><label>Ayat Akhir</label><input type="number" id="ziyadahPAyatAkhirMusyrif"></div>
+    </div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahPoinMusyrif" required></div>
+
+    <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Ziyadah (Sore)</h4>
+    <div class="form-group"><label>Surah</label><select id="ziyadahSSurahMusyrif"></select></div>
+    <div class="form-group grid grid-cols-2 gap-2">
+        <div><label>Ayat Awal</label><input type="number" id="ziyadahSAyatAwalMusyrif"></div>
+        <div><label>Ayat Akhir</label><input type="number" id="ziyadahSAyatAkhirMusyrif"></div>
+    </div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahSoinMusyrif" required></div>
+
+    <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Muraja'ah</h4>
+    
+    <div class="form-group md:col-span-2">
+        <label class="font-semibold">Mode Input Muraja'ah:</label>
+        <div id="murajaah-mode-selector-musyrif" class="flex gap-4 mt-2">
+            <label class="flex items-center"><input type="radio" name="murajaahModeMusyrif" value="surah" checked class="mr-2"> Berdasarkan Surah</label>
+            <label class="flex items-center"><input type="radio" name="murajaahModeMusyrif" value="juz" class="mr-2"> Berdasarkan Juz</label>
+        </div>
+    </div>
+
+    <div id="murajaah-juz-inputs-musyrif" class="md:col-span-2 hidden">
+        <label class="font-semibold mb-2 block">Pilih Juz yang dimuraja'ah (opsional, untuk mengisi otomatis):</label>
+        <div id="juz-checkbox-container-musyrif" class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-x-4 gap-y-2 p-4 border rounded-md bg-gray-50">
+            </div>
+    </div>
+
+    <div id="murajaah-surah-inputs-musyrif" class="contents">
+        <div class="form-group"><label>Surah Awal</label><select id="murajaahSurahAwalMusyrif"></select></div>
+        <div class="form-group"><label>Ayat Awal</label><input type="number" id="murajaahAyatAwalMusyrif"></div>
+        <div class="form-group"><label>Surah Akhir</label><select id="murajaahSurahAkhirMusyrif"></select></div>
+        <div class="form-group"><label>Ayat Akhir</label><input type="number" id="murajaahAyatAkhirMusyrif"></div>
+    </div>
+
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="murajaahPoinMusyrif" required></div>
 </div>
             <button type="submit" class="submit-btn">Simpan Nilai Tahfidz</button>
         </form>
@@ -1231,7 +1783,7 @@
         <form id="formPelanggaranMusyrif" class="custom-form p-0 shadow-none max-w-full">
              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <div class="form-group"><label for="santriPelanggaranMusyrif">Nama Santri</label><select id="santriPelanggaranMusyrif" required></select></div>
-                 <div class="form-group"><label for="tanggalPelanggaranMusyrif">Tanggal</label><input type="date" id="tanggalPelanggaranMusyrif" readonly style="background-color: #e9ecef;"></div>
+                 <div class="form-group"><label for="tanggalPelanggaranMusyrif">Tanggal</label><input type="date" id="tanggalPelanggaranMusyrif" style="background-color: #e9ecef;"></div>
              </div>
              <div class="form-group"><label for="isiPelanggaranMusyrif">Masukkan Pelanggaran</label><textarea id="isiPelanggaranMusyrif" rows="3" required></textarea></div>
              <div class="form-group"><label for="solusiPelanggaranMusyrif">Masukkan Solusi</label><textarea id="solusiPelanggaranMusyrif" rows="3" required></textarea></div>
@@ -1263,7 +1815,7 @@
         <form id="formKegiatanMusyrifah" class="custom-form p-0 shadow-none max-w-full">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="form-group"><label for="santriKegiatanMusyrifah">Nama Santri</label><select id="santriKegiatanMusyrifah" required></select></div>
-                <div class="form-group"><label for="tanggalKegiatanMusyrifah">Tanggal</label><input type="date" id="tanggalKegiatanMusyrifah" readonly style="background-color: #e9ecef;"></div>
+                <div class="form-group"><label for="tanggalKegiatanMusyrifah">Tanggal</label><input type="date" id="tanggalKegiatanMusyrifah" style="background-color: #e9ecef;"></div>
             </div>
             <div class="form-group">
                 <label>Status Pelaksanaan</label>
@@ -1286,19 +1838,50 @@
         <form id="formTahfidzMusyrifah" class="custom-form p-0 shadow-none max-w-full">
              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <div class="form-group"><label for="santriTahfidzMusyrifah">Nama Santri</label><select id="santriTahfidzMusyrifah" required></select></div>
-                 <div class="form-group"><label for="tanggalTahfidzMusyrifah">Tanggal</label><input type="date" id="tanggalTahfidzMusyrifah" readonly style="background-color: #e9ecef;"></div>
+                 <div class="form-group"><label for="tanggalTahfidzMusyrifah">Tanggal</label><input type="date" id="tanggalTahfidzMusyrifah" style="background-color: #e9ecef;"></div>
              </div>
              <!-- GANTI BLOK LAMA DENGAN YANG BARU INI (UNTUK MUSYRIFAH) -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
-    <!-- Ziyadah P -->
-    <div class="form-group md:col-span-2"><label>Ziyadah (P) - Surat & Ayat</label><input type="text" id="ziyadahPTextMusyrifah" placeholder="Cth: Al-Baqarah 1-5"></div>
-    <div class="form-group"><label>Poin</label><input type="text" id="ziyadahPoinMusyrifah" placeholder="Cth: 7"></div>
-    <!-- Ziyadah S -->
-    <div class="form-group md:col-span-2"><label>Ziyadah (S) - Surat & Ayat</label><input type="text" id="ziyadahSTextMusyrifah" placeholder="Cth: An-Nisa 10-15"></div>
-    <div class="form-group"><label>Poin</label><input type="text" id="ziyadahSoinMusyrifah" placeholder="Cth: 8"></div>
-    <!-- Muraja'ah -->
-    <div class="form-group md:col-span-2"><label>Muraja'ah - Surat/Juz</label><input type="text" id="murajaahTextMusyrifah" placeholder="Cth: Juz 30"></div>
-    <div class="form-group"><label>Poin</label><input type="text" id="murajaahPoinMusyrifah" placeholder="Cth: 9"></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 border p-4 rounded-md">
+    <h4 class="md:col-span-2 font-semibold text-lg">Ziyadah (Pagi)</h4>
+    <div class="form-group"><label>Surah</label><select id="ziyadahPSurahMusyrifah"></select></div>
+    <div class="form-group grid grid-cols-2 gap-2">
+        <div><label>Ayat Awal</label><input type="number" id="ziyadahPAyatAwalMusyrifah"></div>
+        <div><label>Ayat Akhir</label><input type="number" id="ziyadahPAyatAkhirMusyrifah"></div>
+    </div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahPoinMusyrifah" required></div>
+
+    <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Ziyadah (Sore)</h4>
+    <div class="form-group"><label>Surah</label><select id="ziyadahSSurahMusyrifah"></select></div>
+    <div class="form-group grid grid-cols-2 gap-2">
+        <div><label>Ayat Awal</label><input type="number" id="ziyadahSAyatAwalMusyrifah"></div>
+        <div><label>Ayat Akhir</label><input type="number" id="ziyadahSAyatAkhirMusyrifah"></div>
+    </div>
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="ziyadahSoinMusyrifah" required></div>
+
+    <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Muraja'ah</h4>
+
+    <div class="form-group md:col-span-2">
+        <label class="font-semibold">Mode Input Muraja'ah:</label>
+        <div id="murajaah-mode-selector-musyrifah" class="flex gap-4 mt-2">
+            <label class="flex items-center"><input type="radio" name="murajaahModeMusyrifah" value="surah" checked class="mr-2"> Berdasarkan Surah</label>
+            <label class="flex items-center"><input type="radio" name="murajaahModeMusyrifah" value="juz" class="mr-2"> Berdasarkan Juz</label>
+        </div>
+    </div>
+
+    <div id="murajaah-juz-inputs-musyrifah" class="md:col-span-2 hidden">
+        <label class="font-semibold mb-2 block">Pilih Juz yang dimuraja'ah (opsional, untuk mengisi otomatis):</label>
+        <div id="juz-checkbox-container-musyrifah" class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-x-4 gap-y-2 p-4 border rounded-md bg-gray-50">
+            </div>
+    </div>
+
+    <div id="murajaah-surah-inputs-musyrifah" class="contents">
+        <div class="form-group"><label>Surah Awal</label><select id="murajaahSurahAwalMusyrifah"></select></div>
+        <div class="form-group"><label>Ayat Awal</label><input type="number" id="murajaahAyatAwalMusyrifah"></div>
+        <div class="form-group"><label>Surah Akhir</label><select id="murajaahSurahAkhirMusyrifah"></select></div>
+        <div class="form-group"><label>Ayat Akhir</label><input type="number" id="murajaahAyatAkhirMusyrifah"></div>
+    </div>
+
+    <div class="form-group md:col-span-2"><label>Poin</label><input type="number" id="murajaahPoinMusyrifah" required></div>
 </div>
             <button type="submit" class="submit-btn">Simpan Nilai Tahfidz</button>
         </form>
@@ -1310,7 +1893,7 @@
         <form id="formPelanggaranMusyrifah" class="custom-form p-0 shadow-none max-w-full">
              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <div class="form-group"><label for="santriPelanggaranMusyrifah">Nama Santri</label><select id="santriPelanggaranMusyrifah" required></select></div>
-                 <div class="form-group"><label for="tanggalPelanggaranMusyrifah">Tanggal</label><input type="date" id="tanggalPelanggaranMusyrifah" readonly style="background-color: #e9ecef;"></div>
+                 <div class="form-group"><label for="tanggalPelanggaranMusyrifah">Tanggal</label><input type="date" id="tanggalPelanggaranMusyrifah" style="background-color: #e9ecef;"></div>
              </div>
              <div class="form-group"><label for="isiPelanggaranMusyrifah">Masukkan Pelanggaran</label><textarea id="isiPelanggaranMusyrifah" rows="3" required></textarea></div>
              <div class="form-group"><label for="solusiPelanggaranMusyrifah">Masukkan Solusi</label><textarea id="solusiPelanggaranMusyrifah" rows="3" required></textarea></div>
@@ -1334,6 +1917,11 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="bg-white p-4 rounded-lg shadow">
             <h3 class="font-bold border-b pb-2 mb-2">1. Pilih Santri</h3>
+			<div class="text-sm font-medium">
+        <input type="checkbox" id="select-all-santri" class="align-middle">
+        <label for="select-all-santri" class="align-middle cursor-pointer font-bold border-b pb-2 mb-2 ">Pilih Semua</label>
+		
+    </div>
             <div id="admin-santri-list-container" class="max-h-96 overflow-y-auto space-y-2">
                 <p>Memuat daftar santri...</p>
             </div>
@@ -1357,6 +1945,14 @@
             <button id="tutup-ujian-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">Tutup Ujian Terpilih</button>
         </div>
     </div>
+</div>
+
+<div id="pengawas-ujian" class="page-section hidden container section">
+    <h2 class="text-3xl font-bold text-gray-800">Dasbor Pengawas Ujian</h2>
+    <p class="mb-8 text-gray-600">Pantau aktivitas santri yang sedang melaksanakan ujian secara real-time.</p>
+
+    <div id="proctor-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        </div>
 </div>
 
 <!-- === AKHIR HALAMAN MUSYRIFAH === -->
@@ -1413,7 +2009,8 @@ b. Soekarno
 
 <div id="halaman-guru" class="page-section hidden container section">
     <h2 class="text-3xl font-bold text-gray-800">Bank Soal Anda</h2>
-    <p class="mb-8 text-gray-600">Di halaman ini, Anda dapat melihat dan melengkapi kunci jawaban serta poin untuk soal-soal dari materi yang Anda ajar. Anda juga bisa merubah isi soal jika dirasa soal tersebut kurang cocok untuk diujikan ke anak-anak.</p>
+    <div id="admin-soal-notification" class="hidden my-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md"></div>
+	<p class="mb-8 text-gray-600">Di halaman ini, Anda dapat melihat dan melengkapi kunci jawaban serta poin untuk soal-soal dari materi yang Anda ajar. Anda juga bisa merubah isi soal jika dirasa soal tersebut kurang cocok untuk diujikan ke anak-anak.</p>
 
     <div class="bg-white p-6 rounded-xl shadow-md">
         <div class="form-group max-w-md mb-6">
@@ -1498,12 +2095,12 @@ b. Soekarno
             update terbaru :
         </p>
 		<ul class="list-disc list-inside text-gray-700 text-left space-y-2 mb-6">
-            <li>Login akun santri</li>
-            <li>Pengelompokan beberapa menu ke dalam menu Sistem Informasi</li>
-            <li>Input soal untuk TU (Tata Usaha)</li>
-            <li>Akses bank soal untuk Guru</li>
-            <li>KRS dan KHS untuk Santri</li>
-            <li>Ujian online untuk Santri</li>
+            <li>Menu Digilib (Digital Library) atau Perpustakaan Digital</li>
+            <li>Menu Tabungan Santri</li>
+            <li>Slip Gaji bulan Agustus 2025 Sudah bisa dilihat</li>
+            <li>Absensi yang lebih akurat</li>
+            <li>KRS dan KHS yang lebih powerfull</li>
+            <li>Ujian online untuk Santri dengan keamanan tinggi</li>
         </ul>
         <button id="understandPopupBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
             Saya Mengerti
@@ -1528,13 +2125,113 @@ b. Soekarno
     <div class="loader"></div>
 </div>
 
-	<footer><div class="container"><p>&copy; 2025 Yayasan Markaz Yatim Duafa Qurani. Semua Hak Cipta Dilindungi.</p><p>Jl. Protokol Desa Sei Kamah II, Sei Dadap, Asahan, Sumut | <a href="mailto:markazyatimduafaqurani@gmail.com">markazyatimduafaqurani@gmail.com</a> | 085261804096</p></div></footer>
+<a href="#jadwal-sholat" id="floating-prayer-btn">
+    <span id="floating-prayer-icon"></span>
+    <span id="floating-prayer-text">Memuat jadwal...</span>
+</a>
 
+	<footer><div class="container"><p>&copy; 2025 Yayasan Markaz Yatim Duafa Qurani. Semua Hak Cipta Dilindungi.</p><p>Jl. Protokol Desa Sei Kamah II, Sei Dadap, Asahan, Sumut | <a href="mailto:markazyatimduafaqurani@gmail.com">markazyatimduafaqurani@gmail.com</a> | 085261804096</p></div></footer>
+	
+	<script src="https://www.youtube.com/iframe_api"></script>
+	
 <script>
 
+	// =======================================================
+// === KODE KONTROL YOUTUBE (VERSI FINAL YANG SEBENARNYA) ===
+// =======================================================
+let player;
+let videoSlideshowInterval;
+const playlistId = 'PLCkk8QVJzkuQBH-p2kHcTTG_4gzibc93v';
 
+let isYouTubeApiReady = false;
+let isPlayerInitialized = false;
+let playlistVideoIds = []; // Variabel untuk menyimpan semua ID video
+let currentVideoIndex = -1; // Kita mulai dari -1 agar putaran pertama menjadi 0
+
+// Fungsi untuk MEMULAI slideshow (perpindahan otomatis)
+function startSlideshow() {
+    stopSlideshow(); // Selalu hentikan timer lama untuk mencegah tumpuk
+    videoSlideshowInterval = setInterval(() => {
+        if (!player || playlistVideoIds.length === 0) return;
+
+        // Pindah ke indeks video berikutnya, kembali ke 0 jika sudah di akhir
+        currentVideoIndex = (currentVideoIndex + 1) % playlistVideoIds.length;
+        const nextVideoId = playlistVideoIds[currentVideoIndex];
+        
+        // Menggunakan cueVideoById untuk HANYA MENYIAPKAN video, BUKAN memutarnya
+        if (player && typeof player.cueVideoById === 'function') {
+            player.cueVideoById(nextVideoId);
+        }
+    }, 8000); // Pindah video setiap 8 detik
+}
+
+// Fungsi untuk MENGHENTIKAN slideshow
+function stopSlideshow() {
+    clearInterval(videoSlideshowInterval);
+}
+
+// Fungsi ini dipanggil oleh YouTube API
+window.onYouTubeIframeAPIReady = function() {
+    isYouTubeApiReady = true;
+    initializePlayer();
+};
+
+// Fungsi ini dipanggil saat pemutar video sudah benar-benar siap
+function onPlayerReady(event) {
+    // Ambil daftar semua ID video di dalam playlist
+    playlistVideoIds = player.getPlaylist();
+    // Dapatkan indeks video yang dimuat pertama kali (biasanya 0)
+    currentVideoIndex = player.getPlaylistIndex();
+    // Mulai slideshow untuk pertama kalinya
+    startSlideshow();
+}
+
+// Fungsi ini dipanggil saat status video berubah
+function onPlayerStateChange(event) {
+    // Saat video baru disiapkan (CUED), perbarui judulnya
+    if (event.data === YT.PlayerState.CUED) {
+        const titleElement = document.getElementById('youtube-title');
+        const videoData = player.getVideoData(); // Ambil data video saat ini
+        if (titleElement && videoData && videoData.title) {
+            titleElement.textContent = videoData.title; // Tampilkan judulnya
+        }
+    }
+
+    // Jika video DIPUTAR atau DIJEDA oleh pengguna, hentikan slideshow
+    if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED) {
+        stopSlideshow();
+    } 
+    // Jika video yang ditonton SELESAI, mulai lagi slideshow
+    else if (event.data === YT.PlayerState.ENDED) {
+        startSlideshow();
+    }
+}
+
+// Fungsi untuk membuat player
+function initializePlayer() {
+    if (isYouTubeApiReady && document.getElementById('youtube-player') && !isPlayerInitialized) {
+        isPlayerInitialized = true;
+        player = new YT.Player('youtube-player', {
+            height: '100%',
+            width: '100%',
+            playerVars: {
+                'playsinline': 1,
+                'autoplay': 0, // Nilai ini HARUS 0
+                'controls': 1,
+                'listType': 'playlist',
+                'list': playlistId
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
+	
+	
 	
 	const loadingOverlay = document.getElementById('loading-overlay');
     const showLoading = () => loadingOverlay.classList.remove('hidden');
@@ -1545,15 +2242,53 @@ document.addEventListener('DOMContentLoaded', function() {
 	let santriDataWithUsernames = null; // Cache untuk santri data termasuk usernames
     // --- BAGIAN 1: KONFIGURASI & DATA UTAMA ---
     const CONFIG = {
-        SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec",
+        
+		SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec",
         CLOUDINARY_URL: "https://api.cloudinary.com/v1_1/deva5eknr/image/upload",
         CLOUDINARY_UPLOAD_PRESET: "markaz",
         ICONS: {
             eye: `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
             eyeOff: `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
         }
+		
     };
-
+	
+	// --- DATA JUZ AL-QUR'AN (MUSHAF MADINAH) ---
+    const JUZ_DATA = [
+        { juz: 1, start: { surah: "Al-Fatihah", ayat: 1 }, end: { surah: "Al-Baqarah", ayat: 141 } },
+        { juz: 2, start: { surah: "Al-Baqarah", ayat: 142 }, end: { surah: "Al-Baqarah", ayat: 252 } },
+        { juz: 3, start: { surah: "Al-Baqarah", ayat: 253 }, end: { surah: "Ali 'Imran", ayat: 92 } },
+        { juz: 4, start: { surah: "Ali 'Imran", ayat: 93 }, end: { surah: "An-Nisa'", ayat: 23 } },
+        { juz: 5, start: { surah: "An-Nisa'", ayat: 24 }, end: { surah: "An-Nisa'", ayat: 147 } },
+        { juz: 6, start: { surah: "An-Nisa'", ayat: 148 }, end: { surah: "Al-Ma'idah", ayat: 81 } },
+        { juz: 7, start: { surah: "Al-Ma'idah", ayat: 82 }, end: { surah: "Al-An'am", ayat: 110 } },
+        { juz: 8, start: { surah: "Al-An'am", ayat: 111 }, end: { surah: "Al-A'raf", ayat: 87 } },
+        { juz: 9, start: { surah: "Al-A'raf", ayat: 88 }, end: { surah: "Al-Anfal", ayat: 40 } },
+        { juz: 10, start: { surah: "Al-Anfal", ayat: 41 }, end: { surah: "At-Tawbah", ayat: 92 } },
+        { juz: 11, start: { surah: "At-Tawbah", ayat: 93 }, end: { surah: "Hud", ayat: 5 } },
+        { juz: 12, start: { surah: "Hud", ayat: 6 }, end: { surah: "Yusuf", ayat: 52 } },
+        { juz: 13, start: { surah: "Yusuf", ayat: 53 }, end: { surah: "Ibrahim", ayat: 52 } },
+        { juz: 14, start: { surah: "Al-Hijr", ayat: 1 }, end: { surah: "An-Nahl", ayat: 128 } },
+        { juz: 15, start: { surah: "Al-Isra'", ayat: 1 }, end: { surah: "Al-Kahf", ayat: 74 } },
+        { juz: 16, start: { surah: "Al-Kahf", ayat: 75 }, end: { surah: "Taha", ayat: 135 } },
+        { juz: 17, start: { surah: "Al-Anbiya'", ayat: 1 }, end: { surah: "Al-Hajj", ayat: 78 } },
+        { juz: 18, start: { surah: "Al-Mu'minun", ayat: 1 }, end: { surah: "Al-Furqan", ayat: 20 } },
+        { juz: 19, start: { surah: "Al-Furqan", ayat: 21 }, end: { surah: "An-Naml", ayat: 55 } },
+        { juz: 20, start: { surah: "An-Naml", ayat: 56 }, end: { surah: "Al-'Ankabut", ayat: 45 } },
+        { juz: 21, start: { surah: "Al-'Ankabut", ayat: 46 }, end: { surah: "Al-Ahzab", ayat: 30 } },
+        { juz: 22, start: { surah: "Al-Ahzab", ayat: 31 }, end: { surah: "Yasin", ayat: 27 } },
+        { juz: 23, start: { surah: "Yasin", ayat: 28 }, end: { surah: "Az-Zumar", ayat: 31 } },
+        { juz: 24, start: { surah: "Az-Zumar", ayat: 32 }, end: { surah: "Fussilat", ayat: 46 } },
+        { juz: 25, start: { surah: "Fussilat", ayat: 47 }, end: { surah: "Al-Jasiyah", ayat: 37 } },
+        { juz: 26, start: { surah: "Al-Ahqaf", ayat: 1 }, end: { surah: "Az-Zariyat", ayat: 30 } },
+        { juz: 27, start: { surah: "Az-Zariyat", ayat: 31 }, end: { surah: "Al-Hadid", ayat: 29 } },
+        { juz: 28, start: { surah: "Al-Mujadilah", ayat: 1 }, end: { surah: "At-Tahrim", ayat: 12 } },
+        { juz: 29, start: { surah: "Al-Mulk", ayat: 1 }, end: { surah: "Al-Mursalat", ayat: 50 } },
+        { juz: 30, start: { surah: "An-Naba'", ayat: 1 }, end: { surah: "An-Nas", ayat: 6 } }
+    ];
+	
+	
+			let selectedFundraisingFile = null; // Variabel untuk menyimpan file gambar yang dipilih
 // === TAMBAHKAN BLOK KODE INI DI BAGIAN ATAS SCRIPT ANDA ===
     
 
@@ -1605,7 +2340,156 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     // ==========================================================
 
+// GANTI TOTAL FUNGSI LAMA DENGAN VERSI FINAL INI
+async function renderFundraisingCards(session) {
+    const section = document.getElementById('fundraising');
+    const container = document.getElementById('fundraising-container');
+    if (!container || !section) return;
 
+    const isAdmin = session && session.loggedIn && ['mia', 'wawan', 'admin'].includes(session.username);
+
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getFundraisingCampaigns' }) });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        const campaigns = result.data;
+        if (campaigns.length === 0) {
+            section.classList.add('hidden');
+            return;
+        }
+
+        container.innerHTML = '';
+        campaigns.forEach(item => {
+            const itemDataString = JSON.stringify(item);
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = 'relative';
+
+            let editButtonHtml = isAdmin ? `<button class="btn-edit-fundraising absolute top-2 left-2 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold py-1 px-3 rounded-full z-10" data-campaign='${itemDataString}'>Edit</button>` : '';
+
+            const now = new Date();
+            const deadline = new Date(item.Deadline);
+            const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+            const progressPercent = Math.min((item.DanaMasuk / item.DanaDibutuhkan) * 100, 100);
+            let deadlineText = daysLeft > 0 ? `${daysLeft} hari lagi` : (daysLeft <= 0 ? 'Berakhir' : 'Selesai');
+
+            cardWrapper.innerHTML = `
+                ${editButtonHtml}
+                <a href="donasi.html?id=${item.ID}" class="fundraising-card">
+                    <div class="image-container"><img src="${item.GambarUtama}" alt="${item.Judul}"><div class="deadline-badge">${deadlineText}</div></div>
+                    <div class="card-body">
+                        <p class="organizer-info">${item.Pembuat}</p>
+                        <h3>${item.Judul}</h3>
+                        <p class="progress-info">Terkumpul <span class="amount">Rp${item.DanaMasuk.toLocaleString('id-ID')}</span> dari Rp${item.DanaDibutuhkan.toLocaleString('id-ID')}</p>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${progressPercent}%;"></div></div>
+                    </div>
+                </a>`;
+            container.appendChild(cardWrapper);
+        });
+
+        // --- LOGIKA TOMBOL EDIT DIPINDAHKAN KE SINI ---
+        container.querySelectorAll('.btn-edit-fundraising').forEach(button => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const campaignData = JSON.parse(button.dataset.campaign);
+                const modal = document.getElementById('fundraising-modal');
+
+                modal.querySelector('#form-title').textContent = 'Edit Penggalangan Dana';
+                modal.querySelector('#input-fund-id').value = campaignData.ID;
+                modal.querySelector('#input-fund-title').value = campaignData.Judul;
+                modal.querySelector('#input-fund-goal').value = campaignData.DanaDibutuhkan;
+                modal.querySelector('#input-fund-deadline').value = new Date(campaignData.Deadline).toISOString().split('T')[0];
+                modal.querySelector('#input-fund-image-file').value = '';
+                modal.querySelector('#fundraising-image-preview').src = campaignData.GambarUtama;
+                modal.querySelector('#input-fund-desc').value = campaignData.DeskripsiHTML;
+
+                modal.style.display = 'block';
+            });
+        });
+
+    } catch (error) {
+        console.error("Gagal memuat data penggalangan dana:", error);
+        section.classList.add('hidden');
+    }
+}
+
+// TAMBAHKAN FUNGSI BARU INI DI DALAM <script>
+// GANTI SELURUH FUNGSI INI
+async function handleFundraisingSubmit(event) {
+    event.preventDefault();
+    showLoading();
+
+    const session = getActiveSession();
+    const campaignId = document.getElementById('input-fund-id').value;
+
+    // Tentukan aksi: jika ada ID, maka 'update', jika tidak maka 'create'
+    const action = campaignId ? 'updateFundraisingCampaign' : 'createFundraisingCampaign';
+
+    const data = {
+        action: action,
+        ID: campaignId, // Akan kosong jika membuat baru
+        Judul: document.getElementById('input-fund-title').value,
+        Pembuat: session.userData.profileName,
+        DanaDibutuhkan: document.getElementById('input-fund-goal').value,
+        Deadline: document.getElementById('input-fund-deadline').value,
+        
+        DeskripsiHTML: document.getElementById('input-fund-desc').value,
+        // Status hanya relevan saat membuat baru, di backend tidak akan diubah saat update
+        Status: "Aktif" 
+    };
+
+    // Jika tidak ada file gambar baru yang dipilih saat edit, jangan kirim properti GambarUtama
+    // Ini agar backend tidak menimpa gambar yang sudah ada dengan string kosong.
+    if (action === 'updateFundraisingCampaign' && !selectedFundraisingFile) {
+        delete data.GambarUtama;
+    }
+
+    // Logika upload gambar (jika ada file baru dipilih)
+    if (selectedFundraisingFile) {
+        try {
+            const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280 };
+            const compressedFile = await imageCompression(selectedFundraisingFile, options);
+
+            const formData = new FormData();
+            formData.append('file', compressedFile, selectedFundraisingFile.name);
+            formData.append('upload_preset', 'markaz');
+
+            const cloudinaryResponse = await fetch(CONFIG.CLOUDINARY_URL, { method: 'POST', body: formData });
+            if (!cloudinaryResponse.ok) throw new Error('Gagal mengunggah gambar.');
+
+            const cloudinaryData = await cloudinaryResponse.json();
+            data.GambarUtama = cloudinaryData.secure_url;
+
+        } catch (error) {
+            showMessage(`Error pada gambar: ${error.message}`, 'error');
+            hideLoading();
+            return;
+        }
+    }
+
+    // Kirim data ke backend
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        showMessage(result.message || `Penggalangan dana berhasil ${action === 'updateFundraisingCampaign' ? 'diperbarui' : 'dibuat'}!`, 'success');
+        document.getElementById('fundraising-modal').style.display = 'none';
+        document.getElementById('form-fundraising').reset();
+
+        // Reset file input & pratinjau
+        selectedFundraisingFile = null;
+        document.getElementById('fundraising-image-preview').src = 'https://placehold.co/400x200/e9ecef/6c757d?text=Pilih+Gambar';
+
+        renderFundraisingCards(session);
+    } catch (error) {
+        showMessage(`Gagal menyimpan: ${error.message}`, 'error');
+    } finally {
+        hideLoading();
+    }
+}
 /**
  * FUNGSI PENCARIAN BARU (PENGGANTI getAcademicMonthForDate)
  * Mencari tanggal yang diberikan di dalam daftar rentang bulan akademik.
@@ -1640,9 +2524,40 @@ function findAcademicMonthForDate(referenceDateStr) {
 
     const appData = {
         heroImages: ["anakdidik.jpg", "anakdidik01.jpg", "anakdidik02.jpg", "anakdidik03.jpg", "anakdidik04.jpg"],
-        news: [{ img: 'https://placehold.co/400x200/28a745/FFFFFF?text=Penerimaan+Santri', title: 'Penerimaan Santri Baru Telah Dibuka!', meta: '30 Juli 2025 | Pendidikan', desc: 'Pendaftaran santri baru untuk program Tahfidz di Markaz Qur\'an Al-Maa\'un telah resmi dibuka.' }, { img: 'https://placehold.co/400x200/17a2b8/FFFFFF?text=Santunan+Yatim', title: 'Santunan Rutin Anak Yatim', meta: '25 Juli 2025 | Sosial', desc: 'Kegiatan santunan bulanan untuk anak-anak yatim binaan Rumah Anak Yatim Abu Darda.' }, { img: 'https://placehold.co/400x200/ffc107/FFFFFF?text=Kajian+Umum', title: 'Kajian Umum Bulanan', meta: '22 Juli 2025 | Dakwah', desc: 'Yayasan akan mengadakan kajian umum terbuka untuk masyarakat. Informasi lokasi akan diumumkan segera.' }],
+        news: [
+		{ img: 'https://placehold.co/400x200/28a745/FFFFFF?text=Penerimaan+Santri', title: 'Penerimaan Santri Baru Telah Dibuka!', meta: '30 Juli 2025 | Pendidikan', desc: 'Pendaftaran santri baru untuk program Tahfidz di Markaz Qur\'an Al-Maa\'un telah resmi dibuka.' },
+		{ img: 'https://placehold.co/400x200/17a2b8/FFFFFF?text=Santunan+Yatim', title: 'Santunan Rutin Anak Yatim', meta: '25 Juli 2025 | Sosial', desc: 'Kegiatan santunan bulanan untuk anak-anak yatim binaan Rumah Anak Yatim Abu Darda.' },
+		{
+            type: 'youtube_playlist', // Penanda khusus untuk playlist
+            title: 'Kajian Umum Pilihan',
+			meta: '25 Agustus 2025 | Kajian', desc: 'Ada 20 Video Kajian Pilihan yang bisa ditonton.',
+            embedUrl: 'https://www.youtube.com/embed/vgB8YouGb_M?list=PLCkk8QVJzkuQBH-p2kHcTTG_4gzibc93v',
+			
+        }],
         gallery: [{ img: 'https://placehold.co/400x250/6f42c1/FFFFFF?text=Halaqah+Tahfidz', title: 'Halaqah Tahfidz Pagi', desc: 'Para santri sedang menyetorkan hafalan Al-Qur\'an kepada Musyrif.' }, { img: 'https://placehold.co/400x250/fd7e14/FFFFFF?text=Buka+Puasa+Bersama', title: 'Buka Puasa Bersama', desc: 'Kegiatan buka puasa bersama anak-anak yatim dan dhuafa di bulan Ramadhan.' }, { img: 'https://placehold.co/400x250/20c997/FFFFFF?text=Penyaluran+Bantuan', title: 'Penyaluran Bantuan', desc: 'Distribusi bantuan sembako dari para donatur kepada masyarakat sekitar.' }],
-        calendarEvents: [
+        fundraising: [
+        {
+            img: 'https://images.unsplash.com/photo-1593113646773-ae18c6422d75?q=80&w=2070&auto=format&fit=crop', // Ganti dengan URL gambar Anda
+            deadline: '2025-12-31', // Format: YYYY-MM-DD
+            organizer: 'Penghubung Kebaikan',
+            title: 'Hadiahkan Suara: Donasi Alat Bantu Dengar',
+            current: 27614492,
+            goal: 50000000 
+        },
+        {
+            img: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?q=80&w=2070&auto=format&fit=crop', // Ganti dengan URL gambar Anda
+            deadline: '2025-09-25', // Format: YYYY-MM-DD
+            organizer: 'Yana Sutisna',
+            title: 'Diintai Gizi Buruk & Gagal Hati, Bantu Rafasha!',
+            current: 25950330,
+            goal: 40000000
+        }
+        // Anda bisa menambahkan item penggalangan dana lainnya di sini
+    ],
+	
+	
+	
+	calendarEvents: [
             // --- Semester Ganjil 2025 ---
             { date: "2025-07-7", title: "Pengenalan Lingkungan Madrasah", color: "event-lightgreen", span: 3 }, 
 			{ date: "2025-07-14", title: "Awal Materi Bulan I", color: "event-green" },
@@ -1691,7 +2606,7 @@ function findAcademicMonthForDate(referenceDateStr) {
             { no: 1, name: "Sulistiawan, S.Kom", username: "wawan", major: "Pelajaran Umum & Keterampilan", hari: "Semua hari & jam", schedule: "Guru Cadangan" }, 
             { no: 2, name: "Zhofri F. Majdi, S.Sos", username: "zhofri", major: "Diniyah", hari: "Kamis, Jumat, Sabtu", schedule: "Kamis (08-10), Jumat & Sabtu (Semua Jam)" }, 
             { no: 3, name: "M. Ryza Anshori, S.Pd", username: "ryza", major: "Diniyah", hari: "Jumat", schedule: "Semua Jam" }, 
-            { no: 4, name: "Erwan Syahputra, S.Pd", username: "erwan", major: "Diniyah", hari: "Selasa, Rabu, Sabtu", schedule: "Selasa (Semua Jam), Rabu & Sabtu (sampai 10.00)" }, 
+            { no: 4, name: "Erwan SyahPutra, S.Pd", username: "erwan", major: "Diniyah", hari: "Selasa, Rabu, Sabtu", schedule: "Selasa (Semua Jam), Rabu & Sabtu (sampai 10.00)" }, 
             { no: 5, name: "Ariyanti R. Siregar, S.Kom", username: "yanti", major: "Pelajaran Umum", hari: "Senin, Rabu, Kamis", schedule: "12.45 - 14.15" }, 
             { no: 6, name: "Mia A. Lubis, S.Kom", username: "mia", major: "Pelajaran Umum", hari: "Semua Hari", schedule: "10.00 - 12.15 (Guru Cadangan)" }, 
             { no: 7, name: "Mahadi Sentosa, S.Sos", username: "mahadi", major: "Diniyah", hari: "Sabtu", schedule: "13.00-14.30" }, 
@@ -1706,13 +2621,13 @@ function findAcademicMonthForDate(referenceDateStr) {
                     { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-201: Pengantar Thibbun Nabawi", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1ZjmZkzVknCL8sNPz4nWwaARTN62AN1qG/view" },
                     { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-101: Greetings & Introductions", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/1LYRMv43xr0ei9aHJ4Rm8VVGEZv2LMoJT/view?usp=drive_link" },
                     { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-201: Riset Pasar & Analisis Kompetitor", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1ibVSjYmLhxxAhmAm_EGJ-qowFDPy3aZ_/view?usp=drive_link" },
-                    { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-101: ABY Jilid 1A Unit 1-2 (Perkenalan & Keluarga)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1KNuZMEsYPEznGzEcyhTR5GDb5J3gUwM5/view?usp=drive_link" },
+                    { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-101: ABY Jilid 1A Unit 1-2 (Perkenalan & Keluarga)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/1KNuZMEsYPEznGzEcyhTR5GDb5J3gUwM5/view?usp=drive_link" },
                     { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "PANC-201: Implementasi nilai-nilai Pancasila Dalam Kehidupan", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1V0ZYiN9sYr5ZYXR3yfk5p80uLFNlbv9g/view?usp=drive_link" },
-                    { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-201: ABY Jilid 1B Unit 7-8 (Pendidikan & Pekerjaan)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/19dfcrahHUBSjFQx0bNvcGDxm2gJw35Tt/view?usp=drive_link" },
+                    { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-201: ABY Jilid 1B Unit 7-8 (Pendidikan & Pekerjaan)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/19dfcrahHUBSjFQx0bNvcGDxm2gJw35Tt/view?usp=drive_link" },
                     { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KTR-101: Pertolongan Pertama Pada Kecelakaan (P3K)", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1X7OG1Z2rdwVPn4B8VqZM--wV7zDddOFw/view?usp=drive_link" },
-                    { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-101: Makna & Konsekuensi 2 Kalimat Syahadat", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/11yClAXt_5YcDrzyZ9-Ee4fJOSIwGQWcK/view?usp=drive_link" },
+                    { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-101: Makna & Konsekuensi 2 Kalimat Syahadat", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/11yClAXt_5YcDrzyZ9-Ee4fJOSIwGQWcK/view?usp=drive_link" },
                     { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-201: Gerak Lurus dan Gaya", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/170mKM_vLYEeO0tIUOP063-k1wMW1a1jD/view?usp=drive_link" },
-                    { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-201: Pengantar Ilmu Hadits (Definisi & Sejarah)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1b839aBuE0qPkPX5TISgiloV3qGljV2EF/view?usp=drive_link" },
+                    { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-201: Pengantar Ilmu Hadits (Definisi & Sejarah)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/1b839aBuE0qPkPX5TISgiloV3qGljV2EF/view?usp=drive_link" },
                     { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KWU-101: Pengantar Mindset Wirausaha Muslim", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1OY6JWCfKPjxgKECTDUoWadrY_eoMMdCj/view?usp=drive_link" },
                     { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-201: Pengenalan Alat-Alat Servis", teacher: "Aria Atmaja", downloadLink: "https://drive.google.com/file/d/1tgiZzRH8P-WWtoNdtRWkJW8qGDBcrU8b/view?usp=drive_link" },
                     { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "IPS-101: Aku & Lingkungan Sekitarku", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/1FlPhTpeWb9ARmQRa8g-dV74_tabkmwFI/view?usp=drive_link" },
@@ -1730,7 +2645,7 @@ function findAcademicMonthForDate(referenceDateStr) {
                     { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "SIR-101: Kondisi Dunia Sebelum Kenabian & Masa Kecil Nabi", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1uULQr6lFC2YylJ4ZdcktlUXbgKEPzdp-/view?usp=drive_link" },
                     { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-101: Pengantar Ilmu Balaghah", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "https://drive.google.com/file/d/1UyC0-W-l-Xfli8SSvpMcihgiuFc1zYS0/view?usp=drive_link" },
                     { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-201: Tafsir & Tadabbur Surat Al-Maa'un & Al-Kafirun", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1uy5pOjhibrZbLUOUfRJHNKtqV4AT6obY/view?usp=drive_link" },
-                    { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-101: Adab Kepada Allah", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1bXBq9UzfDsnIxEnh1cMHZchqlEHB8etK/view?usp=drive_link" },
+                    { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-101: Adab Kepada Allah", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/1bXBq9UzfDsnIxEnh1cMHZchqlEHB8etK/view?usp=drive_link" },
                     { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAF-101: Tafsir & Tadabbur Surat Al-Fatihah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1XyXIN1bsnIKVeGX3_H9MkaGlgrB2dhCu/view?usp=drive_link" },
                     { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-201: Membaca 3 (Membedakan Fakta & Opini dalam Teks)", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/12D_Sk1hB2q5e3BdNX1-Iw8kIjTrm6UId/view?usp=drive_link" },
                     { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-201: Peristiwa Boikot & Wafatnya Khadijah dan Abu Thalib", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1vJCQq48tCQNX_S5X8NF3DqTE9weOhGse/view?usp=drive_link" },
@@ -1751,13 +2666,13 @@ function findAcademicMonthForDate(referenceDateStr) {
                     { day: "Senin", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "AKH-202: Adab kepada Orang Tua & Guru (Gabungan)", teacher: "SupraSojo, S.Pd.I., M.Pd.", downloadLink: "https://drive.google.com/file/d/1k_P5RN0TS25K_3K3yc4yMNGsOj1qOtE2/view?usp=drive_link" },
                     { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-102: Classroom Objects & Instructions", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "https://drive.google.com/file/d/1q2btB5Fv1-ifXl9n7tOLT9bk1CmpsMYt/view?usp=drive_link" },
                     { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-202: Validasi Ide & Model Bisnis Sederhana", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1rR-udDxso8F9x2pExZTfemJoiZQDknDn/view?usp=drive_link" },
-                    { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-102: ABY Jilid 1A: Unit 3-4 (Tempat Tinggal & Kehidupan Harian)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1_YO9Z4NlH6JjtycqQCZC7i26IZdS_K3M/view?usp=drive_link" },
+                    { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-102: ABY Jilid 1A: Unit 3-4 (Tempat Tinggal & Kehidupan Harian)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/1_YO9Z4NlH6JjtycqQCZC7i26IZdS_K3M/view?usp=drive_link" },
                     { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-202: Hifzhu Shihhah (Pola Hidup Sehat Rasulullah ﷺ)", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/10qcUn-Ycfqfw03SiS2F2zZg8TbGHu4_E/view?usp=drive_link" },
-                    { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-202: ABY Jilid 1B: Unit 9-10 (Berbelanja & Cuaca)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/14EF5H4lZaA-Kx4WHvIqL3_WxDNhtEj3F/view?usp=drive_link" },
+                    { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-202: ABY Jilid 1B: Unit 9-10 (Berbelanja & Cuaca)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/14EF5H4lZaA-Kx4WHvIqL3_WxDNhtEj3F/view?usp=drive_link" },
                     { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KTR-102: Manajemen Kesehatan Dasar & Penyakit Umum", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/1ROzqQ6HtB3t4UwQLVuGGZBwE6uZO8_Zc/view?usp=drive_link" },
-                    { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-102: Studi Kitab Tauhid 1", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1qjYbEFYXgoJa5oBrE8-D3-8XcpML3qfc/view?usp=drive_link" },
+                    { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-102: Studi Kitab Tauhid 1", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/1qjYbEFYXgoJa5oBrE8-D3-8XcpML3qfc/view?usp=drive_link" },
                     { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-202: Sistem Gerak pada Manusia (Rangka & Sendi)", teacher: "Sulistiawan, S.Kom", downloadLink: "https://drive.google.com/file/d/16GiZXYA0pLnivjI-AgZxa0cs1bm5onLt/view?usp=drive_link" },
-                    { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-202: Klasifikasi Hadits (Shahih, Hasan, Dha'if)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/15Wdnf8x9oqPhjhurjqJC8eEN5VlG51uY/view?usp=drive_link" },
+                    { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-202: Klasifikasi Hadits (Shahih, Hasan, Dha'if)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/15Wdnf8x9oqPhjhurjqJC8eEN5VlG51uY/view?usp=drive_link" },
                     // DIUBAH: MAT-102 sekarang di sini dengan guru baru.
                     { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "MAT-102: Pecahan & Desimal", teacher: "Suprasojo, S.Pd.I., M.Pd.", downloadLink: "https://drive.google.com/file/d/14mAyOGGZXxbiC0OM9lUWFkY3xzkpDCD2/view?usp=drive_link" },
                     { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-202: Praktik Menggunakan Alat Tangan & Solder", teacher: "Aria Atmaja", downloadLink: "https://drive.google.com/file/d/1g6ZMvLvlZz5ML1wFJla4tEsd8Thi6ixr/view?usp=drive_link" },
@@ -1778,7 +2693,7 @@ function findAcademicMonthForDate(referenceDateStr) {
                     { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "SIR-102: Masa Kenabian & Dakwah di Mekah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1ru17RARAr5mBS8fXP_tD_2HE3KH41ZeW/view?usp=drive_link" },
                     { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-102: Ilmu Ma'ani: Kalam Khabari & Insya'i", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "https://drive.google.com/file/d/1_sbsi-bfwpLPjzgR7G00yOCRj-4fZIIK/view?usp=drive_link" },
                     { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-202: Tafsir & Tadabbur Surat Al-'Asr & Al-Humazah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/14DD1UeZQ-_1UojKNOZ6n_-8Z1BXQlMms/view?usp=drive_link" },
-                    { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-102: Adab kepada Sesama & Lingkungan", teacher: "Erwan Syahputra, S.Pd", downloadLink: "https://drive.google.com/file/d/1j_-GAHn0VUbq3pjBHRvo2tajQUMcvIyM/view?usp=drive_link" },
+                    { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-102: Adab kepada Sesama & Lingkungan", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "https://drive.google.com/file/d/1j_-GAHn0VUbq3pjBHRvo2tajQUMcvIyM/view?usp=drive_link" },
                     { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAF-102: Tafsir & Tadabbur Ayat Kursi", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/18T2MoUIgArVl5bpl62IiX-lbMa4Xz5Wr/view?usp=drive_link" },
                     { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-202: Menulis 3: Membuat Ringkasan & Peta Konsep", teacher: "Mia A. Lubis, S.Kom", downloadLink: "https://drive.google.com/file/d/1EX9Suwx3tz13lBY6ZDl8WbBoh4d925zp/view?usp=drive_link" },
                     { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-202: Peristiwa Isra' Mi'raj & Perintah Shalat", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "https://drive.google.com/file/d/1bWBklTc9RNC0TC-X2S_4paK5nyU_BrjA/view?usp=drive_link" },
@@ -1793,14 +2708,14 @@ function findAcademicMonthForDate(referenceDateStr) {
             { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-103: Alphabet, Numbers, & Telling Time", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "" },
             { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-202: Analisis Kompetitor & SWOT Sederhana", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             // Selasa
-            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-103: ABY Jilid 1A: Unit 5-6 (Makanan & Shalat)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-103: ABY Jilid 1A: Unit 5-6 (Makanan & Shalat)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-203: Makanan & Minuman Penyembuh Sesuai Wahyu", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-203: ABY Jilid 1B: Unit 11-12 (Manusia, Tempat & Hobi)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-203: ABY Jilid 1B: Unit 11-12 (Manusia, Tempat & Hobi)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KTR-103: Penanganan Luka & Pendarahan", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-103: Rukun Iman & Pembagian Tauhid", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-103: Rukun Iman & Pembagian Tauhid", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-203: Sistem Pencernaan Manusia", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             // Rabu
-            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-203: Pengantar Sanad & Matan Hadits", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-203: Pengantar Sanad & Matan Hadits", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KWU-103: Menemukan Ide Bisnis dari Masalah Sekitar", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-203: Praktik Menggunakan Alat Ukur & Perawatan Alat", teacher: "Aria Atmaja", downloadLink: "" },
             { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "IPS-103: Interaksi Sosial & Adab", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
@@ -1821,7 +2736,7 @@ function findAcademicMonthForDate(referenceDateStr) {
             { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-103: Ilmu Bayan: Seni Perumpamaan (Tasybih)", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "" },
             // Sabtu
             { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-203: Tafsir & Tadabbur Surat At-Takatsur & Al-'Adiyat", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
-            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-103: Adab Menuntut Ilmu", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-103: Adab Menuntut Ilmu", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAF-103: Tafsir & Tadabbur Surat Al-Ikhlas, Al-Falaq, An-Nas", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
             { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-203: Berbicara 3: Menyampaikan Pendapat dalam Diskusi", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
             { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-203: Bai'at 'Aqabah & Rencana Hijrah ke Madinah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
@@ -1836,14 +2751,14 @@ function findAcademicMonthForDate(referenceDateStr) {
             { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-104: My Family & My Friends", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "" },
             { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-204: Analisis SWOT Sederhana", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             // Selasa
-            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-104: Mufrodat 1: Kosakata Benda di Kelas & Rumah", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-104: Mufrodat 1: Kosakata Benda di Kelas & Rumah", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-204: Terapi Pengobatan Nabawi (Bekam & Ruqyah)", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-204: Kitabah 2: Menulis Paragraf Sederhana & Imla' Lanjutan", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-204: Kitabah 2: Menulis Paragraf Sederhana & Imla' Lanjutan", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KTR-104: Penanganan Kasus Umum & Simulasi P3K", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-104: Hadits Arba'in 4 (Hafalan & Makna Hadits #16-20)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-104: Hadits Arba'in 4 (Hafalan & Makna Hadits #16-20)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-204: Usaha & Pesawat Sederhana", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             // Rabu
-            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-204: Studi Sanad & Matan Sederhana", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-204: Studi Sanad & Matan Sederhana", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KWU-104: Menyusun Rencana Bisnis Sederhana", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-204: Praktik Menggunakan Alat Ukur & Perawatan Alat", teacher: "Aria Atmaja", downloadLink: "" },
             { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "IPS-104: Peta & Kompas", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
@@ -1864,7 +2779,7 @@ function findAcademicMonthForDate(referenceDateStr) {
             { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-104: Ilmu Badi': Keindahan Lafaz (Jinas & Thibaq)", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "" },
             // Sabtu
             { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-204: Tafsir & Tadabbur Surat Al-'Adiyat & Al-Qari'ah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
-            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-104: Adab Menuntut Ilmu", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-104: Adab Menuntut Ilmu", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAF-104: Tafsir & Tadabbur Surat Al-Ikhlas, Al-Falaq, An-Nas", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
             { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-204: Kaidah Bahasa 3: Imbuhan Dasar (me-, di-, ber-)", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
             { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-204: Dakwah Terang-terangan & Reaksi Kafir Quraisy", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
@@ -1879,14 +2794,14 @@ function findAcademicMonthForDate(referenceDateStr) {
             { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "Wajib", subject: "ENG-105: Daily Activities", teacher: "Ariyanti R. Siregar, S.Kom", downloadLink: "" },
             { day: "Senin", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "KWU-205: Pemasaran Digital Dasar", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             // Selasa
-            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-105: Mufrodat 2: Anggota Tubuh & Pakaian", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "ARB-105: Mufrodat 2: Anggota Tubuh & Pakaian", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "STT", subject: "THI-205: Studi Kasus Pengobatan Nabawi", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-205: Muhadatsah 1: Praktik Percakapan Harian", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "ARB-205: Muhadatsah 1: Praktik Percakapan Harian", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KTR-105: Dasar-dasar Menjahit & Kerajinan Tangan", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
-            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-105: Pembatal Keislaman", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAU-105: Pembatal Keislaman", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Selasa", time: "13:00-14:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IPA-205: Sistem Pernapasan Manusia", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             // Rabu
-            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-205: Takhrij Hadits Sederhana", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "LKS", subject: "ULH-205: Takhrij Hadits Sederhana", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Rabu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "KWU-105: Praktik Membuat Rencana Bisnis", teacher: "Sulistiawan, S.Kom", downloadLink: "" },
             { day: "Rabu", time: "08:00-09:30", sks: 2, room: "RBM", group: "KG", cluster: "STT", subject: "TME-205: Proyek Elektronika Sederhana", teacher: "Aria Atmaja", downloadLink: "" },
             { day: "Rabu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "IPS-105: Sejarah Lokal & Pahlawan", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
@@ -1907,7 +2822,7 @@ function findAcademicMonthForDate(referenceDateStr) {
             { day: "Jumat", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "LKS", subject: "BAL-105: Praktik Analisis Balaghah", teacher: "M. Ryza Anshori, S.Pd", downloadLink: "" },
             // Sabtu
             { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "TAF-205: Tafsir & Tadabbur Surat Al-Qari'ah & Al-Zalzalah", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
-            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-105: Akhlak Terpuji (Mahmudah)", teacher: "Erwan Syahputra, S.Pd", downloadLink: "" },
+            { day: "Sabtu", time: "08:00-09:30", sks: 2, room: "Kelas Madinah", group: "KF", cluster: "", subject: "AKH-105: Akhlak Terpuji (Mahmudah)", teacher: "Erwan SyahPutra, S.Pd", downloadLink: "" },
             { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Mekah", group: "KF", cluster: "", subject: "TAF-105: Tafsir & Tadabbur Juz 'Amma Pilihan", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
             { day: "Sabtu", time: "10:00-11:30", sks: 2, room: "Kelas Madinah", group: "KG", cluster: "Wajib", subject: "IND-205: Menulis Kreatif: Cerpen & Puisi", teacher: "Mia A. Lubis, S.Kom", downloadLink: "" },
             { day: "Sabtu", time: "13:00-14:30", sks: 2, room: "Kelas Mekah", group: "KG", cluster: "Wajib", subject: "SIR-205: Hijrah ke Madinah & Pembangunan Masjid Nabawi", teacher: "Zhofri F. Majdi, S.Sos", downloadLink: "" },
@@ -2091,6 +3006,62 @@ function checkAndDisplayHeaderNotifications() {
             p.textContent = msg;
             notificationArea.appendChild(p);
         });
+    }
+}
+
+/**
+ * Fungsi baru untuk mengambil dan menampilkan notifikasi khusus admin.
+ */
+// GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
+async function fetchAndShowAdminNotification() {
+    const notifContainer = document.getElementById('admin-soal-notification');
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'handleGetMissingKeysDetail' }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const result = await response.json();
+
+        if (result.status === 'success' && result.data.length > 0) {
+            
+            // 1. Urutkan data berdasarkan nama guru
+            const sortedData = result.data.sort((a, b) => a.guru.localeCompare(b.guru));
+
+            // 2. Kelompokkan materi berdasarkan nama guru
+            const groupedByTeacher = sortedData.reduce((acc, item) => {
+                const teacher = item.guru;
+                if (!acc[teacher]) {
+                    acc[teacher] = [];
+                }
+                acc[teacher].push(item);
+                return acc;
+            }, {});
+
+            // 3. Buat daftar (list) HTML dari data yang sudah dikelompokkan
+            let listItemsHTML = '';
+            for (const teacher in groupedByTeacher) {
+                listItemsHTML += `<p class="font-bold mt-3">${teacher}:</p>`;
+                const materias = groupedByTeacher[teacher].map(item => 
+                    `<li><span class="font-semibold">${item.kode}:</span> ${item.namaMateri}</li>`
+                ).join('');
+                listItemsHTML += `<ul class="list-disc list-inside ml-4 text-sm">${materias}</ul>`;
+            }
+
+            notifContainer.innerHTML = `
+                <p class="font-bold">Pemberitahuan: Materi Berikut Belum Memiliki Kunci Jawaban Lengkap</p>
+				<p class="font-bold"><i>(Pemberitahuan ini hanya bisa dilihat oleh Waka Kurikulum, TU dan admin)</i></p>
+                <div class="mt-2">
+                    ${listItemsHTML}
+                </div>
+            `;
+            notifContainer.classList.remove('hidden');
+        } else {
+            notifContainer.classList.add('hidden');
+        }
+    } catch (error) {
+        console.error("Gagal mengambil notifikasi admin:", error);
+        notifContainer.classList.add('hidden');
     }
 }
 
@@ -2322,6 +3293,7 @@ function setupResultModalListeners() {
 
 async function startExam() {
     isExamInProgress = true;
+	logAction('UJIAN_DIMULAI', currentExamData.title);
     const examContainer = document.getElementById('exam-container');
     const questionsContainer = document.getElementById('exam-questions');
     
@@ -2393,20 +3365,25 @@ async function startExam() {
         `;
     });
     
-    questionsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            examAnswers[e.target.name] = e.target.value;
-            document.querySelectorAll(`label[for^="${e.target.name}"]`).forEach(label => label.classList.remove('selected'));
-            document.querySelector(`label[for="${e.target.id}"]`).classList.add('selected');
-        });
+    questionsContainer.querySelectorAll('input[type="radio"]').forEach((radio, questionIndex) => { // <-- TAMBAHKAN TANDA KURUNG DI SINI
+    radio.addEventListener('change', (e) => {
+        examAnswers[e.target.name] = e.target.value;
+        logAction('JAWAB_SOAL', `Menjawab soal no. ${questionIndex + 1}`);
+        document.querySelectorAll(`label[for^="${e.target.name}"]`).forEach(label => label.classList.remove('selected'));
+        document.querySelector(`label[for="${e.target.id}"]`).classList.add('selected');
     });
+});
 }
 
 function calculateAndShowResult() {
     isExamInProgress = false;
     alarmSound.pause();
     alarmSound.currentTime = 0;
-    
+
+    // --- AWAL BAGIAN YANG DIPERBAIKI ---
+    const isForceSubmit = false; // Tambahkan ini untuk mengatasi error 'isForceSubmit is not defined'
+    // --- AKHIR BAGIAN YANG DIPERBAIKI ---
+
     let correctAnswers = 0;
     currentQuestions.forEach((q, index) => {
         if (examAnswers[`q${index}`] === q.a) {
@@ -2417,25 +3394,30 @@ function calculateAndShowResult() {
     const totalQuestions = currentQuestions.length;
     const score = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
     
-    // --- AWAL LOGIKA BARU ---
     let finalScore;
     const previousAttempts = currentAttemptHistory ? currentAttemptHistory.percobaan : 0;
-    // Jika ada riwayat, ambil skor pertama. Jika tidak, skor saat ini adalah skor pertama.
     const firstScore = currentAttemptHistory ? currentAttemptHistory.skor : score;
+    
+    // --- AWAL BAGIAN YANG DIPERBAIKI ---
+    // Definisikan 'isRemedial' berdasarkan jumlah percobaan sebelumnya
+    const isRemedial = previousAttempts === 1;
+    // --- AKHIR BAGIAN YANG DIPERBAIKI ---
 
     if (previousAttempts >= 2) {
-        // Ini adalah upaya ke-3 atau lebih (dari admin), nilai maksimal adalah 75
         finalScore = Math.min(score, 75);
     } else if (previousAttempts === 1) {
-        // Ini adalah upaya ke-2 (remedial normal), nilai maksimal adalah 80
         const firstAttemptScore = currentAttemptHistory.skor || 0;
         finalScore = Math.min(Math.max(firstAttemptScore, score), 80);
     } else {
-        // Ini adalah upaya pertama
         finalScore = score;
     }
-    // --- AKHIR LOGIKA BARU ---
     
+    if(isForceSubmit) {
+        logAction('UJIAN_DIAKHIRI_PAKSA', `Pelanggaran ke-${fullscreenExitCount}`);
+    } else {
+        logAction('UJIAN_SELESAI', `Skor Akhir: ${finalScore}`);
+    }
+	
     const resultScoreEl = document.getElementById('result-score');
     const resultMessageEl = document.getElementById('result-message');
     const resultActionsEl = document.getElementById('result-actions');
@@ -2447,8 +3429,8 @@ function calculateAndShowResult() {
         namaSantri: session.userData.profileName,
         kodeMateri: currentExamData.code,
         judulMateri: currentExamData.title,
-        skor: firstScore,      // Kirim skor dari percobaan PERTAMA
-        skorAkhir: finalScore  // Kirim skor yang sudah dihitung sesuai aturan
+        skor: firstScore,      
+        skorAkhir: finalScore  
     };
     
     fetch(CONFIG.SCRIPT_URL, {
@@ -2524,40 +3506,130 @@ function playAlarm() {
     if (isExamInProgress) {
         alarmSound.play().catch(error => {
             console.error("Gagal memutar audio:", error);
-            // Fallback jika audio gagal diputar
-          
         });
-        document.getElementById('fullscreenWarningModal').style.display = 'block';
+        const warningModal = document.getElementById('fullscreenWarningModal');
+        warningModal.style.display = 'flex';
+        // TAMBAHKAN BARIS INI untuk membuat peringatan menjadi fullscreen
+        enterFullscreen(warningModal);
     }
 }
 
+/**
+ * Fungsi baru untuk admin keluar paksa dari mode ujian.
+ */
+function forceExitExamByAdmin() {
+    console.log("Shortcut admin terdeteksi. Menghentikan ujian.");
+    isExamInProgress = false; // Hentikan status ujian untuk mencegah peringatan lain
+    exitFullscreen(); // Keluar dari mode fullscreen
+    alarmSound.pause(); // Matikan alarm jika berbunyi
+    alarmSound.currentTime = 0;
+    
+    // Sembunyikan semua elemen terkait ujian
+    document.getElementById('exam-container').classList.add('hidden');
+    document.getElementById('fullscreenWarningModal').style.display = 'none';
+
+    showMessage('Ujian dihentikan paksa oleh Admin.', 'success');
+    
+    // Arahkan kembali ke halaman daftar ujian
+    window.location.hash = '#ujian-online';
+    renderExamSchedule();
+}
+
 function setupExamSecurityListeners() {
-    // DIUBAH: Listener fullscreen sekarang menangani saat masuk dan keluar
     document.addEventListener('fullscreenchange', () => {
         if (document.fullscreenElement) {
-            // Jika santri berhasil masuk lagi ke fullscreen
             alarmSound.pause();
             alarmSound.currentTime = 0;
             document.getElementById('fullscreenWarningModal').style.display = 'none';
         } else if (isExamInProgress) {
-            // Jika santri keluar dari fullscreen saat ujian berlangsung
+			logAction('PELANGGARAN', 'Keluar dari mode layar penuh.');
             playAlarm();
         }
     });
 
-    // Listener untuk pindah tab (tetap sama)
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && isExamInProgress) {
+		logAction('PELANGGARAN', 'Pindah tab atau aplikasi lain.');
             playAlarm();
         }
     });
 
-    // DITAMBAHKAN: Event listener untuk tombol "Kembali ke Ujian" di dalam pop-up
     document.getElementById('reenterFullscreenBtn').addEventListener('click', () => {
-        // Fungsi ini hanya memicu permintaan fullscreen, sisanya akan ditangani
-        // oleh listener 'fullscreenchange' di atas.
         enterFullscreen(document.documentElement);
     });
+
+    // --- BLOK BARU DITAMBAHKAN DI SINI ---
+    // Listener untuk mendeteksi shortcut admin
+    document.addEventListener('keydown', function(e) {
+        const session = getActiveSession();
+        
+
+        // Cek jika ujian sedang berlangsung DAN user adalah admin
+        if (isExamInProgress) {
+            // Cek kombinasi tombol: CTRL + SHIFT + ALT + X
+            if (e.ctrlKey && e.shiftKey && e.altKey && e.key.toLowerCase() === 'x') {
+                e.preventDefault(); // Mencegah aksi default browser
+                forceExitExamByAdmin();
+            }
+        }
+    });
+    // --- AKHIR BLOK BARU ---
+}
+
+let tahfidzChartInstance = null;
+
+async function renderTahfidzChart(santriName, startDate, endDate) {
+    const ctx = document.getElementById('tahfidzChart').getContext('2d');
+    
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getSantriTahfidzDetail', santriName, startDate, endDate })
+        });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+        
+        const labels = result.data.map(item => item.label);
+        const points = result.data.map(item => item.points);
+
+        if (tahfidzChartInstance) {
+            tahfidzChartInstance.destroy();
+        }
+
+        tahfidzChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    type: 'line',
+                    label: 'Poin',
+                    data: points,
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    yAxisID: 'y_poin',
+                }, {
+                    type: 'bar',
+                    label: 'Setoran',
+                    data: points,
+                    backgroundColor: 'rgba(44, 94, 46, 0.7)',
+                    yAxisID: 'y_poin',
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y_poin: {
+                        beginAtZero: true,
+                        position: 'left',
+                        title: { display: true, text: 'Poin' }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Gagal membuat grafik:", error);
+    }
 }
 
 /**
@@ -2605,6 +3677,100 @@ async function fetchAndShowTeacherNotifications() {
         console.error("Gagal mengambil notifikasi:", error);
     }
 }
+
+// =======================================================
+// === FUNGSI-FUNGSI BARU UNTUK HALAMAN PENGAWAS UJIAN ===
+// =======================================================
+let proctorInterval = null; // Variabel untuk menyimpan interval refresh
+
+function setupPengawasUjianPage() {
+    if (proctorInterval) clearInterval(proctorInterval);
+
+    const proctorGridContainer = document.getElementById('proctor-grid-container');
+
+    const refreshProctorView = async () => {
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getSantriActivityLogs' }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+
+            const allLogs = result.data;
+
+            // 1. Kelompokkan semua log berdasarkan username santri
+            const logsBySantri = allLogs.reduce((acc, log) => {
+                if (!acc[log.Username]) {
+                    acc[log.Username] = {
+                        profileName: log.ProfileName,
+                        logs: []
+                    };
+                }
+                acc[log.Username].logs.push(log);
+                return acc;
+            }, {});
+
+            // 2. Tentukan santri mana yang sedang aktif ujian
+            let activeSantriUsernames = [];
+            for (const username in logsBySantri) {
+                const userLogs = logsBySantri[username].logs;
+                const lastLog = userLogs.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp))[0];
+                if (lastLog && lastLog.ActionType === 'UJIAN_DIMULAI' || (lastLog.ActionType !== 'UJIAN_SELESAI' && lastLog.ActionType !== 'UJIAN_DIAKHIRI_PAKSA')) {
+                    const lastActionTime = new Date(lastLog.Timestamp);
+                    // Anggap santri masih aktif jika log terakhirnya kurang dari 2 jam yang lalu
+                    if ((new Date() - lastActionTime) < (2 * 60 * 60 * 1000)) {
+                        activeSantriUsernames.push(username);
+                    }
+                }
+            }
+
+            // 3. Render ulang seluruh grid
+            proctorGridContainer.innerHTML = '';
+            if (activeSantriUsernames.length === 0) {
+                proctorGridContainer.innerHTML = '<p class="col-span-full text-center text-gray-500">Tidak ada santri yang sedang ujian saat ini.</p>';
+            } else {
+                activeSantriUsernames.forEach(username => {
+                    const santriData = logsBySantri[username];
+                    const santriCard = document.createElement('div');
+                    santriCard.className = 'santri-proctor-card';
+
+                    // Urutkan log dari yang terbaru ke terlama
+                    const sortedLogs = santriData.logs.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp));
+                    const logHTML = sortedLogs.map(log => {
+                        const time = new Date(log.Timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        let color = 'text-gray-700';
+                        if (log.ActionType.includes('PELANGGARAN')) color = 'text-red-600 font-bold';
+                        if (log.ActionType.includes('SELESAI')) color = 'text-green-600 font-bold';
+                        return `<p class="${color}"><span class="text-gray-400 mr-2">${time}</span>${log.ActionDetail}</p>`;
+                    }).join('');
+
+                    santriCard.innerHTML = `
+                        <div class="header">${santriData.profileName}</div>
+                        <div class="log-container">${logHTML}</div>
+                    `;
+                    proctorGridContainer.appendChild(santriCard);
+                });
+            }
+
+        } catch (error) {
+            proctorGridContainer.innerHTML = `<p class="col-span-full text-center text-red-500">${error.message}</p>`;
+        }
+    };
+    
+    refreshProctorView();
+    proctorInterval = setInterval(refreshProctorView, 7000); // Refresh setiap 7 detik
+}
+
+// Fungsi untuk membersihkan interval saat pindah halaman
+function cleanupPengawasUjianPage() {
+    if (proctorInterval) {
+        clearInterval(proctorInterval);
+        proctorInterval = null;
+    }
+}
+
 // =======================================================
 // === FUNGSI-FUNGSI UNTUK INPUT SOAL ===
 // =======================================================
@@ -2707,7 +3873,7 @@ function handleSimpanSoal() {
     }
 
     // DITAMBAHKAN: Logika untuk mencari nama guru & username-nya di frontend
-    const teacherName = Object.values(appData.schedules).flat().find(item => item.subject.startsWith(materiKode))?.teacher;
+    const teacherName = Object.values(appState.processedSchedules).flat().find(item => item.subject.startsWith(materiKode))?.teacher;
     const teacherData = appData.teachers.find(t => t.name === teacherName);
     const teacherUsername = teacherData ? teacherData.username : '';
 
@@ -2768,7 +3934,12 @@ let soalGuruData = []; // Untuk menyimpan data soal yang diambil
 async function setupHalamanGuru() {
     const session = getActiveSession();
     if (!session || !session.loggedIn) return;
-
+	
+	// Cek jika user adalah admin, panggil fungsi notifikasi khusus
+    if (['mia', 'wawan', 'admin', 'zhofri'].includes(session.username)) {
+        fetchAndShowAdminNotification();
+    }
+	
     const guruMateriSelect = document.getElementById('guru-materi-select');
     const soalContainer = document.getElementById('guru-soal-container');
     const updateBtn = document.getElementById('update-soal-btn');
@@ -2790,7 +3961,7 @@ async function setupHalamanGuru() {
         guruMateriSelect.innerHTML = '<option value="all">Tampilkan Semua Materi</option>';
         for (const kode in materiGuruDariServer) {
             // DIUBAH: Mencari nama materi lengkap di frontend berdasarkan kode
-            const subjectData = Object.values(appData.schedules).flat().find(item => item.subject.startsWith(kode));
+            const subjectData = Object.values(appState.processedSchedules).flat().find(item => item.subject.startsWith(kode));
             const namaLengkapMateri = subjectData ? subjectData.subject : kode;
 
             const option = document.createElement('option');
@@ -2842,13 +4013,13 @@ function renderSoalUntukGuru(filterKodeMateri) {
             <tr class="soal-row-guru" data-kode-materi="${soal.kodemateri}" data-nomor-soal="${soal.nomorsoal}">
                 <td class="px-4 py-3 align-top">${index + 1}</td>
                 <td class="px-4 py-3 text-sm text-gray-800">
-                    <textarea class="w-full p-2 border rounded-md" rows="4">${soal.isisoal}</textarea>
+                    <textarea class="w-full p-2 border rounded-md" style="resize: vertical;">${soal.isisoal}</textarea>
                 </td>
                 <td class="px-4 py-3 align-top">
                     <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md uppercase" maxlength="1" value="${soal.kuncijawaban || ''}" placeholder="Cth: A">
                 </td>
                 <td class="px-4 py-3 align-top">
-                    <input type="number" class="poin-soal-input w-full p-2 border rounded-md" value="${soal.poin || 0}" placeholder="Cth: A">
+                    <input type="number" class="poin-soal-input w-full p-2 border rounded-md" value="${soal.poin || 0}">
                 </td>
             </tr>
         `;
@@ -2857,6 +4028,21 @@ function renderSoalUntukGuru(filterKodeMateri) {
     tableHTML += `</tbody></table>`;
     soalContainer.innerHTML = tableHTML;
     updateBtn.classList.remove('hidden');
+
+    // --- KODE BARU DITAMBAHKAN DI SINI ---
+    // Menerapkan auto-resize ke semua textarea yang baru dibuat
+    soalContainer.querySelectorAll('textarea').forEach(textarea => {
+        // Panggil fungsi sekali saat pertama kali ditampilkan
+        autoResizeTextarea(textarea);
+        // Tambahkan event listener agar textarea menyesuaikan diri saat guru mengedit soal
+        textarea.addEventListener('input', () => autoResizeTextarea(textarea));
+    });
+    // --- AKHIR DARI KODE BARU ---
+}
+
+function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto'; // Reset tinggi untuk mendapatkan scrollHeight yang benar
+    textarea.style.height = textarea.scrollHeight + 'px'; // Atur tinggi sesuai dengan konten
 }
 
 function handleUpdateSoal() {
@@ -2929,7 +4115,30 @@ function getClientDateString() {
 	
     function showMessage(message, type = 'error') { ui.messageBox.textContent = message; ui.messageBox.className = `message-box ${type} show`; setTimeout(() => { ui.messageBox.classList.remove('show'); }, 3500); }
     function getActiveSession() { return JSON.parse(localStorage.getItem('userSession') || sessionStorage.getItem('userSession') || 'null'); }
-	
+/**
+ * Fungsi baru untuk mengirim log aktivitas ke backend.
+ */
+function logAction(actionType, actionDetail) {
+    // Hanya kirim log jika yang login adalah santri dan ujian sedang berlangsung
+    const session = getActiveSession();
+    if (session && session.userData.jabatan === 'santri' && isExamInProgress) {
+        const data = {
+            action: 'logUserActivity',
+            username: session.username,
+            profileName: session.userData.profileName,
+            actionType: actionType,
+            actionDetail: actionDetail
+        };
+
+        // Kirim data ke backend tanpa menunggu respons (kirim dan lupakan)
+        fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            keepalive: true // Penting agar log tetap terkirim meski tab ditutup
+        });
+    }
+}	
 	const handleBackToSantriList = () => {
     // Sembunyikan semua kontainer yang mungkin terbuka
     
@@ -3482,87 +4691,497 @@ function downloadSlipPDF() {
     });
 }
 
+let isJadwalSholatInitialized = false; // Penanda agar tidak diinisialisasi berulang kali
 
-// GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
+    function initializeJadwalSholat() {
+        if (isJadwalSholatInitialized) return; // Jika sudah, hentikan
+
+        const js_el = {
+            lokasi: document.querySelector('#jadwal-sholat #lokasi'),
+            resetLokasiBtn: document.querySelector('#jadwal-sholat #reset-lokasi'),
+            liveClock: document.querySelector('#jadwal-sholat #live-clock'),
+            nextPrayerCountdown: document.querySelector('#jadwal-sholat #next-prayer-countdown'),
+            tglMasehi: document.querySelector('#jadwal-sholat #tanggal-masehi'),
+            tglHijriah: document.querySelector('#jadwal-sholat #tanggal-hijriah'),
+            prevDayBtn: document.querySelector('#jadwal-sholat #prev-day'),
+            nextDayBtn: document.querySelector('#jadwal-sholat #next-day'),
+            skyContainer: document.querySelector('#jadwal-sholat #sky-container'),
+            celestialWrapper: document.querySelector('#jadwal-sholat #celestial-object-wrapper'),
+            celestialBody: document.querySelector('#jadwal-sholat #celestial-body'),
+            timelineLabels: document.querySelector('#jadwal-sholat #timeline-labels'),
+            jadwalContainer: document.querySelector('#jadwal-sholat #jadwal-container'),
+            adhanAudio: document.querySelector('#adhan-audio'),
+            notifPrompt: document.querySelector('#jadwal-sholat #notif-prompt'),
+            enableNotifBtn: document.querySelector('#jadwal-sholat #enable-notif-btn'),
+            closeNotifPrompt: document.querySelector('#jadwal-sholat #close-notif-prompt'),
+            testAdhanBtn: document.querySelector('#jadwal-sholat #test-adhan-btn'),
+            adhanPopupOverlay: document.querySelector('#adhan-popup-overlay'),
+            popupPrayerName: document.querySelector('#adhan-popup-overlay #popup-prayer-name'),
+            stopAdhanBtn: document.querySelector('#adhan-popup-overlay #stop-adhan-btn'),
+        };
+
+        let js_currentDate = new Date();
+        let js_prayerDataCache = {};
+        let js_mainInterval;
+        let js_lastMinute = -1;
+        let js_todayPrayerTimes = {};
+        let js_scheduledTimers = [];
+        let js_isAudioUnlocked = false;
+        let js_hijriInfo = { today: null, tomorrow: null };
+
+        // ... (Tempel semua fungsi JavaScript dari jadwalsholat.html di sini, pastikan untuk menggunakan variabel js_el) ...
+        // Contoh: const timeToMinutes = (...) menjadi const js_timeToMinutes = (...)
+        // Namun, agar lebih sederhana, kita akan langsung menempelnya dan memastikan selectornya benar
+        const NOTIF_MODES = ['bell', 'adhan', 'vibrate'];
+        const NOTIF_ICONS = { bell: '🔔', adhan: '🔊', vibrate: '🔕' };
+        const MOON_PHASES = [
+    '🌑', '🌑', '🌘', '🌘', '🌘', '🌗', '🌗', '🌖', '🌖', '🌖', 
+    '🌖', '🌕', '🌕', '🌕', '🌕', '🌔', '🌔', '🌔', '🌔', '🌓', 
+    '🌓', '🌒', '🌒', '🌒', '🌒', '🌑', '🌑', '🌑', '🌑', '🌑'
+];
+        
+        const timeToMinutes = (timeStr) => { if (!timeStr) return 0; const [h, m] = timeStr.split(':'); return parseInt(h) * 60 + parseInt(m); };
+        const minutesToTime = (totalMinutes) => { const hours = Math.floor(totalMinutes / 60) % 24; const minutes = Math.round(totalMinutes % 60); return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`; };
+        const formatLocationName = (address) => [address.village || address.suburb || address.city_district, address.city || address.town, address.state].filter(Boolean).join(', ');
+        const getNotifPrefs = () => JSON.parse(localStorage.getItem('prayerNotifPrefs')) || {};
+        const saveNotifPrefs = (prefs) => localStorage.setItem('prayerNotifPrefs', JSON.stringify(prefs));
+
+        async function fetchAllData(date, coords) {
+            const dateString = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
+            if (js_prayerDataCache[dateString]) {
+                updateUI(js_prayerDataCache[dateString]);
+                return;
+            }
+            const { latitude, longitude } = coords;
+            let locationName = `Lat: ${latitude.toFixed(2)}, Long: ${longitude.toFixed(2)}`;
+            try {
+                const geoResponse = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                if (geoResponse.ok) {
+                    const geoData = await geoResponse.json();
+                    locationName = formatLocationName(geoData.address);
+                }
+            } catch (error) { console.error("Gagal mengambil nama lokasi:", error); }
+            try {
+                const nextDate = new Date(date);
+                nextDate.setDate(date.getDate() + 1);
+                const [prayerResponse, nextDayPrayerResponse] = await Promise.all([
+    fetch(`https://api.aladhan.com/v1/calendar/${date.getFullYear()}/${date.getMonth() + 1}?latitude=${latitude}&longitude=${longitude}&method=20`),
+    fetch(`https://api.aladhan.com/v1/calendar/${nextDate.getFullYear()}/${nextDate.getMonth() + 1}?latitude=${latitude}&longitude=${longitude}&method=20`)
+]);
+                const prayerCalendar = await prayerResponse.json();
+                const nextDayPrayerCalendar = await nextDayPrayerResponse.json();
+                const dailyData = prayerCalendar.data[date.getDate() - 1];
+                dailyData.timings.NextFajr = nextDayPrayerCalendar.data[0].timings.Fajr;
+                const fullData = { locationName, timings: dailyData.timings, date: dailyData.date, coords };
+                js_prayerDataCache[dateString] = fullData;
+                updateUI(fullData);
+            } catch (error) {
+                js_el.lokasi.textContent = "Gagal mengambil jadwal sholat.";
+                console.error(error);
+            }
+        }
+        function updateUI(data) {
+            js_el.lokasi.textContent = data.locationName;
+            js_el.tglMasehi.textContent = data.date.readable;
+            js_el.tglHijriah.textContent = `${data.date.hijri.day} ${data.date.hijri.month.en} ${data.date.hijri.year}`;
+            js_todayPrayerTimes = { "Subuh": data.timings.Fajr, "Terbit": data.timings.Sunrise, "Dzuhur": data.timings.Dhuhr, "Ashar": data.timings.Asr, "Maghrib": data.timings.Maghrib, "Isya": data.timings.Isha, "NextFajr": data.timings.NextFajr };
+            js_el.jadwalContainer.innerHTML = '';
+            const prefs = getNotifPrefs();
+            for (const name of ["Subuh", "Terbit", "Dzuhur", "Ashar", "Maghrib", "Isya"]) {
+                const time = js_todayPrayerTimes[name];
+                const currentPref = prefs[name] || 'bell';
+                const scheduleItem = document.createElement('div');
+                scheduleItem.className = 'jadwal-item';
+                scheduleItem.id = `jadwal-${name}`;
+                scheduleItem.innerHTML = `<div class="prayer-details"><button class="notification-btn" data-prayer="${name}">${NOTIF_ICONS[currentPref]}</button><div class="prayer-info"><span class="prayer-name">${name}</span><span class="prayer-countdown"></span></div></div><span class="waktu">${time.substring(0, 5)}</span>`;
+                js_el.jadwalContainer.appendChild(scheduleItem);
+            }
+            js_el.jadwalContainer.querySelectorAll('.notification-btn').forEach(btn => btn.addEventListener('click', handleNotifBtnClick));
+            scheduleAllNotifications(js_todayPrayerTimes);
+            if (js_mainInterval) clearInterval(js_mainInterval);
+            js_mainInterval = setInterval(tick, 1000);
+            tick(true);
+        }
+        function updateSkyAnimation(data) {
+            const now = new Date();
+            const nowInMinutes = now.getHours() * 60 + now.getMinutes();
+            const timings = data.timings;
+            const shuruq = timeToMinutes(timings.Sunrise);
+            const maghrib = timeToMinutes(timings.Maghrib);
+            const isDay = nowInMinutes >= shuruq && nowInMinutes < maghrib;
+            js_el.skyContainer.classList.toggle('night', !isDay);
+            if (isDay) {
+                js_el.celestialBody.textContent = '☀️';
+            } else {
+                const hijriDay = parseInt(data.date.hijri.day);
+            // Logika baru: Hitung indeks fase berdasarkan proporsi hari dalam sebulan (asumsi 30 hari)
+            const phaseIndex = Math.floor(((hijriDay - 1) / 29.5) * MOON_PHASES.length);
+            js_el.celestialBody.textContent = MOON_PHASES[phaseIndex] || '🌑';
+        }
+            js_el.timelineLabels.innerHTML = '';
+            let timelineDef;
+            if (isDay) {
+                timelineDef = { "Subuh": timings.Fajr, "Terbit": timings.Sunrise, "Dzuhur": timings.Dhuhr, "Ashar": timings.Asr, "Maghrib": timings.Maghrib };
+            } else {
+                const nightDuration = (timeToMinutes(timings.NextFajr) + 24 * 60) - maghrib;
+                const lastThirdTime = minutesToTime(maghrib + (nightDuration * 2 / 3));
+                timelineDef = { "Maghrib": timings.Maghrib, "Isya": timings.Isha, "1/3 Malam": lastThirdTime, "Subuh": timings.Fajr };
+            }
+            for (const [name, time] of Object.entries(timelineDef)) {
+                const labelItem = document.createElement('div');
+                labelItem.className = 'label-item';
+                labelItem.innerHTML = `<span>${name}</span><span>${time.substring(0, 5)}</span>`;
+                js_el.timelineLabels.appendChild(labelItem);
+            }
+            let rotationAngle;
+            if (isDay) {
+                const progress = Math.max(0, Math.min(1, (nowInMinutes - shuruq) / (maghrib - shuruq)));
+                rotationAngle = (progress * 180) - 90;
+            } else {
+                let totalNight, elapsed;
+                if (nowInMinutes < shuruq) {
+                    const prevMaghrib = maghrib - (24 * 60);
+                    totalNight = shuruq - prevMaghrib;
+                    elapsed = nowInMinutes - prevMaghrib;
+                } else {
+                    const nextShuruq = shuruq + (24 * 60);
+                    totalNight = nextShuruq - maghrib;
+                    elapsed = nowInMinutes - maghrib;
+                }
+                const progress = Math.max(0, Math.min(1, elapsed / totalNight));
+                rotationAngle = (progress * 180) - 90;
+            }
+            js_el.celestialWrapper.style.transform = `rotate(${rotationAngle}deg)`;
+        }
+        function updateCountdownAndHighlights() {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const prayerSchedule = [
+                { name: "Subuh", time: new Date(today.getTime() + timeToMinutes(js_todayPrayerTimes.Subuh) * 60000) },
+                { name: "Terbit", time: new Date(today.getTime() + timeToMinutes(js_todayPrayerTimes.Terbit) * 60000) },
+                { name: "Dzuhur", time: new Date(today.getTime() + timeToMinutes(js_todayPrayerTimes.Dzuhur) * 60000) },
+                { name: "Ashar", time: new Date(today.getTime() + timeToMinutes(js_todayPrayerTimes.Ashar) * 60000) },
+                { name: "Maghrib", time: new Date(today.getTime() + timeToMinutes(js_todayPrayerTimes.Maghrib) * 60000) },
+                { name: "Isya", time: new Date(today.getTime() + timeToMinutes(js_todayPrayerTimes.Isya) * 60000) },
+                { name: "NextFajr", time: new Date(today.getTime() + (timeToMinutes(js_todayPrayerTimes.NextFajr) + 24 * 60) * 60000) }
+            ];
+            let nextPrayer = prayerSchedule.find(p => p.time > now);
+            let currentPrayer = [...prayerSchedule].reverse().find(p => p.time <= now);
+            js_el.jadwalContainer.querySelectorAll('.jadwal-item').forEach(item => {
+                item.classList.remove('highlight');
+                const countdownEl = item.querySelector('.prayer-countdown');
+                if(countdownEl) countdownEl.style.display = 'none';
+            });
+            if (nextPrayer) {
+                const msRemaining = nextPrayer.time - now;
+                const totalSeconds = Math.floor(msRemaining / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                const nextPrayerName = nextPrayer.name === 'NextFajr' ? 'Subuh' : nextPrayer.name;
+                js_el.nextPrayerCountdown.innerHTML = `Menuju ${nextPrayerName}: <span id="countdown-timer">${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}</span>`;
+                const minutesRemaining = Math.floor(totalSeconds / 60);
+                if (minutesRemaining < 30) {
+                    const itemToHighlight = js_el.jadwalContainer.querySelector(`#jadwal-${nextPrayerName}`);
+                    if (itemToHighlight) {
+                        itemToHighlight.classList.add('highlight');
+                        const countdownEl = itemToHighlight.querySelector('.prayer-countdown');
+                        if (countdownEl) {
+                            countdownEl.textContent = `dalam ${minutesRemaining + 1} menit`;
+                            countdownEl.style.display = 'block';
+                        }
+                    }
+                } else if (currentPrayer) {
+                    const currentPrayerName = currentPrayer.name === 'NextFajr' ? 'Subuh' : currentPrayer.name;
+                    const itemToHighlight = js_el.jadwalContainer.querySelector(`#jadwal-${currentPrayerName}`);
+                    if (itemToHighlight) {
+                        itemToHighlight.classList.add('highlight');
+                        const countdownEl = itemToHighlight.querySelector('.prayer-countdown');
+                        if (countdownEl) {
+                           countdownEl.textContent = `Menuju ${nextPrayerName} ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                           countdownEl.style.display = 'block';
+                        }
+                    }
+                }
+            } else {
+                js_el.nextPrayerCountdown.innerHTML = "Waktu sholat hari ini telah selesai.";
+            }
+        }
+		
+		// FUNGSI BARU UNTUK UPDATE TOMBOL MENGAMBANG
+        function updateFloatingPrayerButton() {
+            const btn = document.getElementById('floating-prayer-btn');
+            const btnText = document.getElementById('floating-prayer-text');
+            if (!btn || !btnText) return;
+
+            // Cari item jadwal yang sedang di-highlight (berwarna hijau)
+            const highlightedItem = document.querySelector('.jadwal-item.highlight');
+
+            if (highlightedItem) {
+                const prayerNameEl = highlightedItem.querySelector('.prayer-name');
+                const countdownEl = highlightedItem.querySelector('.prayer-countdown');
+                
+                if (prayerNameEl) {
+                    const prayerName = prayerNameEl.textContent;
+                    // Cek apakah countdown (misal: "dalam 15 menit") sedang tampil
+                    if (countdownEl && countdownEl.style.display !== 'none') {
+                        btn.classList.add('highlight');
+                        btnText.textContent = `${prayerName} ${countdownEl.textContent}`;
+                    } else {
+                        // Jika tidak, tampilkan nama sholat yang sedang berlangsung
+                        btn.classList.remove('highlight');
+                        btnText.textContent = `Waktu ${prayerName} sedang berlangsung`;
+                    }
+                    btn.classList.add('visible'); // Tampilkan tombol
+                }
+            } else {
+                btn.classList.remove('visible'); // Sembunyikan tombol jika tidak ada jadwal highlight
+            }
+        }
+		
+		
+        function tick(forceSkyUpdate = false) {
+            const now = new Date();
+            js_el.liveClock.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            if (Object.keys(js_todayPrayerTimes).length > 0) {
+                updateCountdownAndHighlights();
+				updateFloatingPrayerButton();
+            }
+            if (now.getMinutes() !== js_lastMinute || forceSkyUpdate) {
+                const dateString = `${js_currentDate.getDate()}-${js_currentDate.getMonth() + 1}-${js_currentDate.getFullYear()}`;
+                if (js_prayerDataCache[dateString]) { updateSkyAnimation(js_prayerDataCache[dateString]); }
+                js_lastMinute = now.getMinutes();
+            }
+        }
+        function unlockAudio() {
+            if (js_isAudioUnlocked) return;
+            js_el.adhanAudio.play().then(() => {
+                js_el.adhanAudio.pause();
+                js_el.adhanAudio.currentTime = 0;
+                js_isAudioUnlocked = true;
+                console.log("Konteks audio berhasil diaktifkan.");
+            }).catch(e => console.warn("Gagal membuka kunci audio, diperlukan interaksi pengguna.", e));
+        }
+        function handleNotifBtnClick(event) {
+            unlockAudio();
+            const btn = event.currentTarget;
+            const prayerName = btn.dataset.prayer;
+            if (Notification.permission === 'default') { Notification.requestPermission().then(permission => { if (permission === 'granted') { scheduleAllNotifications(js_todayPrayerTimes); } }); }
+            const prefs = getNotifPrefs();
+            const currentPref = prefs[prayerName] || 'bell';
+            const currentIndex = NOTIF_MODES.indexOf(currentPref);
+            const nextIndex = (currentIndex + 1) % NOTIF_MODES.length;
+            const nextPref = NOTIF_MODES[nextIndex];
+            prefs[prayerName] = nextPref;
+            saveNotifPrefs(prefs);
+            btn.textContent = NOTIF_ICONS[nextPref];
+            scheduleAllNotifications(js_todayPrayerTimes);
+        }
+        function scheduleAllNotifications(timings) {
+            js_scheduledTimers.forEach(timerId => clearTimeout(timerId));
+            js_scheduledTimers = [];
+            if (Notification.permission !== 'granted') return;
+            const prefs = getNotifPrefs();
+            const now = new Date();
+            for (const name of ["Subuh", "Dzuhur", "Ashar", "Maghrib", "Isya"]) {
+                const prayerTimeStr = timings[name];
+                if (!prayerTimeStr) continue;
+                const prayerDate = new Date();
+                const [h, m] = prayerTimeStr.split(':');
+                prayerDate.setHours(h, m, 0, 0);
+                if (prayerDate > now) {
+                    const timeToNotif = prayerDate.getTime() - now.getTime();
+                    const pref = prefs[name] || 'bell';
+                    const timerId = setTimeout(() => { triggerNotification(name, pref); }, timeToNotif);
+                    js_scheduledTimers.push(timerId);
+                }
+            }
+        }
+        function triggerNotification(prayerName, preference) {
+            const title = `Waktu Sholat ${prayerName} Telah Tiba`;
+            const options = { body: `Saatnya menunaikan sholat.`, icon: 'https://cdn-icons-png.flaticon.com/512/3039/3039017.png', tag: `prayer-time-${prayerName}` };
+            if (preference === 'adhan') {
+                js_el.popupPrayerName.textContent = prayerName;
+                js_el.adhanPopupOverlay.style.display = 'flex';
+                js_el.adhanAudio.currentTime = 0;
+                js_el.adhanAudio.play().catch(e => {
+                    console.error("Gagal memutar Adzan:", e);
+                    new Notification(title, { body: 'Gagal memutar suara, saatnya sholat.', icon: options.icon });
+                });
+            } else {
+                if (preference === 'vibrate') {
+                    options.body = 'Pengingat getar untuk sholat.';
+                    options.vibrate = [200, 100, 200];
+                }
+                new Notification(title, options);
+            }
+        }
+        function requestAndSaveLocation() {
+            js_el.lokasi.textContent = "Meminta izin lokasi...";
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const coords = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+                    localStorage.setItem('userLocation', JSON.stringify(coords));
+                    fetchAllData(js_currentDate, coords);
+                },
+                error => { js_el.lokasi.textContent = "Izin lokasi ditolak."; console.error(error); },
+                { enableHighAccuracy: false, timeout: 10000 }
+            );
+        }
+        function checkNotificationPermission() {
+            if ('Notification' in window) {
+                const isDismissed = sessionStorage.getItem('notifPromptDismissed');
+                if (Notification.permission === 'default' && !isDismissed) {
+                    js_el.notifPrompt.style.display = 'block';
+                }
+            }
+        }
+        
+        const savedLocation = localStorage.getItem('userLocation');
+        if (savedLocation) {
+            fetchAllData(js_currentDate, JSON.parse(savedLocation));
+        } else {
+            requestAndSaveLocation();
+        }
+        
+        checkNotificationPermission();
+
+        js_el.enableNotifBtn.addEventListener('click', () => {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') { scheduleAllNotifications(js_todayPrayerTimes); }
+                js_el.notifPrompt.style.display = 'none';
+                sessionStorage.setItem('notifPromptDismissed', 'true');
+            });
+        });
+        js_el.closeNotifPrompt.addEventListener('click', () => {
+            js_el.notifPrompt.style.display = 'none';
+            sessionStorage.setItem('notifPromptDismissed', 'true');
+        });
+        js_el.testAdhanBtn.addEventListener('click', () => {
+            unlockAudio();
+            if (js_el.adhanAudio.paused) {
+                js_el.adhanAudio.currentTime = 0;
+                js_el.adhanAudio.play().catch(e => alert("Gagal memutar audio. Pastikan tidak di-mute."));
+            } else {
+                js_el.adhanAudio.pause();
+            }
+        });
+        js_el.stopAdhanBtn.addEventListener('click', () => {
+            js_el.adhanAudio.pause();
+            js_el.adhanAudio.currentTime = 0;
+            js_el.adhanPopupOverlay.style.display = 'none';
+        });
+        js_el.adhanAudio.addEventListener('play', () => {
+            js_el.testAdhanBtn.innerHTML = '🔇 Matikan Suara Adzan';
+            js_el.testAdhanBtn.classList.add('playing');
+        });
+        js_el.adhanAudio.addEventListener('pause', () => {
+            js_el.testAdhanBtn.innerHTML = '🔊 Tes Suara Adzan';
+            js_el.testAdhanBtn.classList.remove('playing');
+        });
+        js_el.adhanAudio.addEventListener('ended', () => {
+            js_el.testAdhanBtn.innerHTML = '🔊 Tes Suara Adzan';
+            js_el.testAdhanBtn.classList.remove('playing');
+            js_el.adhanPopupOverlay.style.display = 'none';
+        });
+        js_el.prevDayBtn.addEventListener('click', () => {
+            js_currentDate.setDate(js_currentDate.getDate() - 1);
+            const coords = JSON.parse(localStorage.getItem('userLocation'));
+            if(coords) fetchAllData(js_currentDate, coords);
+        });
+        js_el.nextDayBtn.addEventListener('click', () => {
+            js_currentDate.setDate(js_currentDate.getDate() + 1);
+            const coords = JSON.parse(localStorage.getItem('userLocation'));
+            if(coords) fetchAllData(js_currentDate, coords);
+        });
+        js_el.resetLokasiBtn.addEventListener('click', () => {
+            localStorage.removeItem('userLocation');
+            js_prayerDataCache = {};
+            js_el.jadwalContainer.innerHTML = '';
+            js_el.timelineLabels.innerHTML = '';
+            if (js_mainInterval) clearInterval(js_mainInterval);
+            requestAndSaveLocation();
+        });
+
+        isJadwalSholatInitialized = true; // Tandai sudah diinisialisasi
+    }
+
+// // GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
 function showPage(hash) {
+	
+	cleanupPengawasUjianPage();
     // Selalu sembunyikan semua bagian dulu
     document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
+	document.getElementById('tahfidz-chart-container').classList.add('hidden');
 	
+	const targetHash = (hash === '' || hash === '#') ? '#beranda' : hash;
 	
+	if (targetHash === '#jadwal-sholat') {
+            const section = document.querySelector(hash);
+            if (section) {
+                section.classList.remove('hidden');
+            }
+            return;
+        }
+    
     // =======================================================
     // === BLOK PRIORITAS KHUSUS UNTUK KRS & KHS ===
     // =======================================================
     if (hash === '#krs' || hash === '#khs') {
-	
-	// Cek apakah fungsi-fungsi penting (seperti handleKrsClick) sudah siap.
-    // Jika belum, jalankan inisialisasi satu kali.
-    if (!isSistemInformasiInitialized) {
-        initializeSistemInformasi();
-    }
-    // --- AKHIR PENAMBAHAN KODE ---
-	
+		if (!isSistemInformasiInitialized) {
+			initializeSistemInformasi();
+		}
         const santriSection = document.getElementById('santri');
         if (santriSection) {
-            // 1. Tampilkan kontainer utama untuk santri
             santriSection.classList.remove('hidden');
-
-            // 2. Jalankan logika untuk menampilkan form pilihan
             const session = getActiveSession();
             if (session && session.userData && (session.userData.jabatan || '').trim().toLowerCase() === 'santri') {
-                if (session && session.userData && (session.userData.jabatan || '').trim().toLowerCase() === 'santri') {
-    const loggedInSantriName = session.userData.profileName;
-    
-    // Cari data lengkap santri di dalam appData berdasarkan nama
-    const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
-    
-    // Ambil data kelompok dari hasil pencarian
-    const kelompokSantri = santriData ? santriData.grup : 'Data tidak ditemukan';
+                const loggedInSantriName = session.userData.profileName;
+				const santriData = appData.santri.find(s => s.nama === loggedInSantriName);
+				const kelompokSantri = santriData ? santriData.grup : 'Data tidak ditemukan';
 
-    document.getElementById('santri-selection-container').classList.remove('hidden');
-    document.getElementById('santri-selector-name').textContent = `: ${loggedInSantriName}`;
-    document.getElementById('santri-selector-group').textContent = `: ${kelompokSantri}`; // Tampilkan data kelompok yang benar
+				document.getElementById('santri-selection-container').classList.remove('hidden');
+				document.getElementById('santri-selector-name').textContent = `: ${loggedInSantriName}`;
+				document.getElementById('santri-selector-group').textContent = `: ${kelompokSantri}`;
 
-    const monthSelector = document.getElementById('santri-month-selector');
-    if (monthSelector.options.length === 0) {
-        const months = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
-        months.forEach((month, index) => {
-            const option = document.createElement('option');
-            option.value = index + 1;
-            option.textContent = month;
-            monthSelector.appendChild(option);
-        });
-    }
-    
-    const showReportBtn = document.getElementById('show-report-btn');
-    showReportBtn.classList.remove('krs-btn-color', 'khs-btn-color');
-    if (hash === '#krs') {
-        showReportBtn.textContent = 'Tampilkan KRS';
-        showReportBtn.dataset.reportType = 'krs';
-        showReportBtn.classList.add('krs-btn-color');
-    } else {
-        showReportBtn.textContent = 'Tampilkan KHS';
-        showReportBtn.dataset.reportType = 'khs';
-        showReportBtn.classList.add('khs-btn-color');
-    }
-}
+				const monthSelector = document.getElementById('santri-month-selector');
+				if (monthSelector.options.length === 0) {
+					const months = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+					months.forEach((month, index) => {
+						const option = document.createElement('option');
+						option.value = index + 1;
+						option.textContent = month;
+						monthSelector.appendChild(option);
+					});
+				}
+				
+				const showReportBtn = document.getElementById('show-report-btn');
+				showReportBtn.classList.remove('krs-btn-color', 'khs-btn-color');
+				if (hash === '#krs') {
+					showReportBtn.textContent = 'Tampilkan KRS';
+					showReportBtn.dataset.reportType = 'krs';
+					showReportBtn.classList.add('krs-btn-color');
+				} else {
+					showReportBtn.textContent = 'Tampilkan KHS';
+					showReportBtn.dataset.reportType = 'khs';
+					showReportBtn.classList.add('khs-btn-color');
+				}
                 
-                // 3. Pastikan kontainer hasil disembunyikan pada awalnya
                 document.getElementById('krs-container').classList.add('hidden');
                 document.getElementById('khs-container').classList.add('hidden');
             }
         }
-        return; // <-- PENTING: Hentikan fungsi di sini agar tidak menjalankan kode lain di bawah
+        return;
     }
 
     // =======================================================
     // === LOGIKA STANDAR UNTUK SEMUA HALAMAN LAINNYA ===
     // =======================================================
-    const targetHash = (hash === '' || hash === '#') ? '#beranda' : hash;
+    
     const sectionToShow = document.querySelector(targetHash);
 
     if (sectionToShow) {
         sectionToShow.classList.remove('hidden');
-        // Kode asli Anda untuk menangani halaman lain (absensi, sistem-informasi, dll.)
         if (targetHash === '#roster-kbm' && !isSistemInformasiInitialized) {
             initializeSistemInformasi();
         } else if (targetHash === '#absensi') {
@@ -3578,35 +5197,79 @@ function showPage(hash) {
                 fetchAndRenderAttendanceHistory(session.userData.profileName);
             }
         } else if (targetHash === '#musyrif') {
+            // --- AWAL PERBAIKAN ---
             const session = getActiveSession();
-            if (session && session.loggedIn && session.userData.jabatan === 'Musyrif') {
+            const username = session ? session.username : '';
+            const jabatan = (session && session.userData) ? session.userData.jabatan : '';
+            // Logika pengecekan disamakan dengan logika di menu nav
+            if (session && session.loggedIn && (jabatan === 'Musyrif' || ['wawan', 'admin'].includes(username))) {
                 populateSantriDropdowns('musyrif');
+				buatDropdownSurah('ziyadahPSurahMusyrif');
+				buatDropdownSurah('ziyadahSSurahMusyrif');
+				buatDropdownSurah('murajaahSurahAwalMusyrif');
+				buatDropdownSurah('murajaahSurahAkhirMusyrif');
                 setupMusyrifEventListeners('musyrif');
                 fetchAndRenderDailyReports('musyrif');
                 document.querySelectorAll('#musyrif input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
             }
+            // --- AKHIR PERBAIKAN ---
         } else if (targetHash === '#musyrifah') {
-             const session = getActiveSession();
-            if (session && session.loggedIn && session.userData.jabatan === 'Musyrifah') {
+            // --- AWAL PERBAIKAN ---
+            const session = getActiveSession();
+            const username = session ? session.username : '';
+            const jabatan = (session && session.userData) ? session.userData.jabatan : '';
+            // Logika pengecekan disamakan dengan logika di menu nav
+            if (session && session.loggedIn && (jabatan === 'Musyrifah' || ['wawan', 'admin'].includes(username))) {
                 populateSantriDropdowns('musyrifah');
+				buatDropdownSurah('ziyadahPSurahMusyrifah');
+				buatDropdownSurah('ziyadahSSurahMusyrifah');
+				buatDropdownSurah('murajaahSurahAwalMusyrifah');
+				buatDropdownSurah('murajaahSurahAkhirMusyrifah');
                 setupMusyrifEventListeners('musyrifah');
                 fetchAndRenderDailyReports('musyrifah');
                 document.querySelectorAll('#musyrifah input[type="date"]').forEach(input => input.value = new Date().toISOString().slice(0, 10));
             }
+            // --- AKHIR PERBAIKAN ---
         } else if (targetHash === '#laporan') {
-            const session = getActiveSession();
-            const userJabatan = (session && session.userData) ? session.userData.jabatan : '';
-            if (session && session.loggedIn && (userJabatan === 'Kepala' || userJabatan === 'Waka Kurikulum' || userJabatan === 'Kepala Rumah Anak Yatim' || userJabatan === 'Kepala Rumah Tahfidz Quran')) {
-                const datePicker = document.getElementById('laporanTanggal');
-                if (!datePicker.dataset.listenerAttached) {
-                    datePicker.addEventListener('change', (e) => {
-                        fetchAndRenderTahfidzReport(e.target.value);
-                    });
-                    datePicker.dataset.listenerAttached = 'true';
-                }
-                datePicker.value = new Date().toISOString().slice(0, 10);
-                fetchAndRenderTahfidzReport(datePicker.value);
-            }
+			const session = getActiveSession();
+			const userJabatan = (session && session.userData) ? (session.userData.jabatan || '').toLowerCase().trim() : '';
+			const allowedJabatan = ['waka kurikulum', 'kepala rumah tahfidz quran', 'kepala rumah anak yatim', 'admin', 'wawan'];
+
+			if (session && session.loggedIn) {
+				const datePicker = document.getElementById('laporanTanggal');
+				if (!datePicker.dataset.listenerAttached) {
+					datePicker.addEventListener('change', (e) => {
+						fetchAndRenderTahfidzReport(e.target.value);
+					});
+					datePicker.dataset.listenerAttached = 'true';
+				}
+				datePicker.value = new Date().toISOString().slice(0, 10);
+				fetchAndRenderTahfidzReport(datePicker.value);
+
+				if (allowedJabatan.includes(userJabatan) || session.username === 'wawan' || session.username === 'admin') {
+					document.getElementById('tahfidz-chart-container').classList.remove('hidden');
+					const santriList = [...new Set([...appData.santriMusyrif, ...appData.santriMusyrifah])].sort();
+					const santriSelect = document.getElementById('chart-santri-select');
+					santriSelect.innerHTML = '<option value="">-- Pilih Santri --</option>';
+					santriList.forEach(name => {
+						santriSelect.innerHTML += `<option value="${name}">${name}</option>`;
+					});
+					const endDateInput = document.getElementById('chart-end-date');
+					const startDateInput = document.getElementById('chart-start-date');
+					const today = new Date();
+					endDateInput.value = today.toISOString().slice(0, 10);
+					today.setDate(today.getDate() - 30);
+					startDateInput.value = today.toISOString().slice(0, 10);
+					document.getElementById('show-chart-btn').onclick = () => {
+						const santriName = santriSelect.value;
+						if (!santriName) {
+							alert("Silakan pilih nama santri.");
+							return;
+						}
+						renderTahfidzChart(santriName, startDateInput.value, endDateInput.value);
+					};
+				}
+			}
         } else if (targetHash === '#slip-gaji') {
             const session = getActiveSession();
             if (session && session.loggedIn) {
@@ -3668,14 +5331,15 @@ function showPage(hash) {
                 document.getElementById('tampilkanLaporanKeuanganBtn').click();
             }
         }
-else if (targetHash === '#halaman-guru') {
-    setupHalamanGuru();
-} else if (targetHash === '#halaman-ujian-admin') {
-            setupHalamanUjianAdmin();
+		else if (targetHash === '#halaman-guru') {
+			setupHalamanGuru();
+		} else if (targetHash === '#halaman-ujian-admin') {
+					setupHalamanUjianAdmin();
+				}
+				 else if (targetHash === '#pengawas-ujian') {
+            setupPengawasUjianPage();
         }
-
     } else {
-        // Jika tidak ada hash atau hash tidak ditemukan, tampilkan beranda
         document.getElementById('beranda').classList.remove('hidden');
     }
 }
@@ -3769,7 +5433,18 @@ async function setupHalamanUjianAdmin() {
         santriContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`;
         materiContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`;
     }
-
+	
+	const selectAllSantriCheckbox = document.getElementById('select-all-santri');
+    if (selectAllSantriCheckbox) {
+        selectAllSantriCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            const santriCheckboxes = document.querySelectorAll('#admin-santri-list-container input[type="checkbox"]');
+            santriCheckboxes.forEach(cb => {
+                cb.checked = isChecked;
+            });
+        });
+    }
+	
     // Event listener untuk tombol "Buka Ujian" (tetap sama)
     bukaUjianBtn.onclick = async () => {
         const selectedSantri = Array.from(santriContainer.querySelectorAll('input:checked')).map(cb => cb.value);
@@ -3828,7 +5503,9 @@ async function setupHalamanUjianAdmin() {
     renderUnlockedExamsList();
 }
 
-    function showLoggedInView(userData) {
+    // GANTI SELURUH FUNGSI showLoggedInView ANDA DENGAN VERSI DI BAWAH INI
+
+function showLoggedInView(userData) {
     ui.loginButton.classList.add('hidden');
     ui.attendanceNav.classList.remove('hidden');
     ui.sistemInformasiNav.classList.remove('hidden');
@@ -3847,31 +5524,40 @@ async function setupHalamanUjianAdmin() {
     if (session && session.loggedIn) {
         const username = session.username;
         const jabatan = session.userData.jabatan || '';
+		const allowedUsernames = ['wawan', 'mia', 'reza', 'yeni', 'admin'];
         const isSantri = (jabatan || '').trim().toLowerCase() === 'santri';
         const isKepalaOrWaka = jabatan === 'Kepala Rumah Anak Yatim' || jabatan === 'Kepala Rumah Tahfidz' || jabatan === 'Waka Kurikulum';
-        const isMusyrif = jabatan === 'Musyrif';
-        const isMusyrifah = jabatan === 'Musyrifah';
+        const isMusyrif = jabatan === 'Musyrif' || ['wawan', 'admin'].includes(username);
+		const isMusyrifah = jabatan === 'Musyrifah' || ['wawan', 'admin'].includes(username);
         const financeUsers = ['mia', 'wawan', 'aria', 'yeni', 'admin'];
         const karyawanUsers = ['wawan', 'admin', 'aria', 'yeni', 'mia', 'zhofri', 'erwan', 'mahadi', 'zaidun', 'yanti', 'ryza', 'reza', 'uswah', 'erma'];
         const isGuru = (jabatan || '').trim().toLowerCase() === 'guru' || appData.teachers.some(t => t.name === session.userData.profileName);
         const canAccessBankSoal = isGuru || userData.username === 'mia' || userData.username === 'wawan' || userData.username === 'admin';
         const isAdminUjian = ['wawan', 'mia', 'admin'].includes(username);
+		const canSupervise = isGuru || ['wawan', 'mia', 'aria', 'zhofri', 'admin'].includes(username);
 
 		if (isGuru) {
-        fetchAndShowTeacherNotifications();
-    }
+            fetchAndShowTeacherNotifications();
+        }
 
         document.getElementById('attendanceNav').classList.toggle('hidden', isSantri);
         document.getElementById('ujianOnlineNav').classList.toggle('hidden', !isSantri);
-        
+        const tabunganNav = document.getElementById('tabunganNav');
+        if (tabunganNav) {
+            const canSeeTabungan = allowedUsernames.includes(username) || jabatan === 'santri';
+            tabunganNav.classList.toggle('hidden', !canSeeTabungan);
+        }
         const showDropdown = isSantri || isKepalaOrWaka || isMusyrif || isMusyrifah || financeUsers.includes(username) || karyawanUsers.includes(username) || isAdminUjian;
         document.getElementById('sistemInformasiDropdown').classList.toggle('hidden', !showDropdown);
         
-        // Cek ID 'halamanUjianAdminNav' di dalam dropdown navigasi Anda
         const halamanUjianAdminNav = document.getElementById('halamanUjianAdminNav');
         if(halamanUjianAdminNav) {
             halamanUjianAdminNav.classList.toggle('hidden', !isAdminUjian);
         }
+		const pengawasUjianNav = document.getElementById('pengawasUjianNav');
+		if (pengawasUjianNav) {
+			pengawasUjianNav.classList.toggle('hidden', !canSupervise);
+		}
         
         document.getElementById('krsNav').classList.toggle('hidden', !isSantri);
         document.getElementById('khsNav').classList.toggle('hidden', !isSantri);
@@ -3882,6 +5568,26 @@ async function setupHalamanUjianAdmin() {
         document.getElementById('musyrifahNav').classList.toggle('hidden', !isMusyrifah);
         document.getElementById('halamanGuruNav').classList.toggle('hidden', !canAccessBankSoal);
         document.getElementById('inputSoalNav').classList.toggle('hidden', !isAdminUjian);
+		
+		const createFundraisingContainer = document.getElementById('create-fundraising-btn-container');
+        if (createFundraisingContainer) {
+            const canCreate = ['mia', 'wawan', 'admin'].includes(username);
+            createFundraisingContainer.classList.toggle('hidden', !canCreate);
+        }
+		
+        // --- KODE YANG DIPINDAHKAN, DITEMPEL DI SINI ---
+        const tugasNav = document.getElementById('tugasNav');
+        if (tugasNav) {
+            // Tampilkan tombol Tugas untuk Santri dan Guru/Admin
+            const canAccessTugas = isSantri || isGuru || ['wawan', 'mia', 'aria', 'admin'].includes(username);
+            tugasNav.classList.toggle('hidden', !canAccessTugas);
+
+            // Jika yang login adalah Santri, panggil fungsi untuk cek notifikasi
+            if (isSantri) {
+                fetchTugasNotifications();
+            }
+        }
+        // --- AKHIR DARI KODE YANG DIPINDAHKAN ---
     }
     
     if (window.location.hash === '#login') { window.location.hash = '#beranda'; }
@@ -3905,7 +5611,9 @@ async function setupHalamanUjianAdmin() {
         const protectedHashes = ['#absensi', '#profile', '#sistem-informasi'];
         if (protectedHashes.includes(window.location.hash)) { window.location.hash = '#beranda'; }
     }
-
+	
+	
+	
     function logUserVisit() {
         const session = getActiveSession();
         if (session && session.loggedIn) {
@@ -4027,7 +5735,44 @@ function setupSantriSelectorListeners() {
 // =================================================================
 
 
-    function renderNewsCards() { const container = document.getElementById('news-container'); if (container) container.innerHTML = appData.news.map(item => `<div class="card"><img src="${item.img}" alt="${item.title}" onerror="this.onerror=null;this.src='https://placehold.co/400x200/cccccc/FFFFFF?text=Error';"><div class="card-content"><h3>${item.title}</h3><p class="meta">${item.meta}</p><p>${item.desc}</p></div></div>`).join(''); }
+    // GANTI FUNGSI LAMA DENGAN VERSI BARU INI
+function renderNewsCards() {
+    const container = document.getElementById('news-container');
+    if (!container) return;
+
+    container.innerHTML = appData.news.map(item => {
+        // Cek jika item adalah playlist YouTube
+        if (item.type === 'youtube_playlist') {
+    return `
+        <div class="card">
+            <div class="video-responsive">
+                <div id="youtube-player"></div> 
+            </div>
+            
+            <p id="youtube-title" class="text-sm text-center font-semibold mt-2 text-gray-700 p-2">Memuat judul...</p>
+            
+            <div class="card-content">
+                <h3>${item.title}</h3>
+                <p class="meta">${item.meta}</p>
+                <p>${item.desc}</p>
+            </div>
+        </div>
+    `;
+} else {
+            // Jika tidak (berita biasa), buat HTML untuk kartu berita seperti biasa
+            return `
+                <div class="card">
+                    <img src="${item.img}" alt="${item.title}" onerror="this.onerror=null;this.src='https://placehold.co/400x200/cccccc/FFFFFF?text=Error';">
+                    <div class="card-content">
+                        <h3>${item.title}</h3>
+                        <p class="meta">${item.meta}</p>
+                        <p>${item.desc}</p>
+                    </div>
+                </div>
+            `;
+        }
+    }).join('');
+}
     function renderGalleryCards() { const container = document.getElementById('gallery-container'); if (container) container.innerHTML = appData.gallery.map(item => `<div class="card"><img src="${item.img}" alt="${item.title}" onerror="this.onerror=null;this.src='https://placehold.co/400x250/cccccc/FFFFFF?text=Error';"><div class="card-content"><h3>${item.title}</h3><p>${item.desc}</p></div></div>`).join(''); }
     function fetchMarqueeText() { const session = getActiveSession(); const isLoggedIn = !!(session && session.loggedIn); const data = { action: 'getMarqueeText', isLoggedIn: isLoggedIn }; fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.ok ? res.json() : Promise.reject(res)).then(result => { if (result.status === 'success' && result.text && result.text.trim() !== '') { const textContent = ` ${result.text} ••• `; ui.marqueeText.textContent = textContent.repeat(10); ui.marqueeContainer.classList.remove('hidden'); } else { ui.marqueeContainer.classList.add('hidden'); } }).catch(error => { console.error('Error fetching marquee text:', error); ui.marqueeContainer.classList.add('hidden'); }); }
     
@@ -4250,13 +5995,32 @@ function handleLoginSubmit(event) {
         } else {
             data = { action: 'submitAttendance', role: 'rapat', name: session.userData.profileName, date: form.querySelector('#rapatDate').value, startTime: form.querySelector('#rapatStartTime').value, endTime: form.querySelector('#rapatEndTime').value, remarks: form.querySelector('#rapatRemarks').value };
         }
-        fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.ok ? res.json() : Promise.reject(res)).then(result => {if (result.status === "success") {showMessage('Absensi berhasil direkam!', 'success');const namaGuru = form.querySelector('#teacherNameDisplay').value;form.reset();form.querySelector('#teacherNameDisplay').value = namaGuru;setTodayDate();fetchAndRenderAttendanceHistory(session.userData.profileName);} else if (result.status === "duplicate") {showMessage(result.message, 'error');} else {showMessage(result.message || 'Gagal mengirim absensi.', 'error');}}).catch(error => { console.error('Attendance Error:', error); showMessage('Gagal terhubung.', 'error'); }).finally(() => { submitBtn.textContent = `Kirim Absensi ${role.charAt(0).toUpperCase() + role.slice(1)}`; submitBtn.disabled = false; });
+        fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.ok ? res.json() : Promise.reject(res)).then(result => {
+		if (result.status === "success") {
+    showMessage('Absensi berhasil direkam!', 'success');
+    const session = getActiveSession();
+    const currentName = session.userData.profileName;
+
+    form.reset(); // Reset seluruh isian form
+
+    // PERBAIKAN: Isi kembali nama HANYA pada form yang sesuai
+    if (role === 'guru') {
+        form.querySelector('#teacherNameDisplay').value = currentName;
+    } else if (role === 'staf') {
+		const currentJabatan = session.userData.jabatan; // Ambil jabatan dari sesi
+        form.querySelector('#stafNameDisplay').value = currentName;
+		form.querySelector('#jabatanStaf').value = currentJabatan; // Isi kembali jabatan
+    } else if (role === 'rapat') {
+        form.querySelector('#rapatNameDisplay').value = currentName;
+    }
+		setTodayDate();fetchAndRenderAttendanceHistory(session.userData.profileName);} else if (result.status === "duplicate") {showMessage(result.message, 'error');} else {showMessage(result.message || 'Gagal mengirim absensi.', 'error');}}).catch(error => { console.error('Attendance Error:', error); showMessage('Gagal terhubung.', 'error'); }).finally(() => { submitBtn.textContent = `Kirim Absensi ${role.charAt(0).toUpperCase() + role.slice(1)}`; submitBtn.disabled = false; });
     }
 
 // =======================================================
 // === FUNGSI-FUNGSI BARU UNTUK FITUR SLIP GAJI ===
 // =======================================================
 
+// --- AWAL KODE PENGGANTI ---
 function populateMonthYearDropdowns(monthSelect, yearSelect) {
     monthSelect.innerHTML = '';
     yearSelect.innerHTML = '';
@@ -4270,16 +6034,19 @@ function populateMonthYearDropdowns(monthSelect, yearSelect) {
     });
 
     const currentYear = new Date().getFullYear();
-    for (let y = 2025; y <= currentYear; y++) {
+    // Loop sekarang dimulai dari tahun 2026 hingga 2050
+    for (let y = 2025; y <= 2050; y++) { 
         const option = document.createElement('option');
         option.value = y;
         option.textContent = y;
         yearSelect.appendChild(option);
     }
 
+    // >Mengatur nilai default ke bulan dan tahun saat ini
     monthSelect.value = (new Date().getMonth() + 1).toString().padStart(2, '0');
     yearSelect.value = currentYear;
 }
+// --- AKHIR KODE PENGGANTI ---
 
 function populateEmployeeDropdown() {
     const employeeSelect = document.getElementById('employeeSelect');
@@ -4309,10 +6076,11 @@ function populateEmployeeDropdown() {
 }
 
 // GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
+// GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
 function fetchAndRenderSlipGaji() {
     const slipContainer = document.getElementById('slipGajiContainer');
     const downloadContainer = document.getElementById('downloadSlipContainer');
-    downloadContainer.classList.add('hidden'); // Sembunyikan tombol setiap kali memuat
+    downloadContainer.classList.add('hidden');
 
     const session = getActiveSession();
     const userJabatan = (session && session.userData) ? session.userData.jabatan : '';
@@ -4346,13 +6114,28 @@ function fetchAndRenderSlipGaji() {
     .then(result => {
         if (result.status === 'success') {
             const s = result.slip;
+            const holidaysInMonth = getHolidaysInMonth(parseInt(selectedYear), parseInt(selectedMonth));
+            const originalHariKerja = s.kehadiran.hariKerja;
+            const originalPotonganAbsen = s.potongan.potonganAbsen;
+            const adjustedHariKerja = Math.max(0, originalHariKerja - holidaysInMonth);
+            const potonganPerHari = s.kehadiran.totalAbsen > 0 ? (originalPotonganAbsen / s.kehadiran.totalAbsen) : 0;
+            const adjustedTotalAbsen = Math.max(0, adjustedHariKerja - s.kehadiran.totalMasuk);
+            const adjustedPotonganAbsen = adjustedTotalAbsen * potonganPerHari;
+            
+            s.kehadiran.hariKerja = adjustedHariKerja;
+            s.kehadiran.totalAbsen = adjustedTotalAbsen;
+            s.potongan.potonganAbsen = adjustedPotonganAbsen;
 
-            // Fungsi pembulatan
             const roundToHundred = num => Math.round(num / 100) * 100;
-
-            // Bangun HTML Rincian Pendapatan
+			
             let pendapatanHTML = '';
-            if (s.pendapatan.gajiPokok > 0) pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok</span> <span>${s.pendapatan.gajiPokok.toLocaleString('id-ID')}</span></div>`;
+            if (s.pendapatan.gajiPokokRinci) {
+              for (const [jabatan, gaji] of Object.entries(s.pendapatan.gajiPokokRinci)) {
+                pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok (${jabatan})</span> <span>${gaji.toLocaleString('id-ID')}</span></div>`;
+              }
+            } else if (s.pendapatan.gajiPokok > 0) {
+              pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok</span> <span>${s.pendapatan.gajiPokok.toLocaleString('id-ID')}</span></div>`;
+            }
             if (s.pendapatan.honorMengajar > 0) pendapatanHTML += `<div class="flex justify-between"><span>Honor Mengajar</span> <span>${s.pendapatan.honorMengajar.toLocaleString('id-ID')}</span></div>`;
             if (s.pendapatan.tunjanganMakan > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan Makan</span> <span>${s.pendapatan.tunjanganMakan.toLocaleString('id-ID')}</span></div>`;
             if (s.pendapatan.tunjanganBPJS > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan BPJamsostek</span> <span>${s.pendapatan.tunjanganBPJS.toLocaleString('id-ID')}</span></div>`;
@@ -4361,11 +6144,10 @@ function fetchAndRenderSlipGaji() {
             if (s.pendapatan.bonusLain > 0) pendapatanHTML += `<div class="flex justify-between"><span>Bonus Lain</span> <span>${s.pendapatan.bonusLain.toLocaleString('id-ID')}</span></div>`;
             if (s.pendapatan.bonusRapat > 0) pendapatanHTML += `<div class="flex justify-between"><span>Bonus Rapat</span> <span>${Math.round(s.pendapatan.bonusRapat).toLocaleString('id-ID')}</span></div>`;
 
-            // Bangun HTML Rincian Potongan
             let potonganHTML = '';
             if (s.potongan.potonganMakan > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Makan</span> <span>${s.potongan.potonganMakan.toLocaleString('id-ID')}</span></div>`;
             if (s.potongan.potonganBPJS > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan BPJamsostek</span> <span>${s.potongan.potonganBPJS.toLocaleString('id-ID')}</span></div>`;
-            if (s.potongan.potonganFasilitas > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Fasilitas (Rumah, Listrik, Air, Internet, dll.)</span> <span>${s.potongan.potonganFasilitas.toLocaleString('id-ID')}</span></div>`;
+            if (s.potongan.potonganFasilitas > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Fasilitas</span> <span>${s.potongan.potonganFasilitas.toLocaleString('id-ID')}</span></div>`;
             if (s.potongan.potonganAbsen > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Absen (${s.kehadiran.totalAbsen} hari)</span> <span>${roundToHundred(s.potongan.potonganAbsen).toLocaleString('id-ID')}</span></div>`;
             if (s.potongan.potonganTerlambat > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Terlambat</span> <span>${s.potongan.potonganTerlambat.toLocaleString('id-ID')}</span></div>`;
             if (s.potongan.hutang > 0) potonganHTML += `<div class="flex justify-between"><span>Hutang</span> <span>${s.potongan.hutang.toLocaleString('id-ID')}</span></div>`;
@@ -4375,7 +6157,21 @@ function fetchAndRenderSlipGaji() {
             if (s.kehadiran.totalMengajar > 0) kehadiranHTML += `<li>Total Mengajar: ${s.kehadiran.totalMengajar} sesi</li>`;
             if (s.kehadiran.hariKerja > 0) kehadiranHTML += `<li>Kehadiran Staf: ${s.kehadiran.totalMasuk} dari ${s.kehadiran.hariKerja} hari kerja</li>`;
 
-            const totalPendapatan = Object.values(s.pendapatan).reduce((a, b) => a + b, 0);
+            // BLOK BARU UNTUK CATATAN PENJELASAN
+            let catatanKeterlambatanHTML = '';
+            if (s.kehadiran.totalSesiTerlambat > 0) {
+                catatanKeterlambatanHTML = `
+                <div class="text-xs text-gray-500 mt-6 border-t pt-2">
+                    <b>Catatan Potongan Keterlambatan:</b>
+                    <ul>
+                        <li>Anda terlambat di <b>${s.kehadiran.totalSesiTerlambat} sesi</b> mengajar dari total ${s.kehadiran.totalMengajar} sesi bulan ini.</li>
+                        <li>Total akumulasi keterlambatan Anda adalah <b>${s.kehadiran.totalMenitTerlambat} menit</b>.</li>
+                        <li>Aturan: Potongan Rp 8.000 untuk keterlambatan >= 10 menit, ditambah Rp 5.000 untuk setiap kelipatan 5 menit berikutnya per sesi.</li>
+                    </ul>
+                </div>`;
+            }
+
+            const totalPendapatan = Object.values(s.pendapatan).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0);
             const totalPotongan = Object.values(s.potongan).reduce((a, b) => a + b, 0);
             const gajiBersih = totalPendapatan - totalPotongan;
 
@@ -4409,11 +6205,11 @@ function fetchAndRenderSlipGaji() {
                            </div>
                         </div>
                         ${kehadiranHTML ? `<div class="text-xs text-gray-500 mt-6 border-t pt-2"><b>Rincian Kehadiran:</b><ul>${kehadiranHTML}</ul></div>` : ''}
-                    </div>
+                        ${catatanKeterlambatanHTML} </div>
                 </div>`;
             slipContainer.innerHTML = slipHTML;
-            downloadContainer.classList.remove('hidden'); // Tampilkan tombol unduh
-            document.getElementById('downloadSlipBtn').onclick = downloadSlipPDF; // Pasang event listener
+            downloadContainer.classList.remove('hidden');
+            document.getElementById('downloadSlipBtn').onclick = downloadSlipPDF;
         } else if (result.status === 'pending') {
             slipContainer.innerHTML = `<p class="p-8 text-center text-blue-600 bg-blue-50 rounded-lg">${result.message}</p>`;
         } else {
@@ -4425,8 +6221,46 @@ function fetchAndRenderSlipGaji() {
     });
 }
 
-	
-	// FUNGSI BARU UNTUK MENGAMBIL DAN MENAMPILKAN RIWAYAT
+/**
+ * FUNGSI BARU: Menghitung jumlah hari libur (selain Minggu) dalam bulan tertentu.
+ * @param {number} year - Tahun yang akan diperiksa (misal: 2025).
+ * @param {number} month - Bulan yang akan diperiksa (1 untuk Januari, 12 untuk Desember).
+ * @returns {number} - Jumlah hari libur pada bulan tersebut.
+ */
+function getHolidaysInMonth(year, month) {
+    let holidayCount = 0;
+    const targetMonth = month - 1; // Bulan di JavaScript dimulai dari 0 (0=Jan, 11=Des)
+
+    // Iterasi melalui semua event di kalender pendidikan
+    appData.calendarEvents.forEach(event => {
+        // Hanya proses event yang ditandai sebagai 'holiday'
+        if (event.color === 'holiday') {
+            const startDate = new Date(event.date + 'T00:00:00'); // Atur waktu ke awal hari untuk konsistensi
+            const span = event.span || 1; // Jika ada properti span (libur beberapa hari)
+
+            // Loop sebanyak durasi libur (span)
+            for (let i = 0; i < span; i++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + i);
+
+                // Cek apakah tanggal ini:
+                // 1. Sesuai dengan tahun dan bulan yang ditargetkan.
+                // 2. BUKAN hari Minggu (getDay() 0 adalah Minggu).
+                if (
+                    currentDate.getFullYear() === year &&
+                    currentDate.getMonth() === targetMonth &&
+                    currentDate.getDay() !== 0 
+                ) {
+                    holidayCount++;
+                }
+            }
+        }
+    });
+    
+    console.log(`Ditemukan ${holidayCount} hari libur di bulan ${month}/${year}`);
+    return holidayCount;
+}	
+	// >FUNGSI BARU UNTUK MENGAMBIL DAN MENAMPILKAN RIWAYAT
 function fetchAndRenderAttendanceHistory(profileName) {
     const historyContainer = document.getElementById('historyContainer');
     if (!historyContainer) return;
@@ -4505,7 +6339,16 @@ function fetchAndRenderAttendanceHistory(profileName) {
             }
         }, 100); // 100ms sudah lebih dari cukup
     }
-
+	
+	if (params && params.includes('scroll=fundraising')) {
+        setTimeout(() => {
+            const fundraisingSection = document.getElementById('fundraising');
+            if (fundraisingSection) {
+                fundraisingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100); // Beri jeda agar halaman sempat tampil
+    }
+	
     // Reset semua link
     document.querySelectorAll('#mainNav a').forEach(a => a.classList.remove('active'));
 
@@ -4575,13 +6418,118 @@ function populateSantriDropdowns(role) {
     });
 }
 
+const daftarSurah = [
+    "Al-Fatihah", "Al-Baqarah", "Ali 'Imran", "An-Nisa'", "Al-Ma'idah", "Al-An'am", "Al-A'raf", "Al-Anfal", "At-Tawbah", "Yunus",
+    "Hud", "Yusuf", "Ar-Ra'd", "Ibrahim", "Al-Hijr", "An-Nahl", "Al-Isra'", "Al-Kahf", "Maryam", "Taha",
+    "Al-Anbiya'", "Al-Hajj", "Al-Mu'minun", "An-Nur", "Al-Furqan", "Asy-Syu'ara'", "An-Naml", "Al-Qasas", "Al-'Ankabut", "Ar-Rum",
+    "Luqman", "As-Sajdah", "Al-Ahzab", "Saba'", "Fatir", "Yasin", "As-Saffat", "Sad", "Az-Zumar", "Ghafir",
+    "Fussilat", "Asy-Syura", "Az-Zukhruf", "Ad-Dukhan", "Al-Jasiyah", "Al-Ahqaf", "Muhammad", "Al-Fath", "Al-Hujurat", "Qaf",
+    "Az-Zariyat", "At-Tur", "An-Najm", "Al-Qamar", "Ar-Rahman", "Al-Waqi'ah", "Al-Hadid", "Al-Mujadilah", "Al-Hasyr", "Al-Mumtahanah",
+    "As-Saff", "Al-Jumu'ah", "Al-Munafiqun", "At-Taghabun", "At-Talaq", "At-Tahrim", "Al-Mulk", "Al-Qalam", "Al-Haqqah", "Al-Ma'arij",
+    "Nuh", "Al-Jinn", "Al-Muzzammil", "Al-Muddassir", "Al-Qiyamah", "Al-Insan", "Al-Mursalat", "An-Naba'", "An-Nazi'at", "'Abasa",
+    "At-Takwir", "Al-Infitar", "Al-Mutaffifin", "Al-Insyiqaq", "Al-Buruj", "At-Tariq", "Al-A'la", "Al-Ghasyiyah", "Al-Fajr", "Al-Balad",
+    "Asy-Syams", "Al-Lail", "Ad-Duha", "Asy-Syarh", "At-Tin", "Al-'Alaq", "Al-Qadr", "Al-Bayyinah", "Az-Zalzalah", "Al-'Adiyat",
+    "Al-Qari'ah", "At-Takasur", "Al-'Asr", "Al-Humazah", "Al-Fil", "Quraisy", "Al-Ma'un", "Al-Kausar", "Al-Kafirun", "An-Nasr",
+    "Al-Masad", "Al-Ikhlas", "Al-Falaq", "An-Nas"
+];
+
+function buatDropdownSurah(elementId) {
+    const select = document.getElementById(elementId);
+    if (select) {
+        select.innerHTML = '<option value="">Pilih Surah...</option>';
+        daftarSurah.forEach((surah, index) => {
+            select.innerHTML += `<option value="${surah}">${index + 1}. ${surah}</option>`;
+        });
+    }
+}
+
+// FUNGSI BARU UNTUK MEMBUAT CHECKBOX JUZ
+function initializeJuzCheckboxes(role) {
+    const container = document.getElementById(`juz-checkbox-container-${role}`);
+    if (!container) return;
+    container.innerHTML = ''; // Kosongkan dulu
+    for (let i = 1; i <= 30; i++) {
+        container.innerHTML += `
+            <label class="flex items-center cursor-pointer text-sm">
+                <input type="checkbox" value="${i}" class="mr-2 juz-checkbox-${role}"> Juz ${i}
+            </label>
+        `;
+    }
+    // Tambahkan event listener ke container setelah semua checkbox dibuat
+    container.addEventListener('change', () => updateMurajaahFromJuz(role));
+}
+
+// FUNGSI BARU UNTUK MENGUPDATE INPUT SURAH DARI PILIHAN JUZ
+function updateMurajaahFromJuz(role) {
+    const checkedBoxes = document.querySelectorAll(`.juz-checkbox-${role}:checked`);
+    const surahAwalSelect = document.getElementById(`murajaahSurahAwal${role.charAt(0).toUpperCase() + role.slice(1)}`);
+    const ayatAwalInput = document.getElementById(`murajaahAyatAwal${role.charAt(0).toUpperCase() + role.slice(1)}`);
+    const surahAkhirSelect = document.getElementById(`murajaahSurahAkhir${role.charAt(0).toUpperCase() + role.slice(1)}`);
+    const ayatAkhirInput = document.getElementById(`murajaahAyatAkhir${role.charAt(0).toUpperCase() + role.slice(1)}`);
+
+    if (checkedBoxes.length === 0) {
+        // Jika tidak ada juz yang dipilih, kosongkan input
+        surahAwalSelect.value = "";
+        ayatAwalInput.value = "";
+        surahAkhirSelect.value = "";
+        ayatAkhirInput.value = "";
+        return;
+    }
+
+    const selectedJuzNumbers = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+    const minJuz = Math.min(...selectedJuzNumbers);
+    const maxJuz = Math.max(...selectedJuzNumbers);
+
+    const startData = JUZ_DATA.find(j => j.juz === minJuz);
+    const endData = JUZ_DATA.find(j => j.juz === maxJuz);
+
+    if (startData && endData) {
+        surahAwalSelect.value = startData.start.surah;
+        ayatAwalInput.value = startData.start.ayat;
+        surahAkhirSelect.value = endData.end.surah;
+        ayatAkhirInput.value = endData.end.ayat;
+    }
+}
+
+// FUNGSI BARU UNTUK MENGATUR TOGGLE JUZ/SURAH
+// FUNGSI UNTUK MENGATUR TOGGLE JUZ/SURAH (VERSI FINAL)
+function setupMurajaahToggle(role) {
+    const modeSelector = document.getElementById(`murajaah-mode-selector-${role}`);
+    if (!modeSelector) return; // Pengaman jika elemen tidak ada
+    
+    // PERBAIKAN: Kita hanya perlu referensi ke kontainer Juz
+    const juzInputsContainer = document.getElementById(`murajaah-juz-inputs-${role}`);
+
+    modeSelector.addEventListener('change', (e) => {
+        if (e.target.value === 'juz') {
+            // Tampilkan pilihan Juz
+            juzInputsContainer.classList.remove('hidden');
+            // Panggil fungsi untuk mengisi nilai berdasarkan Juz yang mungkin sudah dipilih
+            updateMurajaahFromJuz(role); 
+        } else { // Mode 'surah'
+            // Sembunyikan pilihan Juz
+            juzInputsContainer.classList.add('hidden');
+            // Hapus centang pada semua checkbox juz
+            document.querySelectorAll(`.juz-checkbox-${role}:checked`).forEach(cb => cb.checked = false);
+            // Panggil fungsi ini lagi untuk mengosongkan input surah/ayat
+            updateMurajaahFromJuz(role); 
+        }
+    });
+}
+
+// FUNGSI UTAMA YANG TELAH DIPERBAIKI
 function setupMusyrifEventListeners(role) {
+    // 1. Panggil semua fungsi setup baru di awal
+    initializeJuzCheckboxes(role);
+    setupMurajaahToggle(role);
+
+    // 2. Deklarasikan variabel yang dibutuhkan (hanya sekali)
     const pageSelector = `#${role}`;
     const formKegiatan = document.querySelector(`${pageSelector} #formKegiatan${role.charAt(0).toUpperCase() + role.slice(1)}`);
     const formTahfidz = document.querySelector(`${pageSelector} #formTahfidz${role.charAt(0).toUpperCase() + role.slice(1)}`);
     const formPelanggaran = document.querySelector(`${pageSelector} #formPelanggaran${role.charAt(0).toUpperCase() + role.slice(1)}`);
     
-    // Logika untuk menampilkan/menyembunyikan keterangan kegiatan
+    // 3. Pasang event listener untuk radio button kegiatan
     const statusRadios = document.querySelectorAll(`input[name="statusKegiatan${role.charAt(0).toUpperCase() + role.slice(1)}"]`);
     const keteranganContainer = document.getElementById(`keteranganKegiatan${role.charAt(0).toUpperCase() + role.slice(1)}Container`);
     statusRadios.forEach(radio => {
@@ -4590,10 +6538,13 @@ function setupMusyrifEventListeners(role) {
         });
     });
 
-    // Event listener untuk form
-    formKegiatan.addEventListener('submit', (e) => handleMusyrifFormSubmit(e, role, 'Kegiatan'));
-    formTahfidz.addEventListener('submit', (e) => handleMusyrifFormSubmit(e, role, 'Tahfidz'));
-    formPelanggaran.addEventListener('submit', (e) => handleMusyrifFormSubmit(e, role, 'Pelanggaran'));
+    // 4. Pasang event listener untuk form submit
+    if (formKegiatan) formKegiatan.addEventListener('submit', (e) => handleMusyrifFormSubmit(e, role, 'Kegiatan'));
+    if (formTahfidz) formTahfidz.addEventListener('submit', (e) => handleMusyrifFormSubmit(e, role, 'Tahfidz'));
+    if (formPelanggaran) formPelanggaran.addEventListener('submit', (e) => handleMusyrifFormSubmit(e, role, 'Pelanggaran'));
+
+    // 5. Inisialisasi tampilan awal dengan benar
+    updateMurajaahFromJuz(role);
 }
 
 // GANTI SELURUH ISI FUNGSI INI
@@ -4631,12 +6582,26 @@ function handleMusyrifFormSubmit(event, role, type) {
         data.status = form.querySelector(`input[name="statusKegiatan${roleCapitalized}"]:checked`).value;
         data.keterangan = form.querySelector(`#keteranganKegiatan${roleCapitalized}`).value || '-';
     } else if (type === 'Tahfidz') {
-        data.ziyadahP = document.getElementById(`ziyadahPoin${roleCapitalized}`).value || '0';
-        data.ziyadahPText = document.getElementById(`ziyadahPText${roleCapitalized}`).value || '-';
-        data.ziyadahS = document.getElementById(`ziyadahSoin${roleCapitalized}`).value || '0';
-        data.ziyadahSText = document.getElementById(`ziyadahSText${roleCapitalized}`).value || '-';
-        data.murajaah = document.getElementById(`murajaahPoin${roleCapitalized}`).value || '0';
-        data.murajaahText = document.getElementById(`murajaahText${roleCapitalized}`).value || '-';
+        const zPAwal = document.getElementById(`ziyadahPAyatAwal${roleCapitalized}`).value;
+        const zPAkhir = document.getElementById(`ziyadahPAyatAkhir${roleCapitalized}`).value;
+        const zSAwal = document.getElementById(`ziyadahSAyatAwal${roleCapitalized}`).value;
+        const zSAkhir = document.getElementById(`ziyadahSAyatAkhir${roleCapitalized}`).value;
+        const mSAwal = document.getElementById(`murajaahSurahAwal${roleCapitalized}`).value;
+        const mAAwal = document.getElementById(`murajaahAyatAwal${roleCapitalized}`).value;
+        const mSAkhir = document.getElementById(`murajaahSurahAkhir${roleCapitalized}`).value;
+        const mAAkhir = document.getElementById(`murajaahAyatAkhir${roleCapitalized}`).value;
+
+        // Mengambil poin dan menggabungkan teks untuk Ziyadah Pagi
+        data.ziyadahPoin = document.getElementById(`ziyadahPoin${roleCapitalized}`).value || '0';
+        data.ziyadahPText = zPAwal ? `${document.getElementById(`ziyadahPSurah${roleCapitalized}`).value}: ${zPAwal}-${zPAkhir}` : '-';
+        
+        // Mengambil poin dan menggabungkan teks untuk Ziyadah Sore
+        data.ziyadahSoin = document.getElementById(`ziyadahSoin${roleCapitalized}`).value || '0';
+        data.ziyadahSText = zSAwal ? `${document.getElementById(`ziyadahSSurah${roleCapitalized}`).value}: ${zSAwal}-${zSAkhir}` : '-';
+        
+        // Mengambil poin dan menggabungkan teks untuk Muraja'ah
+        data.murajaahPoin = document.getElementById(`murajaahPoin${roleCapitalized}`).value || '0';
+        data.murajaahText = mSAwal ? `${mSAwal}: ${mAAwal} - ${mSAkhir}: ${mAAkhir}` : '-';
     } else if (type === 'Pelanggaran') {
         data.pelanggaran = document.getElementById(`isiPelanggaran${roleCapitalized}`).value;
         data.solusi = document.getElementById(`solusiPelanggaran${roleCapitalized}`).value;
@@ -4913,6 +6878,36 @@ const handleKrsClick = async (event, userData = null) => {
             krsTableBody.innerHTML = `<tr><td colspan="8" class="text-center p-4 text-red-500">Gagal memuat data: ${error.message}</td></tr>`;
         }
     };
+async function fetchTugasNotifications() {
+    try {
+        const session = getActiveSession();
+        
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: 'getTugasNotifications',
+                username: session.username,
+                namaSantri: session.userData.profileName
+                // Parameter 'bulan' sudah dihapus
+            })
+        });
+        const result = await response.json();
+        if (result.status === 'success' && result.count > 0) {
+            const wrapper = document.querySelector('#tugasNav .nav-link-wrapper');
+            if (wrapper) {
+                const oldDot = wrapper.querySelector('.notification-dot');
+                if (oldDot) oldDot.remove();
+                
+                const dot = document.createElement('span');
+                dot.className = 'notification-dot';
+                dot.textContent = result.count;
+                wrapper.appendChild(dot);
+            }
+        }
+    } catch (error) {
+        console.error("Gagal mengambil notifikasi tugas:", error);
+    }
+}
 
 // GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU YANG LENGKAP INI
 async function handleKhsClick(event, userData = null) {
@@ -6110,20 +8105,18 @@ function handleInputMateriFromModal() {
 
     function setupMainEventListeners() {
         if (ui.donasiBtn) ui.donasiBtn.onclick = () => document.getElementById('donasiModal').style.display = "block";
-        
-		document.body.addEventListener('click', function(event) {
-    // Cek apakah elemen yang diklik atau salah satu induknya adalah tombol kembali KRS
-    if (event.target.closest('#back-to-santri-krs')) {
-        handleBackToSantriList();
-        return; // Hentikan pengecekan lebih lanjut
-    }
+    
+    document.body.addEventListener('click', function(event) {
+        // Cek jika tombol kembali KRS/KHS diklik
+        if (event.target.closest('#back-to-santri-krs') || event.target.closest('#back-to-santri-khs')) {
+            handleBackToSantriList();
+            return;
+        }
 
-    // Cek apakah elemen yang diklik atau salah satu induknya adalah tombol kembali KHS
-    if (event.target.closest('#back-to-santri-khs')) {
-        handleBackToSantriList();
-        return; // Hentikan pengecekan lebih lanjut
-    }
-});
+        // Cek jika tombol edit penggalangan dana yang diklik
+        const editButton = event.target.closest('.btn-edit-fundraising');
+        
+    });
 
 		if (ui.userProfile) ui.userProfile.onclick = () => openProfileModal();
 		
@@ -6170,7 +8163,40 @@ function handleInputMateriFromModal() {
             const selectedDate = document.getElementById('attendanceDateGuru').value;
             populateTeacherClasses(null, selectedDate, selectedTeacher);
         });
-		
+
+		const fundImageInput = document.getElementById('input-fund-image-file');
+    const fundImagePreview = document.getElementById('fundraising-image-preview');
+
+    if (fundImageInput && fundImagePreview) {
+        // Buat agar gambar pratinjau juga bisa diklik untuk memilih file
+        fundImagePreview.addEventListener('click', () => fundImageInput.click());
+
+        fundImageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                selectedFundraisingFile = file; // Simpan file ke variabel
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    fundImagePreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+		const fundraisingModal = document.getElementById('fundraising-modal');
+    const createFundraisingBtn = document.getElementById('btn-create-fundraising');
+    const fundraisingForm = document.getElementById('form-fundraising');
+
+    if (createFundraisingBtn) {
+        createFundraisingBtn.onclick = () => {
+            fundraisingModal.style.display = 'block';
+        };
+    }
+
+    if (fundraisingForm) {
+        fundraisingForm.addEventListener('submit', handleFundraisingSubmit);
+    }
 		// DIUBAH TOTAL: Event listener untuk tombol 'Tambah Materi'
 // GANTI SELURUH BLOK FUNGSI LAMA DENGAN VERSI FINAL YANG SUDAH DIPERBAIKI INI
 
@@ -6323,6 +8349,7 @@ addKrsRowBtn.addEventListener('click', async () => {
         setTodayDate();
 		
 		generateAcademicMonthRanges();
+		initializeJadwalSholat(); 
 		
 		checkAndDisplayHeaderNotifications();
         setInterval(checkAndDisplayHeaderNotifications, 60 * 60 * 1000); // Cek setiap 1 jam
@@ -6381,6 +8408,7 @@ addKrsRowBtn.addEventListener('click', async () => {
 		setupAdvancedDropdown(); 
         renderNewsCards();
         renderGalleryCards();
+		renderFundraisingCards(session);
         fetchMarqueeText();
         renderDynamicCalendar(2025, 7, 12);
         setupSlideshow();
@@ -6391,6 +8419,7 @@ addKrsRowBtn.addEventListener('click', async () => {
 	setupResultModalListeners();
 	setupExamSecurityListeners();
 	setupInputSoalPage();
+	initializePlayer(); 
     }
 
 // HAPUS FUNGSI LAMA setupDropdownMobile() DAN GANTI DENGAN INI
@@ -6449,6 +8478,8 @@ function setupAdvancedDropdown() {
 
     // Tambahkan event listener untuk menutup menu jika mengklik di tempat lain
     window.addEventListener('click', closeMenu);
+	
+	
 }
     
 
