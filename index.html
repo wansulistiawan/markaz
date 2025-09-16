@@ -3137,7 +3137,36 @@ async function renderExamSchedule() {
         const activeCardsFragment = document.createDocumentFragment();
         const inactiveCardsFragment = document.createDocumentFragment();
         // --- AKHIR PERUBAHAN ---
+		
+		// =======================================================
+        // === BLOK KODE BARU UNTUK MENGURUTKAN KARTU UJIAN ===
+        // =======================================================
+        const getPriorityScore = (item) => {
+            const now = new Date();
+            const academicMonth = subjectToMonthMap[item.code] || 0;
+            const isSpeciallyUnlocked = unlockedExams.includes(item.code);
 
+            const { examWeekStart, examWeekEnd } = getAcademicMonthInfo(academicMonth);
+            // Pengecekan apakah hari ini berada dalam rentang pekan ujian
+            const isExamWindowActive = (now >= examWeekStart && now <= examWeekEnd);
+
+            // Jika sedang pekan ujian atau dibuka manual, beri skor prioritas tertinggi
+            if (isExamWindowActive || isSpeciallyUnlocked) {
+                return 100; 
+            } else {
+                // Jika tidak, skornya adalah nomor bulan itu sendiri
+                return academicMonth;
+            }
+        };
+
+        savedKrsSubjects.sort((a, b) => {
+            const scoreA = getPriorityScore(a);
+            const scoreB = getPriorityScore(b);
+            // Urutkan dari skor tertinggi ke terendah
+            return scoreB - scoreA;
+        });
+        // === AKHIR DARI BLOK KODE BARU ===
+		
         savedKrsSubjects.forEach(item => {
             const subjectCode = item.code;
             if (!availableExams.includes(subjectCode)) return;
@@ -3157,7 +3186,15 @@ async function renderExamSchedule() {
 
             if (riwayat) {
                 const nilaiToShow = riwayat.skorAkhir ?? riwayat.skor;
-                if (riwayat.percobaan >= 3 && !isAdmin) {
+				if (nilaiToShow >= 75 && !isAdmin) {
+                    statusText = `Lulus (Nilai Akhir: ${nilaiToShow})`;
+                    statusColor = 'bg-green-600';
+                    isDisabled = true;
+				} else if (isSpeciallyUnlocked && riwayat.percobaan >= 3 && !isAdmin) {
+					statusText = `Batas Coba Habis (Nilai: ${nilaiToShow})`;
+					statusColor = 'bg-gray-500';
+					isDisabled = true;
+                } else if (riwayat.percobaan >= 3 && !isAdmin) {
                     statusText = `Selesai (Nilai Akhir: ${nilaiToShow})`;
                     statusColor = 'bg-gray-500';
                     isDisabled = true;
@@ -3165,19 +3202,19 @@ async function renderExamSchedule() {
                     statusText = `Waktu Habis (Nilai: ${nilaiToShow})`;
                     statusColor = 'bg-gray-500';
                     isDisabled = true;
-                } else if (nilaiToShow >= 75 && !isAdmin) {
-                    statusText = `Lulus (Nilai Akhir: ${nilaiToShow})`;
-                    statusColor = 'bg-green-600';
-                    isDisabled = true;
-                } else if (riwayat.percobaan >= 2 && !isSpeciallyUnlocked && !isAdmin) {
-                    statusText = `Remedial Selesai (Nilai: ${nilaiToShow})`;
-                    statusColor = 'bg-gray-500';
-                    isDisabled = true;
-                } else { 
-                    isDisabled = false;
-                    statusText = `Kerjakan Ulang (Nilai: ${nilaiToShow})`;
-                    statusColor = 'bg-red-600 hover:bg-red-700';
-                }
+                } else { // Kondisi ini untuk santri yang sudah punya riwayat nilai, tapi nilainya di bawah 75 dan masih punya kesempatan.
+    isDisabled = false;
+    // PENGECEKAN BARU: Jika waktu ujian reguler sudah lewat TAPI aksesnya dibuka manual oleh admin.
+    if (isExamWeekOver && isSpeciallyUnlocked) {
+        // Tampilkan tombol "Kerjakan Ulang" sesuai permintaan Anda.
+        statusText = `Kerjakan Ulang (Nilai: ${nilaiToShow})`;
+        statusColor = 'bg-red-600 hover:bg-red-700'; // Warna merah untuk kasus khusus ini.
+    } else {
+        // Jika tidak, ini adalah remedial biasa dalam masa ujian normal.
+        statusText = `Mulai Remedial (Nilai: ${nilaiToShow})`; 
+        statusColor = 'bg-yellow-500 hover:bg-yellow-600';
+    }
+}
             } else {
                 if (isExamWindowActive || isSpeciallyUnlocked || isAdmin) {
                     statusText = 'Mulai Ujian';
@@ -3385,7 +3422,7 @@ async function startExam() {
 }
 
 function calculateAndShowResult() {
-    isExamInProgress = false;
+    
     alarmSound.pause();
     alarmSound.currentTime = 0;
 
@@ -3412,11 +3449,9 @@ function calculateAndShowResult() {
     const isRemedial = previousAttempts === 1;
     // --- AKHIR BAGIAN YANG DIPERBAIKI ---
 
-    if (previousAttempts >= 2) {
-        finalScore = Math.min(score, 75);
-    } else if (previousAttempts === 1) {
-        const firstAttemptScore = currentAttemptHistory.skor || 0;
-        finalScore = Math.min(Math.max(firstAttemptScore, score), 80);
+    if (previousAttempts > 0) {
+        const highestPreviousScore = currentAttemptHistory.skorAkhir || currentAttemptHistory.skor || 0;
+        finalScore = Math.max(highestPreviousScore, score);
     } else {
         finalScore = score;
     }
@@ -3470,7 +3505,7 @@ function calculateAndShowResult() {
         }
     } else { 
         resultScoreEl.className = 'text-8xl font-bold my-8 fail';
-        if (isRemedial) {
+        if (previousAttempts >= 2) {
             resultMessageEl.textContent = `Anda telah menyelesaikan remedial. Nilai akhir Anda (${finalScore}) akan dicatat di KHS.`;
             resultActionsEl.innerHTML = `<button id="result-done-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Selesai</button>`;
         } else {
@@ -3482,6 +3517,8 @@ function calculateAndShowResult() {
 
     document.getElementById('exam-container').classList.add('hidden');
     document.getElementById('exam-result-modal').style.display = 'block';
+	
+	isExamInProgress = false;
 }
 
 function closeResultModal() {
@@ -3626,6 +3663,7 @@ async function renderTahfidzChart(santriName, startDate, endDate) {
             },
             options: {
                 responsive: true,
+				maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
                     y_poin: {
@@ -3726,9 +3764,9 @@ function setupPengawasUjianPage() {
             for (const username in logsBySantri) {
                 const userLogs = logsBySantri[username].logs;
                 const lastLog = userLogs.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp))[0];
-                if (lastLog && lastLog.ActionType === 'UJIAN_DIMULAI' || (lastLog.ActionType !== 'UJIAN_SELESAI' && lastLog.ActionType !== 'UJIAN_DIAKHIRI_PAKSA')) {
+                if (lastLog) {
                     const lastActionTime = new Date(lastLog.Timestamp);
-                    // Anggap santri masih aktif jika log terakhirnya kurang dari 2 jam yang lalu
+                    // Anggap santri 'aktif' jika log terakhirnya kurang dari 2 jam yang lalu
                     if ((new Date() - lastActionTime) < (2 * 60 * 60 * 1000)) {
                         activeSantriUsernames.push(username);
                     }
@@ -5400,6 +5438,13 @@ function showPage(hash) {
 				 else if (targetHash === '#pengawas-ujian') {
             setupPengawasUjianPage();
         }
+		} else if (targetHash === '#ujian-online') {
+            const section = document.querySelector(targetHash);
+            if (section) {
+                section.classList.remove('hidden');
+                // Panggil fungsi untuk memuat ulang jadwal ujian
+                renderExamSchedule(); 
+            }
     } else {
         document.getElementById('beranda').classList.remove('hidden');
     }
