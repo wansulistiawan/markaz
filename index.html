@@ -1165,6 +1165,7 @@
 						<a href="#musyrifah" id="musyrifahNav">Halaman Musyrifah</a>
 						<a href="#input-soal" id="inputSoalNav">Input Soal Ujian</a>
 						<a href="#halaman-guru" id="halamanGuruNav"><span class="nav-link-wrapper">Bank Soal Guru</span></a>
+						<a href="#lihat-nilai" id="lihatNilaiNav">Lihat Nilai Santri</a>
 						<a href="#halaman-ujian-admin" id="halamanUjianAdminNav" class="hidden" style="background-color: #F59E0B;">Buka Ujian Manual</a>
 						<a href="#pengawas-ujian" id="pengawasUjianNav" class="hidden" style="background-color: #ef4444; color: white;">Pengawas Ujian</a>
 						<a href="tabungan.html" id="tabunganNav" class="hidden" style="background-color: #0d6efd;">Tabungan</a>
@@ -2034,6 +2035,24 @@
     </div>
 </div>
 
+<div id="lihat-nilai" class="page-section hidden container section">
+    <h2 class="text-3xl font-bold text-gray-800">Rekap Nilai Ujian Santri</h2>
+    <p class="mb-8 text-gray-600">Pilih salah satu materi yang Anda ajar untuk melihat rekapitulasi nilai seluruh santri.</p>
+
+    <div class="bg-white p-6 rounded-xl shadow-md">
+        <div class="form-group max-w-md mb-6">
+            <label for="guru-nilai-materi-select" class="text-base font-semibold">Pilih Materi Ujian</label>
+            <select id="guru-nilai-materi-select" class="filter-select w-full mt-2">
+                <option value="">Memuat materi Anda...</option>
+            </select>
+        </div>
+        
+        <div id="guru-nilai-container" class="border rounded-lg overflow-hidden">
+            <p class="p-8 text-center text-gray-400">Silakan pilih materi untuk menampilkan rekap nilai.</p>
+        </div>
+    </div>
+</div>
+
 <div id="exam-warning-modal" class="modal">
     <div class="modal-content text-center">
         <h2 class="text-2xl font-bold text-yellow-600 mb-4">Konfirmasi Memulai Ujian</h2>
@@ -2358,6 +2377,95 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     // ==========================================================
+
+// FUNGSI BARU UNTUK HALAMAN LIHAT NILAI
+async function setupLihatNilaiPage() {
+    const session = getActiveSession();
+    if (!session || !session.loggedIn) return;
+
+    const materiSelect = document.getElementById('guru-nilai-materi-select');
+    const nilaiContainer = document.getElementById('guru-nilai-container');
+
+    // 1. Ambil daftar materi yang diajar guru
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getSoalUntukGuru', namaGuru: session.userData.profileName }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        materiSelect.innerHTML = '<option value="">-- Pilih Materi --</option>';
+        for (const kode in result.materi) {
+            const subjectData = Object.values(appState.processedSchedules).flat().find(item => item.subject.startsWith(kode));
+            const namaLengkapMateri = subjectData ? subjectData.subject : kode;
+            const option = document.createElement('option');
+            option.value = kode;
+            option.textContent = namaLengkapMateri;
+            materiSelect.appendChild(option);
+        }
+    } catch (error) {
+        materiSelect.innerHTML = `<option value="">Gagal memuat materi</option>`;
+        console.error(error);
+    }
+
+    // 2. Tambahkan event listener untuk menampilkan nilai saat materi dipilih
+    materiSelect.addEventListener('change', async (e) => {
+        const kodeMateri = e.target.value;
+        if (!kodeMateri) {
+            nilaiContainer.innerHTML = '<p class="p-8 text-center text-gray-400">Silakan pilih materi.</p>';
+            return;
+        }
+
+        nilaiContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Mengambil data nilai...</p>';
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getScoresBySubject', kodeMateri: kodeMateri }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+
+            if (result.scores.length === 0) {
+                nilaiContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Belum ada santri yang mengerjakan ujian ini.</p>';
+                return;
+            }
+
+            // 3. Buat dan tampilkan tabel nilai
+            let tableHTML = `<table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nama Santri</th>
+                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Skor Awal</th>
+                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Jml. Coba</th>
+                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Skor Akhir</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">`;
+
+            result.scores.forEach((item, index) => {
+                tableHTML += `
+                    <tr>
+                        <td class="px-4 py-3">${index + 1}</td>
+                        <td class="px-4 py-3 font-medium">${item.namaSantri}</td>
+                        <td class="px-4 py-3 text-center">${item.skor}</td>
+                        <td class="px-4 py-3 text-center">${item.percobaan}</td>
+                        <td class="px-4 py-3 text-center font-bold ${item.skorAkhir >= 75 ? 'text-green-600' : 'text-red-600'}">${item.skorAkhir}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `</tbody></table>`;
+            nilaiContainer.innerHTML = tableHTML;
+
+        } catch (error) {
+            nilaiContainer.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat nilai: ${error.message}</p>`;
+        }
+    });
+}
 
 // GANTI TOTAL FUNGSI LAMA DENGAN VERSI FINAL INI
 async function renderFundraisingCards(session) {
@@ -5366,7 +5474,9 @@ function showPage(hash) {
             }
             return;
         }
-    
+    else if (targetHash === '#lihat-nilai') {
+            setupLihatNilaiPage();
+        }
     // =======================================================
     // === BLOK PRIORITAS KHUSUS UNTUK KRS & KHS ===
     // =======================================================
@@ -5785,7 +5895,18 @@ function showLoggedInView(userData) {
         const canAccessBankSoal = isGuru || userData.username === 'mia' || userData.username === 'wawan' || userData.username === 'admin';
         const isAdminUjian = ['wawan', 'mia', 'admin'].includes(username);
 		const canSupervise = isGuru || ['wawan', 'mia', 'aria', 'zhofri', 'admin'].includes(username);
+		
+		const lihatNilaiNav = document.getElementById('lihatNilaiNav');
+if (lihatNilaiNav) {
+    const isGuru = (jabatan || '').trim().toLowerCase() === 'guru';
+    const isWaka = jabatan === 'Waka Kurikulum';
+    const allowedUsernames = ['wawan', 'mia', 'aria', 'admin'];
 
+    const canAccessNilai = isGuru || isWaka || allowedUsernames.includes(username);
+
+    lihatNilaiNav.classList.toggle('hidden', !canAccessNilai);
+}
+		
 		if (isGuru) {
             fetchAndShowTeacherNotifications();
         }
