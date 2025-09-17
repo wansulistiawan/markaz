@@ -2082,6 +2082,22 @@
         </button>
     </div>
 </div>
+
+<div id="teacherPasswordModal" class="modal" style="background-color: rgba(0,0,0,0.85);">
+    <div class="modal-content text-center">
+        <h2 class="text-2xl font-bold text-yellow-500 mb-4">Akses Ujian Lanjutan</h2>
+        <p class="text-gray-700 text-lg mb-6">
+            Ujian ini sudah pernah dimulai. Untuk melanjutkan, silakan minta <strong>kata sandi 5 digit</strong> dari pengawas ujian.
+        </p>
+        <div class="my-4">
+            <input type="number" id="teacherPasswordInput" class="text-center text-3xl tracking-[1em] w-48 p-2 border-2 rounded" maxlength="5" placeholder="_ _ _ _ _">
+        </div>
+        <div class="flex justify-center gap-4">
+            <button id="submitTeacherPasswordBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg">Lanjutkan Ujian</button>
+            <button id="cancelTeacherPasswordBtn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-8 rounded-lg">Batal</button>
+        </div>
+    </div>
+</div>
 	
     <div id="login" class="page-section hidden container"><form id="loginForm" class="custom-form"><h2 style="text-align: center;">Login Pengurus / Staf</h2><div class="form-group"><label for="username">Username</label><input type="text" id="username" name="username" autocomplete="username" required></div><div class="form-group password-container"><label for="password">Password</label><input type="password" id="password" name="password" required><span class="toggle-password"></span></div><div class="form-group remember-me"><div><input type="checkbox" id="remember" name="remember"><label for="remember">Ingat saya selama 30 hari</label></div><a href="#" id="forgotPasswordLink" class="forgot-password">Lupa Sandi?</a></div><button type="submit" class="submit-btn">Masuk</button></form></div>
     <div id="donasiModal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h2>Tata Cara Donasi</h2><p>Silakan transfer ke <strong>Bank BRI: 7040-0102-7168535</strong> a/n Markaz Yatim Duafa Qurani.</p><p style="text-align:center; margin-top:1rem;">Atau scan QRIS:</p><img src="qrisdonasi.png" alt="QRIS Donasi" style="width:250px;display:block;margin:15px auto;border-radius:8px;" onerror="this.onerror=null;this.src='https://placehold.co/250x250/cccccc/FFFFFF?text=QRIS+Error';"><a href="qrisdonasi.png" class="download-btn" download="qrisdonasi.png">Unduh QRIS</a><p>Konfirmasi ke <strong>085261804096</strong>.</p></div></div>
@@ -2295,7 +2311,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
 
     const ui = { messageBox: document.getElementById('messageBox'), donasiModal: document.getElementById("donasiModal"), donasiBtn: document.getElementById("donasiBtn"), loginButton: document.getElementById('loginButton'), userProfile: document.getElementById('userProfile'), userProfileName: document.getElementById('userProfileName'), navProfilePic: document.getElementById('navProfilePic'), attendanceNav: document.getElementById('attendanceNav'), sistemInformasiNav: document.getElementById('sistemInformasiNav'), kalenderPendidikan: document.getElementById('kalenderPendidikanSection'), marqueeContainer: document.getElementById('marquee-container'), marqueeText: document.getElementById('marquee-text'), dynamicCalendarGrid: document.getElementById('dynamic-calendar-grid'), slideshowContainer: document.getElementById('slideshow') };
-    
+    const namaBulanHijriah = ["Muharram", "Safar", "Rabi'ul Awal", "Rabi'ul Akhir", "Jumadil Awal", "Jumadil Akhir", "Rajab", "Sya'ban", "Ramadhan", "Syawwal", "Dzulqa'dah", "Dzulhijjah"];
+	const ZONA_WAKTU_OFFSET_JAM = 7;
 	let appState = {
         activeMonthKey: 'bulan1', // Kunci untuk mengakses data di appData.schedules
         filters: {
@@ -3325,100 +3342,199 @@ function setupResultModalListeners() {
 
 async function startExam() {
     isExamInProgress = true;
-	logAction('UJIAN_DIMULAI', currentExamData.title);
     const examContainer = document.getElementById('exam-container');
     const questionsContainer = document.getElementById('exam-questions');
     
     document.getElementById('exam-subtitle').textContent = currentExamData.title;
-    questionsContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Memuat soal dan riwayat ujian...</p>';
-    examContainer.classList.remove('hidden');
+    questionsContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Memeriksa progres sebelumnya...</p>';
 
+    let temporaryAnswers = {};
+    const session = getActiveSession();
+
+    // Langkah 1: Selalu cek apakah ada progres yang tersimpan di server terlebih dahulu
     try {
-        const session = getActiveSession();
-        const [soalResponse, nilaiResponse] = await Promise.all([
-            fetch(CONFIG.SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'getBankSoal', kodeMateri: currentExamData.code }),
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        const tempAnswersResponse = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'getTemporaryAnswers',
+                username: session.username,
+                kodeMateri: currentExamData.code
             }),
-            fetch(CONFIG.SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'getNilaiUjian', username: session.username }),
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-            })
-        ]);
-
-        const soalResult = await soalResponse.json();
-        const nilaiResult = await nilaiResponse.json();
-
-        if (soalResult.status !== 'success') throw new Error(soalResult.message);
-        if (nilaiResult.status !== 'success') throw new Error(nilaiResult.message);
-        
-        currentQuestions = soalResult.questions;
-        currentAttemptHistory = nilaiResult.nilai[currentExamData.code] || null;
-
-        if (currentQuestions.length === 0) {
-            throw new Error("Tidak ada soal yang ditemukan untuk materi ini.");
-        }
-
-    } catch (error) {
-        questionsContainer.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat soal: ${error.message}</p>`;
-        return;
-    }
-    
-    examAnswers = {};
-    questionsContainer.innerHTML = '';
-
-    currentQuestions.forEach((q, index) => {
-        const questionId = `q${index}`;
-        let optionsHtml = '';
-        const shuffledOptions = [...q.o].sort(() => Math.random() - 0.5);
-        
-        shuffledOptions.forEach((option, i) => {
-            const optionId = `q${index}_opt${i}`;
-            optionsHtml += `
-                <label for="${optionId}" class="answer-option">
-                    <input type="radio" name="${questionId}" id="${optionId}" value="${option}">
-                    <span>${String.fromCharCode(65 + i)}. ${option}</span>
-                </label>
-            `;
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
-
-        questionsContainer.innerHTML += `
-            <div class="question-block" id="${questionId}_block">
-                <div class="flex justify-between items-start">
-                    <p class="text-lg font-semibold mb-4 flex-1">${index + 1}. ${q.q}</p>
-                    <span class="text-sm font-bold text-gray-500 ml-4">${q.p || 4} Poin</span>
-                </div>
-                <div class="answer-options">${optionsHtml}</div>
-            </div>
-        `;
-    });
-    
-    currentQuestions.forEach((q, index) => {
-        const questionBlock = document.getElementById(`q${index}_block`);
-        if (questionBlock) {
-            const radioButtons = questionBlock.querySelectorAll('input[type="radio"]');
-            radioButtons.forEach(radio => {
-                radio.addEventListener('change', (e) => {
-                    examAnswers[e.target.name] = e.target.value;
-                    
-                    // --- AWAL BAGIAN YANG DIPERBAIKI ---
-                    // Ambil label yang sesuai dengan radio button yang diklik
-                    const correspondingLabel = document.querySelector(`label[for="${e.target.id}"]`);
-                    // Ambil karakter pertama dari teks label (yaitu huruf A, B, C, atau D)
-                    const answerLetter = correspondingLabel ? correspondingLabel.textContent.trim().charAt(0) : '?';
-                    
-                    // Tambahkan huruf jawaban ke dalam detail log
-                    logAction('JAWAB_SOAL', `Menjawab soal no. ${index + 1} : ${answerLetter}`);
-                    // --- AKHIR BAGIAN YANG DIPERBAIKI ---
-                    
-                    document.querySelectorAll(`label[for^="${e.target.name}"]`).forEach(label => label.classList.remove('selected'));
-                    document.querySelector(`label[for="${e.target.id}"]`).classList.add('selected');
-                });
-            });
+        const tempAnswersResult = await tempAnswersResponse.json();
+        if (tempAnswersResult.status === 'success' && tempAnswersResult.answers) {
+            temporaryAnswers = tempAnswersResult.answers;
         }
-    });
+    } catch (e) {
+        console.warn("Gagal mengambil jawaban sementara, memulai sesi baru:", e);
+        // Jika gagal, biarkan temporaryAnswers tetap kosong agar ujian dimulai dari awal
+    }
+
+    // Ini adalah fungsi inti yang akan menjalankan ujian
+    const startTheExamProcess = async () => {
+        examContainer.classList.remove('hidden');
+        enterFullscreen(document.documentElement);
+        
+        questionsContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Memuat soal dan riwayat ujian...</p>';
+
+        try {
+            const [soalResponse, nilaiResponse] = await Promise.all([
+                fetch(CONFIG.SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'getBankSoal', kodeMateri: currentExamData.code }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                }),
+                fetch(CONFIG.SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'getNilaiUjian', username: session.username }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                })
+            ]);
+
+            const soalResult = await soalResponse.json();
+            const nilaiResult = await nilaiResponse.json();
+
+            if (soalResult.status !== 'success') throw new Error(soalResult.message);
+            if (nilaiResult.status !== 'success') throw new Error(nilaiResult.message);
+            
+            currentQuestions = soalResult.questions;
+            currentAttemptHistory = nilaiResult.nilai[currentExamData.code] || null;
+            
+            if (currentQuestions.length === 0) {
+                throw new Error("Tidak ada soal yang ditemukan untuk materi ini.");
+            }
+
+            // Terapkan jawaban yang sudah dipulihkan ke variabel utama
+            examAnswers = temporaryAnswers; 
+            if(Object.keys(examAnswers).length > 0) {
+                showMessage('Progres sebelumnya berhasil dipulihkan.', 'success');
+            }
+
+        } catch (error) {
+            questionsContainer.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat soal: ${error.message}</p>`;
+            isExamInProgress = false; // Hentikan status ujian jika gagal
+            return;
+        }
+        
+        questionsContainer.innerHTML = '';
+
+        // Render semua soal ke layar
+        currentQuestions.forEach((q, index) => {
+            const questionId = `q${index}`;
+            let optionsHtml = '';
+            const shuffledOptions = [...q.o].sort(() => Math.random() - 0.5);
+            
+            shuffledOptions.forEach((option, i) => {
+                const optionId = `q${index}_opt${i}`;
+                optionsHtml += `
+                    <label for="${optionId}" class="answer-option">
+                        <input type="radio" name="${questionId}" id="${optionId}" value="${option}">
+                        <span>${String.fromCharCode(65 + i)}. ${option}</span>
+                    </label>
+                `;
+            });
+
+            questionsContainer.innerHTML += `
+                <div class="question-block" id="${questionId}_block">
+                    <div class="flex justify-between items-start">
+                        <p class="text-lg font-semibold mb-4 flex-1">${index + 1}. ${q.q}</p>
+                        <span class="text-sm font-bold text-gray-500 ml-4">${q.p || 4} Poin</span>
+                    </div>
+                    <div class="answer-options">${optionsHtml}</div>
+                </div>
+            `;
+            
+            // Pulihkan jawaban untuk soal ini jika ada
+            const questionText = q.q;
+            const savedAnswerForThisQuestion = examAnswers[questionText];
+            if (savedAnswerForThisQuestion) {
+                const radioToCheck = document.querySelector(`input[name="q${index}"][value="${savedAnswerForThisQuestion}"]`);
+                if (radioToCheck) {
+                    radioToCheck.checked = true;
+                    const label = document.querySelector(`label[for="${radioToCheck.id}"]`);
+                    if (label) label.classList.add('selected');
+                }
+            }
+        });
+        
+        // Tambahkan event listener untuk auto-save
+        currentQuestions.forEach((q, index) => {
+            const questionBlock = document.getElementById(`q${index}_block`);
+            if (questionBlock) {
+                const radioButtons = questionBlock.querySelectorAll('input[type="radio"]');
+                radioButtons.forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        const questionTextKey = currentQuestions[index].q;
+                        examAnswers[questionTextKey] = e.target.value; // Simpan ke variabel lokal
+                        
+                        const answerLetter = document.querySelector(`label[for="${e.target.id}"]`)?.textContent.trim().charAt(0) || '?';
+                        logAction('JAWAB_SOAL', `Menjawab soal no. ${index + 1} : ${answerLetter}`);
+                        
+                        // Kirim ke server untuk auto-save
+                        fetch(CONFIG.SCRIPT_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                action: 'saveTemporaryAnswer',
+                                username: session.username,
+                                kodeMateri: currentExamData.code,
+                                kunciSoal: questionTextKey,
+                                jawaban: e.target.value
+                            }),
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            keepalive: true
+                        });
+                        
+                        document.querySelectorAll(`label[for^="q${index}_opt"]`).forEach(label => label.classList.remove('selected'));
+                        document.querySelector(`label[for="${e.target.id}"]`).classList.add('selected');
+                    });
+                });
+            }
+        });
+    };
+
+    // Langkah 3: Tentukan apakah perlu kata sandi atau tidak
+    if (Object.keys(temporaryAnswers).length > 0) {
+        // Jika ada progres, minta kata sandi dari guru
+        const password = String(Math.floor(10000 + Math.random() * 90000));
+        logAction('AKSES_LANJUTAN', `Santri mencoba melanjutkan ujian. Kata sandi: ${password}`);
+        
+        const modal = document.getElementById('teacherPasswordModal');
+        const input = document.getElementById('teacherPasswordInput');
+        const submitBtn = document.getElementById('submitTeacherPasswordBtn');
+        const cancelBtn = document.getElementById('cancelTeacherPasswordBtn');
+        input.value = '';
+        modal.style.display = 'block';
+
+        const submitHandler = () => {
+            if (input.value === password) {
+                modal.style.display = 'none';
+                logAction('AKSES_DIBERIKAN', `Kata sandi benar.`);
+                startTheExamProcess(); // Lanjutkan ke proses ujian
+            } else {
+                alert('Kata sandi salah. Silakan minta lagi dari pengawas.');
+                logAction('AKSES_DITOLAK', `Santri salah memasukkan kata sandi.`);
+            }
+            cleanupListeners();
+        };
+        const cancelHandler = () => {
+            modal.style.display = 'none';
+            isExamInProgress = false; // Batalkan status ujian
+            cleanupListeners();
+        };
+        const cleanupListeners = () => {
+            submitBtn.removeEventListener('click', submitHandler);
+            cancelBtn.removeEventListener('click', cancelHandler);
+        };
+
+        submitBtn.addEventListener('click', submitHandler);
+        cancelBtn.addEventListener('click', cancelHandler);
+        
+    } else {
+        // Jika ujian benar-benar baru, langsung mulai
+        logAction('UJIAN_DIMULAI', currentExamData.title);
+        startTheExamProcess();
+    }
 }
 
 function calculateAndShowResult() {
@@ -4882,7 +4998,35 @@ let isJadwalSholatInitialized = false; // Penanda agar tidak diinisialisasi beru
         function updateUI(data) {
             js_el.lokasi.textContent = data.locationName;
             js_el.tglMasehi.textContent = data.date.readable;
-            js_el.tglHijriah.textContent = `${data.date.hijri.day} ${data.date.hijri.month.en} ${data.date.hijri.year}`;
+            const today = new Date();
+const dateBeingDisplayed = new Date(js_currentDate);
+today.setHours(0, 0, 0, 0);
+dateBeingDisplayed.setHours(0, 0, 0, 0);
+
+let dateForHijriCalc = new Date(dateBeingDisplayed);
+// 1. Tambahkan offset 7 jam untuk mengompensasi konversi ke UTC
+dateForHijriCalc.setHours(dateForHijriCalc.getHours() + ZONA_WAKTU_OFFSET_JAM);
+
+// 2. Terapkan logika Maghrib hanya jika melihat tanggal hari ini
+if (dateBeingDisplayed.getTime() === today.getTime()) {
+    const maghribTime = timeToMinutes(data.timings.Maghrib);
+    const nowInMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+    if (nowInMinutes >= maghribTime) {
+        dateForHijriCalc.setDate(dateForHijriCalc.getDate() + 1);
+    }
+}
+
+// 3. Gunakan formatter yang sama persis dengan di header
+const formatter = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura-nu-latn', {
+    day: 'numeric', month: 'numeric', year: 'numeric', timeZone: 'UTC'
+});
+const parts = formatter.formatToParts(dateForHijriCalc);
+const day = parts.find(p => p.type === 'day').value;
+const monthIndex = parts.find(p => p.type === 'month').value - 1;
+const year = parts.find(p => p.type === 'year').value;
+const monthName = namaBulanHijriah[monthIndex];
+
+js_el.tglHijriah.textContent = `${day} ${monthName} ${year} H`;
             js_todayPrayerTimes = { "Subuh": data.timings.Fajr, "Terbit": data.timings.Sunrise, "Dzuhur": data.timings.Dhuhr, "Ashar": data.timings.Asr, "Maghrib": data.timings.Maghrib, "Isya": data.timings.Isha, "NextFajr": data.timings.NextFajr };
             js_el.jadwalContainer.innerHTML = '';
             const prefs = getNotifPrefs();
@@ -6473,7 +6617,7 @@ const subMenuHashes = ['#roster-kbm', '#krs', '#khs', '#santri', '#slip-gaji', '
     
     function updateDateTime() {
         const WAKTU_MAGHRIB = 18.5; // 18:30
-        const ZONA_WAKTU_OFFSET_JAM = 7; // WIB adalah UTC+7
+        
         const tanggalMasehiAsli = new Date();
         const optionsMasehi = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Jakarta' };
         const dateStringMasehi = tanggalMasehiAsli.toLocaleDateString('id-ID', optionsMasehi);
@@ -6483,7 +6627,7 @@ const subMenuHashes = ['#roster-kbm', '#krs', '#khs', '#santri', '#slip-gaji', '
         if (jamLokal >= WAKTU_MAGHRIB) {
             dateForHijri.setDate(dateForHijri.getDate() + 1);
         }
-        const namaBulanHijriah = ["Muharram", "Safar", "Rabi'ul Awal", "Rabi'ul Akhir", "Jumadil Awal", "Jumadil Akhir", "Rajab", "Sya'ban", "Ramadhan", "Syawwal", "Dzulqa'dah", "Dzulhijjah"];
+        
         const optionsHijriNumeric = { calendar: 'islamic-umalqura', day: 'numeric', month: 'numeric', year: 'numeric', timeZone: 'UTC' };
         const formatter = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura-nu-latn', optionsHijriNumeric);
         const parts = formatter.formatToParts(dateForHijri);
