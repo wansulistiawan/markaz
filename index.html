@@ -3584,7 +3584,7 @@ async function startExam() {
                 radioButtons.forEach(radio => {
                     radio.addEventListener('change', (e) => {
                         const questionTextKey = currentQuestions[index].q;
-                        examAnswers[questionTextKey] = e.target.value; // Simpan ke variabel lokal
+                        examAnswers[currentQuestions[index].q] = e.target.value; // Simpan ke variabel lokal
                         
                         const answerLetter = document.querySelector(`label[for="${e.target.id}"]`)?.textContent.trim().charAt(0) || '?';
                         logAction('JAWAB_SOAL', `Menjawab soal no. ${index + 1} : ${answerLetter}`);
@@ -3665,11 +3665,12 @@ function calculateAndShowResult() {
     // --- AKHIR BAGIAN YANG DIPERBAIKI ---
 
     let correctAnswers = 0;
-    currentQuestions.forEach((q, index) => {
-        if (examAnswers[`q${index}`] === q.a) {
-            correctAnswers++;
-        }
-    });
+currentQuestions.forEach((q, index) => {
+    // PERBAIKAN: Cocokkan jawaban berdasarkan teks soal (q.q)
+    if (examAnswers[q.q] === q.a) {
+        correctAnswers++;
+    }
+});
 
     const totalQuestions = currentQuestions.length;
     const score = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
