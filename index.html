@@ -1071,6 +1071,42 @@
     font-size: 0.8rem; /* Ukuran font lebih kecil untuk log */
     line-height: 1.5;
 }
+
+/* === CSS BARU UNTUK EFEK GELOMBANG TEKS === */
+.wave-char {
+    display: inline-block; /* Memungkinkan transformasi pada setiap huruf */
+    animation: wave-animation 1.6s ease-in-out infinite;
+}
+
+@keyframes wave-animation {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-15px); /* Seberapa tinggi huruf akan melompat */
+    }
+}
+
+/* === CSS BARU UNTUK EFEK TITIK BERDENYUT === */
+.pulsing-dot {
+    display: inline-block;
+    width: 8px; /* Ukuran titik */
+    height: 8px;
+    background-color: currentColor; /* Mengambil warna dari teks induk (text-gray-500) */
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: pulse-dot-animation 1.4s infinite ease-in-out both;
+}
+
+@keyframes pulse-dot-animation {
+    0%, 80%, 100% {
+        transform: scale(0);
+    } 40% {
+        transform: scale(1.0);
+    }
+}
+
+
     </style>
 </head>
 <body>
@@ -2109,7 +2145,7 @@
             Ujian ini sudah pernah dimulai. Untuk melanjutkan, silakan minta <strong>kata sandi 5 digit</strong> dari pengawas ujian.
         </p>
         <div class="my-4">
-            <input type="number" id="teacherPasswordInput" class="text-center text-3xl tracking-[1em] w-48 p-2 border-2 rounded" maxlength="5" placeholder="_ _ _ _ _">
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="teacherPasswordInput" class="text-center text-3xl tracking-[0.5em] w-64 p-2 border-2 rounded" maxlength="5" placeholder="_ _ _ _ _">
         </div>
         <div class="flex justify-center gap-4">
             <button id="submitTeacherPasswordBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg">Lanjutkan Ujian</button>
@@ -3460,12 +3496,13 @@ function setupResultModalListeners() {
 
 async function startExam() {
     isExamInProgress = true;
+	showLoading();
     const examContainer = document.getElementById('exam-container');
     const questionsContainer = document.getElementById('exam-questions');
     
     document.getElementById('exam-subtitle').textContent = currentExamData.title;
-    questionsContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Memeriksa progres sebelumnya...</p>';
-
+ 
+ 
     let temporaryAnswers = {};
     const session = getActiveSession();
 
@@ -3494,7 +3531,26 @@ async function startExam() {
         examContainer.classList.remove('hidden');
         enterFullscreen(document.documentElement);
         
-        questionsContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Memuat soal dan riwayat ujian...</p>';
+        // Di dalam fungsi startTheExamProcess...
+const loadingText = "Memuat soal dan riwayat ujian...";
+const chars = loadingText.split('').map((char, index) => {
+    // Beri spasi biasa jika karakternya adalah spasi
+    if(char === ' ') return ' '; 
+    // Bungkus setiap huruf dengan span dan beri delay animasi
+    return `<span class="wave-char" style="animation-delay: ${index * 0.05}s">${char}</span>`;
+}).join('');
+
+const loadingHTML = `
+    <div class="p-24 text-center text-gray-500 text-xl font-semibold flex justify-center items-center">
+        <span>Memuat soal dan riwayat ujian</span>
+        <div class="ml-2">
+            <span class="pulsing-dot" style="animation-delay: 0s;"></span>
+            <span class="pulsing-dot" style="animation-delay: 0.2s;"></span>
+            <span class="pulsing-dot" style="animation-delay: 0.4s;"></span>
+        </div>
+    </div>
+`;
+questionsContainer.innerHTML = loadingHTML;
 
         try {
             const [soalResponse, nilaiResponse] = await Promise.all([
@@ -3622,6 +3678,7 @@ async function startExam() {
         const submitBtn = document.getElementById('submitTeacherPasswordBtn');
         const cancelBtn = document.getElementById('cancelTeacherPasswordBtn');
         input.value = '';
+		hideLoading(); 
         modal.style.display = 'block';
 
         const submitHandler = () => {
@@ -3649,6 +3706,7 @@ async function startExam() {
         cancelBtn.addEventListener('click', cancelHandler);
         
     } else {
+		hideLoading(); 
         // Jika ujian benar-benar baru, langsung mulai
         logAction('UJIAN_DIMULAI', currentExamData.title);
         startTheExamProcess();
@@ -3686,7 +3744,14 @@ currentQuestions.forEach((q, index) => {
 
     if (previousAttempts > 0) {
         const highestPreviousScore = currentAttemptHistory.skorAkhir || currentAttemptHistory.skor || 0;
-        finalScore = Math.max(highestPreviousScore, score);
+        // Ambil nilai percobaan saat ini
+        let remedialScore = score; 
+        
+        // **LOGIKA BARU: Jika nilai remedial melebihi 80, batasi menjadi 80**
+        if (remedialScore > 80) {
+            remedialScore = 80;
+        }
+		finalScore = Math.max(highestPreviousScore, remedialScore);
     } else {
         finalScore = score;
     }
