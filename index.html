@@ -2434,32 +2434,42 @@ async function setupLihatNilaiPage() {
             }
 
             // 3. Buat dan tampilkan tabel nilai
-            let tableHTML = `<table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nama Santri</th>
-                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Skor Awal</th>
-                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Jml. Coba</th>
-                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Skor Akhir</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">`;
+            // 3. Buat dan tampilkan tabel nilai
+let tableHTML = `<table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+        <tr>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No</th>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nama Santri</th>
+            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Skor Ujian</th>
+            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Poin Tugas</th>
+            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Nilai KHS</th>
+            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Jml. Coba</th>
+        </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">`;
 
-            result.scores.forEach((item, index) => {
-                tableHTML += `
-                    <tr>
-                        <td class="px-4 py-3">${index + 1}</td>
-                        <td class="px-4 py-3 font-medium">${item.namaSantri}</td>
-                        <td class="px-4 py-3 text-center">${item.skor}</td>
-                        <td class="px-4 py-3 text-center">${item.percobaan}</td>
-                        <td class="px-4 py-3 text-center font-bold ${item.skorAkhir >= 75 ? 'text-green-600' : 'text-red-600'}">${item.skorAkhir}</td>
-                    </tr>
-                `;
-            });
+result.scores.forEach((item, index) => {
+    // Lakukan perhitungan di frontend
+    const skorUjian = parseFloat(item.skorAkhir) || 0;
+    const poinTugas = 0.08 * (parseFloat(item.totalNilaiTugas) || 0);
+    const nilaiKHS = Math.min(100, skorUjian + poinTugas);
+	const poinTugasBulat = Math.ceil(poinTugas);
+    const nilaiKHSBulat = Math.ceil(nilaiKHS);
+	
+    tableHTML += `
+        <tr>
+            <td class="px-4 py-3">${index + 1}</td>
+            <td class="px-4 py-3 font-medium">${item.namaSantri}</td>
+            <td class="px-4 py-3 text-center">${skorUjian}</td>
+            <td class="px-4 py-3 text-center text-blue-600">+${poinTugasBulat}</td>
+            <td class="px-4 py-3 text-center font-bold ${nilaiKHSBulat >= 75 ? 'text-green-600' : 'text-red-600'}">${nilaiKHSBulat}</td>
+            <td class="px-4 py-3 text-center">${item.percobaan}</td>
+        </tr>
+    `;
+});
 
-            tableHTML += `</tbody></table>`;
-            nilaiContainer.innerHTML = tableHTML;
+tableHTML += `</tbody></table>`;
+nilaiContainer.innerHTML = tableHTML;
 
         } catch (error) {
             nilaiContainer.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat nilai: ${error.message}</p>`;
