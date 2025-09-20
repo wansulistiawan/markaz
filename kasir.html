@@ -501,38 +501,63 @@
     // Deklarasikan variabel di luar fungsi agar bisa diakses secara global
 let html5QrCodeScanner;
 
-window.startBarcodeScan = async () => {
+window.startBarcodeScan = () => {
     const barcodeModal = document.getElementById('barcodeModal');
     const scanResult = document.getElementById('scanResult');
     barcodeModal.classList.remove('hidden');
-    scanResult.textContent = 'Mencari barcode...';
-    
-    // Inisialisasi scanner dan simpan ke variabel global
-    html5QrCodeScanner = new Html5Qrcode("interactive", true);
+    scanResult.textContent = 'Memulai pemindai...';
 
-    const config = {
-      fps: 10,
-      // Ubah nilai qrbox menjadi lebih kecil untuk kompatibilitas
-      qrbox: { width: 150, height: 100 }
-    };
+    const html5QrCode = new Html5Qrcode("interactive");
+    html5QrCodeScanner = html5QrCode; // Simpan ke variabel global agar bisa dihentikan
 
-    html5QrCodeScanner.start({ facingMode: "environment" }, config,
-      (decodedText, decodedResult) => {
-        // Callback saat barcode berhasil di-scan
-        console.log('Barcode ditemukan:', decodedText);
+    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
         document.getElementById('itemCode').value = decodedText;
         scanResult.textContent = `Barcode: ${decodedText}`;
         stopBarcodeScan();
         showMessage('Barcode berhasil discan!');
-      },
-      (errorMessage) => {
-        // Callback saat tidak ada barcode yang ditemukan
-      })
-      .catch((err) => {
-        console.error(`Gagal memulai scanner.`, err);
-        scanResult.textContent = `Kesalahan: ${err.message}`;
-        showMessage('Gagal memulai pemindai barcode.', true);
-      });
+    };
+
+    const config = {};
+
+    scanResult.textContent = 'Mencari daftar kamera...';
+    // Logika baru: Cek dulu daftar kamera yang tersedia
+    Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+            let cameraId;
+            // Cek apakah ada kamera dengan label 'back' atau 'belakang'
+            const rearCamera = cameras.find(camera => camera.label.toLowerCase().includes('back') || camera.label.toLowerCase().includes('belakang'));
+            
+            if (rearCamera) {
+                // Jika ADA kamera belakang, gunakan itu.
+                cameraId = rearCamera.id;
+                scanResult.textContent = 'Menggunakan kamera belakang...';
+            } else {
+                // Jika TIDAK ADA, langsung gunakan kamera pertama (pasti kamera depan).
+                cameraId = cameras[0].id;
+                scanResult.textContent = 'Menggunakan kamera depan...';
+            }
+
+            // Langsung mulai kamera dengan ID yang sudah pasti ada dan benar
+            html5QrCode.start(
+                { deviceId: { exact: cameraId } },
+                config,
+                qrCodeSuccessCallback
+            ).catch(err => {
+                console.error("Gagal memulai kamera yang dipilih.", err);
+                scanResult.textContent = `Error: ${err.message}`;
+                showMessage('Gagal memulai kamera.', true);
+            });
+
+        } else {
+            console.error("Tidak ada kamera yang ditemukan.");
+            scanResult.textContent = 'Tidak ada kamera ditemukan di perangkat ini.';
+            showMessage('Tidak ada kamera yang ditemukan.', true);
+        }
+    }).catch(err => {
+        console.error("Gagal mendapatkan daftar kamera.", err);
+        scanResult.textContent = 'Gagal mengakses kamera.';
+        showMessage('Izin kamera ditolak atau gagal diakses.', true);
+    });
 };
 
 window.stopBarcodeScan = () => {
