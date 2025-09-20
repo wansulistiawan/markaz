@@ -266,7 +266,7 @@
                 </button>
             </div>
             <div class="mt-2 text-center">
-                <div id="interactive" class="viewport"></div>
+                <div id="interactive" class="viewport barcode-reader-container"></div>
                 <p id="scanResult" class="mt-4 text-lg font-bold text-gray-800"></p>
                 <button onclick="stopBarcodeScan()" class="btn-secondary w-full py-2 px-4 rounded-md mt-4">Tutup</button>
             </div>
@@ -498,7 +498,8 @@
         }
     });
 
-    let html5QrCodeScanner;
+    // Deklarasikan variabel di luar fungsi agar bisa diakses secara global
+let html5QrCodeScanner;
 
 window.startBarcodeScan = async () => {
     const barcodeModal = document.getElementById('barcodeModal');
@@ -537,23 +538,6 @@ window.startBarcodeScan = async () => {
 window.stopBarcodeScan = () => {
     const barcodeModal = document.getElementById('barcodeModal');
     // Periksa apakah scanner sedang berjalan sebelum menghentikannya
-    if (html5QrCodeScanner && html5QrCodeScanner.isScanning) {
-        html5QrCodeScanner.stop().then(() => {
-            console.log("QR Code scanning stopped.");
-            barcodeModal.classList.add('hidden');
-            html5QrCodeScanner = null; // Atur ulang variabel
-        }).catch(err => {
-            console.error("Gagal menghentikan scanner.", err);
-            showMessage("Gagal menghentikan scanner.", true);
-            html5QrCodeScanner = null;
-        });
-    } else {
-        barcodeModal.classList.add('hidden');
-    }
-};
-
-    window.stopBarcodeScan = () => {
-    const barcodeModal = document.getElementById('barcodeModal');
     if (html5QrCodeScanner && html5QrCodeScanner.isScanning) {
         html5QrCodeScanner.stop().then(() => {
             console.log("QR Code scanning stopped.");
