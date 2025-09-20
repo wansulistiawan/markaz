@@ -505,17 +505,19 @@ window.startBarcodeScan = async () => {
     const scanResult = document.getElementById('scanResult');
     barcodeModal.classList.remove('hidden');
     scanResult.textContent = 'Mencari barcode...';
-
-    // Inisialisasi di sini dan simpan ke variabel global
+    
+    // Inisialisasi scanner dan simpan ke variabel global
     html5QrCodeScanner = new Html5Qrcode("interactive", true);
 
     const config = {
       fps: 10,
-      qrbox: 250
+      // Ubah nilai qrbox menjadi lebih kecil untuk kompatibilitas
+      qrbox: { width: 150, height: 100 }
     };
 
     html5QrCodeScanner.start({ facingMode: "environment" }, config,
       (decodedText, decodedResult) => {
+        // Callback saat barcode berhasil di-scan
         console.log('Barcode ditemukan:', decodedText);
         document.getElementById('itemCode').value = decodedText;
         scanResult.textContent = `Barcode: ${decodedText}`;
@@ -523,13 +525,31 @@ window.startBarcodeScan = async () => {
         showMessage('Barcode berhasil discan!');
       },
       (errorMessage) => {
-        // Callback saat tidak ada barcode yang ditemukan (tidak perlu melakukan apa-apa di sini)
+        // Callback saat tidak ada barcode yang ditemukan
       })
       .catch((err) => {
         console.error(`Gagal memulai scanner.`, err);
         scanResult.textContent = `Kesalahan: ${err.message}`;
         showMessage('Gagal memulai pemindai barcode.', true);
       });
+};
+
+window.stopBarcodeScan = () => {
+    const barcodeModal = document.getElementById('barcodeModal');
+    // Periksa apakah scanner sedang berjalan sebelum menghentikannya
+    if (html5QrCodeScanner && html5QrCodeScanner.isScanning) {
+        html5QrCodeScanner.stop().then(() => {
+            console.log("QR Code scanning stopped.");
+            barcodeModal.classList.add('hidden');
+            html5QrCodeScanner = null; // Atur ulang variabel
+        }).catch(err => {
+            console.error("Gagal menghentikan scanner.", err);
+            showMessage("Gagal menghentikan scanner.", true);
+            html5QrCodeScanner = null;
+        });
+    } else {
+        barcodeModal.classList.add('hidden');
+    }
 };
 
     window.stopBarcodeScan = () => {
