@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Memuat library pemindai barcode -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -74,23 +76,12 @@
         input, select, textarea {
             border: 1px solid #d1d5db;
         }
-        .barcode-reader-container {
-            position: relative;
-            height: 300px;
+        /* Style untuk area pembaca barcode */
+        #reader {
             width: 100%;
+            border-radius: 0.5rem;
             overflow: hidden;
-        }
-        #interactive.viewport {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-        #interactive.viewport canvas, #interactive.viewport video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            border: 2px solid #e5e7eb;
         }
     </style>
 </head>
@@ -208,8 +199,9 @@
                         <div class="relative mt-1">
                             <input type="text" id="itemCode" class="block w-full rounded-md p-2 pr-10">
                             <button type="button" onclick="startBarcodeScan()" class="absolute inset-y-0 right-0 flex items-center pr-3 focus:outline-none">
-                                <svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1.894-3.56a.75.75 0 01-1.061 1.06l-2.5-2.5a.75.75 0 010-1.06l2.5-2.5a.75.75 0 111.06 1.061L8.31 10l.794.793a.75.75 0 01-.061 1.06zM13.626 13.626a.75.75 0 01-1.06 1.06l-2.5-2.5a.75.75 0 010-1.06l2.5-2.5a.75.75 0 011.06 1.061L12.19 10l.794.793a.75.75 0 01.061 1.06z" clip-rule="evenodd" fill-rule="evenodd"></path>
+                                <svg class="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-1.036.84-1.875 1.875-1.875h4.5c1.036 0 1.875.84 1.875 1.875v4.5c0 1.036-.84 1.875-1.875 1.875h-4.5A1.875 1.875 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-1.036.84-1.875 1.875-1.875h4.5c1.036 0 1.875.84 1.875 1.875v4.5c0 1.036-.84 1.875-1.875 1.875h-4.5a1.875 1.875 0 0 1-1.875-1.875v-4.5ZM13.5 4.875c0-1.036.84-1.875 1.875-1.875h4.5c1.036 0 1.875.84 1.875 1.875v4.5c0 1.036-.84 1.875-1.875 1.875h-4.5A1.875 1.875 0 0 1 13.5 9.375v-4.5Z" />
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
                                 </svg>
                             </button>
                         </div>
@@ -256,10 +248,11 @@
         </div>
     </div>
 
-    <div id="barcodeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white">
+    <!-- Modal untuk Pemindai Barcode -->
+    <div id="barcodeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center h-full w-full hidden z-50 p-4">
+        <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
             <div class="flex justify-between items-center pb-3">
-                <h3 class="text-xl font-semibold">Scan Barcode</h3>
+                <h3 class="text-xl font-semibold">Pindai Barcode</h3>
                 <button onclick="stopBarcodeScan()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -267,28 +260,31 @@
                 </button>
             </div>
             <div class="mt-2 text-center">
-                <div id="interactive" class="viewport barcode-reader-container"></div>
-                <p id="scanResult" class="mt-4 text-lg font-bold text-gray-800"></p>
+                <!-- Area untuk menampilkan video kamera pemindai -->
+                <div id="reader" class="bg-gray-200"></div>
+                <p class="mt-4 text-sm text-gray-500">Arahkan kamera ke barcode produk.</p>
                 <button onclick="stopBarcodeScan()" class="btn-secondary w-full py-2 px-4 rounded-md mt-4">Tutup</button>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <script type="module">
-        const CONFIG = {
+    // --- KONFIGURASI ---
+    const CONFIG = {
         SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyNVr58Xay5aYGHT8Eu2xbXW5jXW9zjx5hwLc4SJGeqL-hmnhvVNY0KU-2DeRoglOgB/exec",
         CLOUDINARY_URL: "https://api.cloudinary.com/v1_1/deva5eknr/image/upload",
         CLOUDINARY_UPLOAD_PRESET: "markaz",
     };
+    
+    // --- FUNGSI UTAMA ---
 
-    let codeReader;
+    // Variabel untuk menyimpan instance pemindai barcode
+    let html5QrCodeScanner = null;
 
     const showMessage = (message, isError = false) => {
         const messageBox = document.createElement('div');
-        messageBox.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg text-white font-semibold transition-all duration-300 transform ${isError ? 'bg-red-500' : 'bg-green-500'} z-50`;
+        messageBox.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg text-white font-semibold transition-all duration-300 transform ${isError ? 'bg-red-500' : 'bg-green-500'} z-[100]`;
         messageBox.textContent = message;
         document.body.appendChild(messageBox);
         setTimeout(() => {
@@ -370,7 +366,7 @@
         document.getElementById('productForm').reset();
         document.getElementById('photoName').textContent = '';
         document.getElementById('itemPhotoURL').value = '';
-        stopBarcodeScan();
+        stopBarcodeScan(); // Pastikan pemindai berhenti jika form ditutup
     };
 
     window.editProduct = async (productId) => {
@@ -401,29 +397,30 @@
         }
     };
 
-    window.deleteProduct = async (productId) => {
-        const confirmDelete = confirm("Apakah Anda yakin ingin menghapus produk ini?");
-        if (confirmDelete) {
-            try {
-                const response = await fetch(CONFIG.SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'delete', id: productId })
-                });
-                const result = await response.json();
+    window.deleteProduct = (productId) => {
+        if (confirm("Apakah Anda yakin ingin menghapus produk ini?")) {
+            fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete', id: productId })
+            })
+            .then(response => response.json())
+            .then(result => {
                 if (result.status === 'success') {
                     showMessage('Produk berhasil dihapus!');
                     fetchProducts();
                 } else {
                     showMessage('Kesalahan: Gagal menghapus produk.', true);
                 }
-            } catch (error) {
+            })
+            .catch(error => {
                 console.error("Error deleting document:", error);
                 showMessage("Kesalahan jaringan saat menghapus produk.", true);
-            }
+            });
         }
     };
     
+    // --- FUNGSI UPLOAD & KOMPRESI GAMBAR ---
     const uploadImage = async (file) => {
         const formData = new FormData();
         formData.append('file', file);
@@ -457,30 +454,62 @@
                         height = height * (maxWidth / width);
                         width = maxWidth;
                     }
-
                     canvas.width = width;
                     canvas.height = height;
-
                     ctx.drawImage(img, 0, 0, width, height);
-
                     canvas.toBlob((blob) => {
                         if (blob) {
-                            const compressedFile = new File([blob], file.name, {
-                                type: 'image/jpeg',
-                                lastModified: Date.now()
-                            });
-                            resolve(compressedFile);
+                            resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
                         } else {
                             reject(new Error('Gagal mengompres gambar.'));
                         }
                     }, 'image/jpeg', quality);
                 };
+                img.onerror = (error) => reject(error);
             };
             reader.onerror = (error) => reject(error);
             reader.readAsDataURL(file);
         });
     };
+    
+    // --- FUNGSI PEMINDAI BARCODE BARU ---
+    window.startBarcodeScan = () => {
+        document.getElementById('barcodeModal').classList.remove('hidden');
 
+        const onScanSuccess = (decodedText, decodedResult) => {
+            document.getElementById('itemCode').value = decodedText;
+            showMessage('Barcode berhasil dipindai!');
+            stopBarcodeScan();
+        };
+
+        const onScanFailure = (error) => { /* Abaikan error untuk mencegah spam di console */ };
+
+        html5QrCodeScanner = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        html5QrCodeScanner.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
+            .catch((err) => {
+                console.error("Gagal memulai pemindai kamera.", err);
+                showMessage("Gagal memulai kamera. Pastikan izin telah diberikan.", true);
+                stopBarcodeScan();
+            });
+    };
+
+    window.stopBarcodeScan = () => {
+        if (html5QrCodeScanner) {
+            html5QrCodeScanner.stop()
+                .catch((err) => { /* Tidak perlu menangani error saat berhenti */ })
+                .finally(() => {
+                    html5QrCodeScanner = null;
+                    document.getElementById('barcodeModal').classList.add('hidden');
+                });
+        } else {
+            document.getElementById('barcodeModal').classList.add('hidden');
+        }
+    };
+
+
+    // --- EVENT LISTENERS ---
     document.getElementById('itemPhotoInput').addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -498,70 +527,6 @@
             }
         }
     });
-
-    // Deklarasikan variabel di luar fungsi agar bisa diakses secara global
-let html5QrCodeScanner;
-
-window.startBarcodeScan = () => {
-    const barcodeModal = document.getElementById('barcodeModal');
-    const scanResult = document.getElementById('scanResult');
-    barcodeModal.classList.remove('hidden');
-    scanResult.textContent = 'Memulai pemindai...';
-
-    const html5QrCode = new Html5Qrcode("interactive");
-    html5QrCodeScanner = html5QrCode;
-
-    const qrCodeSuccessCallback = (decodedText) => {
-        document.getElementById('itemCode').value = decodedText;
-        scanResult.textContent = `✅ Barcode: ${decodedText}`;
-        showMessage('Barcode berhasil discan!');
-        stopBarcodeScan();
-    };
-
-    const config = { fps: 10, qrbox: 250 };
-
-    Html5Qrcode.getCameras().then(cameras => {
-        if (cameras && cameras.length) {
-            const backCamera = cameras.find(c => c.label.toLowerCase().includes('back'));
-			const cameraId = backCamera ? backCamera.id : cameras[0].id;
-
-
-            html5QrCode.start(
-				{ facingMode: "environment" },
-				config,
-				qrCodeSuccessCallback
-            ).catch(err => {
-                console.error("Gagal memulai kamera:", err);
-                scanResult.textContent = `❌ Error: ${err.message}`;
-                showMessage('Gagal memulai kamera. Cek console untuk detail.', true);
-            });
-        } else {
-            scanResult.textContent = '❌ Tidak ada kamera ditemukan.';
-            showMessage('Tidak ada kamera yang ditemukan.', true);
-        }
-    }).catch(err => {
-        scanResult.textContent = '❌ Gagal mengakses kamera.';
-        showMessage('Pastikan izin kamera sudah diberikan.', true);
-    });
-};
-
-window.stopBarcodeScan = () => {
-    const barcodeModal = document.getElementById('barcodeModal');
-    // Periksa apakah scanner sedang berjalan sebelum menghentikannya
-    if (html5QrCodeScanner && html5QrCodeScanner.isScanning) {
-        html5QrCodeScanner.stop().then(() => {
-            console.log("QR Code scanning stopped.");
-            barcodeModal.classList.add('hidden');
-            html5QrCodeScanner = null; // Atur ulang variabel
-        }).catch(err => {
-            console.error("Gagal menghentikan scanner.", err);
-            showMessage("Gagal menghentikan scanner.", true);
-            html5QrCodeScanner = null;
-        });
-    } else {
-        barcodeModal.classList.add('hidden');
-    }
-};
 
     document.getElementById('productForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -610,7 +575,8 @@ window.stopBarcodeScan = () => {
 
     document.getElementById('addProductBtn').addEventListener('click', showAddProductForm);
     
-    setInterval(fetchProducts, 5000);
+    // --- INISIALISASI ---
+    // Memuat produk saat halaman pertama kali dibuka
     fetchProducts();
 </script>
 </body>
