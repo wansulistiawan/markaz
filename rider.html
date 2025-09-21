@@ -3,231 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Pelacak Rider</title>
+    <title>Aplikasi Pelacak Rider - Fitur Lengkap</title>
     
+    <!-- Leaflet & Plugin Routing CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        #map { height: 65vh; z-index: 10; background-color: #4a5568; }
+        #map { height: 70vh; z-index: 10; background-color: #4a5568; }
         body { font-family: 'Inter', sans-serif; }
-        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #2d3748; color: #e2e8f0; border-radius: 8px; }
-        .leaflet-popup-content-wrapper .user-popup img { border-radius: 50%; width: 40px; height: 40px; margin-right: 10px;}
-        .leaflet-popup-content-wrapper .user-popup { display: flex; align-items: center; }
         .hidden { display: none; }
+        
+        /* Kustomisasi Popup */
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #2d3748; color: #e2e8f0; border-radius: 8px; }
+        .user-popup { display: flex; align-items: center; gap: 10px; }
+        .user-popup img { border-radius: 50%; width: 40px; height: 40px; }
+        .user-popup button { background-color: #10B981; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+
+        /* Kustomisasi Panel Rute */
+        .leaflet-routing-container { background-color: rgba(45, 55, 72, 0.9); color: #e2e8f0; border: 1px solid #4A5568; border-radius: 8px; }
+        .leaflet-routing-alt h2 { color: #6EE7B7; }
+
+        /* Styling untuk Modal Pengaturan Pin */
+        #pin-settings-modal .color-option, #pin-settings-modal .icon-option {
+            transition: transform 0.2s;
+        }
+        #pin-settings-modal input:checked + label {
+            transform: scale(1.15);
+            outline: 3px solid #6EE7B7;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white antialiased">
 
-    <div class="container mx-auto p-4 max-w-5xl">
+    <div class="container mx-auto p-4 max-w-6xl">
         <!-- Header & Kontrol Pengguna -->
-        <header class="flex justify-between items-center mb-4 flex-wrap">
+        <header class="flex justify-between items-center mb-4 flex-wrap gap-4">
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold text-emerald-400">Rider Real-Time Tracker</h1>
-                <p class="text-gray-400">Login untuk membagikan lokasimu.</p>
+                <p class="text-gray-400">Klik rider lain untuk melihat rute.</p>
             </div>
-            <div id="auth-container" class="flex items-center gap-4 mt-4 md:mt-0">
+            <div id="auth-container" class="flex items-center gap-4">
+                <button id="settings-btn" class="hidden bg-gray-600 hover:bg-gray-700 p-3 rounded-full transition-colors duration-300" title="Ubah Pin Anda">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </button>
                 <div id="user-info" class="hidden items-center gap-3 text-right">
-                    <div>
-                        <p id="user-name" class="font-semibold"></p>
-                        <button id="logout-btn" class="text-sm text-red-400 hover:underline">Logout</button>
-                    </div>
+                     <div><p id="user-name" class="font-semibold"></p><button id="logout-btn" class="text-sm text-red-400 hover:underline">Logout</button></div>
                     <img id="user-pic" class="w-12 h-12 rounded-full border-2 border-emerald-400">
                 </div>
-                <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center gap-2 shadow-lg">
-                    <svg class="w-5 h-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 381.5 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 61.9l-72.2 64.5C305.1 102.8 277.6 88 248 88c-86.5 0-155.2 67.8-155.2 151.3s68.7 151.3 155.2 151.3c92.8 0 132-61.1 135-95.2H248v-73.8h238.2c2.6 13.2 4.2 27.8 4.2 43.8z"></path></svg>
+                <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 shadow-lg">
+                    <svg class="w-5 h-5" aria-hidden="true" focusable="false" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 381.5 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 61.9l-72.2 64.5C305.1 102.8 277.6 88 248 88c-86.5 0-155.2 67.8-155.2 151.3s68.7 151.3 155.2 151.3c92.8 0 132-61.1 135-95.2H248v-73.8h238.2c2.6 13.2 4.2 27.8 4.2 43.8z"></path></svg>
                     Login dengan Google
                 </button>
             </div>
         </header>
 
-        <!-- Kontrol Peta -->
         <div id="map-controls" class="hidden my-4 flex justify-center items-center gap-4 flex-wrap">
-            <button id="recenter-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center gap-2">
-                Pusatkan Lokasi
-            </button>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="share-public-toggle" class="sr-only peer">
-              <div class="w-14 h-7 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-600"></div>
-              <span class="ml-3 text-sm font-medium text-gray-300">Tampilkan Lokasi ke Publik</span>
-            </label>
+             <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="share-public-toggle" class="sr-only peer"><div class="w-14 h-7 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-600"></div><span class="ml-3 font-medium text-gray-300">Bagikan Lokasi</span></label>
         </div>
 
         <main>
-            <div id="map-container" class="rounded-2xl shadow-2xl overflow-hidden border-2 border-gray-700">
+            <div id="map-container" class="rounded-2xl shadow-2xl overflow-hidden border-2 border-gray-700 relative">
                 <div id="map"></div>
             </div>
         </main>
         
-        <footer>
-            <div id="status" class="mt-4 p-3 bg-gray-800 rounded-lg text-center transition-all duration-300">
-                Silakan login untuk memulai.
+        <footer><div id="status" class="mt-4 p-3 bg-gray-800 rounded-lg text-center">Silakan login.</div></footer>
+    </div>
+
+    <!-- Modal Pengaturan Pin -->
+    <div id="pin-settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            <h2 class="text-2xl font-bold mb-4 text-emerald-400">Ubah Pin Anda</h2>
+            <!-- Pilihan Warna -->
+            <div class="mb-6">
+                <h3 class="font-semibold mb-2 text-gray-300">Pilih Warna</h3>
+                <div id="color-options" class="flex gap-3 flex-wrap">
+                    <!-- Opsi warna akan di-generate oleh JS -->
+                </div>
             </div>
-        </footer>
+            <!-- Pilihan Ikon -->
+            <div class="mb-6">
+                <h3 class="font-semibold mb-2 text-gray-300">Pilih Ikon</h3>
+                <div id="icon-options" class="flex gap-3 flex-wrap">
+                    <!-- Opsi ikon akan di-generate oleh JS -->
+                </div>
+            </div>
+            <!-- Tombol Aksi -->
+            <div class="flex justify-end gap-4">
+                <button id="cancel-settings-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Batal</button>
+                <button id="save-settings-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg">Simpan</button>
+            </div>
+        </div>
     </div>
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Firebase SDK -->
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
-        // Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyA9fthcIZ_VQXMUL6lPd-165NIFNb09JOA",
             authDomain: "aplikasi-touring.firebaseapp.com",
             projectId: "aplikasi-touring",
-            storageBucket: "aplikasi-touring.appspot.com", // <-- Koreksi di sini
+            storageBucket: "aplikasi-touring.appspot.com",
             messagingSenderId: "310021643774",
             appId: "1:310021643774:web:4943db8f567e66aef174af",
             measurementId: "G-ZRCCNLC8WB"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        // Variabel Global
-        let map, myMarker, userCoords = null;
+        let map, myMarker, userCoords = null, routingControl = null;
         let isSharingPublicly = false;
         let publicRidersUnsubscribe = null;
         const publicMarkers = {};
+        let currentUserSettings = { pinColor: '#3498db', pinIcon: 'motorcycle' };
 
         // Elemen DOM
-        const loginBtn = document.getElementById('login-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-        const userInfo = document.getElementById('user-info');
-        const userNameEl = document.getElementById('user-name');
-        const userPicEl = document.getElementById('user-pic');
-        const mapControls = document.getElementById('map-controls');
         const statusEl = document.getElementById('status');
-        const recenterBtn = document.getElementById('recenter-btn');
-        const shareToggle = document.getElementById('share-public-toggle');
+        const loginBtn = document.getElementById('login-btn'), logoutBtn = document.getElementById('logout-btn');
+        const userInfo = document.getElementById('user-info'), userNameEl = document.getElementById('user-name'), userPicEl = document.getElementById('user-pic');
+        const mapControls = document.getElementById('map-controls'), shareToggle = document.getElementById('share-public-toggle');
+        const settingsBtn = document.getElementById('settings-btn'), modal = document.getElementById('pin-settings-modal');
+        const cancelBtn = document.getElementById('cancel-settings-btn'), saveBtn = document.getElementById('save-settings-btn');
+        const colorOptionsContainer = document.getElementById('color-options'), iconOptionsContainer = document.getElementById('icon-options');
 
-        // Inisialisasi Peta
-        function initMap() {
-            map = L.map('map').setView([-6.2088, 106.8456], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap'
-            }).addTo(map);
+        // Data untuk kustomisasi
+        const availableColors = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#ffffff'];
+        const availableIcons = {
+            motorcycle: `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M15.5 13.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm-10 0a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM17 6.5a1 1 0 00-1-1h-2.28a1 1 0 00-.97.72L12 9.5h3.5a1 1 0 001-1v-2zM4.72 5.5H7.5a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-1.28a1 1 0 01.72-.97L4.72 5.5zM12.5 3a1 1 0 00-1-1h-3a1 1 0 00-1 1v1.5H6a2 2 0 00-2 2V11a2 2 0 002 2h1.5a4.5 4.5 0 109 0H18a2 2 0 002-2V6.5a2 2 0 00-2-2h-1.5V3z"></path></svg>`,
+            person: `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`,
+            car: `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 8a2 2 0 00-2-2H4a2 2 0 00-2 2v4a2 2 0 002 2h.5a1 1 0 011-1h8a1 1 0 011 1H16a2 2 0 002-2V8zm-2 2H4V8h12v2zM5 14a1 1 0 100-2 1 1 0 000 2zm10 0a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path></svg>`
+        };
+
+        // Fungsi untuk membuat Ikon Kustom
+        function createCustomIcon(color, iconName) {
+            const iconSvg = availableIcons[iconName] || availableIcons.person;
+            const iconHtml = `<div style="background-color: ${color};" class="p-2 rounded-full shadow-lg border-2 border-white">${iconSvg}</div>`;
+            return L.divIcon({
+                html: iconHtml,
+                className: 'custom-div-icon',
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+                popupAnchor: [0, -32]
+            });
         }
+        
+        function initMap() { map = L.map('map').setView([-6.2088, 106.8456], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map); }
 
-        // Logika Otentikasi
         onAuthStateChanged(auth, user => {
             if (user) {
-                // Pengguna Login
-                userNameEl.textContent = user.displayName;
-                userPicEl.src = user.photoURL;
-                loginBtn.classList.add('hidden');
-                userInfo.classList.remove('hidden');
-                userInfo.classList.add('flex');
-                mapControls.classList.remove('hidden');
+                userInfo.classList.remove('hidden'); userInfo.classList.add('flex'); loginBtn.classList.add('hidden');
+                userNameEl.textContent = user.displayName; userPicEl.src = user.photoURL;
+                mapControls.classList.remove('hidden'); settingsBtn.classList.remove('hidden');
                 statusEl.textContent = 'Mencari lokasi Anda...';
-                startLocationWatch();
-                listenToPublicRiders();
+                startLocationWatch(); listenToPublicRiders();
             } else {
-                // Pengguna Logout
-                loginBtn.classList.remove('hidden');
-                userInfo.classList.add('hidden');
-                mapControls.classList.add('hidden');
+                userInfo.classList.add('hidden'); loginBtn.classList.remove('hidden'); mapControls.classList.add('hidden'); settingsBtn.classList.add('hidden');
                 statusEl.textContent = 'Silakan login untuk memulai.';
-                if (myMarker) map.removeLayer(myMarker);
+                if (myMarker) map.removeLayer(myMarker); if (routingControl) map.removeControl(routingControl);
                 if (publicRidersUnsubscribe) publicRidersUnsubscribe();
                 Object.values(publicMarkers).forEach(marker => map.removeLayer(marker));
             }
         });
 
-        loginBtn.addEventListener('click', () => {
-            signInWithPopup(auth, provider).catch(error => {
-                console.error("Login Gagal:", error);
-                statusEl.textContent = `Login Gagal: ${error.message}. Cek console untuk detail.`;
-                statusEl.style.backgroundColor = '#EF4444';
-            });
-        });
-
-        logoutBtn.addEventListener('click', () => {
-            if (auth.currentUser) {
-                removeLocationFromFirestore(auth.currentUser.uid);
-            }
-            signOut(auth);
-        });
+        loginBtn.addEventListener('click', () => signInWithPopup(auth, provider).catch(err => console.error(err)));
+        logoutBtn.addEventListener('click', async () => { if (auth.currentUser) await removeLocationFromFirestore(auth.currentUser.uid); signOut(auth); });
         
-        // Logika Lokasi & Peta
-        function startLocationWatch() {
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(updateLocation, handleLocationError, { enableHighAccuracy: true });
-            } else {
-                statusEl.textContent = 'Geolocation tidak didukung oleh browser ini.';
-            }
-        }
-
+        function startLocationWatch() { if (navigator.geolocation) { navigator.geolocation.watchPosition(updateLocation, (err) => statusEl.textContent = `Error Lokasi: ${err.message}`, { enableHighAccuracy: true }); } }
+        
         function updateLocation(position) {
-            const { latitude, longitude } = position.coords;
-            userCoords = [latitude, longitude];
-            statusEl.textContent = `Lokasi diperbarui. Akurasi: ${position.coords.accuracy.toFixed(0)} meter.`;
-            statusEl.style.backgroundColor = '#10B981';
-
+            userCoords = [position.coords.latitude, position.coords.longitude];
+            statusEl.textContent = `Lokasi diperbarui. Akurasi: ${position.coords.accuracy.toFixed(0)}m`;
+            
             if (!myMarker) {
-                myMarker = L.marker(userCoords).addTo(map).bindPopup('<b>Ini Anda!</b>');
+                const myIcon = createCustomIcon(currentUserSettings.pinColor, currentUserSettings.pinIcon);
+                myMarker = L.marker(userCoords, { icon: myIcon }).addTo(map).bindPopup('<b>Ini Anda!</b>');
                 map.setView(userCoords, 16);
             } else {
                 myMarker.setLatLng(userCoords);
             }
-            
-            if (isSharingPublicly && auth.currentUser) {
-                updateLocationInFirestore(auth.currentUser, userCoords);
-            }
+            if (isSharingPublicly && auth.currentUser) updateLocationInFirestore(auth.currentUser, userCoords);
         }
 
-        function handleLocationError(error) {
-            statusEl.textContent = `Gagal mendapatkan lokasi: ${error.message}`;
-            statusEl.style.backgroundColor = '#EF4444';
-        }
-
-        recenterBtn.addEventListener('click', () => {
-            if (userCoords) map.setView(userCoords, 16);
-        });
-
-        // Logika Berbagi Lokasi & Firestore
         shareToggle.addEventListener('change', () => {
             isSharingPublicly = shareToggle.checked;
-            const currentUser = auth.currentUser;
-            if (!currentUser) return;
-
+            if (!auth.currentUser) return;
             if (isSharingPublicly) {
-                if (userCoords) {
-                    updateLocationInFirestore(currentUser, userCoords);
-                    statusEl.textContent = 'Lokasi Anda sekarang publik.';
-                } else {
-                    statusEl.textContent = 'Tunggu lokasi ditemukan sebelum berbagi.';
-                    shareToggle.checked = false;
-                    isSharingPublicly = false;
-                }
-            } else {
-                removeLocationFromFirestore(currentUser.uid);
-                statusEl.textContent = 'Lokasi Anda tidak lagi publik.';
-            }
+                if (userCoords) { updateLocationInFirestore(auth.currentUser, userCoords); statusEl.textContent = 'Lokasi Anda sekarang publik.'; } 
+                else { statusEl.textContent = 'Tunggu lokasi ditemukan.'; shareToggle.checked = isSharingPublicly = false; }
+            } else { removeLocationFromFirestore(auth.currentUser.uid); statusEl.textContent = 'Lokasi Anda tidak lagi publik.'; }
         });
-        
+
         async function updateLocationInFirestore(user, coords) {
             const riderRef = doc(db, 'public_riders', user.uid);
             await setDoc(riderRef, {
-                name: user.displayName,
-                photoURL: user.photoURL,
-                lat: coords[0],
-                lng: coords[1],
-                lastUpdate: new Date()
-            });
+                name: user.displayName, photoURL: user.photoURL,
+                lat: coords[0], lng: coords[1],
+                lastUpdate: new Date(),
+                pinColor: currentUserSettings.pinColor,
+                pinIcon: currentUserSettings.pinIcon
+            }, { merge: true });
         }
         
-        async function removeLocationFromFirestore(uid) {
-            await deleteDoc(doc(db, "public_riders", uid));
-        }
+        async function removeLocationFromFirestore(uid) { await deleteDoc(doc(db, "public_riders", uid)); }
 
         function listenToPublicRiders() {
             const ridersCol = collection(db, 'public_riders');
@@ -236,28 +225,71 @@
                     const riderData = change.doc.data();
                     const riderId = change.doc.id;
 
-                    if (riderId === auth.currentUser?.uid) return;
+                    if (riderId === auth.currentUser?.uid) {
+                        currentUserSettings.pinColor = riderData.pinColor || '#3498db';
+                        currentUserSettings.pinIcon = riderData.pinIcon || 'motorcycle';
+                        if (myMarker) myMarker.setIcon(createCustomIcon(currentUserSettings.pinColor, currentUserSettings.pinIcon));
+                        return;
+                    }
 
                     if (change.type === "added" || change.type === "modified") {
+                        if (publicMarkers[riderId]) map.removeLayer(publicMarkers[riderId]);
+                        
                         const riderCoords = [riderData.lat, riderData.lng];
-                        if (publicMarkers[riderId]) {
-                            publicMarkers[riderId].setLatLng(riderCoords);
-                        } else {
-                            const popupContent = `<div class="user-popup"><img src="${riderData.photoURL}" alt="foto profil"><strong>${riderData.name}</strong></div>`;
-                            publicMarkers[riderId] = L.marker(riderCoords).addTo(map).bindPopup(popupContent);
-                        }
+                        const icon = createCustomIcon(riderData.pinColor || '#34495e', riderData.pinIcon || 'person');
+                        const popupContent = `<div class="user-popup"><img src="${riderData.photoURL}" alt="foto"><div><strong>${riderData.name}</strong><br><button onclick="window.showRouteTo([${riderCoords}])">Rute ke Sini</button></div></div>`;
+                        
+                        publicMarkers[riderId] = L.marker(riderCoords, { icon: icon }).addTo(map).bindPopup(popupContent);
                     } else if (change.type === "removed") {
-                        if (publicMarkers[riderId]) {
-                            map.removeLayer(publicMarkers[riderId]);
-                            delete publicMarkers[riderId];
-                        }
+                        if (publicMarkers[riderId]) { map.removeLayer(publicMarkers[riderId]); delete publicMarkers[riderId]; }
                     }
                 });
             });
         }
+        
+        window.showRouteTo = (destinationCoords) => {
+            if (!userCoords) { alert("Lokasi Anda belum ditemukan."); return; }
+            if (routingControl) map.removeControl(routingControl);
+            
+            routingControl = L.Routing.control({
+                waypoints: [ L.latLng(userCoords), L.latLng(destinationCoords) ],
+                routeWhileDragging: true,
+                lineOptions: { styles: [{color: '#6EE7B7', weight: 5}] },
+                createMarker: () => null // Sembunyikan marker default dari plugin rute
+            }).addTo(map);
+        }
 
-        // Mulai aplikasi
+        // Logika Modal Pengaturan Pin
+        function setupModal() {
+            colorOptionsContainer.innerHTML = availableColors.map(color => `
+                <div><input type="radio" name="color" value="${color}" id="color-${color}" class="sr-only"><label for="color-${color}" class="color-option block w-8 h-8 rounded-full cursor-pointer border-2 border-gray-500" style="background-color: ${color};"></label></div>
+            `).join('');
+            iconOptionsContainer.innerHTML = Object.keys(availableIcons).map(icon => `
+                <div><input type="radio" name="icon" value="${icon}" id="icon-${icon}" class="sr-only"><label for="icon-${icon}" class="icon-option block p-2 rounded-lg cursor-pointer border-2 border-gray-500 bg-gray-600">${availableIcons[icon]}</label></div>
+            `).join('');
+        }
+
+        settingsBtn.addEventListener('click', () => {
+            document.querySelector(`input[name="color"][value="${currentUserSettings.pinColor}"]`).checked = true;
+            document.querySelector(`input[name="icon"][value="${currentUserSettings.pinIcon}"]`).checked = true;
+            modal.classList.remove('hidden');
+        });
+        
+        cancelBtn.addEventListener('click', () => modal.classList.add('hidden'));
+        saveBtn.addEventListener('click', async () => {
+            const selectedColor = document.querySelector('input[name="color"]:checked').value;
+            const selectedIcon = document.querySelector('input[name="icon"]:checked').value;
+            
+            currentUserSettings = { pinColor: selectedColor, pinIcon: selectedIcon };
+            if (auth.currentUser) {
+                const riderRef = doc(db, 'public_riders', auth.currentUser.uid);
+                await updateDoc(riderRef, { pinColor: selectedColor, pinIcon: selectedIcon });
+            }
+            modal.classList.add('hidden');
+        });
+        
         initMap();
+        setupModal();
     </script>
 </body>
 </html>
