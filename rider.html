@@ -45,6 +45,8 @@
         .role-select { background-color: #4A5568; border: 1px solid #718096; color: white; border-radius: 6px; padding: 4px 8px; }
 
         .checkpoint-marker-icon { background-color: #f59e0b; color: white; width: 2.5rem; height: 2.5rem; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px black; text-align: center; font-weight: bold; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; }
+
+        #group-info-bar { transition: opacity 0.3s ease-in-out; }
     </style>
 </head>
 <body class="bg-gray-900 text-white antialiased overflow-hidden">
@@ -57,6 +59,11 @@
             <button id="search-fab" class="fab bg-amber-500 hover:bg-amber-600" title="Cari Rute">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13V7m0 13a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m5-7l5.447 2.724A1 1 0 0121 5.618v10.764a1 1 0 01-1.447.894L15 17m0-13v13m0 0a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg>
             </button>
+        </div>
+
+        <div id="group-info-bar" class="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-gray-800 bg-opacity-80 backdrop-blur-sm p-3 rounded-xl shadow-lg hidden">
+            <h2 class="text-lg font-bold text-amber-400" id="group-info-name">Nama Grup</h2>
+            <p class="text-sm text-gray-300 text-center" id="group-info-count">0 Anggota</p>
         </div>
 
         <div id="fab-top-right" class="absolute top-4 right-4 z-[400] hidden">
@@ -189,6 +196,9 @@
             settingsMenuBtn: document.getElementById('settings-menu-btn'), modal: document.getElementById('pin-settings-modal'),
             groupFab: document.getElementById('group-fab'), groupModal: document.getElementById('group-modal'),
             groupView: document.getElementById('group-view'), noGroupView: document.getElementById('no-group-view'),
+            groupInfoBar: document.getElementById('group-info-bar'),
+            groupInfoName: document.getElementById('group-info-name'),
+            groupInfoCount: document.getElementById('group-info-count'),
             groupName: document.getElementById('group-name'), groupId: document.getElementById('group-id'),
             groupMemberCount: document.getElementById('group-member-count'),
             groupMembersList: document.getElementById('group-members-list'),
@@ -214,7 +224,7 @@
         };
 
         const roles = {
-            amir: '⭐', penunjuk_jalan: '🧭', guard: '🛡️', sweeper: '🧹', logistik: '🛠️', member: '👤'
+            amir: '👑', penunjuk_jalan: '🧭', guard: '🛡️', sweeper: '🧹', logistik: '🛠️', member: '👤'
         };
 
         const alertTypes = {
@@ -236,8 +246,7 @@
                         <circle cx="16" cy="11" r="9" fill="#2d3748" stroke="${color}" stroke-width="1.5" />
                         <image href="${imageUrl}" x="7" y="2" height="18" width="18" clip-path="url(#${uniqueId})" />
                     </g>
-                    <circle cx="16" cy="6" r="7" fill="#1a202c" stroke="${color}" stroke-width="1.5"/>
-                    <text x="16" y="8.5" font-size="9" text-anchor="middle" fill="white">${roleEmoji}</text>
+                    <text x="16" y="8" font-size="14" text-anchor="middle" stroke="black" stroke-width="0.5px" paint-order="stroke" fill="white">${roleEmoji}</text>
                 </svg>`;
             return L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [64, 70], iconAnchor: [32, 70], popupAnchor: [0, -70] });
         }
@@ -747,12 +756,15 @@
 
         function updateGroupMembersUI(groupData) {
             if (groupData && groupData.members) {
+                DOM.groupInfoBar.classList.remove('hidden');
                 DOM.groupView.classList.remove('hidden');
                 DOM.noGroupView.classList.add('hidden');
                 DOM.groupName.textContent = groupData.name;
+                DOM.groupInfoName.textContent = groupData.name;
                 DOM.groupId.textContent = currentGroupId;
                 const memberCount = Object.keys(groupData.members).length;
                 DOM.groupMemberCount.textContent = memberCount;
+                DOM.groupInfoCount.textContent = `${memberCount} Anggota`;
                 DOM.groupMembersList.innerHTML = '';
                 
                 const user = auth.currentUser;
@@ -782,6 +794,7 @@
                     }
                 });
             } else {
+                DOM.groupInfoBar.classList.add('hidden');
                 DOM.groupView.classList.add('hidden');
                 DOM.noGroupView.classList.remove('hidden');
             }
