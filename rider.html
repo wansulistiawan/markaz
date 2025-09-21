@@ -11,10 +11,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        #map { height: 75vh; z-index: 10; background-color: #4a5568; }
+        body { font-family: 'Inter', sans-serif; overflow: hidden; }
+        #map { height: 100vh; width: 100vw; z-index: 10; background-color: #4a5568; }
         .map-locked { cursor: not-allowed !important; }
-        .adding-waypoint, .creating-alert { cursor: crosshair !important; }
+        .adding-waypoint, .creating-alert, .adding-checkpoint { cursor: crosshair !important; }
         .hidden { display: none; }
         
         .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #2d3748; color: #e2e8f0; border-radius: 8px; }
@@ -34,53 +34,81 @@
         #navigation-controls { transition: transform 0.3s ease-in-out; transform: translateY(200%); }
         #navigation-controls.visible { transform: translateY(0); }
 
-        .fab-container { position: absolute; bottom: 1rem; right: 1rem; z-index: 400; display: flex; flex-direction: column; gap: 0.75rem; }
         .fab { width: 56px; height: 56px; background-color: #4A5568; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; transition: background-color 0.2s; border: 1px solid #718096; }
         .fab:hover { background-color: #718096; }
         .fab.active { background-color: #10B981; border-color: #6EE7B7; }
 
-        #suggestions-container { position: absolute; width: 100%; max-height: 200px; overflow-y: auto; background-color: #2d3748; border: 1px solid #4A5568; border-radius: 0 0 0.5rem 0.5rem; z-index: 1000; }
+        #suggestions-container { position: absolute; width: 100%; max-height: 200px; overflow-y: auto; background-color: #2d3748; border: 1px solid #4A5568; border-radius: 0.5rem; z-index: 1000; }
         .suggestion-item { padding: 0.75rem; cursor: pointer; color: #e2e8f0; }
         .suggestion-item:hover { background-color: #4A5568; }
 
         .role-select { background-color: #4A5568; border: 1px solid #718096; color: white; border-radius: 6px; padding: 4px 8px; }
+
+        .checkpoint-marker-icon { background-color: #f59e0b; color: white; width: 2.5rem; height: 2.5rem; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px black; text-align: center; font-weight: bold; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="bg-gray-900 text-white antialiased">
+<body class="bg-gray-900 text-white antialiased overflow-hidden">
 
-    <div class="container mx-auto p-4 max-w-6xl">
-        <header class="flex justify-between items-center mb-4 flex-wrap gap-4">
-            <div><h1 class="text-2xl md:text-3xl font-bold text-emerald-400">Pelacak Rider Waktu Nyata</h1><p id="subtitle" class="text-gray-400">Klik peta atau cari untuk pratinjau rute.</p></div>
-            <div id="auth-container" class="flex items-center gap-2 sm:gap-4">
-                <button id="group-btn" class="hidden bg-gray-600 hover:bg-gray-700 p-3 rounded-full" title="Manajemen Grup"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a3.002 3.002 0 01-2.702 0M12 15a3 3 0 100-6 3 3 0 000 6z"></path></svg></button>
-                <button id="settings-btn" class="hidden bg-gray-600 hover:bg-gray-700 p-3 rounded-full" title="Ubah Warna Pin Anda"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg></button>
-                <div id="user-info" class="hidden items-center gap-3 text-right"><div><p id="user-name" class="font-semibold"></p><button id="logout-btn" class="text-sm text-red-400 hover:underline">Keluar</button></div><img id="user-pic" class="w-12 h-12 rounded-full border-2 border-emerald-400"></div>
-                <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 488 512"><path d="M488 261.8C488 403.3 381.5 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 61.9l-72.2 64.5C305.1 102.8 277.6 88 248 88c-86.5 0-155.2 67.8-155.2 151.3s68.7 151.3 155.2 151.3c92.8 0 132-61.1 135-95.2H248v-73.8h238.2c2.6 13.2 4.2 27.8 4.2 43.8z"></path></svg> Masuk</button>
-            </div>
-        </header>
+    <div id="map-container" class="w-screen h-screen relative">
+        <div id="map"></div>
 
-        <div class="relative w-full max-w-lg mx-auto my-4">
-             <form id="search-form" onsubmit="event.preventDefault();"><div class="relative"><input type="text" id="search-input" placeholder="Cari alamat atau nama tempat..." class="w-full bg-gray-700 text-white rounded-lg py-3 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-emerald-500" autocomplete="off"><button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></button></div></form>
-             <div id="suggestions-container" class="hidden"></div>
+        <!-- Floating UI Elements -->
+        <div id="fab-top-left" class="absolute top-4 left-4 z-[400]">
+            <button id="search-fab" class="fab bg-amber-500 hover:bg-amber-600" title="Cari Rute">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13V7m0 13a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m5-7l5.447 2.724A1 1 0 0121 5.618v10.764a1 1 0 01-1.447.894L15 17m0-13v13m0 0a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg>
+            </button>
         </div>
 
-        <main>
-            <div id="map-container" class="rounded-2xl shadow-2xl overflow-hidden border-2 border-gray-700 relative">
-                <div id="map"></div>
-                <div id="navigation-controls" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[401] flex gap-2 sm:gap-4 bg-gray-800 bg-opacity-80 backdrop-blur-sm p-3 rounded-xl shadow-lg">
-                    <button id="set-destination-btn" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-5 rounded-lg">Tetapkan Tujuan</button>
-                    <button id="add-waypoint-btn" class="hidden bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-5 rounded-lg">Tambah Persinggahan</button>
-                    <button id="start-nav-btn" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg">Mulai Navigasi</button>
-                    <button id="stop-nav-btn" class="hidden bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-5 rounded-lg">Hentikan Navigasi</button>
-                    <button id="cancel-route-btn" class="hidden bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-lg">Batal</button>
-                </div>
-                <div id="fab-group" class="fab-container hidden">
-                    <button id="share-location-fab" class="fab" title="Bagikan Lokasi Anda"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6.002l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.368a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path></svg></button>
-                    <button id="recenter-fab" class="fab" title="Pusatkan ke Lokasi Saya"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></button>
+        <div id="fab-top-right" class="absolute top-4 right-4 z-[400] hidden">
+             <div class="relative">
+                <img id="profile-fab" class="w-14 h-14 rounded-full border-2 border-emerald-400 cursor-pointer shadow-lg" src="https://placehold.co/100x100/2d3748/e2e8f0?text=:)">
+                <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-gray-700 rounded-lg shadow-xl py-1">
+                    <a href="#" id="settings-menu-btn" class="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-600">Ubah Warna Pin</a>
+                    <a href="#" id="logout-menu-btn" class="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-600">Keluar</a>
                 </div>
             </div>
-        </main>
-        <footer><div id="status" class="mt-4 p-3 bg-gray-800 rounded-lg text-center">Memuat peta...</div></footer>
+        </div>
+        
+        <div id="fab-bottom-left" class="absolute bottom-4 left-4 z-[400] hidden">
+            <button id="group-fab" class="fab" title="Manajemen Grup">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a3.002 3.002 0 01-2.702 0M12 15a3 3 0 100-6 3 3 0 000 6z"></path></svg>
+            </button>
+        </div>
+
+        <div id="fab-bottom-right" class="absolute bottom-4 right-4 z-[400] fab-container hidden">
+            <button id="share-location-fab" class="fab" title="Bagikan Lokasi Anda">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6.002l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.368a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path></svg>
+            </button>
+            <button id="recenter-fab" class="fab" title="Pusatkan ke Lokasi Saya">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </button>
+        </div>
+        
+        <div id="navigation-controls" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[401] flex gap-2 sm:gap-4 bg-gray-800 bg-opacity-80 backdrop-blur-sm p-3 rounded-xl shadow-lg">
+            <button id="set-destination-btn" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-5 rounded-lg">Tetapkan Tujuan</button>
+            <button id="add-checkpoint-btn" class="hidden bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-5 rounded-lg">Tambah Checkpoint</button>
+            <button id="add-waypoint-btn" class="hidden bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-5 rounded-lg">Tambah Persinggahan</button>
+            <button id="start-nav-btn" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg">Mulai Navigasi</button>
+            <button id="stop-nav-btn" class="hidden bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-5 rounded-lg">Hentikan Navigasi</button>
+            <button id="cancel-route-btn" class="hidden bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-lg">Batal</button>
+        </div>
+        
+        <div id="status-bar" class="absolute bottom-0 w-full z-[400] p-4 pointer-events-none">
+            <div id="status" class="max-w-xl mx-auto p-3 bg-gray-800 bg-opacity-80 backdrop-blur-sm rounded-lg text-center pointer-events-auto">Memuat peta...</div>
+        </div>
+
+        <button id="login-btn" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-3 z-[500] text-lg">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 488 512"><path d="M488 261.8C488 403.3 381.5 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 61.9l-72.2 64.5C305.1 102.8 277.6 88 248 88c-86.5 0-155.2 67.8-155.2 151.3s68.7 151.3 155.2 151.3c92.8 0 132-61.1 135-95.2H248v-73.8h238.2c2.6 13.2 4.2 27.8 4.2 43.8z"></path></svg> 
+            Masuk dengan Google
+        </button>
+    </div>
+
+    <!-- Modals -->
+    <div id="search-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center z-50 p-4 pt-16">
+        <div class="relative w-full max-w-lg">
+             <form id="search-form" onsubmit="event.preventDefault();"><div class="relative"><input type="text" id="search-input" placeholder="Cari alamat atau nama tempat..." class="w-full bg-gray-700 text-white rounded-lg py-3 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-emerald-500" autocomplete="off"><button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></button></div></form>
+             <div id="suggestions-container" class="mt-1"></div>
+        </div>
     </div>
 
     <div id="pin-settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-lg p-6 w-full max-w-md"><h2 class="text-2xl font-bold mb-6 text-emerald-400">Ubah Warna Pin Anda</h2><div class="mb-6"><h3 class="font-semibold mb-3 text-gray-300">Pilih Warna</h3><div id="color-options" class="flex gap-3 flex-wrap justify-center"></div></div><div class="flex justify-end gap-4"><button id="cancel-settings-btn" class="bg-gray-600 hover:bg-gray-700 font-bold py-2 px-4 rounded-lg">Batal</button><button id="save-settings-btn" class="bg-emerald-600 hover:bg-emerald-700 font-bold py-2 px-4 rounded-lg">Simpan</button></div></div></div>
@@ -95,7 +123,7 @@
                     <p class="text-sm text-gray-400">ID Grup: <span id="group-id" class="font-mono"></span></p>
                 </div>
                 <div class="mb-4 border-t border-gray-700 pt-4 overflow-y-auto" style="max-height: 40vh;">
-                    <h4 class="font-semibold mb-2">Anggota Grup:</h4>
+                    <h4 class="font-semibold mb-2">Anggota Grup (<span id="group-member-count">0</span>):</h4>
                     <div id="group-members-list" class="space-y-2"></div>
                 </div>
                 <button id="leave-group-btn" class="w-full bg-red-600 hover:bg-red-700 font-bold py-2 px-4 rounded-lg">Keluar Grup</button>
@@ -122,7 +150,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, getDoc, writeBatch, updateDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, getDoc, writeBatch, updateDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyA9fthcIZ_VQXMUL6lPd-165NIFNb09JOA", authDomain: "aplikasi-touring.firebaseapp.com", projectId: "aplikasi-touring", storageBucket: "aplikasi-touring.appspot.com", messagingSenderId: "310021643774", appId: "1:310021643774:web:4943db8f567e66aef174af", measurementId: "G-ZRCCNLC8WB" };
 
@@ -135,36 +163,45 @@
         let publicRidersUnsubscribe = null;
         const publicMarkers = {};
         const alertMarkers = {};
+        const checkpointMarkers = {};
         let currentUserSettings = { pinColor: '#3498db' };
         let currentRouteState = 'IDLE';
         let isAddingWaypoint = false;
+        let isAddingCheckpoint = false;
         let currentGroupId = null;
         let currentGroupData = null;
         let groupUnsubscribe = null;
         let userUnsubscribe = null;
         let groupAlertsUnsubscribe = null;
+        let groupCheckpointsUnsubscribe = null;
 
         const DOM = {
-            map: document.getElementById('map'), subtitle: document.getElementById('subtitle'), status: document.getElementById('status'),
-            loginBtn: document.getElementById('login-btn'), logoutBtn: document.getElementById('logout-btn'),
-            userInfo: document.getElementById('user-info'), userName: document.getElementById('user-name'), userPic: document.getElementById('user-pic'),
-            settingsBtn: document.getElementById('settings-btn'), modal: document.getElementById('pin-settings-modal'),
-            groupBtn: document.getElementById('group-btn'), groupModal: document.getElementById('group-modal'),
+            mapContainer: document.getElementById('map-container'),
+            status: document.getElementById('status'),
+            loginBtn: document.getElementById('login-btn'),
+            logoutMenuBtn: document.getElementById('logout-menu-btn'),
+            profileFab: document.getElementById('profile-fab'),
+            profileFabContainer: document.getElementById('fab-top-right'),
+            profileDropdown: document.getElementById('profile-dropdown'),
+            settingsMenuBtn: document.getElementById('settings-menu-btn'), modal: document.getElementById('pin-settings-modal'),
+            groupFab: document.getElementById('group-fab'), groupModal: document.getElementById('group-modal'),
             groupView: document.getElementById('group-view'), noGroupView: document.getElementById('no-group-view'),
             groupName: document.getElementById('group-name'), groupId: document.getElementById('group-id'),
+            groupMemberCount: document.getElementById('group-member-count'),
             groupMembersList: document.getElementById('group-members-list'),
             createGroupName: document.getElementById('create-group-name'), createGroupBtn: document.getElementById('create-group-btn'),
             joinGroupId: document.getElementById('join-group-id'), joinGroupBtn: document.getElementById('join-group-btn'),
             leaveGroupBtn: document.getElementById('leave-group-btn'), closeGroupModalBtn: document.getElementById('close-group-modal-btn'),
-            searchForm: document.getElementById('search-form'), searchInput: document.getElementById('search-input'),
-            suggestionsContainer: document.getElementById('suggestions-container'),
+            searchFab: document.getElementById('search-fab'), searchModal: document.getElementById('search-modal'),
+            searchInput: document.getElementById('search-input'), suggestionsContainer: document.getElementById('suggestions-container'),
             navControls: document.getElementById('navigation-controls'),
             setDestinationBtn: document.getElementById('set-destination-btn'),
+            addCheckpointBtn: document.getElementById('add-checkpoint-btn'),
             addWaypointBtn: document.getElementById('add-waypoint-btn'),
             startNavBtn: document.getElementById('start-nav-btn'),
             stopNavBtn: document.getElementById('stop-nav-btn'),
             cancelRouteBtn: document.getElementById('cancel-route-btn'),
-            fabGroup: document.getElementById('fab-group'),
+            fabBottomRight: document.getElementById('fab-bottom-right'),
             shareLocationFab: document.getElementById('share-location-fab'),
             recenterFab: document.getElementById('recenter-fab'),
             cancelSettingsBtn: document.getElementById('cancel-settings-btn'), 
@@ -173,42 +210,46 @@
         };
 
         const roles = {
-            amir: '⭐',
-            penunjuk_jalan: '🧭',
-            guard: '🛡️',
-            sweeper: '🧹',
-            logistik: '🛠️',
-            member: '👤'
+            amir: '⭐', penunjuk_jalan: '🧭', guard: '🛡️', sweeper: '🧹', logistik: '🛠️', member: '👤'
         };
 
         const alertTypes = {
-            razia: { icon: '👮', text: 'Ada Razia Polisi' },
-            kecelakaan: { icon: '💥', text: 'Ada Kecelakaan' },
-            macet: { icon: '🚗', text: 'Lalu Lintas Macet' },
-            pawai: { icon: '🎉', text: 'Ada Pawai/Keramaian' },
-            bencana: { icon: '🌋', text: 'Ada Bencana Alam' }
+            razia: { icon: '👮', text: 'Ada Razia Polisi' }, kecelakaan: { icon: '💥', text: 'Ada Kecelakaan' },
+            macet: { icon: '🚗', text: 'Lalu Lintas Macet' }, pawai: { icon: '🎉', text: 'Ada Pawai/Keramaian' },
+            bencana: { icon: '🌋', text: 'Ada Bencana Alam' }, jalan_rusak: { icon: '🚧', text: 'Ada Jalan Rusak' }
         };
         
         function createProfilePinIcon(color, imageUrl, role = 'member') {
             const uniqueId = `clip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const roleEmoji = roles[role] || roles['member'];
             const iconHtml = `
-                <svg width="64" height="64" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                <svg width="64" height="70" viewBox="0 0 32 38" xmlns="http://www.w3.org/2000/svg" style="transform: translateY(-6px);">
                     <defs>
                         <clipPath id="${uniqueId}"><circle cx="16" cy="11" r="9" /></clipPath>
                     </defs>
-                    <path fill="${color}" stroke="#1a202c" stroke-width="1.5" d="M16 31.547c0 0 10-13.235 10-20.547a10 10 0 10-20 0c0 7.312 10 20.547 10 20.547z"></path>
-                    <circle cx="16" cy="11" r="9" fill="#2d3748" stroke="${color}" stroke-width="1.5" />
-                    <image href="${imageUrl}" x="7" y="2" height="18" width="18" clip-path="url(#${uniqueId})" />
-                    <circle cx="25" cy="19" r="6" fill="#1a202c" stroke="${color}" stroke-width="1"/>
-                    <text x="25" y="22.5" font-size="9" text-anchor="middle" fill="white">${roleEmoji}</text>
+                    <g transform="translate(0, 6)">
+                        <path fill="${color}" stroke="#1a202c" stroke-width="1.5" d="M16 31.547c0 0 10-13.235 10-20.547a10 10 0 10-20 0c0 7.312 10 20.547 10 20.547z"></path>
+                        <circle cx="16" cy="11" r="9" fill="#2d3748" stroke="${color}" stroke-width="1.5" />
+                        <image href="${imageUrl}" x="7" y="2" height="18" width="18" clip-path="url(#${uniqueId})" />
+                    </g>
+                    <circle cx="16" cy="6" r="7" fill="#1a202c" stroke="${color}" stroke-width="1.5"/>
+                    <text x="16" y="8.5" font-size="9" text-anchor="middle" fill="white">${roleEmoji}</text>
                 </svg>`;
-            return L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [64, 64], iconAnchor: [32, 64], popupAnchor: [0, -64] });
+            return L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [64, 70], iconAnchor: [32, 70], popupAnchor: [0, -70] });
         }
         
         function createFlagIcon(color) {
             const iconHtml = `<svg width="64" height="64" viewBox="0 0 32 32"><path fill="${color}" stroke="#1a202c" stroke-width="1.5" d="M16 31.547c0 0 10-13.235 10-20.547a10 10 0 10-20 0c0 7.312 10 20.547 10 20.547z"></path><path fill="white" d="M14.23 6.02l.46 2.06h6.09l-.46-2.06H14.23zM13 3h9v2h-9V3zm1.69 5.02L13 18H5v-2h6.27l.45-2.02H5V12h6.72l.45-2.02H5V8.02h9.69z"></path></svg>`;
             return L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [64, 64], iconAnchor: [32, 64], popupAnchor: [0, -64] });
+        }
+
+        function createCheckpointIcon(number) {
+            return L.divIcon({
+                className: 'checkpoint-marker-icon',
+                html: `<span>${number}</span>`,
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
         }
 
         function debounce(func, delay) {
@@ -244,6 +285,7 @@
                     item.onclick = () => {
                         DOM.searchInput.value = s.display_name;
                         DOM.suggestionsContainer.classList.add('hidden');
+                        DOM.searchModal.classList.add('hidden');
                         window.showRouteTo([s.lat, s.lon], s.display_name);
                     };
                     DOM.suggestionsContainer.appendChild(item);
@@ -256,13 +298,12 @@
 
         function initMap() {
             if (map) return;
-            map = L.map('map').setView([-2.5489, 118.0149], 5);
+            map = L.map('map', { zoomControl: false }).setView([-2.5489, 118.0149], 5);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
             map.on('click', (e) => {
-                if (isAddingWaypoint) {
-                    addWaypointToRoute(e.latlng);
-                    return;
-                }
+                if (isAddingWaypoint) { addWaypointToRoute(e.latlng); return; }
+                if (isAddingCheckpoint) { showCheckpointPrompt(e.latlng); return; }
                 const userRole = currentGroupData?.members?.[auth.currentUser?.uid]?.role;
                 if (currentRouteState === 'NAVIGATING' && currentGroupId && ['amir', 'penunjuk_jalan', 'guard', 'sweeper', 'logistik'].includes(userRole)) {
                     showUIAlertSelection(e.latlng);
@@ -288,14 +329,10 @@
         function handleLocationError(error) {
             let message = 'Gagal mendapatkan lokasi. ';
             switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    message += "Anda menolak permintaan izin lokasi."; break;
-                case error.POSITION_UNAVAILABLE:
-                    message += "Informasi lokasi tidak tersedia."; break;
-                case error.TIMEOUT:
-                    message += "Permintaan lokasi timeout."; break;
-                default:
-                    message += "Terjadi kesalahan tidak dikenal."; break;
+                case error.PERMISSION_DENIED: message += "Anda menolak permintaan izin lokasi."; break;
+                case error.POSITION_UNAVAILABLE: message += "Informasi lokasi tidak tersedia."; break;
+                case error.TIMEOUT: message += "Permintaan lokasi timeout."; break;
+                default: message += "Terjadi kesalahan tidak dikenal."; break;
             }
             DOM.status.textContent = message + " Peta tetap dapat digunakan untuk pencarian.";
         }
@@ -309,16 +346,20 @@
             const isVisible = (currentRouteState !== 'IDLE');
             DOM.navControls.classList.toggle('visible', isVisible);
             
-            [DOM.setDestinationBtn, DOM.addWaypointBtn, DOM.startNavBtn, DOM.stopNavBtn, DOM.cancelRouteBtn].forEach(btn => btn.classList.add('hidden'));
+            [DOM.setDestinationBtn, DOM.addWaypointBtn, DOM.addCheckpointBtn, DOM.startNavBtn, DOM.stopNavBtn, DOM.cancelRouteBtn].forEach(btn => btn.classList.add('hidden'));
+            
+            const userRole = currentGroupData?.members?.[auth.currentUser?.uid]?.role;
+            const isOfficer = ['amir', 'penunjuk_jalan', 'guard', 'sweeper', 'logistik'].includes(userRole);
 
             if (currentRouteState === 'PREVIEW') {
                 DOM.setDestinationBtn.classList.remove('hidden');
                 DOM.cancelRouteBtn.classList.remove('hidden');
                 DOM.subtitle.textContent = 'Seret pin tujuan untuk mengubah rute.';
-                DOM.map.classList.remove('map-locked', 'adding-waypoint');
+                DOM.map.classList.remove('map-locked', 'adding-waypoint', 'adding-checkpoint');
             } else if (currentRouteState === 'SET' || currentRouteState === 'NAVIGATING') {
                 DOM.addWaypointBtn.classList.remove('hidden');
                 DOM.cancelRouteBtn.classList.remove('hidden');
+                if (isOfficer) DOM.addCheckpointBtn.classList.remove('hidden');
                 if (currentRouteState === 'SET') {
                     DOM.startNavBtn.classList.remove('hidden');
                     DOM.status.textContent = 'Tujuan ditetapkan. Siap memulai atau tambah persinggahan.';
@@ -331,7 +372,7 @@
             } else {
                 DOM.status.textContent = userCoords ? `Akurasi: ${Math.round(userCoords.accuracy)}m` : 'Mencari lokasi...';
                 DOM.subtitle.textContent = 'Klik peta atau cari untuk pratinjau rute.';
-                DOM.map.classList.remove('map-locked', 'adding-waypoint');
+                DOM.map.classList.remove('map-locked', 'adding-waypoint', 'adding-checkpoint');
             }
         }
         
@@ -359,6 +400,37 @@
             DOM.status.textContent = 'Persinggahan ditambahkan.';
         }
 
+        DOM.addCheckpointBtn.addEventListener('click', () => {
+            isAddingCheckpoint = true;
+            DOM.map.classList.add('adding-checkpoint');
+            DOM.status.textContent = 'Klik di peta untuk menambah checkpoint.';
+        });
+
+        function showCheckpointPrompt(latlng) {
+            const description = prompt("Masukkan keterangan untuk checkpoint ini (misal: 'Titik Kumpul 1', 'Makan Siang', dll):");
+            if (description) {
+                createCheckpoint(latlng, description);
+            }
+            isAddingCheckpoint = false;
+            DOM.map.classList.remove('adding-checkpoint');
+            DOM.status.textContent = 'Mode navigasi aktif.';
+        }
+
+        async function createCheckpoint(latlng, description) {
+            const user = auth.currentUser;
+            if (!user || !currentGroupId) return;
+            const checkpointRef = doc(collection(db, 'groups', currentGroupId, 'checkpoints'));
+            await setDoc(checkpointRef, {
+                description: description,
+                lat: latlng.lat,
+                lng: latlng.lng,
+                creatorId: user.uid,
+                creatorName: user.displayName,
+                createdAt: serverTimestamp()
+            });
+            DOM.status.textContent = 'Checkpoint ditambahkan!';
+        }
+
         DOM.startNavBtn.addEventListener('click', () => {
             if (currentRouteState !== 'SET') return;
             setRouteState('NAVIGATING');
@@ -373,24 +445,25 @@
         DOM.cancelRouteBtn.addEventListener('click', () => {
             if (routingControl) map.removeControl(routingControl);
             if (destinationMarker) map.removeLayer(destinationMarker);
-            routingControl = null; destinationMarker = null; isAddingWaypoint = false;
+            routingControl = null; destinationMarker = null; isAddingWaypoint = false; isAddingCheckpoint = false;
             setRouteState('IDLE');
         });
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                DOM.userInfo.classList.remove('hidden'); DOM.userInfo.classList.add('flex'); DOM.loginBtn.classList.add('hidden');
-                DOM.userName.textContent = user.displayName; DOM.userPic.src = user.photoURL;
-                DOM.settingsBtn.classList.remove('hidden');
-                DOM.groupBtn.classList.remove('hidden');
-                DOM.fabGroup.classList.remove('hidden');
+                DOM.loginBtn.classList.add('hidden');
+                DOM.profileFabContainer.classList.remove('hidden');
+                DOM.profileFab.src = user.photoURL;
+                DOM.fabBottomLeft.classList.remove('hidden');
+                DOM.fabBottomRight.classList.remove('hidden');
                 
                 startLocationWatch(); 
-                listenToPublicRiders();
                 listenToUserDoc(user.uid);
             } else {
-                DOM.userInfo.classList.add('hidden'); DOM.loginBtn.classList.remove('hidden');
-                DOM.settingsBtn.classList.add('hidden'); DOM.groupBtn.classList.add('hidden'); DOM.fabGroup.classList.add('hidden');
+                DOM.loginBtn.classList.remove('hidden');
+                DOM.profileFabContainer.classList.add('hidden');
+                DOM.fabBottomLeft.classList.add('hidden');
+                DOM.fabBottomRight.classList.add('hidden');
                 DOM.status.textContent = 'Silakan masuk untuk memulai.';
                 if (myMarker) { map.removeLayer(myMarker); myMarker = null; }
                 DOM.cancelRouteBtn.click();
@@ -398,13 +471,16 @@
                 if (userUnsubscribe) userUnsubscribe();
                 if (groupUnsubscribe) groupUnsubscribe();
                 if (groupAlertsUnsubscribe) groupAlertsUnsubscribe();
+                if (groupCheckpointsUnsubscribe) groupCheckpointsUnsubscribe();
                 Object.values(publicMarkers).forEach(marker => map.removeLayer(marker));
                 Object.values(alertMarkers).forEach(marker => map.removeLayer(marker));
+                Object.values(checkpointMarkers).forEach(marker => map.removeLayer(marker));
+                currentGroupId = null; currentGroupData = null;
             }
         });
 
         DOM.loginBtn.addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()));
-        DOM.logoutBtn.addEventListener('click', async () => { if (auth.currentUser) await removeLocationFromFirestore(auth.currentUser.uid); signOut(auth); });
+        DOM.logoutMenuBtn.addEventListener('click', async () => { if (auth.currentUser) await removeLocationFromFirestore(auth.currentUser.uid); signOut(auth); });
         
         function updateLocation(position) {
             userCoords = [position.coords.latitude, position.coords.longitude];
@@ -414,7 +490,7 @@
             if (!myMarker && auth.currentUser) {
                 const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
                 myMarker = L.marker(userCoords, { icon: createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole) }).addTo(map).bindPopup('<b>Ini Lokasi Anda!</b>');
-                map.setView(userCoords, 16);
+                if (currentRouteState === 'IDLE') map.setView(userCoords, 16);
             } else if (myMarker) { myMarker.setLatLng(userCoords); }
             
             if (currentRouteState === 'NAVIGATING') { map.setView(userCoords, 18, {animate: true, pan: {duration: 1}}); }
@@ -473,13 +549,13 @@
 
         function listenToPublicRiders() {
             if (publicRidersUnsubscribe) publicRidersUnsubscribe();
-            publicRidersUnsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
+            const q = query(collection(db, 'users'));
+            publicRidersUnsubscribe = onSnapshot(q, (snapshot) => {
                 snapshot.docChanges().forEach((change) => {
                     const riderData = change.doc.data(); const riderId = change.doc.id;
                     const isMySelf = riderId === auth.currentUser?.uid;
                     const isSharing = riderData.isSharing;
                     const belongsToMyGroup = currentGroupId && riderData.groupId === currentGroupId;
-
                     const shouldShow = isSharing && (!currentGroupId || belongsToMyGroup);
                     
                     if (change.type === "removed" || !shouldShow) {
@@ -537,18 +613,26 @@
 
         DOM.searchInput.addEventListener('input', debounce(e => fetchSuggestions(e.target.value), 300));
         document.addEventListener('click', (e) => {
-            if (!DOM.searchForm.contains(e.target)) {
-                DOM.suggestionsContainer.classList.add('hidden');
+            if (!DOM.searchModal.contains(e.target) && e.target !== DOM.searchFab && !DOM.searchFab.contains(e.target)) {
+                DOM.searchModal.classList.add('hidden');
+            }
+            if (!DOM.profileDropdown.parentElement.contains(e.target)) {
+                DOM.profileDropdown.classList.add('hidden');
             }
         });
+        
+        DOM.searchFab.addEventListener('click', () => DOM.searchModal.classList.toggle('hidden'));
+        DOM.profileFab.addEventListener('click', () => DOM.profileDropdown.classList.toggle('hidden'));
 
         function setupModal() {
             DOM.colorOptions.innerHTML = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#ffffff'].map(c => `<div><input type="radio" name="color" value="${c}" id="c-${c}" class="sr-only modal-input"><label for="c-${c}" class="block w-8 h-8 rounded-full cursor-pointer border-2 border-gray-500" style="background-color:${c};"></label></div>`).join('');
         }
         
-        DOM.settingsBtn.addEventListener('click', () => {
+        DOM.settingsMenuBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             document.querySelector(`input[name="color"][value="${currentUserSettings.pinColor}"]`).checked = true;
             DOM.modal.classList.remove('hidden');
+            DOM.profileDropdown.classList.add('hidden');
         });
 
         DOM.saveSettingsBtn.addEventListener('click', async () => {
@@ -559,8 +643,7 @@
 
         DOM.cancelSettingsBtn.addEventListener('click', () => DOM.modal.classList.add('hidden'));
 
-        // --- Group Management ---
-        DOM.groupBtn.addEventListener('click', () => DOM.groupModal.classList.remove('hidden'));
+        DOM.groupFab.addEventListener('click', () => DOM.groupModal.classList.remove('hidden'));
         DOM.closeGroupModalBtn.addEventListener('click', () => DOM.groupModal.classList.add('hidden'));
 
         DOM.createGroupBtn.addEventListener('click', async () => {
@@ -570,25 +653,21 @@
 
             const groupRef = doc(collection(db, 'groups'));
             const newGroup = {
-                name: groupName,
-                amir: user.uid,
-                createdAt: new Date(),
+                name: groupName, amir: user.uid, createdAt: new Date(),
                 members: {
-                    [user.uid]: {
-                        name: user.displayName,
-                        photoURL: user.photoURL,
-                        role: 'amir'
-                    }
+                    [user.uid]: { name: user.displayName, photoURL: user.photoURL, role: 'amir' }
                 }
             };
             await setDoc(groupRef, newGroup);
             await updateDoc(doc(db, "users", user.uid), { groupId: groupRef.id });
+            DOM.createGroupName.value = '';
         });
 
         DOM.joinGroupBtn.addEventListener('click', async () => {
             const groupId = DOM.joinGroupId.value.trim();
             if (!groupId) return;
             joinGroup(groupId);
+            DOM.joinGroupId.value = '';
         });
 
         async function joinGroup(groupId, silent = false) {
@@ -608,13 +687,15 @@
             await updateDoc(doc(db, "users", user.uid), { groupId: groupId });
             
             currentGroupId = groupId;
-            DOM.groupModal.classList.add('hidden');
+            if (!silent) DOM.groupModal.classList.add('hidden');
+
             if (groupUnsubscribe) groupUnsubscribe();
             groupUnsubscribe = onSnapshot(groupRef, (doc) => {
                 currentGroupData = doc.data();
                 updateGroupMembersUI(currentGroupData);
             });
             listenToGroupAlerts(groupId);
+            listenToCheckpoints(groupId);
         }
 
         DOM.leaveGroupBtn.addEventListener('click', () => leaveGroup());
@@ -634,10 +715,13 @@
             if (Object.keys(members).length === 0) {
                 batch.delete(groupRef);
             } else {
-                if(currentGroupData.amir === user.uid) {
-                    members[Object.keys(members)[0]].role = 'amir';
+                if(currentGroupData.amir === user.uid && Object.keys(members).length > 0) {
+                    const newAmirId = Object.keys(members)[0];
+                    members[newAmirId].role = 'amir';
+                    batch.update(groupRef, { members: members, amir: newAmirId });
+                } else {
+                    batch.update(groupRef, { members: members });
                 }
-                batch.update(groupRef, { members: members });
             }
 
             await batch.commit();
@@ -647,16 +731,20 @@
             currentGroupData = null;
             if (groupUnsubscribe) groupUnsubscribe();
             if (groupAlertsUnsubscribe) groupAlertsUnsubscribe();
+            if (groupCheckpointsUnsubscribe) groupCheckpointsUnsubscribe();
             updateGroupMembersUI(null);
             Object.values(alertMarkers).forEach(marker => map.removeLayer(marker));
+            Object.values(checkpointMarkers).forEach(marker => map.removeLayer(marker));
         }
 
         function updateGroupMembersUI(groupData) {
-            if (groupData) {
+            if (groupData && groupData.members) {
                 DOM.groupView.classList.remove('hidden');
                 DOM.noGroupView.classList.add('hidden');
                 DOM.groupName.textContent = groupData.name;
                 DOM.groupId.textContent = currentGroupId;
+                const memberCount = Object.keys(groupData.members).length;
+                DOM.groupMemberCount.textContent = memberCount;
                 DOM.groupMembersList.innerHTML = '';
                 
                 const user = auth.currentUser;
@@ -678,11 +766,11 @@
                     if (amIAmir && uid !== user.uid) {
                         const select = document.createElement('select');
                         select.className = 'role-select';
-                        select.innerHTML = Object.keys(roles).filter(r => r !== 'amir').map(r => `<option value="${r}" ${member.role === r ? 'selected' : ''}>${r.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>`).join('');
+                        select.innerHTML = Object.keys(roles).filter(r => r !== 'amir').map(r => `<option value="${r}" ${member.role === r ? 'selected' : ''}>${r.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>`).join('');
                         select.onchange = (e) => updateMemberRole(uid, e.target.value);
                         roleControlContainer.appendChild(select);
                     } else {
-                        roleControlContainer.innerHTML = `<span class="px-2 py-1 text-sm rounded-full bg-gray-600">${roles[member.role]} ${member.role.replace('_', ' ')}</span>`;
+                        roleControlContainer.innerHTML = `<span class="px-2 py-1 text-sm rounded-full bg-gray-600">${roles[member.role]} ${member.role.replace(/_/g, ' ')}</span>`;
                     }
                 });
             } else {
@@ -703,7 +791,6 @@
                 content += `<button onclick="window.createAlert('${key}', ${latlng.lat}, ${latlng.lng})">${value.icon} ${value.text}</button>`;
             });
             content += '</div>';
-
             L.popup().setLatLng(latlng).setContent(content).openOn(map);
         }
 
@@ -711,15 +798,10 @@
             map.closePopup();
             const user = auth.currentUser;
             if (!user || !currentGroupId) return;
-
             const alertRef = doc(collection(db, 'groups', currentGroupId, 'alerts'));
             await setDoc(alertRef, {
-                type: type,
-                lat: lat,
-                lng: lng,
-                creatorId: user.uid,
-                creatorName: user.displayName,
-                createdAt: new Date()
+                type: type, lat: lat, lng: lng,
+                creatorId: user.uid, creatorName: user.displayName, createdAt: new Date()
             });
         }
 
@@ -730,32 +812,16 @@
                 snapshot.docChanges().forEach((change) => {
                     const alertId = change.doc.id;
                     const alertData = change.doc.data();
-
                     if (change.type === 'removed') {
-                        if (alertMarkers[alertId]) {
-                            map.removeLayer(alertMarkers[alertId]);
-                            delete alertMarkers[alertId];
-                        }
-                        return;
+                        if (alertMarkers[alertId]) { map.removeLayer(alertMarkers[alertId]); delete alertMarkers[alertId]; } return;
                     }
-
                     if (alertMarkers[alertId]) map.removeLayer(alertMarkers[alertId]);
-
-                    const alertIcon = L.divIcon({
-                        className: 'alert-marker-icon',
-                        html: alertTypes[alertData.type].icon,
-                        iconSize: [40, 40],
-                        iconAnchor: [20, 20]
-                    });
-
-                    let popupContent = `<strong>${alertTypes[alertData.type].text}</strong><br><small>Ditandai oleh: ${alertData.creatorName}</small>`;
+                    const alertIcon = L.divIcon({ className: 'alert-marker-icon', html: alertTypes[alertData.type].icon, iconSize: [40, 40], iconAnchor: [20, 20] });
+                    let popupContent = `<strong>${alertTypes[alertData.type].text}</strong><br><small>Oleh: ${alertData.creatorName}</small>`;
                     if (auth.currentUser?.uid === currentGroupData?.amir) {
-                        popupContent += `<br><button class="mt-2" onclick="window.deleteAlert('${alertId}')">Hapus Tanda</button>`;
+                        popupContent += `<br><button class="mt-2" onclick="window.deleteAlert('${alertId}')">Hapus</button>`;
                     }
-
-                    alertMarkers[alertId] = L.marker([alertData.lat, alertData.lng], { icon: alertIcon })
-                        .addTo(map)
-                        .bindPopup(popupContent);
+                    alertMarkers[alertId] = L.marker([alertData.lat, alertData.lng], { icon: alertIcon }).addTo(map).bindPopup(popupContent);
                 });
             });
         }
@@ -765,10 +831,34 @@
             await deleteDoc(doc(db, 'groups', currentGroupId, 'alerts', alertId));
             map.closePopup();
         }
+
+        function listenToCheckpoints(groupId) {
+            if (groupCheckpointsUnsubscribe) groupCheckpointsUnsubscribe();
+            const checkpointsRef = query(collection(db, 'groups', groupId, 'checkpoints'), orderBy('createdAt'));
+            groupCheckpointsUnsubscribe = onSnapshot(checkpointsRef, (snapshot) => {
+                Object.values(checkpointMarkers).forEach(marker => map.removeLayer(marker));
+                let count = 1;
+                snapshot.forEach((doc) => {
+                    const cpId = doc.id;
+                    const cpData = doc.data();
+                    const icon = createCheckpointIcon(count++);
+                    let popupContent = `<strong>Checkpoint: ${cpData.description}</strong><br><small>Oleh: ${cpData.creatorName}</small>`;
+                    if (auth.currentUser?.uid === currentGroupData?.amir) {
+                         popupContent += `<br><button class="mt-2" onclick="window.deleteCheckpoint('${cpId}')">Hapus</button>`;
+                    }
+                    checkpointMarkers[cpId] = L.marker([cpData.lat, cpData.lng], { icon }).addTo(map).bindPopup(popupContent);
+                });
+            });
+        }
+        
+        window.deleteCheckpoint = async (checkpointId) => {
+             if (!currentGroupId) return;
+            await deleteDoc(doc(db, 'groups', currentGroupId, 'checkpoints', checkpointId));
+            map.closePopup();
+        }
         
         document.addEventListener('DOMContentLoaded', initMap);
         setupModal();
-        
     </script>
 </body>
 </html>
