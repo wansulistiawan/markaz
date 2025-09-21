@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Pelacak Rider - Mode Navigasi</title>
+    <title>Aplikasi Pelacak Rider - Final</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
@@ -11,36 +11,55 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        #map { height: 70vh; z-index: 10; background-color: #4a5568; }
-        .map-locked { cursor: not-allowed; }
         body { font-family: 'Inter', sans-serif; }
+        #map { height: 70vh; z-index: 10; background-color: #4a5568; }
+        .map-locked { cursor: not-allowed !important; }
         .hidden { display: none; }
         
+        /* Tema Gelap untuk Popup */
         .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #2d3748; color: #e2e8f0; border-radius: 8px; }
         .user-popup { display: flex; align-items: center; gap: 10px; }
         .user-popup img { border-radius: 50%; width: 40px; height: 40px; }
         .user-popup button { background-color: #10B981; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
 
-        #pin-settings-modal input:checked + label { outline: 3px solid #6EE7B7; transform: scale(1.1); }
+        /* Tema Gelap untuk Panel Rute (Kotak Putih) */
+        .leaflet-routing-container {
+            background-color: rgba(45, 55, 72, 0.9);
+            color: #e2e8f0;
+            border: 1px solid #4A5568;
+            border-radius: 8px;
+        }
+        .leaflet-routing-alt, .leaflet-routing-alt h2, .leaflet-routing-summary {
+            background-color: #4a5568 !important;
+            color: #e2e8f0 !important;
+        }
+        .leaflet-routing-instruction:hover {
+            background-color: #718096 !important;
+        }
+        .leaflet-bar a, .leaflet-bar a:hover {
+            background-color: #4a5568;
+            color: #e2e8f0;
+            border-bottom: 1px solid #2d3748;
+        }
+        .leaflet-bar a:hover {
+            background-color: #718096;
+        }
 
-        #navigation-controls {
-            transition: transform 0.3s ease-in-out;
-            transform: translateY(200%);
-        }
-        #navigation-controls.visible {
-            transform: translateY(0);
-        }
+        /* Styling Tambahan */
+        #pin-settings-modal input:checked + label { outline: 3px solid #6EE7B7; transform: scale(1.1); }
+        #navigation-controls { transition: transform 0.3s ease-in-out; transform: translateY(200%); }
+        #navigation-controls.visible { transform: translateY(0); }
     </style>
 </head>
 <body class="bg-gray-900 text-white antialiased">
 
     <div class="container mx-auto p-4 max-w-6xl">
         <header class="flex justify-between items-center mb-4 flex-wrap gap-4">
-            <div><h1 class="text-2xl md:text-3xl font-bold text-emerald-400">Rider Real-Time Tracker</h1><p id="subtitle" class="text-gray-400">Klik peta atau cari untuk pratinjau rute.</p></div>
+            <div><h1 class="text-2xl md:text-3xl font-bold text-emerald-400">Pelacak Rider Waktu Nyata</h1><p id="subtitle" class="text-gray-400">Klik peta atau cari untuk pratinjau rute.</p></div>
             <div id="auth-container" class="flex items-center gap-4">
                 <button id="settings-btn" class="hidden bg-gray-600 hover:bg-gray-700 p-3 rounded-full" title="Ubah Pin Anda"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></button>
-                <div id="user-info" class="hidden items-center gap-3 text-right"><div><p id="user-name" class="font-semibold"></p><button id="logout-btn" class="text-sm text-red-400 hover:underline">Logout</button></div><img id="user-pic" class="w-12 h-12 rounded-full border-2 border-emerald-400"></div>
-                <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 488 512"><path d="M488 261.8C488 403.3 381.5 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 61.9l-72.2 64.5C305.1 102.8 277.6 88 248 88c-86.5 0-155.2 67.8-155.2 151.3s68.7 151.3 155.2 151.3c92.8 0 132-61.1 135-95.2H248v-73.8h238.2c2.6 13.2 4.2 27.8 4.2 43.8z"></path></svg> Login</button>
+                <div id="user-info" class="hidden items-center gap-3 text-right"><div><p id="user-name" class="font-semibold"></p><button id="logout-btn" class="text-sm text-red-400 hover:underline">Keluar</button></div><img id="user-pic" class="w-12 h-12 rounded-full border-2 border-emerald-400"></div>
+                <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 488 512"><path d="M488 261.8C488 403.3 381.5 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 61.9l-72.2 64.5C305.1 102.8 277.6 88 248 88c-86.5 0-155.2 67.8-155.2 151.3s68.7 151.3 155.2 151.3c92.8 0 132-61.1 135-95.2H248v-73.8h238.2c2.6 13.2 4.2 27.8 4.2 43.8z"></path></svg> Masuk</button>
             </div>
         </header>
 
@@ -61,9 +80,10 @@
                 </div>
             </div>
         </main>
-        <footer><div id="status" class="mt-4 p-3 bg-gray-800 rounded-lg text-center">Silakan login untuk memulai.</div></footer>
+        <footer><div id="status" class="mt-4 p-3 bg-gray-800 rounded-lg text-center">Silakan masuk untuk memulai.</div></footer>
     </div>
 
+    <!-- Modal Pengaturan Pin -->
     <div id="pin-settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-full overflow-y-auto"><h2 class="text-2xl font-bold mb-4 text-emerald-400">Kustomisasi Pin Anda</h2><div class="mb-6"><h3 class="font-semibold mb-3 text-gray-300">Pilih Warna</h3><div id="color-options" class="flex gap-3 flex-wrap"></div></div><div class="mb-6"><h3 class="font-semibold mb-3 text-gray-300">Pilih Ikon</h3><div id="icon-options" class="flex gap-3 flex-wrap justify-center"></div></div><div class="flex justify-end gap-4"><button id="cancel-settings-btn" class="bg-gray-600 hover:bg-gray-700 font-bold py-2 px-4 rounded-lg">Batal</button><button id="save-settings-btn" class="bg-emerald-600 hover:bg-emerald-700 font-bold py-2 px-4 rounded-lg">Simpan</button></div></div></div>
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -72,7 +92,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyA9fthcIZ_VQXMUL6lPd-165NIFNb09JOA", authDomain: "aplikasi-touring.firebaseapp.com", projectId: "aplikasi-touring", storageBucket: "aplikasi-touring.appspot.com", messagingSenderId: "310021643774", appId: "1:310021643774:web:4943db8f567e66aef174af", measurementId: "G-ZRCCNLC8WB" };
 
@@ -210,14 +230,14 @@
                 startLocationWatch(); listenToPublicRiders();
             } else {
                 DOM.userInfo.classList.add('hidden'); DOM.loginBtn.classList.remove('hidden'); DOM.shareControl.classList.add('hidden'); DOM.settingsBtn.classList.add('hidden'); DOM.recenterBtn.classList.add('hidden');
-                DOM.status.textContent = 'Silakan login untuk memulai.';
-                if (myMarker) map.removeLayer(myMarker);
+                DOM.status.textContent = 'Silakan masuk untuk memulai.';
+                if (myMarker) { map.removeLayer(myMarker); myMarker = null; }
                 DOM.cancelRouteBtn.click();
                 if (publicRidersUnsubscribe) publicRidersUnsubscribe(); Object.values(publicMarkers).forEach(marker => map.removeLayer(marker));
             }
         });
 
-        DOM.loginBtn.addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()).catch(err => console.error(err)));
+        DOM.loginBtn.addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()).catch(err => console.error("Gagal Masuk:", err)));
         DOM.logoutBtn.addEventListener('click', async () => { if (auth.currentUser) await removeLocationFromFirestore(auth.currentUser.uid); signOut(auth); });
         
         function startLocationWatch() { if (navigator.geolocation) { navigator.geolocation.watchPosition(updateLocation, (err) => DOM.status.textContent = `Error Lokasi: ${err.message}`, { enableHighAccuracy: true }); } }
@@ -229,7 +249,7 @@
             if (currentRouteState === 'IDLE') DOM.status.textContent = `Akurasi: ${Math.round(userCoords.accuracy)}m`;
             
             if (!myMarker) {
-                myMarker = L.marker(userCoords, { icon: createCustomIcon(currentUserSettings.pinColor, currentUserSettings.pinIcon) }).addTo(map).bindPopup('<b>Ini Anda!</b>');
+                myMarker = L.marker(userCoords, { icon: createCustomIcon(currentUserSettings.pinColor, currentUserSettings.pinIcon) }).addTo(map).bindPopup('<b>Ini Lokasi Anda!</b>');
                 map.setView(userCoords, 16);
             } else { myMarker.setLatLng(userCoords); }
             
@@ -242,26 +262,31 @@
 
         DOM.recenterBtn.addEventListener('click', () => {
             if (userCoords) { map.setView(userCoords, 16, {animate: true}); } 
-            else { DOM.status.textContent = 'Lokasi Anda belum ditemukan untuk dipusatkan.'; }
+            else { DOM.status.textContent = 'Lokasi Anda belum ditemukan.'; }
         });
 
         DOM.shareToggle.addEventListener('change', () => {
             isSharingPublicly = DOM.shareToggle.checked; if (!auth.currentUser) return;
             if (isSharingPublicly) {
-                if (userCoords) { updateLocationInFirestore(auth.currentUser); DOM.status.textContent = 'Lokasi Anda sekarang publik.'; } 
+                if (userCoords) { updateLocationInFirestore(auth.currentUser); } 
                 else { DOM.status.textContent = 'Tunggu lokasi ditemukan.'; DOM.shareToggle.checked = isSharingPublicly = false; }
-            } else { removeLocationFromFirestore(auth.currentUser.uid); DOM.status.textContent = 'Lokasi Anda tidak lagi publik.'; }
+            } else { removeLocationFromFirestore(auth.currentUser.uid); }
         });
 
         async function updateLocationInFirestore(user) {
             if (!userCoords) return;
+            const statusText = isSharingPublicly ? 'Lokasi Anda sekarang publik.' : 'Lokasi Anda tidak lagi publik.';
+            DOM.status.textContent = statusText;
             await setDoc(doc(db, 'public_riders', user.uid), {
                 name: user.displayName, photoURL: user.photoURL, lat: userCoords[0], lng: userCoords[1],
                 lastUpdate: new Date(), pinColor: currentUserSettings.pinColor, pinIcon: currentUserSettings.pinIcon
             }, { merge: true });
         }
         
-        async function removeLocationFromFirestore(uid) { await deleteDoc(doc(db, "public_riders", uid)); }
+        async function removeLocationFromFirestore(uid) { 
+            await deleteDoc(doc(db, "public_riders", uid)); 
+            DOM.status.textContent = 'Lokasi Anda tidak lagi publik.';
+        }
 
         function listenToPublicRiders() {
             publicRidersUnsubscribe = onSnapshot(collection(db, 'public_riders'), (snapshot) => {
@@ -287,14 +312,15 @@
         window.showRouteTo = (destinationCoords, destinationName = 'Tujuan') => {
             if (currentRouteState !== 'IDLE') { DOM.status.textContent = 'Batalkan rute saat ini untuk membuat rute baru.'; return; }
             if (!userCoords) { alert("Lokasi Anda belum ditemukan."); return; }
-            if (routingControl) map.removeControl(routingControl);
-            if (destinationMarker) map.removeLayer(destinationMarker);
             
             previewRouteInfo = { coords: destinationCoords, name: destinationName };
             destinationMarker = L.marker(destinationCoords, { icon: createCustomIcon('#e74c3c', 'flag')}).addTo(map).bindPopup(`<b>${destinationName}</b>`).openPopup();
             routingControl = L.Routing.control({
-                waypoints: [ L.latLng(userCoords), L.latLng(destinationCoords) ], routeWhileDragging: false,
-                lineOptions: { styles: [{color: '#6EE7B7', weight: 5}] }, createMarker: () => null
+                waypoints: [ L.latLng(userCoords), L.latLng(destinationCoords) ],
+                routeWhileDragging: false,
+                lineOptions: { styles: [{color: '#6EE7B7', weight: 5}] },
+                createMarker: () => null,
+                language: 'id' // Mengatur bahasa panel rute
             }).addTo(map);
 
             setRouteState('PREVIEW');
@@ -306,7 +332,8 @@
             const query = DOM.searchInput.value; if (!query) return;
             DOM.status.textContent = `Mencari "${query}"...`;
             try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`); const data = await res.json();
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                const data = await res.json();
                 if (data && data.length > 0) {
                     const { lat, lon, display_name } = data[0];
                     showRouteTo([lat, lon], display_name); map.setView([lat, lon], 14);
@@ -335,3 +362,4 @@
     </script>
 </body>
 </html>
+
