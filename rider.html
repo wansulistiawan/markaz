@@ -211,7 +211,7 @@
             cancelSettingsBtn: document.getElementById('cancel-settings-btn'), 
             saveSettingsBtn: document.getElementById('save-settings-btn'),
             colorOptions: document.getElementById('color-options'),
-            subtitle: null, // Akan diinisialisasi setelah login
+            subtitle: null,
         };
 
         const roles = {
@@ -359,8 +359,7 @@
             if (currentRouteState === 'PREVIEW') {
                 DOM.setDestinationBtn.classList.remove('hidden');
                 DOM.cancelRouteBtn.classList.remove('hidden');
-                if (DOM.subtitle) DOM.subtitle.textContent = 'Seret pin tujuan untuk mengubah rute.';
-                DOM.map.classList.remove('map-locked', 'adding-waypoint', 'adding-checkpoint');
+                DOM.mapContainer.classList.remove('map-locked', 'adding-waypoint', 'adding-checkpoint');
             } else if (currentRouteState === 'SET' || currentRouteState === 'NAVIGATING') {
                 DOM.addWaypointBtn.classList.remove('hidden');
                 DOM.cancelRouteBtn.classList.remove('hidden');
@@ -372,12 +371,10 @@
                     DOM.stopNavBtn.classList.remove('hidden');
                     DOM.status.textContent = 'Mode navigasi aktif. Peta akan mengikuti Anda.';
                 }
-                if (DOM.subtitle) DOM.subtitle.textContent = 'Rute telah ditetapkan.';
-                DOM.map.classList.add('map-locked');
-            } else {
+                DOM.mapContainer.classList.add('map-locked');
+            } else { // IDLE
                 DOM.status.textContent = userCoords ? `Akurasi: ${Math.round(userCoords.accuracy)}m` : 'Mencari lokasi...';
-                if (DOM.subtitle) DOM.subtitle.textContent = 'Klik peta atau cari untuk pratinjau rute.';
-                DOM.map.classList.remove('map-locked', 'adding-waypoint', 'adding-checkpoint');
+                DOM.mapContainer.classList.remove('map-locked', 'adding-waypoint', 'adding-checkpoint');
             }
         }
         
@@ -389,7 +386,7 @@
 
         DOM.addWaypointBtn.addEventListener('click', () => {
             isAddingWaypoint = true;
-            DOM.map.classList.add('adding-waypoint');
+            DOM.mapContainer.classList.add('adding-waypoint');
             DOM.status.textContent = 'Klik di peta untuk menambah titik persinggahan.';
         });
 
@@ -401,13 +398,13 @@
             routingControl.setWaypoints(waypoints);
             
             isAddingWaypoint = false;
-            DOM.map.classList.remove('adding-waypoint');
+            DOM.mapContainer.classList.remove('adding-waypoint');
             DOM.status.textContent = 'Persinggahan ditambahkan.';
         }
 
         DOM.addCheckpointBtn.addEventListener('click', () => {
             isAddingCheckpoint = true;
-            DOM.map.classList.add('adding-checkpoint');
+            DOM.mapContainer.classList.add('adding-checkpoint');
             DOM.status.textContent = 'Klik di peta untuk menambah checkpoint.';
         });
 
@@ -417,7 +414,7 @@
                 createCheckpoint(latlng, description);
             }
             isAddingCheckpoint = false;
-            DOM.map.classList.remove('adding-checkpoint');
+            DOM.mapContainer.classList.remove('adding-checkpoint');
             DOM.status.textContent = 'Mode navigasi aktif.';
         }
 
@@ -461,9 +458,6 @@
                 DOM.profileFab.src = user.photoURL;
                 DOM.fabBottomLeft.classList.remove('hidden');
                 DOM.fabBottomRight.classList.remove('hidden');
-                
-                // Initialize subtitle here after login
-                DOM.subtitle = document.getElementById('subtitle');
                 
                 startLocationWatch(); 
                 listenToUserDoc(user.uid);
