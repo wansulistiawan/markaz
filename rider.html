@@ -83,7 +83,6 @@
         <footer><div id="status" class="mt-4 p-3 bg-gray-800 rounded-lg text-center">Silakan masuk untuk memulai.</div></footer>
     </div>
 
-    <!-- Modal Pengaturan Pin -->
     <div id="pin-settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-full overflow-y-auto"><h2 class="text-2xl font-bold mb-4 text-emerald-400">Kustomisasi Pin Anda</h2><div class="mb-6"><h3 class="font-semibold mb-3 text-gray-300">Pilih Warna</h3><div id="color-options" class="flex gap-3 flex-wrap"></div></div><div class="mb-6"><h3 class="font-semibold mb-3 text-gray-300">Pilih Ikon</h3><div id="icon-options" class="flex gap-3 flex-wrap justify-center"></div></div><div class="flex justify-end gap-4"><button id="cancel-settings-btn" class="bg-gray-600 hover:bg-gray-700 font-bold py-2 px-4 rounded-lg">Batal</button><button id="save-settings-btn" class="bg-emerald-600 hover:bg-emerald-700 font-bold py-2 px-4 rounded-lg">Simpan</button></div></div></div>
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -178,7 +177,6 @@
             if (currentRouteState === 'PREVIEW') {
                 DOM.setDestinationBtn.classList.remove('hidden');
                 DOM.cancelRouteBtn.classList.remove('hidden');
-                DOM.status.textContent = 'Rute pratinjau. Tetapkan tujuan untuk melanjutkan.';
                 DOM.subtitle.textContent = 'Sebuah rute sedang ditampilkan...';
                 DOM.map.classList.add('map-locked');
             } else if (currentRouteState === 'SET') {
@@ -315,12 +313,23 @@
             
             previewRouteInfo = { coords: destinationCoords, name: destinationName };
             destinationMarker = L.marker(destinationCoords, { icon: createCustomIcon('#e74c3c', 'flag')}).addTo(map).bindPopup(`<b>${destinationName}</b>`).openPopup();
+            
             routingControl = L.Routing.control({
                 waypoints: [ L.latLng(userCoords), L.latLng(destinationCoords) ],
                 routeWhileDragging: false,
                 lineOptions: { styles: [{color: '#6EE7B7', weight: 5}] },
-                createMarker: () => null,
-                language: 'id' // Mengatur bahasa panel rute
+                createMarker: () => null
+            }).on('routesfound', function(e) {
+                const summary = e.routes[0].summary;
+                const totalDistance = (summary.totalDistance / 1000).toFixed(1);
+                const totalTime = Math.round(summary.totalTime / 60);
+                const hours = Math.floor(totalTime / 60);
+                const minutes = totalTime % 60;
+                let timeString = '';
+                if(hours > 0) timeString += `${hours} jam `;
+                if(minutes > 0) timeString += `${minutes} menit`;
+                
+                DOM.status.textContent = `Estimasi Rute: ${timeString} (${totalDistance} km)`;
             }).addTo(map);
 
             setRouteState('PREVIEW');
@@ -362,4 +371,3 @@
     </script>
 </body>
 </html>
-
