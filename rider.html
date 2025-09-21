@@ -14,6 +14,7 @@
         #map { height: 70vh; z-index: 10; background-color: #4a5568; }
         .map-locked { cursor: not-allowed; }
         body { font-family: 'Inter', sans-serif; }
+        .hidden { display: none; }
         
         .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #2d3748; color: #e2e8f0; border-radius: 8px; }
         .user-popup { display: flex; align-items: center; gap: 10px; }
@@ -52,7 +53,6 @@
         <main>
             <div id="map-container" class="rounded-2xl shadow-2xl overflow-hidden border-2 border-gray-700 relative">
                 <div id="map"></div>
-                <!-- Navigation Controls -->
                 <div id="navigation-controls" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-4 bg-gray-800 bg-opacity-80 backdrop-blur-sm p-3 rounded-xl shadow-lg">
                     <button id="set-destination-btn" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-5 rounded-lg">Tetapkan Tujuan</button>
                     <button id="start-nav-btn" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg">Mulai Navigasi</button>
@@ -64,7 +64,6 @@
         <footer><div id="status" class="mt-4 p-3 bg-gray-800 rounded-lg text-center">Silakan login untuk memulai.</div></footer>
     </div>
 
-    <!-- Modal Pengaturan Pin -->
     <div id="pin-settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-full overflow-y-auto"><h2 class="text-2xl font-bold mb-4 text-emerald-400">Kustomisasi Pin Anda</h2><div class="mb-6"><h3 class="font-semibold mb-3 text-gray-300">Pilih Warna</h3><div id="color-options" class="flex gap-3 flex-wrap"></div></div><div class="mb-6"><h3 class="font-semibold mb-3 text-gray-300">Pilih Ikon</h3><div id="icon-options" class="flex gap-3 flex-wrap justify-center"></div></div><div class="flex justify-end gap-4"><button id="cancel-settings-btn" class="bg-gray-600 hover:bg-gray-700 font-bold py-2 px-4 rounded-lg">Batal</button><button id="save-settings-btn" class="bg-emerald-600 hover:bg-emerald-700 font-bold py-2 px-4 rounded-lg">Simpan</button></div></div></div>
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -86,8 +85,6 @@
         let publicRidersUnsubscribe = null;
         const publicMarkers = {};
         let currentUserSettings = { pinColor: '#3498db', pinIcon: 'motorcycle' };
-
-        // --- State Management ---
         let currentRouteState = 'IDLE'; // IDLE, PREVIEW, SET, NAVIGATING
         let previewRouteInfo = null;
 
@@ -101,7 +98,6 @@
             cancelSettingsBtn: document.getElementById('cancel-settings-btn'), saveSettingsBtn: document.getElementById('save-settings-btn'),
             colorOptions: document.getElementById('color-options'), iconOptions: document.getElementById('icon-options'),
             searchForm: document.getElementById('search-form'), searchInput: document.getElementById('search-input'),
-            // Navigation Controls
             navControls: document.getElementById('navigation-controls'),
             setDestinationBtn: document.getElementById('set-destination-btn'),
             startNavBtn: document.getElementById('start-nav-btn'),
@@ -132,7 +128,6 @@
             shopping: '<path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.97 1.228H15.42a1 1 0 00.97-1.228l-1.38-5.52a1 1 0 00-.97-1.222H4.42a1 1 0 00-.97 1.222L3.75 4H2a1 1 0 00-1-1H.99a1 1 0 00-1 1v.01A1 1 0 001 4h1.01l1.38 5.52a2.997 2.997 0 002.91 2.48h8.4a2.997 2.997 0 002.91-2.48L19.22 5.44A2 2 0 0017.27 3H4.88l-.26-1.04A2 2 0 002.72 1H3z"></path><path d="M7 15a2 2 0 100 4 2 2 0 000-4zM15 15a2 2 0 100 4 2 2 0 000-4z"></path>',
         };
 
-        // --- Core Functions ---
         function createCustomIcon(color, iconName) {
             const iconPath = availableIcons[iconName] || availableIcons.person;
             const iconHtml = `<svg width="64" height="64" viewBox="0 0 32 32"><path fill="${color}" stroke="#1a202c" stroke-width="1.5" d="M16 31.547c0 0 10-13.235 10-20.547a10 10 0 10-20 0c0 7.312 10 20.547 10 20.547z"></path><svg x="6" y="5" width="20" height="20" viewBox="0 0 20 20" fill="white">${iconPath}</svg></svg>`;
@@ -149,7 +144,6 @@
             });
         }
         
-        // --- State and UI Control ---
         function setRouteState(newState) {
             currentRouteState = newState;
             updateNavControlsUI();
@@ -159,7 +153,6 @@
             const isVisible = (currentRouteState !== 'IDLE');
             DOM.navControls.classList.toggle('visible', isVisible);
             
-            // Sembunyikan semua tombol dulu
             [DOM.setDestinationBtn, DOM.startNavBtn, DOM.stopNavBtn, DOM.cancelRouteBtn].forEach(btn => btn.classList.add('hidden'));
 
             if (currentRouteState === 'PREVIEW') {
@@ -185,10 +178,8 @@
             }
         }
         
-        // --- Event Handlers for Navigation Controls ---
         DOM.setDestinationBtn.addEventListener('click', () => {
             if (currentRouteState !== 'PREVIEW' || !previewRouteInfo) return;
-            // The route is already on the map, we just change the state
             setRouteState('SET');
         });
 
@@ -206,13 +197,10 @@
         DOM.cancelRouteBtn.addEventListener('click', () => {
             if (routingControl) map.removeControl(routingControl);
             if (destinationMarker) map.removeLayer(destinationMarker);
-            routingControl = null;
-            destinationMarker = null;
-            previewRouteInfo = null;
+            routingControl = null; destinationMarker = null; previewRouteInfo = null;
             setRouteState('IDLE');
         });
 
-        // --- Authentication & Main Logic ---
         onAuthStateChanged(auth, user => {
             if (user) {
                 DOM.userInfo.classList.remove('hidden'); DOM.userInfo.classList.add('flex'); DOM.loginBtn.classList.add('hidden');
@@ -224,7 +212,7 @@
                 DOM.userInfo.classList.add('hidden'); DOM.loginBtn.classList.remove('hidden'); DOM.shareControl.classList.add('hidden'); DOM.settingsBtn.classList.add('hidden'); DOM.recenterBtn.classList.add('hidden');
                 DOM.status.textContent = 'Silakan login untuk memulai.';
                 if (myMarker) map.removeLayer(myMarker);
-                DOM.cancelRouteBtn.click(); // Reset route state on logout
+                DOM.cancelRouteBtn.click();
                 if (publicRidersUnsubscribe) publicRidersUnsubscribe(); Object.values(publicMarkers).forEach(marker => map.removeLayer(marker));
             }
         });
@@ -236,7 +224,7 @@
         
         function updateLocation(position) {
             userCoords = [position.coords.latitude, position.coords.longitude];
-            userCoords.accuracy = position.coords.accuracy; // Store accuracy
+            userCoords.accuracy = position.coords.accuracy;
 
             if (currentRouteState === 'IDLE') DOM.status.textContent = `Akurasi: ${Math.round(userCoords.accuracy)}m`;
             
@@ -253,17 +241,51 @@
         }
 
         DOM.recenterBtn.addEventListener('click', () => {
-            if (userCoords) map.setView(userCoords, 16, {animate: true});
-            else DOM.status.textContent = 'Lokasi Anda belum ditemukan.';
+            if (userCoords) { map.setView(userCoords, 16, {animate: true}); } 
+            else { DOM.status.textContent = 'Lokasi Anda belum ditemukan untuk dipusatkan.'; }
         });
 
-        DOM.shareToggle.addEventListener('change', () => { isSharingPublicly = DOM.shareToggle.checked; /* ... logic ... */ });
+        DOM.shareToggle.addEventListener('change', () => {
+            isSharingPublicly = DOM.shareToggle.checked; if (!auth.currentUser) return;
+            if (isSharingPublicly) {
+                if (userCoords) { updateLocationInFirestore(auth.currentUser); DOM.status.textContent = 'Lokasi Anda sekarang publik.'; } 
+                else { DOM.status.textContent = 'Tunggu lokasi ditemukan.'; DOM.shareToggle.checked = isSharingPublicly = false; }
+            } else { removeLocationFromFirestore(auth.currentUser.uid); DOM.status.textContent = 'Lokasi Anda tidak lagi publik.'; }
+        });
 
-        async function updateLocationInFirestore(user) { /* ... logic ... */ }
-        async function removeLocationFromFirestore(uid) { /* ... logic ... */ }
-        function listenToPublicRiders() { /* ... logic ... */ }
+        async function updateLocationInFirestore(user) {
+            if (!userCoords) return;
+            await setDoc(doc(db, 'public_riders', user.uid), {
+                name: user.displayName, photoURL: user.photoURL, lat: userCoords[0], lng: userCoords[1],
+                lastUpdate: new Date(), pinColor: currentUserSettings.pinColor, pinIcon: currentUserSettings.pinIcon
+            }, { merge: true });
+        }
+        
+        async function removeLocationFromFirestore(uid) { await deleteDoc(doc(db, "public_riders", uid)); }
+
+        function listenToPublicRiders() {
+            publicRidersUnsubscribe = onSnapshot(collection(db, 'public_riders'), (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    const riderData = change.doc.data(); const riderId = change.doc.id;
+                    if (riderId === auth.currentUser?.uid) {
+                        currentUserSettings.pinColor = riderData.pinColor || '#3498db';
+                        currentUserSettings.pinIcon = riderData.pinIcon || 'motorcycle';
+                        if (myMarker) myMarker.setIcon(createCustomIcon(currentUserSettings.pinColor, currentUserSettings.pinIcon));
+                        return;
+                    }
+                    if (change.type === "added" || change.type === "modified") {
+                        if (publicMarkers[riderId]) map.removeLayer(publicMarkers[riderId]);
+                        const riderCoords = [riderData.lat, riderData.lng];
+                        const icon = createCustomIcon(riderData.pinColor || '#34495e', riderData.pinIcon || 'person');
+                        const popupContent = `<div class="user-popup"><img src="${riderData.photoURL}" alt="foto"><div><strong>${riderData.name}</strong><br><button onclick="window.showRouteTo([${riderCoords}], '${riderData.name.replace(/'/g, "\\'")}')">Rute ke Sini</button></div></div>`;
+                        publicMarkers[riderId] = L.marker(riderCoords, { icon: icon }).addTo(map).bindPopup(popupContent);
+                    } else if (change.type === "removed") { if (publicMarkers[riderId]) { map.removeLayer(publicMarkers[riderId]); delete publicMarkers[riderId]; } }
+                });
+            });
+        }
         
         window.showRouteTo = (destinationCoords, destinationName = 'Tujuan') => {
+            if (currentRouteState !== 'IDLE') { DOM.status.textContent = 'Batalkan rute saat ini untuk membuat rute baru.'; return; }
             if (!userCoords) { alert("Lokasi Anda belum ditemukan."); return; }
             if (routingControl) map.removeControl(routingControl);
             if (destinationMarker) map.removeLayer(destinationMarker);
@@ -292,48 +314,6 @@
             } catch (error) { DOM.status.textContent = 'Gagal melakukan pencarian.'; }
         });
 
-        function setupModal() { /* ... setup logic ... */ }
-        DOM.settingsBtn.addEventListener('click', () => { /* ... modal logic ... */ });
-        DOM.cancelSettingsBtn.addEventListener('click', () => DOM.modal.classList.add('hidden'));
-        DOM.saveSettingsBtn.addEventListener('click', async () => { /* ... save logic ... */ });
-        
-        initMap(); setupModal();
-
-        // --- functions to be copied without changes ---
-        DOM.shareToggle.addEventListener('change', () => {
-            isSharingPublicly = DOM.shareToggle.checked; if (!auth.currentUser) return;
-            if (isSharingPublicly) {
-                if (userCoords) { updateLocationInFirestore(auth.currentUser); DOM.status.textContent = 'Lokasi Anda sekarang publik.'; } 
-                else { DOM.status.textContent = 'Tunggu lokasi ditemukan.'; DOM.shareToggle.checked = isSharingPublicly = false; }
-            } else { removeLocationFromFirestore(auth.currentUser.uid); DOM.status.textContent = 'Lokasi Anda tidak lagi publik.'; }
-        });
-        async function updateLocationInFirestore(user) {
-            if (!userCoords) return;
-            await setDoc(doc(db, 'public_riders', user.uid), {
-                name: user.displayName, photoURL: user.photoURL, lat: userCoords[0], lng: userCoords[1],
-                lastUpdate: new Date(), pinColor: currentUserSettings.pinColor, pinIcon: currentUserSettings.pinIcon
-            }, { merge: true });
-        }
-        async function removeLocationFromFirestore(uid) { await deleteDoc(doc(db, "public_riders", uid)); }
-        function listenToPublicRiders() {
-            publicRidersUnsubscribe = onSnapshot(collection(db, 'public_riders'), (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    const riderData = change.doc.data(); const riderId = change.doc.id;
-                    if (riderId === auth.currentUser?.uid) {
-                        currentUserSettings.pinColor = riderData.pinColor || '#3498db'; currentUserSettings.pinIcon = riderData.pinIcon || 'motorcycle';
-                        if (myMarker) myMarker.setIcon(createCustomIcon(currentUserSettings.pinColor, currentUserSettings.pinIcon));
-                        return;
-                    }
-                    if (change.type === "added" || change.type === "modified") {
-                        if (publicMarkers[riderId]) map.removeLayer(publicMarkers[riderId]);
-                        const riderCoords = [riderData.lat, riderData.lng];
-                        const icon = createCustomIcon(riderData.pinColor || '#34495e', riderData.pinIcon || 'person');
-                        const popupContent = `<div class="user-popup"><img src="${riderData.photoURL}" alt="foto"><div><strong>${riderData.name}</strong><br><button onclick="window.showRouteTo([${riderCoords}], '${riderData.name}')">Rute ke Sini</button></div></div>`;
-                        publicMarkers[riderId] = L.marker(riderCoords, { icon: icon }).addTo(map).bindPopup(popupContent);
-                    } else if (change.type === "removed") { if (publicMarkers[riderId]) { map.removeLayer(publicMarkers[riderId]); delete publicMarkers[riderId]; } }
-                });
-            });
-        }
         function setupModal() {
             DOM.colorOptions.innerHTML = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#ffffff'].map(c => `<div><input type="radio" name="color" value="${c}" id="c-${c}" class="sr-only"><label for="c-${c}" class="block w-8 h-8 rounded-full cursor-pointer border-2 border-gray-500" style="background-color:${c};"></label></div>`).join('');
             DOM.iconOptions.innerHTML = Object.keys(availableIcons).map(i => `<div><input type="radio" name="icon" value="${i}" id="i-${i}" class="sr-only"><label for="i-${i}" class="block p-2 rounded-lg cursor-pointer border-2 border-gray-500 bg-gray-600 transition-transform">${availableIcons[i]}</label></div>`.replace('<path', '<svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path')).join('');
@@ -350,8 +330,8 @@
             DOM.modal.classList.add('hidden');
         });
         DOM.cancelSettingsBtn.addEventListener('click', () => DOM.modal.classList.add('hidden'));
-
+        
+        initMap(); setupModal();
     </script>
 </body>
 </html>
-
