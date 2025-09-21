@@ -211,7 +211,6 @@
             cancelSettingsBtn: document.getElementById('cancel-settings-btn'), 
             saveSettingsBtn: document.getElementById('save-settings-btn'),
             colorOptions: document.getElementById('color-options'),
-            subtitle: null,
         };
 
         const roles = {
@@ -372,7 +371,7 @@
                     DOM.status.textContent = 'Mode navigasi aktif. Peta akan mengikuti Anda.';
                 }
                 DOM.mapContainer.classList.add('map-locked');
-            } else { // IDLE
+            } else {
                 DOM.status.textContent = userCoords ? `Akurasi: ${Math.round(userCoords.accuracy)}m` : 'Mencari lokasi...';
                 DOM.mapContainer.classList.remove('map-locked', 'adding-waypoint', 'adding-checkpoint');
             }
@@ -451,13 +450,19 @@
             setRouteState('IDLE');
         });
 
-        onAuthStateChanged(auth, user => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 DOM.loginContainer.classList.add('hidden');
                 DOM.profileFabContainer.classList.remove('hidden');
                 DOM.profileFab.src = user.photoURL;
                 DOM.fabBottomLeft.classList.remove('hidden');
                 DOM.fabBottomRight.classList.remove('hidden');
+                
+                const userRef = doc(db, 'users', user.uid);
+                await setDoc(userRef, {
+                    name: user.displayName,
+                    photoURL: user.photoURL,
+                }, { merge: true });
                 
                 startLocationWatch(); 
                 listenToUserDoc(user.uid);
