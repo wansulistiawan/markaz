@@ -97,10 +97,12 @@
             <div id="status" class="max-w-xl mx-auto p-3 bg-gray-800 bg-opacity-80 backdrop-blur-sm rounded-lg text-center pointer-events-auto">Memuat peta...</div>
         </div>
 
-        <button id="login-btn" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-3 z-[500] text-lg">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 488 512"><path d="M488 261.8C488 403.3 381.5 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 61.9l-72.2 64.5C305.1 102.8 277.6 88 248 88c-86.5 0-155.2 67.8-155.2 151.3s68.7 151.3 155.2 151.3c92.8 0 132-61.1 135-95.2H248v-73.8h238.2c2.6 13.2 4.2 27.8 4.2 43.8z"></path></svg> 
-            Masuk dengan Google
-        </button>
+        <div id="login-container" class="w-full h-full flex items-center justify-center absolute top-0 left-0 z-[500]">
+            <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-3 text-lg">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 488 512"><path d="M488 261.8C488 403.3 381.5 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 61.9l-72.2 64.5C305.1 102.8 277.6 88 248 88c-86.5 0-155.2 67.8-155.2 151.3s68.7 151.3 155.2 151.3c92.8 0 132-61.1 135-95.2H248v-73.8h238.2c2.6 13.2 4.2 27.8 4.2 43.8z"></path></svg> 
+                Masuk dengan Google
+            </button>
+        </div>
     </div>
 
     <!-- Modals -->
@@ -179,6 +181,7 @@
             mapContainer: document.getElementById('map-container'),
             status: document.getElementById('status'),
             loginBtn: document.getElementById('login-btn'),
+            loginContainer: document.getElementById('login-container'),
             logoutMenuBtn: document.getElementById('logout-menu-btn'),
             profileFab: document.getElementById('profile-fab'),
             profileFabContainer: document.getElementById('fab-top-right'),
@@ -201,12 +204,14 @@
             startNavBtn: document.getElementById('start-nav-btn'),
             stopNavBtn: document.getElementById('stop-nav-btn'),
             cancelRouteBtn: document.getElementById('cancel-route-btn'),
+            fabBottomLeft: document.getElementById('fab-bottom-left'),
             fabBottomRight: document.getElementById('fab-bottom-right'),
             shareLocationFab: document.getElementById('share-location-fab'),
             recenterFab: document.getElementById('recenter-fab'),
             cancelSettingsBtn: document.getElementById('cancel-settings-btn'), 
             saveSettingsBtn: document.getElementById('save-settings-btn'),
             colorOptions: document.getElementById('color-options'),
+            subtitle: null, // Akan diinisialisasi setelah login
         };
 
         const roles = {
@@ -354,7 +359,7 @@
             if (currentRouteState === 'PREVIEW') {
                 DOM.setDestinationBtn.classList.remove('hidden');
                 DOM.cancelRouteBtn.classList.remove('hidden');
-                DOM.subtitle.textContent = 'Seret pin tujuan untuk mengubah rute.';
+                if (DOM.subtitle) DOM.subtitle.textContent = 'Seret pin tujuan untuk mengubah rute.';
                 DOM.map.classList.remove('map-locked', 'adding-waypoint', 'adding-checkpoint');
             } else if (currentRouteState === 'SET' || currentRouteState === 'NAVIGATING') {
                 DOM.addWaypointBtn.classList.remove('hidden');
@@ -367,11 +372,11 @@
                     DOM.stopNavBtn.classList.remove('hidden');
                     DOM.status.textContent = 'Mode navigasi aktif. Peta akan mengikuti Anda.';
                 }
-                DOM.subtitle.textContent = 'Rute telah ditetapkan.';
+                if (DOM.subtitle) DOM.subtitle.textContent = 'Rute telah ditetapkan.';
                 DOM.map.classList.add('map-locked');
             } else {
                 DOM.status.textContent = userCoords ? `Akurasi: ${Math.round(userCoords.accuracy)}m` : 'Mencari lokasi...';
-                DOM.subtitle.textContent = 'Klik peta atau cari untuk pratinjau rute.';
+                if (DOM.subtitle) DOM.subtitle.textContent = 'Klik peta atau cari untuk pratinjau rute.';
                 DOM.map.classList.remove('map-locked', 'adding-waypoint', 'adding-checkpoint');
             }
         }
@@ -451,16 +456,19 @@
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                DOM.loginBtn.classList.add('hidden');
+                DOM.loginContainer.classList.add('hidden');
                 DOM.profileFabContainer.classList.remove('hidden');
                 DOM.profileFab.src = user.photoURL;
                 DOM.fabBottomLeft.classList.remove('hidden');
                 DOM.fabBottomRight.classList.remove('hidden');
                 
+                // Initialize subtitle here after login
+                DOM.subtitle = document.getElementById('subtitle');
+                
                 startLocationWatch(); 
                 listenToUserDoc(user.uid);
             } else {
-                DOM.loginBtn.classList.remove('hidden');
+                DOM.loginContainer.classList.remove('hidden');
                 DOM.profileFabContainer.classList.add('hidden');
                 DOM.fabBottomLeft.classList.add('hidden');
                 DOM.fabBottomRight.classList.add('hidden');
@@ -533,6 +541,7 @@
         function listenToUserDoc(uid) {
             if (userUnsubscribe) userUnsubscribe();
             userUnsubscribe = onSnapshot(doc(db, "users", uid), (doc) => {
+                if (!doc.exists()) return;
                 const userData = doc.data();
                 if (userData?.groupId && userData.groupId !== currentGroupId) {
                     joinGroup(userData.groupId, true);
