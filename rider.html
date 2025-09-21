@@ -73,21 +73,17 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
-		
 
-        // ===================================================================================
-        // === TEMPELKAN KONFIGURASI FIREBASE ANDA DI SINI ===
-        // ===================================================================================
+        // Konfigurasi Firebase Anda
         const firebaseConfig = {
-  apiKey: "AIzaSyA9fthcIZ_VQXMUL6lPd-165NIFNb09JOA",
-  authDomain: "aplikasi-touring.firebaseapp.com",
-  projectId: "aplikasi-touring",
-  storageBucket: "aplikasi-touring.firebasestorage.app",
-  messagingSenderId: "310021643774",
-  appId: "1:310021643774:web:4943db8f567e66aef174af",
-  measurementId: "G-ZRCCNLC8WB"
-};
-        // ===================================================================================
+            apiKey: "AIzaSyA9fthcIZ_VQXMUL6lPd-165NIFNb09JOA",
+            authDomain: "aplikasi-touring.firebaseapp.com",
+            projectId: "aplikasi-touring",
+            storageBucket: "aplikasi-touring.appspot.com", // <-- Koreksi di sini
+            messagingSenderId: "310021643774",
+            appId: "1:310021643774:web:4943db8f567e66aef174af",
+            measurementId: "G-ZRCCNLC8WB"
+        };
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -147,7 +143,11 @@
         });
 
         loginBtn.addEventListener('click', () => {
-            signInWithPopup(auth, provider).catch(error => console.error("Login Gagal:", error));
+            signInWithPopup(auth, provider).catch(error => {
+                console.error("Login Gagal:", error);
+                statusEl.textContent = `Login Gagal: ${error.message}. Cek console untuk detail.`;
+                statusEl.style.backgroundColor = '#EF4444';
+            });
         });
 
         logoutBtn.addEventListener('click', () => {
@@ -236,16 +236,13 @@
                     const riderData = change.doc.data();
                     const riderId = change.doc.id;
 
-                    // Jangan tampilkan pin publik untuk diri sendiri
                     if (riderId === auth.currentUser?.uid) return;
 
                     if (change.type === "added" || change.type === "modified") {
                         const riderCoords = [riderData.lat, riderData.lng];
                         if (publicMarkers[riderId]) {
-                            // Update marker yang ada
                             publicMarkers[riderId].setLatLng(riderCoords);
                         } else {
-                            // Buat marker baru
                             const popupContent = `<div class="user-popup"><img src="${riderData.photoURL}" alt="foto profil"><strong>${riderData.name}</strong></div>`;
                             publicMarkers[riderId] = L.marker(riderCoords).addTo(map).bindPopup(popupContent);
                         }
