@@ -34,7 +34,6 @@
         #navigation-controls { transition: transform 0.3s ease-in-out; transform: translateY(200%); }
         #navigation-controls.visible { transform: translateY(0); }
 
-        .fab-container { position: absolute; bottom: 4rem; right: 1rem; z-index: 400; display: flex; flex-direction: column; gap: 0.75rem; }
         .fab { width: 52px; height: 52px; background-color: #4A5568; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; transition: background-color 0.2s; border: 1px solid #718096; }
         .fab:hover { background-color: #718096; }
         .fab.active { background-color: #10B981; border-color: #6EE7B7; }
@@ -236,9 +235,12 @@
         
         function createProfilePinIcon(color, imageUrl, role) {
             const uniqueId = `clip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            const roleEmoji = roles[role] || ''; // If no role, emoji is empty
+            const roleEmoji = roles[role] || '';
             const iconHtml = `
                 <svg width="64" height="70" viewBox="0 0 32 38" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;">
+                    <defs>
+                        <clipPath id="${uniqueId}"><circle cx="16" cy="11" r="9" /></clipPath>
+                    </defs>
                     <g transform="translate(0, 6)">
                         <path fill="${color}" stroke="#1a202c" stroke-width="1.5" d="M16 31.547c0 0 10-13.235 10-20.547a10 10 0 10-20 0c0 7.312 10 20.547 10 20.547z"></path>
                         <circle cx="16" cy="11" r="9" fill="#2d3748" stroke="${color}" stroke-width="1.5" />
@@ -520,11 +522,9 @@
         DOM.shareLocationFab.addEventListener('click', () => {
             isSharingPublicly = !isSharingPublicly;
             DOM.shareLocationFab.classList.toggle('active', isSharingPublicly);
-            if (!auth.currentUser) return;
-            if (isSharingPublicly) {
-                if (userCoords) { updateLocationInFirestore(auth.currentUser); } 
-                else { DOM.status.textContent = 'Tunggu lokasi ditemukan.'; isSharingPublicly = false; DOM.shareLocationFab.classList.remove('active'); }
-            } else { removeLocationFromFirestore(auth.currentUser.uid); }
+            if (auth.currentUser) {
+                updateDoc(doc(db, 'users', auth.currentUser.uid), { isSharing: isSharingPublicly });
+            }
         });
         
         async function updateLocationInFirestore(user) {
@@ -533,10 +533,11 @@
             if (currentRouteState === 'IDLE') DOM.status.textContent = statusText;
             
             const userRef = doc(db, 'users', user.uid);
-            await setDoc(userRef, {
-                name: user.displayName, photoURL: user.photoURL, lat: userCoords[0], lng: userCoords[1],
-                lastUpdate: new Date(), pinColor: currentUserSettings.pinColor, isSharing: isSharingPublicly, groupId: currentGroupId
-            }, { merge: true });
+            await updateDoc(userRef, {
+                lat: userCoords[0],
+                lng: userCoords[1],
+                lastUpdate: new Date(),
+            });
         }
         
         async function removeLocationFromFirestore(uid) { 
@@ -556,6 +557,10 @@
                     leaveGroup(true);
                 }
                 currentUserSettings.pinColor = userData?.pinColor || '#3498db';
+
+                isSharingPublicly = userData?.isSharing || false;
+                DOM.shareLocationFab.classList.toggle('active', isSharingPublicly);
+
                 if(myMarker && auth.currentUser){
                     const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
                     myMarker.setIcon(createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole));
@@ -567,25 +572,35 @@
             if (publicRidersUnsubscribe) publicRidersUnsubscribe();
             const q = query(collection(db, 'users'));
             publicRidersUnsubscribe = onSnapshot(q, (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    const riderData = change.doc.data(); const riderId = change.doc.id;
+                const currentVisibleMarkers = new Set();
+                snapshot.forEach((doc) => {
+                    const riderData = doc.data();
+                    const riderId = doc.id;
                     const isMySelf = riderId === auth.currentUser?.uid;
                     const isSharing = riderData.isSharing;
                     const belongsToMyGroup = currentGroupId && riderData.groupId === currentGroupId;
                     const shouldShow = isSharing && (!currentGroupId || belongsToMyGroup);
-                    
-                    if (change.type === "removed" || !shouldShow) {
-                        if (publicMarkers[riderId]) { map.removeLayer(publicMarkers[riderId]); delete publicMarkers[riderId]; }
-                        return;
-                    }
 
-                    if (!isMySelf) {
-                        if (publicMarkers[riderId]) map.removeLayer(publicMarkers[riderId]);
+                    if (shouldShow && !isMySelf) {
+                        currentVisibleMarkers.add(riderId);
                         const riderCoords = [riderData.lat, riderData.lng];
                         const role = currentGroupData?.members?.[riderId]?.role || 'member';
                         const icon = createProfilePinIcon(riderData.pinColor || '#34495e', riderData.photoURL, role);
-                        const popupContent = `<div class="user-popup"><img src="${riderData.photoURL}" alt="foto"><div><strong>${riderData.name}</strong><br><button onclick="window.showRouteTo([${riderCoords}], '${riderData.name.replace(/'/g, "\\'")}')">Rute ke Sini</button></div></div>`;
-                        publicMarkers[riderId] = L.marker(riderCoords, { icon: icon }).addTo(map).bindPopup(popupContent);
+                        
+                        if (publicMarkers[riderId]) {
+                            publicMarkers[riderId].setLatLng(riderCoords);
+                            publicMarkers[riderId].setIcon(icon);
+                        } else {
+                            const popupContent = `<div class="user-popup"><img src="${riderData.photoURL}" alt="foto"><div><strong>${riderData.name}</strong><br><button onclick="window.showRouteTo([${riderCoords}], '${riderData.name.replace(/'/g, "\\'")}')">Rute ke Sini</button></div></div>`;
+                            publicMarkers[riderId] = L.marker(riderCoords, { icon: icon }).addTo(map).bindPopup(popupContent);
+                        }
+                    }
+                });
+
+                Object.keys(publicMarkers).forEach(markerId => {
+                    if (!currentVisibleMarkers.has(markerId)) {
+                        map.removeLayer(publicMarkers[markerId]);
+                        delete publicMarkers[markerId];
                     }
                 });
             });
@@ -667,6 +682,9 @@
             const groupName = DOM.createGroupName.value.trim();
             if (!user || !groupName) return;
 
+            DOM.createGroupBtn.disabled = true;
+            DOM.createGroupBtn.textContent = "Membuat...";
+
             let newGroupId = null;
             let groupExists = true;
             while(groupExists) {
@@ -687,7 +705,10 @@
             };
             await setDoc(groupRef, newGroup);
             await updateDoc(doc(db, "users", user.uid), { groupId: groupRef.id });
+
             DOM.createGroupName.value = '';
+            DOM.createGroupBtn.disabled = false;
+            DOM.createGroupBtn.textContent = "Buat";
         });
 
         DOM.joinGroupBtn.addEventListener('click', async () => {
@@ -710,12 +731,15 @@
             }
             
             const groupData = groupSnap.data();
-            if (!groupData.members[user.uid]) {
+            const userRef = doc(db, "users", user.uid);
+            
+            // Only add member if they don't exist
+            if (!groupData.members || !groupData.members[user.uid]) {
                 const newMember = { name: user.displayName, photoURL: user.photoURL, role: 'member' };
                 await updateDoc(groupRef, { [`members.${user.uid}`]: newMember });
             }
             
-            await updateDoc(doc(db, "users", user.uid), { groupId: groupId });
+            await updateDoc(userRef, { groupId: groupId });
             
             currentGroupId = groupId;
             if (!silent) DOM.groupModal.classList.add('hidden');
