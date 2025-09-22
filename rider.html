@@ -285,8 +285,10 @@
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
                 const data = await res.json();
                 displaySuggestions(data);
+			
             } catch (error) {
                 console.error('Gagal mengambil saran:', error);
+				DOM.status.textContent = "Gagal mengambil saran lokasi. Periksa koneksi Anda.";
             }
         }
         
@@ -394,6 +396,21 @@
             setRouteState('SET');
         });
 
+        DOM.shareLocationFab.addEventListener('click', async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    // Toggle status saat ini
+    const newSharingStatus = !isSharingPublicly; 
+
+    // Update ke Firestore
+    const userRef = doc(db, 'users', user.uid);
+    await updateDoc(userRef, { isSharing: newSharingStatus });
+
+    // Beri feedback ke pengguna
+    DOM.status.textContent = newSharingStatus ? 'Berbagi lokasi diaktifkan.' : 'Berbagi lokasi dihentikan.';
+});
+        
         DOM.addWaypointBtn.addEventListener('click', () => {
             isAddingWaypoint = true;
             DOM.mapContainer.classList.add('adding-waypoint');
@@ -477,6 +494,7 @@
                 
                 startLocationWatch(); 
                 listenToUserDoc(user.uid);
+                listenToPublicRiders();
             } else {
                 DOM.loginContainer.classList.remove('hidden');
                 DOM.profileFabContainer.classList.add('hidden');
@@ -638,6 +656,12 @@
         }
 
         DOM.searchInput.addEventListener('input', debounce(e => fetchSuggestions(e.target.value), 300));
+		document.getElementById('search-form').addEventListener('submit', () => {
+            const firstSuggestion = DOM.suggestionsContainer.querySelector('.suggestion-item');
+            if (firstSuggestion) {
+                firstSuggestion.click(); // Simulasikan klik pada saran pertama
+            }
+        });
         document.addEventListener('click', (e) => {
             if (DOM.searchModal && !DOM.searchModal.contains(e.target) && e.target !== DOM.searchFab && !DOM.searchFab.contains(e.target)) {
                 DOM.searchModal.classList.add('hidden');
@@ -919,4 +943,5 @@
     </script>
 </body>
 </html>
+
 
