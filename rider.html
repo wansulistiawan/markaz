@@ -234,17 +234,18 @@
         };
         
         function createProfilePinIcon(color, imageUrl, role) {
-            const uniqueId = `clip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            const uniqueId = `pattern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const roleEmoji = roles[role] || '';
             const iconHtml = `
                 <svg width="64" height="70" viewBox="0 0 32 38" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;">
                     <defs>
-                        <clipPath id="${uniqueId}"><circle cx="16" cy="11" r="9" /></clipPath>
+                        <pattern id="${uniqueId}" patternContentUnits="objectBoundingBox" width="1" height="1">
+                            <image href="${imageUrl}" x="0" y="0" height="1" width="1" preserveAspectRatio="xMidYMid slice"/>
+                        </pattern>
                     </defs>
                     <g transform="translate(0, 6)">
                         <path fill="${color}" stroke="#1a202c" stroke-width="1.5" d="M16 31.547c0 0 10-13.235 10-20.547a10 10 0 10-20 0c0 7.312 10 20.547 10 20.547z"></path>
-                        <circle cx="16" cy="11" r="9" fill="#2d3748" stroke="${color}" stroke-width="1.5" />
-                        <image href="${imageUrl}" x="7" y="2" height="18" width="18" clip-path="url(#${uniqueId})" />
+                        <circle cx="16" cy="11" r="9" fill="url(#${uniqueId})" stroke="${color}" stroke-width="1.5" />
                     </g>
                     <text x="16" y="8" font-size="14" text-anchor="middle" stroke="black" stroke-width="0.5px" paint-order="stroke" fill="white">${roleEmoji}</text>
                 </svg>`;
@@ -521,7 +522,6 @@
 
         DOM.shareLocationFab.addEventListener('click', () => {
             isSharingPublicly = !isSharingPublicly;
-            DOM.shareLocationFab.classList.toggle('active', isSharingPublicly);
             if (auth.currentUser) {
                 updateDoc(doc(db, 'users', auth.currentUser.uid), { isSharing: isSharingPublicly });
             }
@@ -529,8 +529,6 @@
         
         async function updateLocationInFirestore(user) {
             if (!userCoords) return;
-            const statusText = isSharingPublicly ? 'Lokasi Anda sekarang publik.' : 'Lokasi Anda tidak lagi publik.';
-            if (currentRouteState === 'IDLE') DOM.status.textContent = statusText;
             
             const userRef = doc(db, 'users', user.uid);
             await updateDoc(userRef, {
@@ -584,7 +582,7 @@
                     if (shouldShow && !isMySelf) {
                         currentVisibleMarkers.add(riderId);
                         const riderCoords = [riderData.lat, riderData.lng];
-                        const role = currentGroupData?.members?.[riderId]?.role || 'member';
+                        const role = currentGroupData?.members?.[riderId]?.role;
                         const icon = createProfilePinIcon(riderData.pinColor || '#34495e', riderData.photoURL, role);
                         
                         if (publicMarkers[riderId]) {
@@ -733,8 +731,10 @@
             const groupData = groupSnap.data();
             const userRef = doc(db, "users", user.uid);
             
-            // Only add member if they don't exist
             if (!groupData.members || !groupData.members[user.uid]) {
+                const newMember = { name: user.displayName, photoURL: user.photoURL, role: 'member' };
+                await updateDoc(groupRef, { [`members.${user.uid}`]: newMember });
+            } else if (groupData.members[user.uid].role !== 'amir') {
                 const newMember = { name: user.displayName, photoURL: user.photoURL, role: 'member' };
                 await updateDoc(groupRef, { [`members.${user.uid}`]: newMember });
             }
