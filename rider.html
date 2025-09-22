@@ -621,22 +621,51 @@
         DOM.colorOptions.innerHTML = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#ffffff'].map(c => `<div><input type="radio" name="color" value="${c}" id="c-${c}" class="sr-only modal-input"><label for="c-${c}" class="block w-8 h-8 rounded-full cursor-pointer border-2 border-gray-500" style="background-color:${c};"></label></div>`).join('');
     }
     
-	function handleGoogleMapsLink() {
+	async function handleGoogleMapsLink() {
     const url = prompt("Silakan paste link Google Maps di sini:");
     if (!url) return; // Batal jika pengguna tidak memasukkan apa-apa
 
-    // Regex untuk menemukan pola @latitude,longitude dari URL Google Maps
-    const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
-    const match = url.match(regex);
+    // Fungsi internal untuk mengekstrak koordinat
+    const extractCoords = (finalUrl) => {
+        const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+        const match = finalUrl.match(regex);
 
-    if (match && match[1] && match[2]) {
-        const lat = parseFloat(match[1]);
-        const lng = parseFloat(match[2]);
-        
-        // Gunakan fungsi yang sudah ada untuk menampilkan rute
-        window.showRouteTo([lat, lng], 'Lokasi dari Google Maps');
+        if (match && match[1] && match[2]) {
+            const lat = parseFloat(match[1]);
+            const lng = parseFloat(match[2]);
+            window.showRouteTo([lat, lng], 'Lokasi dari Google Maps');
+            DOM.status.textContent = "Rute berhasil dibuat dari link.";
+        } else {
+            alert("Link tidak valid atau tidak mengandung koordinat. Pastikan Anda menyalin URL Google Maps yang benar.");
+            DOM.status.textContent = "Gagal memproses link.";
+        }
+    };
+
+    // Cek apakah ini link pendek yang perlu diurai
+    if (url.includes('goo.gl') || url.includes('maps.app.goo.gl')) {
+        DOM.status.textContent = 'Mengurai link pendek, mohon tunggu...';
+        try {
+            // Kita gunakan API dari unshorten.me untuk "memanjangkan" URL
+            const response = await fetch(`https://unshorten.me/json/${url}`);
+            if (!response.ok) {
+                throw new Error('Gagal menghubungi layanan pengurai link.');
+            }
+            const data = await response.json();
+            
+            if (data.success && data.resolved_url) {
+                // Jika berhasil, proses URL panjangnya
+                extractCoords(data.resolved_url);
+            } else {
+                throw new Error(data.error || 'Gagal mengurai link pendek.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert(`Terjadi masalah saat mengurai link pendek: ${error.message}`);
+            DOM.status.textContent = "Gagal memproses link.";
+        }
     } else {
-        alert("Link tidak valid atau tidak mengandung koordinat. Pastikan Anda menyalin URL lengkap dari address bar browser.");
+        // Jika bukan link pendek, langsung proses seperti biasa
+        extractCoords(url);
     }
 }
 	
@@ -992,5 +1021,6 @@
 </script>
 </body>
 </html>
+
 
 
