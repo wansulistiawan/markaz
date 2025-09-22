@@ -541,7 +541,6 @@
         async function removeLocationFromFirestore(uid) { 
             const userRef = doc(db, 'users', uid);
             await updateDoc(userRef, { isSharing: false });
-            DOM.status.textContent = 'Lokasi Anda tidak lagi publik.';
         }
 
         function listenToUserDoc(uid) {
@@ -732,9 +731,6 @@
             const userRef = doc(db, "users", user.uid);
             
             if (!groupData.members || !groupData.members[user.uid]) {
-                const newMember = { name: user.displayName, photoURL: user.photoURL, role: 'member' };
-                await updateDoc(groupRef, { [`members.${user.uid}`]: newMember });
-            } else if (groupData.members[user.uid].role !== 'amir') {
                 const newMember = { name: user.displayName, photoURL: user.photoURL, role: 'member' };
                 await updateDoc(groupRef, { [`members.${user.uid}`]: newMember });
             }
