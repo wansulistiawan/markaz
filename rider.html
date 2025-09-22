@@ -55,11 +55,14 @@
         <div id="map"></div>
 
         <!-- Floating UI Elements -->
-        <div id="fab-top-left" class="absolute top-4 left-4 z-[400]">
-            <button id="search-fab" class="fab bg-amber-500 hover:bg-amber-600" title="Cari Rute">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13V7m0 13a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m5-7l5.447 2.724A1 1 0 0121 5.618v10.764a1 1 0 01-1.447.894L15 17m0-13v13m0 0a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg>
-            </button>
-        </div>
+        <div id="fab-top-left" class="absolute top-4 left-4 z-[400] flex flex-col gap-3">
+    <button id="search-fab" class="fab bg-amber-500 hover:bg-amber-600" title="Cari Rute">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13V7m0 13a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m5-7l5.447 2.724A1 1 0 0121 5.618v10.764a1 1 0 01-1.447.894L15 17m0-13v13m0 0a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg>
+    </button>
+    <button id="gmaps-fab" class="fab bg-blue-500 hover:bg-blue-600" title="Buka dari Link Google Maps">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+    </button>
+</div>
 
         <div id="group-info-bar" class="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-gray-800 bg-opacity-80 backdrop-blur-sm p-3 rounded-xl shadow-lg hidden">
             <h2 class="text-base sm:text-lg font-bold text-amber-400" id="group-info-name">Nama Grup</h2>
@@ -226,6 +229,7 @@
         fabBottomLeft: document.getElementById('fab-bottom-left'),
         fabBottomRight: document.getElementById('fab-bottom-right'),
         shareLocationFab: document.getElementById('share-location-fab'),
+		gmapsFab: document.getElementById('gmaps-fab'),
         recenterFab: document.getElementById('recenter-fab'),
         cancelSettingsBtn: document.getElementById('cancel-settings-btn'), 
         saveSettingsBtn: document.getElementById('save-settings-btn'),
@@ -617,6 +621,25 @@
         DOM.colorOptions.innerHTML = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#ffffff'].map(c => `<div><input type="radio" name="color" value="${c}" id="c-${c}" class="sr-only modal-input"><label for="c-${c}" class="block w-8 h-8 rounded-full cursor-pointer border-2 border-gray-500" style="background-color:${c};"></label></div>`).join('');
     }
     
+	function handleGoogleMapsLink() {
+    const url = prompt("Silakan paste link Google Maps di sini:");
+    if (!url) return; // Batal jika pengguna tidak memasukkan apa-apa
+
+    // Regex untuk menemukan pola @latitude,longitude dari URL Google Maps
+    const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+    const match = url.match(regex);
+
+    if (match && match[1] && match[2]) {
+        const lat = parseFloat(match[1]);
+        const lng = parseFloat(match[2]);
+        
+        // Gunakan fungsi yang sudah ada untuk menampilkan rute
+        window.showRouteTo([lat, lng], 'Lokasi dari Google Maps');
+    } else {
+        alert("Link tidak valid atau tidak mengandung koordinat. Pastikan Anda menyalin URL lengkap dari address bar browser.");
+    }
+}
+	
     async function joinGroup(groupId, silent = false) {
         const user = auth.currentUser;
         if (!user) return;
@@ -835,7 +858,8 @@
                 firstSuggestion.click();
             }
         });
-        
+        DOM.gmapsFab.addEventListener('click', handleGoogleMapsLink);
+		
         DOM.loginBtn.addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()));
         DOM.logoutMenuBtn.addEventListener('click', async () => { 
             if (auth.currentUser) await removeLocationFromFirestore(auth.currentUser.uid); 
@@ -968,6 +992,5 @@
 </script>
 </body>
 </html>
-
 
 
