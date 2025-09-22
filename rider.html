@@ -12,7 +12,7 @@
     
     <style>
         body { font-family: 'Inter', sans-serif; overflow: hidden; }
-        #map { height: 100vh; width: 100vw; z-index: 10; background-color: #4a5568; }
+        #map { height: 100dvh; width: 100vw; z-index: 10; background-color: #4a5568; }
         .map-locked { cursor: not-allowed !important; }
         .adding-waypoint, .creating-alert, .adding-checkpoint { cursor: crosshair !important; }
         .hidden { display: none; }
@@ -51,7 +51,7 @@
 </head>
 <body class="bg-gray-900 text-white antialiased overflow-hidden">
 
-    <div id="map-container" class="w-screen h-screen relative">
+    <div id="map-container" class="w-screen h-dvh relative">
         <div id="map"></div>
 
         <!-- Floating UI Elements -->
@@ -521,11 +521,27 @@
         });
 
         DOM.shareLocationFab.addEventListener('click', () => {
-            isSharingPublicly = !isSharingPublicly;
-            if (auth.currentUser) {
-                updateDoc(doc(db, 'users', auth.currentUser.uid), { isSharing: isSharingPublicly });
+            const user = auth.currentUser;
+            if (!user) return;
+
+            // Toggle status sharing
+            const newSharingStatus = !isSharingPublicly;
+
+            const userRef = doc(db, 'users', user.uid);
+            const dataToUpdate = { isSharing: newSharingStatus };
+
+            // Jika mengaktifkan sharing DAN koordinat sudah ada, kirimkan lokasi saat ini juga
+            if (newSharingStatus && userCoords) {
+                dataToUpdate.lat = userCoords[0];
+                dataToUpdate.lng = userCoords[1];
+                dataToUpdate.lastUpdate = serverTimestamp(); // Gunakan serverTimestamp untuk konsistensi
+                DOM.status.textContent = 'Lokasi Anda sekarang publik.';
+            } else if (!newSharingStatus) {
+                DOM.status.textContent = 'Berbagi lokasi dihentikan.';
             }
-        });
+
+            updateDoc(userRef, dataToUpdate);
+        });
         
         async function updateLocationInFirestore(user) {
             if (!userCoords) return;
@@ -921,4 +937,5 @@
     </script>
 </body>
 </html>
+
 
