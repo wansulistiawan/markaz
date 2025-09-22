@@ -711,6 +711,12 @@
             groupUnsubscribe = onSnapshot(groupRef, (doc) => {
                 currentGroupData = doc.data();
                 updateGroupMembersUI(currentGroupData);
+
+                // Perbaikan: Update ikon marker pribadi setiap kali data grup berubah
+                if (myMarker && auth.currentUser) {
+                    const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
+                    myMarker.setIcon(createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole));
+                }
             });
             listenToGroupAlerts(groupId);
             listenToCheckpoints(groupId);
