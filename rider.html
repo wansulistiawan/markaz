@@ -145,7 +145,7 @@
                 </div>
                 <div>
                     <h3 class="font-semibold text-lg mb-2">Gabung Grup</h3>
-                    <div class="flex gap-2"><input type="text" id="join-group-id" placeholder="Masukkan ID Grup" class="flex-grow bg-gray-700 text-white rounded-lg py-2 px-3"><button id="join-group-btn" class="bg-emerald-600 hover:bg-emerald-700 font-bold py-2 px-4 rounded-lg">Gabung</button></div>
+                    <div class="flex gap-2"><input type="text" id="join-group-id" placeholder="Masukkan ID Grup (4 Angka)" class="flex-grow bg-gray-700 text-white rounded-lg py-2 px-3"><button id="join-group-btn" class="bg-emerald-600 hover:bg-emerald-700 font-bold py-2 px-4 rounded-lg">Gabung</button></div>
                 </div>
             </div>
 
@@ -237,10 +237,7 @@
             const uniqueId = `clip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const roleEmoji = roles[role] || roles['member'];
             const iconHtml = `
-                <svg width="64" height="70" viewBox="0 0 32 38" xmlns="http://www.w3.org/2000/svg" style="transform: translateY(-6px); overflow: visible;">
-                    <defs>
-                        <clipPath id="${uniqueId}"><circle cx="16" cy="11" r="9" /></clipPath>
-                    </defs>
+                <svg width="64" height="70" viewBox="0 0 32 38" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;">
                     <g transform="translate(0, 6)">
                         <path fill="${color}" stroke="#1a202c" stroke-width="1.5" d="M16 31.547c0 0 10-13.235 10-20.547a10 10 0 10-20 0c0 7.312 10 20.547 10 20.547z"></path>
                         <circle cx="16" cy="11" r="9" fill="#2d3748" stroke="${color}" stroke-width="1.5" />
@@ -669,7 +666,18 @@
             const groupName = DOM.createGroupName.value.trim();
             if (!user || !groupName) return;
 
-            const groupRef = doc(collection(db, 'groups'));
+            let newGroupId = null;
+            let groupExists = true;
+            while(groupExists) {
+                newGroupId = Math.floor(1000 + Math.random() * 9000).toString();
+                const tempGroupRef = doc(db, 'groups', newGroupId);
+                const docSnap = await getDoc(tempGroupRef);
+                if (!docSnap.exists()) {
+                    groupExists = false;
+                }
+            }
+            
+            const groupRef = doc(db, 'groups', newGroupId);
             const newGroup = {
                 name: groupName, amir: user.uid, createdAt: new Date(),
                 members: {
@@ -699,9 +707,13 @@
                 if (!silent) alert("Grup tidak ditemukan!");
                 return;
             }
-
-            const newMember = { name: user.displayName, photoURL: user.photoURL, role: 'member' };
-            await updateDoc(groupRef, { [`members.${user.uid}`]: newMember });
+            
+            const groupData = groupSnap.data();
+            if (!groupData.members[user.uid]) {
+                const newMember = { name: user.displayName, photoURL: user.photoURL, role: 'member' };
+                await updateDoc(groupRef, { [`members.${user.uid}`]: newMember });
+            }
+            
             await updateDoc(doc(db, "users", user.uid), { groupId: groupId });
             
             currentGroupId = groupId;
@@ -711,8 +723,6 @@
             groupUnsubscribe = onSnapshot(groupRef, (doc) => {
                 currentGroupData = doc.data();
                 updateGroupMembersUI(currentGroupData);
-
-                // Perbaikan: Update ikon marker pribadi setiap kali data grup berubah
                 if (myMarker && auth.currentUser) {
                     const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
                     myMarker.setIcon(createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole));
