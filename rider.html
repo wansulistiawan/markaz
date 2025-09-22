@@ -114,11 +114,18 @@
 
     <!-- Modals -->
     <div id="search-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center z-50 p-4 pt-8 sm:pt-16">
-        <div class="relative w-full max-w-lg">
-             <form id="search-form" onsubmit="event.preventDefault();"><div class="relative"><input type="text" id="search-input" placeholder="Cari alamat atau nama tempat..." class="w-full bg-gray-700 text-white rounded-lg py-3 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-emerald-500" autocomplete="off"><button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></button></div></form>
-             <div id="suggestions-container" class="mt-1"></div>
-        </div>
+    <div class="relative w-full max-w-lg">
+        <form id="search-form" onsubmit="event.preventDefault();">
+            <div class="relative">
+                <input type="text" id="search-input" placeholder="Cari alamat atau nama tempat..." class="w-full bg-gray-700 text-white rounded-lg py-3 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-emerald-500" autocomplete="off">
+                <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </button>
+            </div>
+        </form>
+        <div id="suggestions-container" class="mt-1"></div>
     </div>
+</div>
 
     <div id="pin-settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-lg p-4 sm:p-6 w-full max-w-md"><h2 class="text-2xl font-bold mb-6 text-emerald-400">Ubah Warna Pin Anda</h2><div class="mb-6"><h3 class="font-semibold mb-3 text-gray-300">Pilih Warna</h3><div id="color-options" class="flex gap-3 flex-wrap justify-center"></div></div><div class="flex justify-end gap-4"><button id="cancel-settings-btn" class="bg-gray-600 hover:bg-gray-700 font-bold py-2 px-4 rounded-lg">Batal</button><button id="save-settings-btn" class="bg-emerald-600 hover:bg-emerald-700 font-bold py-2 px-4 rounded-lg">Simpan</button></div></div></div>
     
@@ -157,511 +164,682 @@
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, getDoc, writeBatch, updateDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, getDoc, writeBatch, updateDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyA9fthcIZ_VQXMUL6lPd-165NIFNb09JOA", authDomain: "aplikasi-touring.firebaseapp.com", projectId: "aplikasi-touring", storageBucket: "aplikasi-touring.appspot.com", messagingSenderId: "310021643774", appId: "1:310021643774:web:4943db8f567e66aef174af", measurementId: "G-ZRCCNLC8WB" };
+    const firebaseConfig = { apiKey: "AIzaSyA9fthcIZ_VQXMUL6lPd-165NIFNb09JOA", authDomain: "aplikasi-touring.firebaseapp.com", projectId: "aplikasi-touring", storageBucket: "aplikasi-touring.appspot.com", messagingSenderId: "310021643774", appId: "1:310021643774:web:4943db8f567e66aef174af", measurementId: "G-ZRCCNLC8WB" };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        let map, myMarker, userCoords = null, routingControl = null, destinationMarker = null;
-        let isSharingPublicly = false;
-        let publicRidersUnsubscribe = null;
-        const publicMarkers = {};
-        const alertMarkers = {};
-        const checkpointMarkers = {};
-        let currentUserSettings = { pinColor: '#3498db' };
-        let currentRouteState = 'IDLE';
-        let isAddingWaypoint = false;
-        let isAddingCheckpoint = false;
-        let currentGroupId = null;
-        let currentGroupData = null;
-        let groupUnsubscribe = null;
-        let userUnsubscribe = null;
-        let groupAlertsUnsubscribe = null;
-        let groupCheckpointsUnsubscribe = null;
+    let map, myMarker, userCoords = null, routingControl = null, destinationMarker = null;
+    let isSharingPublicly = false;
+    let publicRidersUnsubscribe = null;
+    const publicMarkers = {};
+    const alertMarkers = {};
+    const checkpointMarkers = {};
+    let currentUserSettings = { pinColor: '#3498db' };
+    let currentRouteState = 'IDLE';
+    let isAddingWaypoint = false;
+    let isAddingCheckpoint = false;
+    let currentGroupId = null;
+    let currentGroupData = null;
+    let groupUnsubscribe = null;
+    let userUnsubscribe = null;
+    let groupAlertsUnsubscribe = null;
+    let groupCheckpointsUnsubscribe = null;
 
-        const DOM = {
-            mapContainer: document.getElementById('map-container'),
-            status: document.getElementById('status'),
-            loginBtn: document.getElementById('login-btn'),
-            loginContainer: document.getElementById('login-container'),
-            logoutMenuBtn: document.getElementById('logout-menu-btn'),
-            profileFab: document.getElementById('profile-fab'),
-            profileFabContainer: document.getElementById('fab-top-right'),
-            profileDropdown: document.getElementById('profile-dropdown'),
-            settingsMenuBtn: document.getElementById('settings-menu-btn'), modal: document.getElementById('pin-settings-modal'),
-            groupFab: document.getElementById('group-fab'), groupModal: document.getElementById('group-modal'),
-            groupView: document.getElementById('group-view'), noGroupView: document.getElementById('no-group-view'),
-            groupInfoBar: document.getElementById('group-info-bar'),
-            groupInfoName: document.getElementById('group-info-name'),
-            groupInfoCount: document.getElementById('group-info-count'),
-            groupName: document.getElementById('group-name'), groupId: document.getElementById('group-id'),
-            groupMemberCount: document.getElementById('group-member-count'),
-            groupMembersList: document.getElementById('group-members-list'),
-            createGroupName: document.getElementById('create-group-name'), createGroupBtn: document.getElementById('create-group-btn'),
-            joinGroupId: document.getElementById('join-group-id'), joinGroupBtn: document.getElementById('join-group-btn'),
-            leaveGroupBtn: document.getElementById('leave-group-btn'), closeGroupModalBtn: document.getElementById('close-group-modal-btn'),
-            searchFab: document.getElementById('search-fab'), searchModal: document.getElementById('search-modal'),
-            searchInput: document.getElementById('search-input'), suggestionsContainer: document.getElementById('suggestions-container'),
-            navControls: document.getElementById('navigation-controls'),
-            setDestinationBtn: document.getElementById('set-destination-btn'),
-            addCheckpointBtn: document.getElementById('add-checkpoint-btn'),
-            addWaypointBtn: document.getElementById('add-waypoint-btn'),
-            startNavBtn: document.getElementById('start-nav-btn'),
-            stopNavBtn: document.getElementById('stop-nav-btn'),
-            cancelRouteBtn: document.getElementById('cancel-route-btn'),
-            fabBottomLeft: document.getElementById('fab-bottom-left'),
-            fabBottomRight: document.getElementById('fab-bottom-right'),
-            shareControl: document.getElementById('share-control'),
-            shareToggle: document.getElementById('share-public-toggle'),
-            recenterFab: document.getElementById('recenter-fab'),
-            cancelSettingsBtn: document.getElementById('cancel-settings-btn'), 
-            saveSettingsBtn: document.getElementById('save-settings-btn'),
-            colorOptions: document.getElementById('color-options'),
+    const DOM = {
+        mapContainer: document.getElementById('map-container'),
+        status: document.getElementById('status'),
+        loginBtn: document.getElementById('login-btn'),
+        loginContainer: document.getElementById('login-container'),
+        logoutMenuBtn: document.getElementById('logout-menu-btn'),
+        profileFab: document.getElementById('profile-fab'),
+        profileFabContainer: document.getElementById('fab-top-right'),
+        profileDropdown: document.getElementById('profile-dropdown'),
+        settingsMenuBtn: document.getElementById('settings-menu-btn'), modal: document.getElementById('pin-settings-modal'),
+        groupFab: document.getElementById('group-fab'), groupModal: document.getElementById('group-modal'),
+        groupView: document.getElementById('group-view'), noGroupView: document.getElementById('no-group-view'),
+        groupInfoBar: document.getElementById('group-info-bar'),
+        groupInfoName: document.getElementById('group-info-name'),
+        groupInfoCount: document.getElementById('group-info-count'),
+        groupName: document.getElementById('group-name'), groupId: document.getElementById('group-id'),
+        groupMemberCount: document.getElementById('group-member-count'),
+        groupMembersList: document.getElementById('group-members-list'),
+        createGroupName: document.getElementById('create-group-name'), createGroupBtn: document.getElementById('create-group-btn'),
+        joinGroupId: document.getElementById('join-group-id'), joinGroupBtn: document.getElementById('join-group-btn'),
+        leaveGroupBtn: document.getElementById('leave-group-btn'), closeGroupModalBtn: document.getElementById('close-group-modal-btn'),
+        searchFab: document.getElementById('search-fab'), searchModal: document.getElementById('search-modal'),
+        searchInput: document.getElementById('search-input'), 
+        searchForm: document.getElementById('search-form'),
+        suggestionsContainer: document.getElementById('suggestions-container'),
+        navControls: document.getElementById('navigation-controls'),
+        setDestinationBtn: document.getElementById('set-destination-btn'),
+        addCheckpointBtn: document.getElementById('add-checkpoint-btn'),
+        addWaypointBtn: document.getElementById('add-waypoint-btn'),
+        startNavBtn: document.getElementById('start-nav-btn'),
+        stopNavBtn: document.getElementById('stop-nav-btn'),
+        cancelRouteBtn: document.getElementById('cancel-route-btn'),
+        fabBottomLeft: document.getElementById('fab-bottom-left'),
+        fabBottomRight: document.getElementById('fab-bottom-right'),
+        shareLocationFab: document.getElementById('share-location-fab'),
+        recenterFab: document.getElementById('recenter-fab'),
+        cancelSettingsBtn: document.getElementById('cancel-settings-btn'), 
+        saveSettingsBtn: document.getElementById('save-settings-btn'),
+        colorOptions: document.getElementById('color-options'),
+    };
+
+    const roles = {
+        amir: '👑', penunjuk_jalan: '🧭', guard: '🛡️', sweeper: '🧹', logistik: '🛠️', member: '👤'
+    };
+
+    const alertTypes = {
+        razia: { icon: '👮', text: 'Ada Razia Polisi' }, kecelakaan: { icon: '💥', text: 'Ada Kecelakaan' },
+        macet: { icon: '🚗', text: 'Lalu Lintas Macet' }, pawai: { icon: '🎉', text: 'Ada Pawai/Keramaian' },
+        bencana: { icon: '🌋', text: 'Ada Bencana Alam' }, jalan_rusak: { icon: '🚧', text: 'Ada Jalan Rusak' }
+    };
+    
+    function createProfilePinIcon(color, imageUrl, role) {
+        const uniqueId = `pattern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const roleEmoji = roles[role] || '';
+        const iconHtml = `
+            <svg width="64" height="70" viewBox="0 0 32 38" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;">
+                <defs>
+                    <pattern id="${uniqueId}" patternContentUnits="objectBoundingBox" width="1" height="1">
+                        <image href="${imageUrl}" x="0" y="0" height="1" width="1" preserveAspectRatio="xMidYMid slice"/>
+                    </pattern>
+                </defs>
+                <g transform="translate(0, 6)">
+                    <path fill="${color}" stroke="#1a202c" stroke-width="1.5" d="M16 31.547c0 0 10-13.235 10-20.547a10 10 0 10-20 0c0 7.312 10 20.547 10 20.547z"></path>
+                    <circle cx="16" cy="11" r="9" fill="url(#${uniqueId})" stroke="${color}" stroke-width="1.5" />
+                </g>
+                <text x="16" y="8" font-size="14" text-anchor="middle" stroke="black" stroke-width="0.5px" paint-order="stroke" fill="white">${roleEmoji}</text>
+            </svg>`;
+        return L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [64, 70], iconAnchor: [32, 70], popupAnchor: [0, -70] });
+    }
+    
+    function createFlagIcon(color) {
+        const iconHtml = `<svg width="64" height="64" viewBox="0 0 32 32"><path fill="${color}" stroke="#1a202c" stroke-width="1.5" d="M16 31.547c0 0 10-13.235 10-20.547a10 10 0 10-20 0c0 7.312 10 20.547 10 20.547z"></path><path fill="white" d="M14.23 6.02l.46 2.06h6.09l-.46-2.06H14.23zM13 3h9v2h-9V3zm1.69 5.02L13 18H5v-2h6.27l.45-2.02H5V12h6.72l.45-2.02H5V8.02h9.69z"></path></svg>`;
+        return L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [64, 64], iconAnchor: [32, 64], popupAnchor: [0, -64] });
+    }
+
+    function createCheckpointIcon(number) {
+        return L.divIcon({
+            className: 'checkpoint-marker-icon',
+            html: `<span>${number}</span>`,
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
+        });
+    }
+
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
         };
+    }
 
-        const roles = {
-            amir: '👑', penunjuk_jalan: '🧭', guard: '🛡️', sweeper: '🧹', logistik: '🛠️', member: '👤'
-        };
-
-        const alertTypes = {
-            razia: { icon: '👮', text: 'Ada Razia Polisi' }, kecelakaan: { icon: '💥', text: 'Ada Kecelakaan' },
-            macet: { icon: '🚗', text: 'Lalu Lintas Macet' }, pawai: { icon: '🎉', text: 'Ada Pawai/Keramaian' },
-            bencana: { icon: '🌋', text: 'Ada Bencana Alam' }, jalan_rusak: { icon: '🚧', text: 'Ada Jalan Rusak' }
-        };
-        
-        function createProfilePinIcon(color, imageUrl, role) {
-            const uniqueId = `pattern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            const roleEmoji = roles[role] || '';
-            const iconHtml = `
-                <svg width="64" height="70" viewBox="0 0 32 38" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;">
-                    <defs>
-                        <pattern id="${uniqueId}" patternContentUnits="objectBoundingBox" width="1" height="1">
-                            <image href="${imageUrl}" x="0" y="0" height="1" width="1" preserveAspectRatio="xMidYMid slice"/>
-                        </pattern>
-                    </defs>
-                    <g transform="translate(0, 6)">
-                        <path fill="${color}" stroke="#1a202c" stroke-width="1.5" d="M16 31.547c0 0 10-13.235 10-20.547a10 10 0 10-20 0c0 7.312 10 20.547 10 20.547z"></path>
-                        <circle cx="16" cy="11" r="9" fill="url(#${uniqueId})" stroke="${color}" stroke-width="1.5" />
-                    </g>
-                    <text x="16" y="8" font-size="14" text-anchor="middle" stroke="black" stroke-width="0.5px" paint-order="stroke" fill="white">${roleEmoji}</text>
-                </svg>`;
-            return L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [64, 70], iconAnchor: [32, 70], popupAnchor: [0, -70] });
-        }
-        
-        function createFlagIcon(color) {
-            const iconHtml = `<svg width="64" height="64" viewBox="0 0 32 32"><path fill="${color}" stroke="#1a202c" stroke-width="1.5" d="M16 31.547c0 0 10-13.235 10-20.547a10 10 0 10-20 0c0 7.312 10 20.547 10 20.547z"></path><path fill="white" d="M14.23 6.02l.46 2.06h6.09l-.46-2.06H14.23zM13 3h9v2h-9V3zm1.69 5.02L13 18H5v-2h6.27l.45-2.02H5V12h6.72l.45-2.02H5V8.02h9.69z"></path></svg>`;
-            return L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [64, 64], iconAnchor: [32, 64], popupAnchor: [0, -64] });
-        }
-
-        function createCheckpointIcon(number) {
-            return L.divIcon({
-                className: 'checkpoint-marker-icon',
-                html: `<span>${number}</span>`,
-                iconSize: [40, 40],
-                iconAnchor: [20, 20]
-            });
-        }
-
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
-
-        async function fetchSuggestions(query) {
-            if (query.length < 3) {
-                DOM.suggestionsContainer.innerHTML = '';
-                DOM.suggestionsContainer.classList.add('hidden');
-                return;
-            }
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
-                const data = await res.json();
-                displaySuggestions(data);
-			
-            } catch (error) {
-                console.error('Gagal mengambil saran:', error);
-				DOM.status.textContent = "Gagal mengambil saran lokasi. Periksa koneksi Anda.";
-            }
-        }
-        
-        function displaySuggestions(suggestions) {
+    async function fetchSuggestions(query) {
+        if (query.length < 3) {
             DOM.suggestionsContainer.innerHTML = '';
-            if (suggestions && suggestions.length > 0) {
-                suggestions.forEach(s => {
-                    const item = document.createElement('div');
-                    item.className = 'suggestion-item';
-                    item.textContent = s.display_name;
-                    item.onclick = () => {
-                        DOM.searchInput.value = s.display_name;
-                        DOM.suggestionsContainer.classList.add('hidden');
-                        DOM.searchModal.classList.add('hidden');
-                        window.showRouteTo([s.lat, s.lon], s.display_name);
-                    };
-                    DOM.suggestionsContainer.appendChild(item);
-                });
-                DOM.suggestionsContainer.classList.remove('hidden');
-            } else {
-                DOM.suggestionsContainer.classList.add('hidden');
-            }
+            DOM.suggestionsContainer.classList.add('hidden');
+            return;
         }
-
-        function initMap() {
-            if (map) return;
-            map = L.map('map', { zoomControl: false }).setView([-2.5489, 118.0149], 5);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
-            map.on('click', (e) => {
-                if (isAddingWaypoint) { addWaypointToRoute(e.latlng); return; }
-                if (isAddingCheckpoint) { showCheckpointPrompt(e.latlng); return; }
-                const userRole = currentGroupData?.members?.[auth.currentUser?.uid]?.role;
-                if (currentRouteState === 'NAVIGATING' && currentGroupId && ['amir', 'penunjuk_jalan', 'guard', 'sweeper', 'logistik'].includes(userRole)) {
-                    showUIAlertSelection(e.latlng);
-                    return;
-                }
-                if (currentRouteState === 'IDLE' && auth.currentUser && userCoords) {
-                    const dest = [e.latlng.lat, e.latlng.lng];
-                    window.showRouteTo(dest, 'Titik Dipilih');
-                }
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+            const data = await res.json();
+            displaySuggestions(data);
+        } catch (error) {
+            console.error('Gagal mengambil saran:', error);
+            DOM.status.textContent = "Gagal mengambil saran lokasi. Periksa koneksi Anda.";
+        }
+    }
+    
+    function displaySuggestions(suggestions) {
+        DOM.suggestionsContainer.innerHTML = '';
+        if (suggestions && suggestions.length > 0) {
+            suggestions.forEach(s => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.textContent = s.display_name;
+                item.onclick = () => {
+                    DOM.searchInput.value = s.display_name;
+                    DOM.suggestionsContainer.classList.add('hidden');
+                    DOM.searchModal.classList.add('hidden');
+                    window.showRouteTo([s.lat, s.lon], s.display_name);
+                };
+                DOM.suggestionsContainer.appendChild(item);
             });
-            DOM.status.textContent = "Peta dimuat. Silakan masuk untuk memulai.";
+            DOM.suggestionsContainer.classList.remove('hidden');
+        } else {
+            DOM.suggestionsContainer.classList.add('hidden');
         }
+    }
 
-        function startLocationWatch() {
-            if (!navigator.geolocation) {
-                DOM.status.textContent = 'Geolocation tidak didukung oleh browser ini.';
+    function initMap() {
+        if (map) return;
+        map = L.map('map', { zoomControl: false }).setView([-2.5489, 118.0149], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        map.on('click', (e) => {
+            if (isAddingWaypoint) { addWaypointToRoute(e.latlng); return; }
+            if (isAddingCheckpoint) { showCheckpointPrompt(e.latlng); return; }
+            const userRole = currentGroupData?.members?.[auth.currentUser?.uid]?.role;
+            if (currentRouteState === 'NAVIGATING' && currentGroupId && ['amir', 'penunjuk_jalan', 'guard', 'sweeper', 'logistik'].includes(userRole)) {
+                showUIAlertSelection(e.latlng);
                 return;
             }
-            DOM.status.textContent = "Mencari lokasi Anda...";
-            navigator.geolocation.watchPosition(updateLocation, handleLocationError, { enableHighAccuracy: true });
-        }
-        
-        function handleLocationError(error) {
-            let message = 'Gagal mendapatkan lokasi. ';
-            switch(error.code) {
-                case error.PERMISSION_DENIED: message += "Anda menolak permintaan izin lokasi."; break;
-                case error.POSITION_UNAVAILABLE: message += "Informasi lokasi tidak tersedia."; break;
-                case error.TIMEOUT: message += "Permintaan lokasi timeout."; break;
-                default: message += "Terjadi kesalahan tidak dikenal."; break;
+            if (currentRouteState === 'IDLE' && auth.currentUser && userCoords) {
+                const dest = [e.latlng.lat, e.latlng.lng];
+                window.showRouteTo(dest, 'Titik Dipilih');
             }
-            DOM.status.textContent = message + " Peta tetap dapat digunakan untuk pencarian.";
+        });
+        DOM.status.textContent = "Peta dimuat. Silakan masuk untuk memulai.";
+    }
+
+    function startLocationWatch() {
+        if (!navigator.geolocation) {
+            DOM.status.textContent = 'Geolocation tidak didukung oleh browser ini.';
+            return;
         }
+        DOM.status.textContent = "Mencari lokasi Anda...";
+        navigator.geolocation.watchPosition(updateLocation, handleLocationError, { enableHighAccuracy: true });
+    }
+    
+    function handleLocationError(error) {
+        let message = 'Gagal mendapatkan lokasi. ';
+        switch(error.code) {
+            case error.PERMISSION_DENIED: message += "Anda menolak permintaan izin lokasi."; break;
+            case error.POSITION_UNAVAILABLE: message += "Informasi lokasi tidak tersedia."; break;
+            case error.TIMEOUT: message += "Permintaan lokasi timeout."; break;
+            default: message += "Terjadi kesalahan tidak dikenal."; break;
+        }
+        DOM.status.textContent = message + " Peta tetap dapat digunakan untuk pencarian.";
+    }
+    
+    function setRouteState(newState) {
+        currentRouteState = newState;
+        updateNavControlsUI();
+    }
+
+    function updateNavControlsUI() {
+        const isVisible = (currentRouteState !== 'IDLE');
+        DOM.navControls.classList.toggle('visible', isVisible);
         
-        function setRouteState(newState) {
-            currentRouteState = newState;
-            updateNavControlsUI();
-        }
+        [DOM.setDestinationBtn, DOM.addWaypointBtn, DOM.addCheckpointBtn, DOM.startNavBtn, DOM.stopNavBtn, DOM.cancelRouteBtn].forEach(btn => btn.classList.add('hidden'));
+        
+        const userRole = currentGroupData?.members?.[auth.currentUser?.uid]?.role;
+        const isOfficer = ['amir', 'penunjuk_jalan', 'guard', 'sweeper', 'logistik'].includes(userRole);
 
-        function updateNavControlsUI() {
-            const isVisible = (currentRouteState !== 'IDLE');
-            DOM.navControls.classList.toggle('visible', isVisible);
-            
-            [DOM.setDestinationBtn, DOM.addWaypointBtn, DOM.addCheckpointBtn, DOM.startNavBtn, DOM.stopNavBtn, DOM.cancelRouteBtn].forEach(btn => btn.classList.add('hidden'));
-            
-            const userRole = currentGroupData?.members?.[auth.currentUser?.uid]?.role;
-            const isOfficer = ['amir', 'penunjuk_jalan', 'guard', 'sweeper', 'logistik'].includes(userRole);
-
-            if (currentRouteState === 'PREVIEW') {
-                DOM.setDestinationBtn.classList.remove('hidden');
-                DOM.cancelRouteBtn.classList.remove('hidden');
-                DOM.mapContainer.classList.remove('map-locked', 'adding-waypoint', 'adding-checkpoint');
-            } else if (currentRouteState === 'SET' || currentRouteState === 'NAVIGATING') {
-                DOM.addWaypointBtn.classList.remove('hidden');
-                DOM.cancelRouteBtn.classList.remove('hidden');
-                if (isOfficer) DOM.addCheckpointBtn.classList.remove('hidden');
-                if (currentRouteState === 'SET') {
-                    DOM.startNavBtn.classList.remove('hidden');
-                    DOM.status.textContent = 'Tujuan ditetapkan. Siap memulai atau tambah persinggahan.';
-                } else {
-                    DOM.stopNavBtn.classList.remove('hidden');
-                    DOM.status.textContent = 'Mode navigasi aktif. Peta akan mengikuti Anda.';
-                }
-                DOM.mapContainer.classList.add('map-locked');
+        if (currentRouteState === 'PREVIEW') {
+            DOM.setDestinationBtn.classList.remove('hidden');
+            DOM.cancelRouteBtn.classList.remove('hidden');
+            DOM.mapContainer.classList.remove('map-locked', 'adding-waypoint', 'adding-checkpoint');
+        } else if (currentRouteState === 'SET' || currentRouteState === 'NAVIGATING') {
+            DOM.addWaypointBtn.classList.remove('hidden');
+            DOM.cancelRouteBtn.classList.remove('hidden');
+            if (isOfficer) DOM.addCheckpointBtn.classList.remove('hidden');
+            if (currentRouteState === 'SET') {
+                DOM.startNavBtn.classList.remove('hidden');
+                DOM.status.textContent = 'Tujuan ditetapkan. Siap memulai atau tambah persinggahan.';
             } else {
-                DOM.status.textContent = userCoords ? `Akurasi: ${Math.round(userCoords.accuracy)}m` : 'Mencari lokasi...';
-                DOM.mapContainer.classList.remove('map-locked', 'adding-waypoint', 'adding-checkpoint');
+                DOM.stopNavBtn.classList.remove('hidden');
+                DOM.status.textContent = 'Mode navigasi aktif. Peta akan mengikuti Anda.';
             }
+            DOM.mapContainer.classList.add('map-locked');
+        } else {
+            DOM.status.textContent = userCoords ? `Akurasi: ${Math.round(userCoords.accuracy)}m` : 'Mencari lokasi...';
+            DOM.mapContainer.classList.remove('map-locked', 'adding-waypoint', 'adding-checkpoint');
         }
+    }
+    
+    function addWaypointToRoute(latlng) {
+        if (!routingControl) return;
+        const waypoints = routingControl.getWaypoints();
+        const newWaypoint = L.Routing.waypoint(latlng);
+        waypoints.splice(waypoints.length - 1, 0, newWaypoint);
+        routingControl.setWaypoints(waypoints);
         
-        DOM.setDestinationBtn.addEventListener('click', () => {
-            if (currentRouteState !== 'PREVIEW') return;
-            destinationMarker.dragging.disable();
-            setRouteState('SET');
-        });
+        isAddingWaypoint = false;
+        DOM.mapContainer.classList.remove('adding-waypoint');
+        DOM.status.textContent = 'Persinggahan ditambahkan.';
+    }
 
-        DOM.shareLocationFab.addEventListener('click', async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    // Toggle status saat ini
-    const newSharingStatus = !isSharingPublicly; 
-
-    // Update ke Firestore
-    const userRef = doc(db, 'users', user.uid);
-    await updateDoc(userRef, { isSharing: newSharingStatus });
-
-    // Beri feedback ke pengguna
-    DOM.status.textContent = newSharingStatus ? 'Berbagi lokasi diaktifkan.' : 'Berbagi lokasi dihentikan.';
-});
-        
-        DOM.addWaypointBtn.addEventListener('click', () => {
-            isAddingWaypoint = true;
-            DOM.mapContainer.classList.add('adding-waypoint');
-            DOM.status.textContent = 'Klik di peta untuk menambah titik persinggahan.';
-        });
-
-        function addWaypointToRoute(latlng) {
-            if (!routingControl) return;
-            const waypoints = routingControl.getWaypoints();
-            const newWaypoint = L.Routing.waypoint(latlng);
-            waypoints.splice(waypoints.length - 1, 0, newWaypoint);
-            routingControl.setWaypoints(waypoints);
-            
-            isAddingWaypoint = false;
-            DOM.mapContainer.classList.remove('adding-waypoint');
-            DOM.status.textContent = 'Persinggahan ditambahkan.';
+    function showCheckpointPrompt(latlng) {
+        const description = prompt("Masukkan keterangan untuk checkpoint ini (misal: 'Titik Kumpul 1', 'Makan Siang', dll):");
+        if (description) {
+            createCheckpoint(latlng, description);
         }
+        isAddingCheckpoint = false;
+        DOM.mapContainer.classList.remove('adding-checkpoint');
+        DOM.status.textContent = 'Mode navigasi aktif.';
+    }
 
-        DOM.addCheckpointBtn.addEventListener('click', () => {
-            isAddingCheckpoint = true;
-            DOM.mapContainer.classList.add('adding-checkpoint');
-            DOM.status.textContent = 'Klik di peta untuk menambah checkpoint.';
+    async function createCheckpoint(latlng, description) {
+        const user = auth.currentUser;
+        if (!user || !currentGroupId) return;
+        const checkpointRef = doc(collection(db, 'groups', currentGroupId, 'checkpoints'));
+        await setDoc(checkpointRef, {
+            description: description,
+            lat: latlng.lat,
+            lng: latlng.lng,
+            creatorId: user.uid,
+            creatorName: user.displayName,
+            createdAt: serverTimestamp()
         });
+        DOM.status.textContent = 'Checkpoint ditambahkan!';
+    }
 
-        function showCheckpointPrompt(latlng) {
-            const description = prompt("Masukkan keterangan untuk checkpoint ini (misal: 'Titik Kumpul 1', 'Makan Siang', dll):");
-            if (description) {
-                createCheckpoint(latlng, description);
-            }
-            isAddingCheckpoint = false;
-            DOM.mapContainer.classList.remove('adding-checkpoint');
-            DOM.status.textContent = 'Mode navigasi aktif.';
-        }
-
-        async function createCheckpoint(latlng, description) {
-            const user = auth.currentUser;
-            if (!user || !currentGroupId) return;
-            const checkpointRef = doc(collection(db, 'groups', currentGroupId, 'checkpoints'));
-            await setDoc(checkpointRef, {
-                description: description,
-                lat: latlng.lat,
-                lng: latlng.lng,
-                creatorId: user.uid,
-                creatorName: user.displayName,
-                createdAt: serverTimestamp()
-            });
-            DOM.status.textContent = 'Checkpoint ditambahkan!';
-        }
-
-        DOM.startNavBtn.addEventListener('click', () => {
-            if (currentRouteState !== 'SET') return;
-            setRouteState('NAVIGATING');
-            if(userCoords) map.setView(userCoords, 18, {animate: true});
-        });
-
-        DOM.stopNavBtn.addEventListener('click', () => {
-            if (currentRouteState !== 'NAVIGATING') return;
-            setRouteState('SET');
-        });
-
-        DOM.cancelRouteBtn.addEventListener('click', () => {
-            if (routingControl) map.removeControl(routingControl);
-            if (destinationMarker) map.removeLayer(destinationMarker);
-            routingControl = null; destinationMarker = null; isAddingWaypoint = false; isAddingCheckpoint = false;
-            setRouteState('IDLE');
-        });
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                DOM.loginContainer.classList.add('hidden');
-                DOM.profileFabContainer.classList.remove('hidden');
-                DOM.profileFab.src = user.photoURL;
-                DOM.fabBottomLeft.classList.remove('hidden');
-                DOM.fabBottomRight.classList.remove('hidden');
-                
-                const userRef = doc(db, 'users', user.uid);
-                await setDoc(userRef, {
-                    name: user.displayName,
-                    photoURL: user.photoURL,
-                }, { merge: true });
-                
-                startLocationWatch(); 
-                listenToUserDoc(user.uid);
-                listenToPublicRiders();
-            } else {
-                DOM.loginContainer.classList.remove('hidden');
-                DOM.profileFabContainer.classList.add('hidden');
-                DOM.fabBottomLeft.classList.add('hidden');
-                DOM.fabBottomRight.classList.add('hidden');
-                DOM.status.textContent = 'Silakan masuk untuk memulai.';
-                if (myMarker) { map.removeLayer(myMarker); myMarker = null; }
-                DOM.cancelRouteBtn.click();
-                if (publicRidersUnsubscribe) publicRidersUnsubscribe();
-                if (userUnsubscribe) userUnsubscribe();
-                if (groupUnsubscribe) groupUnsubscribe();
-                if (groupAlertsUnsubscribe) groupAlertsUnsubscribe();
-                if (groupCheckpointsUnsubscribe) groupCheckpointsUnsubscribe();
-                Object.values(publicMarkers).forEach(marker => map.removeLayer(marker));
-                Object.values(alertMarkers).forEach(marker => map.removeLayer(marker));
-                Object.values(checkpointMarkers).forEach(marker => map.removeLayer(marker));
-                currentGroupId = null; currentGroupData = null;
-                DOM.groupInfoBar.classList.add('hidden');
-            }
-        });
-
-        DOM.loginBtn.addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()));
-        DOM.logoutMenuBtn.addEventListener('click', async () => { if (auth.currentUser) await removeLocationFromFirestore(auth.currentUser.uid); signOut(auth); });
-        
-        function updateLocation(position) {
-            userCoords = [position.coords.latitude, position.coords.longitude];
-            userCoords.accuracy = position.coords.accuracy;
-            if (currentRouteState === 'IDLE') DOM.status.textContent = `Akurasi: ${Math.round(userCoords.accuracy)}m`;
-            
-            if (!myMarker && auth.currentUser) {
-                const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
-                myMarker = L.marker(userCoords, { icon: createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole) }).addTo(map).bindPopup('<b>Ini Lokasi Anda!</b>');
-                if (currentRouteState === 'IDLE') map.setView(userCoords, 16);
-            } else if (myMarker) { myMarker.setLatLng(userCoords); }
-            
-            if (currentRouteState === 'NAVIGATING') { map.setView(userCoords, 18, {animate: true, pan: {duration: 1}}); }
-            if (isSharingPublicly && auth.currentUser) updateLocationInFirestore(auth.currentUser);
-        }
-
-        DOM.recenterFab.addEventListener('click', () => {
-            if (userCoords) { map.setView(userCoords, 16, {animate: true}); } 
-            else { DOM.status.textContent = 'Lokasi Anda belum ditemukan.'; }
-        });
-        
-        async function updateLocationInFirestore(user) {
-            if (!userCoords) return;
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            DOM.loginContainer.classList.add('hidden');
+            DOM.profileFabContainer.classList.remove('hidden');
+            DOM.profileFab.src = user.photoURL;
+            DOM.fabBottomLeft.classList.remove('hidden');
+            DOM.fabBottomRight.classList.remove('hidden');
             
             const userRef = doc(db, 'users', user.uid);
-            await updateDoc(userRef, {
-                lat: userCoords[0],
-                lng: userCoords[1],
-                lastUpdate: new Date(),
-            });
-        }
-        
-        async function removeLocationFromFirestore(uid) { 
-            const userRef = doc(db, 'users', uid);
-            await updateDoc(userRef, { isSharing: false });
-        }
-
-        function listenToUserDoc(uid) {
-            if (userUnsubscribe) userUnsubscribe();
-            userUnsubscribe = onSnapshot(doc(db, "users", uid), (doc) => {
-                if (!doc.exists()) return;
-                const userData = doc.data();
-                if (userData?.groupId && userData.groupId !== currentGroupId) {
-                    joinGroup(userData.groupId, true);
-                } else if (!userData?.groupId && currentGroupId) {
-                    leaveGroup(true);
-                }
-                currentUserSettings.pinColor = userData?.pinColor || '#3498db';
-
-                isSharingPublicly = userData?.isSharing || false;
-                if(DOM.shareLocationFab) {
-                    DOM.shareLocationFab.classList.toggle('active', isSharingPublicly);
-                } else if(DOM.shareToggle) {
-                    DOM.shareToggle.checked = isSharingPublicly;
-                }
-
-                if(myMarker && auth.currentUser){
-                    const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
-                    myMarker.setIcon(createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole));
-                }
-            });
-        }
-
-        function listenToPublicRiders() {
+            await setDoc(userRef, {
+                name: user.displayName,
+                photoURL: user.photoURL,
+            }, { merge: true });
+            
+            startLocationWatch();  
+            listenToUserDoc(user.uid);
+            listenToPublicRiders();
+        } else {
+            DOM.loginContainer.classList.remove('hidden');
+            DOM.profileFabContainer.classList.add('hidden');
+            DOM.fabBottomLeft.classList.add('hidden');
+            DOM.fabBottomRight.classList.add('hidden');
+            DOM.status.textContent = 'Silakan masuk untuk memulai.';
+            if (myMarker) { map.removeLayer(myMarker); myMarker = null; }
+            if (routingControl) DOM.cancelRouteBtn.click();
             if (publicRidersUnsubscribe) publicRidersUnsubscribe();
-            const q = query(collection(db, 'users'));
-            publicRidersUnsubscribe = onSnapshot(q, (snapshot) => {
-                const currentVisibleMarkers = new Set();
-                snapshot.forEach((doc) => {
-                    const riderData = doc.data();
-                    const riderId = doc.id;
-                    const isMySelf = riderId === auth.currentUser?.uid;
-                    const isSharing = riderData.isSharing;
-                    const belongsToMyGroup = currentGroupId && riderData.groupId === currentGroupId;
-                    const shouldShow = isSharing && (!currentGroupId || belongsToMyGroup);
-
-                    if (shouldShow && !isMySelf) {
-                        currentVisibleMarkers.add(riderId);
-                        const riderCoords = [riderData.lat, riderData.lng];
-                        const role = currentGroupData?.members?.[riderId]?.role;
-                        const icon = createProfilePinIcon(riderData.pinColor || '#34495e', riderData.photoURL, role);
-                        
-                        if (publicMarkers[riderId]) {
-                            publicMarkers[riderId].setLatLng(riderCoords);
-                            publicMarkers[riderId].setIcon(icon);
-                        } else {
-                            const popupContent = `<div class="user-popup"><img src="${riderData.photoURL}" alt="foto"><div><strong>${riderData.name}</strong><br><button onclick="window.showRouteTo([${riderCoords}], '${riderData.name.replace(/'/g, "\\'")}')">Rute ke Sini</button></div></div>`;
-                            publicMarkers[riderId] = L.marker(riderCoords, { icon: icon }).addTo(map).bindPopup(popupContent);
-                        }
-                    }
-                });
-
-                Object.keys(publicMarkers).forEach(markerId => {
-                    if (!currentVisibleMarkers.has(markerId)) {
-                        map.removeLayer(publicMarkers[markerId]);
-                        delete publicMarkers[markerId];
-                    }
-                });
-            });
+            if (userUnsubscribe) userUnsubscribe();
+            if (groupUnsubscribe) groupUnsubscribe();
+            if (groupAlertsUnsubscribe) groupAlertsUnsubscribe();
+            if (groupCheckpointsUnsubscribe) groupCheckpointsUnsubscribe();
+            Object.values(publicMarkers).forEach(marker => map.removeLayer(marker));
+            Object.values(alertMarkers).forEach(marker => map.removeLayer(marker));
+            Object.values(checkpointMarkers).forEach(marker => map.removeLayer(marker));
+            currentGroupId = null; currentGroupData = null;
+            DOM.groupInfoBar.classList.add('hidden');
         }
+    });
+
+    function updateLocation(position) {
+        userCoords = [position.coords.latitude, position.coords.longitude];
+        userCoords.accuracy = position.coords.accuracy;
+        if (currentRouteState === 'IDLE') DOM.status.textContent = `Akurasi: ${Math.round(userCoords.accuracy)}m`;
         
-        window.showRouteTo = (destinationCoords, destinationName = 'Tujuan') => {
-            if (currentRouteState !== 'IDLE') { DOM.status.textContent = 'Batalkan rute saat ini untuk membuat rute baru.'; return; }
-            if (!userCoords) { alert("Lokasi Anda belum ditemukan."); return; }
-            
-            if (routingControl) map.removeControl(routingControl);
-            if (destinationMarker) map.removeLayer(destinationMarker);
+        if (!myMarker && auth.currentUser) {
+            const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
+            myMarker = L.marker(userCoords, { icon: createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole) }).addTo(map).bindPopup('<b>Ini Lokasi Anda!</b>');
+            if (currentRouteState === 'IDLE') map.setView(userCoords, 16);
+        } else if (myMarker) { myMarker.setLatLng(userCoords); }
+        
+        if (currentRouteState === 'NAVIGATING') { map.setView(userCoords, 18, {animate: true, pan: {duration: 1}}); }
+        if (isSharingPublicly && auth.currentUser) updateLocationInFirestore(auth.currentUser);
+    }
+    
+    async function updateLocationInFirestore(user) {
+        if (!userCoords) return;
+        
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, {
+            lat: userCoords[0],
+            lng: userCoords[1],
+            lastUpdate: new Date(),
+        });
+    }
+    
+    async function removeLocationFromFirestore(uid) { 
+        const userRef = doc(db, 'users', uid);
+        await updateDoc(userRef, { isSharing: false });
+    }
 
-            destinationMarker = L.marker(destinationCoords, { icon: createFlagIcon('#e74c3c'), draggable: true }).addTo(map).bindPopup(`<b>${destinationName}</b>`).openPopup();
-            
-            destinationMarker.on('dragend', function(event) {
-                if (currentRouteState !== 'PREVIEW') return;
-                const newCoords = event.target.getLatLng();
-                window.showRouteTo([newCoords.lat, newCoords.lng], 'Tujuan Baru');
-            });
+    function listenToUserDoc(uid) {
+        if (userUnsubscribe) userUnsubscribe();
+        userUnsubscribe = onSnapshot(doc(db, "users", uid), (doc) => {
+            if (!doc.exists()) return;
+            const userData = doc.data();
+            if (userData?.groupId && userData.groupId !== currentGroupId) {
+                joinGroup(userData.groupId, true);
+            } else if (!userData?.groupId && currentGroupId) {
+                leaveGroup(true);
+            }
+            currentUserSettings.pinColor = userData?.pinColor || '#3498db';
 
-            routingControl = L.Routing.control({
-                waypoints: [ L.latLng(userCoords), L.latLng(destinationCoords) ],
-                routeWhileDragging: false,
-                lineOptions: { styles: [{color: '#6EE7B7', weight: 5}] },
-                createMarker: () => null
-            }).on('routesfound', function(e) {
-                const summary = e.routes[0].summary;
-                const totalDistance = (summary.totalDistance / 1000).toFixed(1);
-                const totalTime = Math.round(summary.totalTime / 60);
-                const hours = Math.floor(totalTime / 60);
-                const minutes = totalTime % 60;
-                let timeString = '';
-                if(hours > 0) timeString += `${hours} jam `;
-                if(minutes > 0) timeString += `${minutes} menit`;
-                
-                DOM.status.textContent = `Estimasi Rute: ${timeString} (${totalDistance} km)`;
-            }).addTo(map);
+            isSharingPublicly = userData?.isSharing || false;
+            if(DOM.shareLocationFab) {
+                DOM.shareLocationFab.classList.toggle('active', isSharingPublicly);
+            }
 
-            setRouteState('PREVIEW');
-        }
-
-        DOM.searchInput.addEventListener('input', debounce(e => fetchSuggestions(e.target.value), 300));
-		document.getElementById('search-form').addEventListener('submit', () => {
-            const firstSuggestion = DOM.suggestionsContainer.querySelector('.suggestion-item');
-            if (firstSuggestion) {
-                firstSuggestion.click(); // Simulasikan klik pada saran pertama
+            if(myMarker && auth.currentUser){
+                const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
+                myMarker.setIcon(createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole));
             }
         });
+    }
+
+    function listenToPublicRiders() {
+        if (publicRidersUnsubscribe) publicRidersUnsubscribe();
+        const q = query(collection(db, 'users'));
+        publicRidersUnsubscribe = onSnapshot(q, (snapshot) => {
+            const currentVisibleMarkers = new Set();
+            snapshot.forEach((doc) => {
+                const riderData = doc.data();
+                const riderId = doc.id;
+                const isMySelf = riderId === auth.currentUser?.uid;
+                const isSharing = riderData.isSharing;
+                const belongsToMyGroup = currentGroupId && riderData.groupId === currentGroupId;
+                const shouldShow = isSharing && (!currentGroupId || belongsToMyGroup);
+
+                if (shouldShow && !isMySelf && riderData.lat && riderData.lng) {
+                    currentVisibleMarkers.add(riderId);
+                    const riderCoords = [riderData.lat, riderData.lng];
+                    const role = currentGroupData?.members?.[riderId]?.role;
+                    const icon = createProfilePinIcon(riderData.pinColor || '#34495e', riderData.photoURL, role);
+                    
+                    if (publicMarkers[riderId]) {
+                        publicMarkers[riderId].setLatLng(riderCoords);
+                        publicMarkers[riderId].setIcon(icon);
+                    } else {
+                        const popupContent = `<div class="user-popup"><img src="${riderData.photoURL}" alt="foto"><div><strong>${riderData.name}</strong><br><button onclick="window.showRouteTo([${riderCoords}], '${riderData.name.replace(/'/g, "\\'")}')">Rute ke Sini</button></div></div>`;
+                        publicMarkers[riderId] = L.marker(riderCoords, { icon: icon }).addTo(map).bindPopup(popupContent);
+                    }
+                }
+            });
+
+            Object.keys(publicMarkers).forEach(markerId => {
+                if (!currentVisibleMarkers.has(markerId)) {
+                    map.removeLayer(publicMarkers[markerId]);
+                    delete publicMarkers[markerId];
+                }
+            });
+        });
+    }
+    
+    window.showRouteTo = (destinationCoords, destinationName = 'Tujuan') => {
+        if (currentRouteState !== 'IDLE') { DOM.status.textContent = 'Batalkan rute saat ini untuk membuat rute baru.'; return; }
+        if (!userCoords) { alert("Lokasi Anda belum ditemukan."); return; }
+        
+        if (routingControl) map.removeControl(routingControl);
+        if (destinationMarker) map.removeLayer(destinationMarker);
+
+        destinationMarker = L.marker(destinationCoords, { icon: createFlagIcon('#e74c3c'), draggable: true }).addTo(map).bindPopup(`<b>${destinationName}</b>`).openPopup();
+        
+        destinationMarker.on('dragend', function(event) {
+            if (currentRouteState !== 'PREVIEW') return;
+            const newCoords = event.target.getLatLng();
+            window.showRouteTo([newCoords.lat, newCoords.lng], 'Tujuan Baru');
+        });
+
+        routingControl = L.Routing.control({
+            waypoints: [ L.latLng(userCoords), L.latLng(destinationCoords) ],
+            routeWhileDragging: false,
+            lineOptions: { styles: [{color: '#6EE7B7', weight: 5}] },
+            createMarker: () => null
+        }).on('routesfound', function(e) {
+            const summary = e.routes[0].summary;
+            const totalDistance = (summary.totalDistance / 1000).toFixed(1);
+            const totalTime = Math.round(summary.totalTime / 60);
+            const hours = Math.floor(totalTime / 60);
+            const minutes = totalTime % 60;
+            let timeString = '';
+            if(hours > 0) timeString += `${hours} jam `;
+            if(minutes > 0) timeString += `${minutes} menit`;
+            
+            DOM.status.textContent = `Estimasi Rute: ${timeString} (${totalDistance} km)`;
+        }).addTo(map);
+
+        setRouteState('PREVIEW');
+    }
+
+    function setupModal() {
+        DOM.colorOptions.innerHTML = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#ffffff'].map(c => `<div><input type="radio" name="color" value="${c}" id="c-${c}" class="sr-only modal-input"><label for="c-${c}" class="block w-8 h-8 rounded-full cursor-pointer border-2 border-gray-500" style="background-color:${c};"></label></div>`).join('');
+    }
+    
+    async function joinGroup(groupId, silent = false) {
+        const user = auth.currentUser;
+        if (!user) return;
+        
+        const groupRef = doc(db, "groups", groupId);
+        const groupSnap = await getDoc(groupRef);
+
+        if (!groupSnap.exists()) {
+            if (!silent) alert("Grup tidak ditemukan!");
+            return;
+        }
+        
+        const groupData = groupSnap.data();
+        const userRef = doc(db, "users", user.uid);
+        
+        if (!groupData.members || !groupData.members[user.uid]) {
+            const newMember = { name: user.displayName, photoURL: user.photoURL, role: 'member' };
+            await updateDoc(groupRef, { [`members.${user.uid}`]: newMember });
+        }
+        
+        await updateDoc(userRef, { groupId: groupId });
+        
+        currentGroupId = groupId;
+        if (!silent) DOM.groupModal.classList.add('hidden');
+
+        if (groupUnsubscribe) groupUnsubscribe();
+        groupUnsubscribe = onSnapshot(groupRef, (doc) => {
+            currentGroupData = doc.data();
+            updateGroupMembersUI(currentGroupData);
+            if (myMarker && auth.currentUser) {
+                const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
+                myMarker.setIcon(createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole));
+            }
+        });
+        listenToGroupAlerts(groupId);
+        listenToCheckpoints(groupId);
+    }
+
+    async function leaveGroup(silent = false) {
+        const user = auth.currentUser;
+        if (!user || !currentGroupId) return;
+
+        const batch = writeBatch(db);
+        const userRef = doc(db, 'users', user.uid);
+        batch.update(userRef, { groupId: null });
+
+        const groupRef = doc(db, 'groups', currentGroupId);
+        const members = { ...currentGroupData.members };
+        delete members[user.uid];
+        
+        if (Object.keys(members).length === 0) {
+            batch.delete(groupRef);
+        } else {
+            if(currentGroupData.amir === user.uid && Object.keys(members).length > 0) {
+                const newAmirId = Object.keys(members)[0];
+                members[newAmirId].role = 'amir';
+                batch.update(groupRef, { members: members, amir: newAmirId });
+            } else {
+                batch.update(groupRef, { members: members });
+            }
+        }
+
+        await batch.commit();
+
+        if (!silent) alert("Anda telah keluar dari grup.");
+        currentGroupId = null;
+        currentGroupData = null;
+        if (groupUnsubscribe) groupUnsubscribe();
+        if (groupAlertsUnsubscribe) groupAlertsUnsubscribe();
+        if (groupCheckpointsUnsubscribe) groupCheckpointsUnsubscribe();
+        updateGroupMembersUI(null);
+        Object.values(alertMarkers).forEach(marker => map.removeLayer(marker));
+        Object.values(checkpointMarkers).forEach(marker => map.removeLayer(marker));
+    }
+    
+    function updateGroupMembersUI(groupData) {
+        if (groupData && groupData.members) {
+            DOM.groupInfoBar.classList.remove('hidden');
+            DOM.groupView.classList.remove('hidden');
+            DOM.noGroupView.classList.add('hidden');
+            DOM.groupName.textContent = groupData.name;
+            DOM.groupInfoName.textContent = groupData.name;
+            DOM.groupId.textContent = currentGroupId;
+            const memberCount = Object.keys(groupData.members).length;
+            DOM.groupMemberCount.textContent = memberCount;
+            DOM.groupInfoCount.textContent = `${memberCount} Anggota`;
+            DOM.groupMembersList.innerHTML = '';
+            
+            const user = auth.currentUser;
+            const amIAmir = user && user.uid === groupData.amir;
+
+            Object.entries(groupData.members).forEach(([uid, member]) => {
+                const memberEl = document.createElement('div');
+                memberEl.className = 'flex items-center justify-between bg-gray-700 p-2 rounded-lg';
+                memberEl.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <img src="${member.photoURL}" class="w-8 h-8 rounded-full">
+                        <span>${member.name} ${uid === user.uid ? '(Anda)' : ''}</span>
+                    </div>
+                    <div id="role-control-${uid}"></div>
+                `;
+                DOM.groupMembersList.appendChild(memberEl);
+
+                const roleControlContainer = document.getElementById(`role-control-${uid}`);
+                if (amIAmir && uid !== user.uid) {
+                    const select = document.createElement('select');
+                    select.className = 'role-select';
+                    select.innerHTML = Object.keys(roles).filter(r => r !== 'amir').map(r => `<option value="${r}" ${member.role === r ? 'selected' : ''}>${r.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>`).join('');
+                    select.onchange = (e) => updateMemberRole(uid, e.target.value);
+                    roleControlContainer.appendChild(select);
+                } else {
+                    roleControlContainer.innerHTML = `<span class="px-2 py-1 text-sm rounded-full bg-gray-600">${roles[member.role]} ${member.role.replace(/_/g, ' ')}</span>`;
+                }
+            });
+        } else {
+            DOM.groupInfoBar.classList.add('hidden');
+            DOM.groupView.classList.add('hidden');
+            DOM.noGroupView.classList.remove('hidden');
+        }
+    }
+
+    async function updateMemberRole(uid, newRole) {
+        if (!currentGroupId) return;
+        const groupRef = doc(db, 'groups', currentGroupId);
+        await updateDoc(groupRef, { [`members.${uid}.role`]: newRole });
+    }
+
+    function showUIAlertSelection(latlng) {
+        let content = '<div class="alert-popup-content text-center"><strong>Tandai Kejadian:</strong><br>';
+        Object.entries(alertTypes).forEach(([key, value]) => {
+            content += `<button onclick="window.createAlert('${key}', ${latlng.lat}, ${latlng.lng})">${value.icon} ${value.text}</button>`;
+        });
+        content += '</div>';
+        L.popup().setLatLng(latlng).setContent(content).openOn(map);
+    }
+
+    window.createAlert = async (type, lat, lng) => {
+        map.closePopup();
+        const user = auth.currentUser;
+        if (!user || !currentGroupId) return;
+        const alertRef = doc(collection(db, 'groups', currentGroupId, 'alerts'));
+        await setDoc(alertRef, {
+            type: type, lat: lat, lng: lng,
+            creatorId: user.uid, creatorName: user.displayName, createdAt: new Date()
+        });
+    }
+
+    function listenToGroupAlerts(groupId) {
+        if (groupAlertsUnsubscribe) groupAlertsUnsubscribe();
+        const alertsRef = collection(db, 'groups', groupId, 'alerts');
+        groupAlertsUnsubscribe = onSnapshot(alertsRef, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                const alertId = change.doc.id;
+                const alertData = change.doc.data();
+                if (change.type === 'removed') {
+                    if (alertMarkers[alertId]) { map.removeLayer(alertMarkers[alertId]); delete alertMarkers[alertId]; } return;
+                }
+                if (alertMarkers[alertId]) map.removeLayer(alertMarkers[alertId]);
+                const alertIcon = L.divIcon({ className: 'alert-marker-icon', html: alertTypes[alertData.type].icon, iconSize: [40, 40], iconAnchor: [20, 20] });
+                let popupContent = `<strong>${alertTypes[alertData.type].text}</strong><br><small>Oleh: ${alertData.creatorName}</small>`;
+                if (auth.currentUser?.uid === currentGroupData?.amir) {
+                    popupContent += `<br><button class="mt-2" onclick="window.deleteAlert('${alertId}')">Hapus</button>`;
+                }
+                alertMarkers[alertId] = L.marker([alertData.lat, alertData.lng], { icon: alertIcon }).addTo(map).bindPopup(popupContent);
+            });
+        });
+    }
+
+    window.deleteAlert = async (alertId) => {
+        if (!currentGroupId) return;
+        await deleteDoc(doc(db, 'groups', currentGroupId, 'alerts', alertId));
+        map.closePopup();
+    }
+
+    function listenToCheckpoints(groupId) {
+        if (groupCheckpointsUnsubscribe) groupCheckpointsUnsubscribe();
+        const checkpointsRef = query(collection(db, 'groups', groupId, 'checkpoints'), orderBy('createdAt'));
+        groupCheckpointsUnsubscribe = onSnapshot(checkpointsRef, (snapshot) => {
+            Object.values(checkpointMarkers).forEach(marker => map.removeLayer(marker));
+            let count = 1;
+            snapshot.forEach((doc) => {
+                const cpId = doc.id;
+                const cpData = doc.data();
+                const icon = createCheckpointIcon(count++);
+                let popupContent = `<strong>Checkpoint: ${cpData.description}</strong><br><small>Oleh: ${cpData.creatorName}</small>`;
+                if (auth.currentUser?.uid === currentGroupData?.amir) {
+                    popupContent += `<br><button class="mt-2" onclick="window.deleteCheckpoint('${cpId}')">Hapus</button>`;
+                }
+                checkpointMarkers[cpId] = L.marker([cpData.lat, cpData.lng], { icon }).addTo(map).bindPopup(popupContent);
+            });
+        });
+    }
+    
+    window.deleteCheckpoint = async (checkpointId) => {
+        if (!currentGroupId) return;
+        await deleteDoc(doc(db, 'groups', currentGroupId, 'checkpoints', checkpointId));
+        map.closePopup();
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        initMap();
+        setupModal();
+
+        DOM.shareLocationFab.addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (!user) return;
+            const newSharingStatus = !isSharingPublicly;
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, { isSharing: newSharingStatus });
+            DOM.status.textContent = newSharingStatus ? 'Berbagi lokasi diaktifkan.' : 'Berbagi lokasi dihentikan.';
+        });
+        
+        DOM.searchForm.addEventListener('submit', () => {
+            const firstSuggestion = DOM.suggestionsContainer.querySelector('.suggestion-item');
+            if (firstSuggestion) {
+                firstSuggestion.click();
+            }
+        });
+        
+        DOM.loginBtn.addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()));
+        DOM.logoutMenuBtn.addEventListener('click', async () => { 
+            if (auth.currentUser) await removeLocationFromFirestore(auth.currentUser.uid); 
+            signOut(auth); 
+        });
+
+        DOM.recenterFab.addEventListener('click', () => {
+            if (userCoords) { 
+                map.setView(userCoords, 16, { animate: true }); 
+            } else { 
+                DOM.status.textContent = 'Lokasi Anda belum ditemukan.'; 
+            }
+        });
+        
+        DOM.searchInput.addEventListener('input', debounce(e => fetchSuggestions(e.target.value), 300));
+        
         document.addEventListener('click', (e) => {
             if (DOM.searchModal && !DOM.searchModal.contains(e.target) && e.target !== DOM.searchFab && !DOM.searchFab.contains(e.target)) {
                 DOM.searchModal.classList.add('hidden');
@@ -674,20 +852,20 @@
         DOM.searchFab.addEventListener('click', () => DOM.searchModal.classList.toggle('hidden'));
         DOM.profileFab.addEventListener('click', () => DOM.profileDropdown.classList.toggle('hidden'));
 
-        function setupModal() {
-            DOM.colorOptions.innerHTML = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#ffffff'].map(c => `<div><input type="radio" name="color" value="${c}" id="c-${c}" class="sr-only modal-input"><label for="c-${c}" class="block w-8 h-8 rounded-full cursor-pointer border-2 border-gray-500" style="background-color:${c};"></label></div>`).join('');
-        }
-        
         DOM.settingsMenuBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            document.querySelector(`input[name="color"][value="${currentUserSettings.pinColor}"]`).checked = true;
+            const colorInput = document.querySelector(`input[name="color"][value="${currentUserSettings.pinColor}"]`);
+            if (colorInput) colorInput.checked = true;
             DOM.modal.classList.remove('hidden');
             DOM.profileDropdown.classList.add('hidden');
         });
 
         DOM.saveSettingsBtn.addEventListener('click', async () => {
-            currentUserSettings.pinColor = document.querySelector('input[name="color"]:checked').value;
-            if (auth.currentUser) await updateDoc(doc(db, "users", auth.currentUser.uid), { pinColor: currentUserSettings.pinColor });
+            const checkedColor = document.querySelector('input[name="color"]:checked');
+            if (checkedColor) {
+                currentUserSettings.pinColor = checkedColor.value;
+                if (auth.currentUser) await updateDoc(doc(db, "users", auth.currentUser.uid), { pinColor: currentUserSettings.pinColor });
+            }
             DOM.modal.classList.add('hidden');
         });
 
@@ -737,210 +915,45 @@
             DOM.joinGroupId.value = '';
         });
 
-        async function joinGroup(groupId, silent = false) {
-            const user = auth.currentUser;
-            if (!user) return;
-            
-            const groupRef = doc(db, "groups", groupId);
-            const groupSnap = await getDoc(groupRef);
-
-            if (!groupSnap.exists()) {
-                if (!silent) alert("Grup tidak ditemukan!");
-                return;
-            }
-            
-            const groupData = groupSnap.data();
-            const userRef = doc(db, "users", user.uid);
-            
-            if (!groupData.members || !groupData.members[user.uid]) {
-                const newMember = { name: user.displayName, photoURL: user.photoURL, role: 'member' };
-                await updateDoc(groupRef, { [`members.${user.uid}`]: newMember });
-            }
-            
-            await updateDoc(userRef, { groupId: groupId });
-            
-            currentGroupId = groupId;
-            if (!silent) DOM.groupModal.classList.add('hidden');
-
-            if (groupUnsubscribe) groupUnsubscribe();
-            groupUnsubscribe = onSnapshot(groupRef, (doc) => {
-                currentGroupData = doc.data();
-                updateGroupMembersUI(currentGroupData);
-                if (myMarker && auth.currentUser) {
-                    const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
-                    myMarker.setIcon(createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole));
-                }
-            });
-            listenToGroupAlerts(groupId);
-            listenToCheckpoints(groupId);
-        }
-
         DOM.leaveGroupBtn.addEventListener('click', () => leaveGroup());
 
-        async function leaveGroup(silent = false) {
-            const user = auth.currentUser;
-            if (!user || !currentGroupId) return;
+        DOM.setDestinationBtn.addEventListener('click', () => {
+            if (currentRouteState !== 'PREVIEW') return;
+            destinationMarker.dragging.disable();
+            setRouteState('SET');
+        });
 
-            const batch = writeBatch(db);
-            const userRef = doc(db, 'users', user.uid);
-            batch.update(userRef, { groupId: null });
+        DOM.addWaypointBtn.addEventListener('click', () => {
+            isAddingWaypoint = true;
+            DOM.mapContainer.classList.add('adding-waypoint');
+            DOM.status.textContent = 'Klik di peta untuk menambah titik persinggahan.';
+        });
 
-            const groupRef = doc(db, 'groups', currentGroupId);
-            const members = { ...currentGroupData.members };
-            delete members[user.uid];
-            
-            if (Object.keys(members).length === 0) {
-                batch.delete(groupRef);
-            } else {
-                if(currentGroupData.amir === user.uid && Object.keys(members).length > 0) {
-                    const newAmirId = Object.keys(members)[0];
-                    members[newAmirId].role = 'amir';
-                    batch.update(groupRef, { members: members, amir: newAmirId });
-                } else {
-                    batch.update(groupRef, { members: members });
-                }
-            }
+        DOM.addCheckpointBtn.addEventListener('click', () => {
+            isAddingCheckpoint = true;
+            DOM.mapContainer.classList.add('adding-checkpoint');
+            DOM.status.textContent = 'Klik di peta untuk menambah checkpoint.';
+        });
 
-            await batch.commit();
+        DOM.startNavBtn.addEventListener('click', () => {
+            if (currentRouteState !== 'SET') return;
+            setRouteState('NAVIGATING');
+            if(userCoords) map.setView(userCoords, 18, {animate: true});
+        });
 
-            if (!silent) alert("Anda telah keluar dari grup.");
-            currentGroupId = null;
-            currentGroupData = null;
-            if (groupUnsubscribe) groupUnsubscribe();
-            if (groupAlertsUnsubscribe) groupAlertsUnsubscribe();
-            if (groupCheckpointsUnsubscribe) groupCheckpointsUnsubscribe();
-            updateGroupMembersUI(null);
-            Object.values(alertMarkers).forEach(marker => map.removeLayer(marker));
-            Object.values(checkpointMarkers).forEach(marker => map.removeLayer(marker));
-        }
+        DOM.stopNavBtn.addEventListener('click', () => {
+            if (currentRouteState !== 'NAVIGATING') return;
+            setRouteState('SET');
+        });
 
-        function updateGroupMembersUI(groupData) {
-            if (groupData && groupData.members) {
-                DOM.groupInfoBar.classList.remove('hidden');
-                DOM.groupView.classList.remove('hidden');
-                DOM.noGroupView.classList.add('hidden');
-                DOM.groupName.textContent = groupData.name;
-                DOM.groupInfoName.textContent = groupData.name;
-                DOM.groupId.textContent = currentGroupId;
-                const memberCount = Object.keys(groupData.members).length;
-                DOM.groupMemberCount.textContent = memberCount;
-                DOM.groupInfoCount.textContent = `${memberCount} Anggota`;
-                DOM.groupMembersList.innerHTML = '';
-                
-                const user = auth.currentUser;
-                const amIAmir = user && user.uid === groupData.amir;
-
-                Object.entries(groupData.members).forEach(([uid, member]) => {
-                    const memberEl = document.createElement('div');
-                    memberEl.className = 'flex items-center justify-between bg-gray-700 p-2 rounded-lg';
-                    memberEl.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <img src="${member.photoURL}" class="w-8 h-8 rounded-full">
-                            <span>${member.name} ${uid === user.uid ? '(Anda)' : ''}</span>
-                        </div>
-                        <div id="role-control-${uid}"></div>
-                    `;
-                    DOM.groupMembersList.appendChild(memberEl);
-
-                    const roleControlContainer = document.getElementById(`role-control-${uid}`);
-                    if (amIAmir && uid !== user.uid) {
-                        const select = document.createElement('select');
-                        select.className = 'role-select';
-                        select.innerHTML = Object.keys(roles).filter(r => r !== 'amir').map(r => `<option value="${r}" ${member.role === r ? 'selected' : ''}>${r.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>`).join('');
-                        select.onchange = (e) => updateMemberRole(uid, e.target.value);
-                        roleControlContainer.appendChild(select);
-                    } else {
-                        roleControlContainer.innerHTML = `<span class="px-2 py-1 text-sm rounded-full bg-gray-600">${roles[member.role]} ${member.role.replace(/_/g, ' ')}</span>`;
-                    }
-                });
-            } else {
-                DOM.groupInfoBar.classList.add('hidden');
-                DOM.groupView.classList.add('hidden');
-                DOM.noGroupView.classList.remove('hidden');
-            }
-        }
-
-        async function updateMemberRole(uid, newRole) {
-            if (!currentGroupId) return;
-            const groupRef = doc(db, 'groups', currentGroupId);
-            await updateDoc(groupRef, { [`members.${uid}.role`]: newRole });
-        }
-
-        function showUIAlertSelection(latlng) {
-            let content = '<div class="alert-popup-content text-center"><strong>Tandai Kejadian:</strong><br>';
-            Object.entries(alertTypes).forEach(([key, value]) => {
-                content += `<button onclick="window.createAlert('${key}', ${latlng.lat}, ${latlng.lng})">${value.icon} ${value.text}</button>`;
-            });
-            content += '</div>';
-            L.popup().setLatLng(latlng).setContent(content).openOn(map);
-        }
-
-        window.createAlert = async (type, lat, lng) => {
-            map.closePopup();
-            const user = auth.currentUser;
-            if (!user || !currentGroupId) return;
-            const alertRef = doc(collection(db, 'groups', currentGroupId, 'alerts'));
-            await setDoc(alertRef, {
-                type: type, lat: lat, lng: lng,
-                creatorId: user.uid, creatorName: user.displayName, createdAt: new Date()
-            });
-        }
-
-        function listenToGroupAlerts(groupId) {
-            if (groupAlertsUnsubscribe) groupAlertsUnsubscribe();
-            const alertsRef = collection(db, 'groups', groupId, 'alerts');
-            groupAlertsUnsubscribe = onSnapshot(alertsRef, (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    const alertId = change.doc.id;
-                    const alertData = change.doc.data();
-                    if (change.type === 'removed') {
-                        if (alertMarkers[alertId]) { map.removeLayer(alertMarkers[alertId]); delete alertMarkers[alertId]; } return;
-                    }
-                    if (alertMarkers[alertId]) map.removeLayer(alertMarkers[alertId]);
-                    const alertIcon = L.divIcon({ className: 'alert-marker-icon', html: alertTypes[alertData.type].icon, iconSize: [40, 40], iconAnchor: [20, 20] });
-                    let popupContent = `<strong>${alertTypes[alertData.type].text}</strong><br><small>Oleh: ${alertData.creatorName}</small>`;
-                    if (auth.currentUser?.uid === currentGroupData?.amir) {
-                        popupContent += `<br><button class="mt-2" onclick="window.deleteAlert('${alertId}')">Hapus</button>`;
-                    }
-                    alertMarkers[alertId] = L.marker([alertData.lat, alertData.lng], { icon: alertIcon }).addTo(map).bindPopup(popupContent);
-                });
-            });
-        }
-
-        window.deleteAlert = async (alertId) => {
-            if (!currentGroupId) return;
-            await deleteDoc(doc(db, 'groups', currentGroupId, 'alerts', alertId));
-            map.closePopup();
-        }
-
-        function listenToCheckpoints(groupId) {
-            if (groupCheckpointsUnsubscribe) groupCheckpointsUnsubscribe();
-            const checkpointsRef = query(collection(db, 'groups', groupId, 'checkpoints'), orderBy('createdAt'));
-            groupCheckpointsUnsubscribe = onSnapshot(checkpointsRef, (snapshot) => {
-                Object.values(checkpointMarkers).forEach(marker => map.removeLayer(marker));
-                let count = 1;
-                snapshot.forEach((doc) => {
-                    const cpId = doc.id;
-                    const cpData = doc.data();
-                    const icon = createCheckpointIcon(count++);
-                    let popupContent = `<strong>Checkpoint: ${cpData.description}</strong><br><small>Oleh: ${cpData.creatorName}</small>`;
-                    if (auth.currentUser?.uid === currentGroupData?.amir) {
-                         popupContent += `<br><button class="mt-2" onclick="window.deleteCheckpoint('${cpId}')">Hapus</button>`;
-                    }
-                    checkpointMarkers[cpId] = L.marker([cpData.lat, cpData.lng], { icon }).addTo(map).bindPopup(popupContent);
-                });
-            });
-        }
-        
-        window.deleteCheckpoint = async (checkpointId) => {
-             if (!currentGroupId) return;
-            await deleteDoc(doc(db, 'groups', currentGroupId, 'checkpoints', checkpointId));
-            map.closePopup();
-        }
-        
-        document.addEventListener('DOMContentLoaded', initMap);
-        setupModal();
-    </script>
+        DOM.cancelRouteBtn.addEventListener('click', () => {
+            if (routingControl) map.removeControl(routingControl);
+            if (destinationMarker) map.removeLayer(destinationMarker);
+            routingControl = null; destinationMarker = null; isAddingWaypoint = false; isAddingCheckpoint = false;
+            setRouteState('IDLE');
+        });
+    });
+</script>
 </body>
 </html>
 
