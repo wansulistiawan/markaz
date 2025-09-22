@@ -528,42 +528,54 @@
     }
 
     function listenToPublicRiders() {
-        if (publicRidersUnsubscribe) publicRidersUnsubscribe();
-        const q = query(collection(db, 'users'));
-        publicRidersUnsubscribe = onSnapshot(q, (snapshot) => {
-            const currentVisibleMarkers = new Set();
-            snapshot.forEach((doc) => {
-                const riderData = doc.data();
-                const riderId = doc.id;
-                const isMySelf = riderId === auth.currentUser?.uid;
-                const isSharing = riderData.isSharing;
-                const belongsToMyGroup = currentGroupId && riderData.groupId === currentGroupId;
-                const shouldShow = isSharing && (!currentGroupId || belongsToMyGroup);
+    if (publicRidersUnsubscribe) publicRidersUnsubscribe();
+    
+    const q = query(collection(db, 'users'));
+    publicRidersUnsubscribe = onSnapshot(q, (snapshot) => {
+        const currentVisibleMarkers = new Set();
+        
+        snapshot.forEach((doc) => {
+            const riderData = doc.data();
+            const riderId = doc.id;
+            const isMySelf = riderId === auth.currentUser?.uid;
 
-                if (shouldShow && !isMySelf && riderData.lat && riderData.lng) {
-                    currentVisibleMarkers.add(riderId);
-                    const riderCoords = [riderData.lat, riderData.lng];
-                    const role = currentGroupData?.members?.[riderId]?.role;
-                    const icon = createProfilePinIcon(riderData.pinColor || '#34495e', riderData.photoURL, role);
-                    
-                    if (publicMarkers[riderId]) {
-                        publicMarkers[riderId].setLatLng(riderCoords);
-                        publicMarkers[riderId].setIcon(icon);
-                    } else {
-                        const popupContent = `<div class="user-popup"><img src="${riderData.photoURL}" alt="foto"><div><strong>${riderData.name}</strong><br><button onclick="window.showRouteTo([${riderCoords}], '${riderData.name.replace(/'/g, "\\'")}')">Rute ke Sini</button></div></div>`;
-                        publicMarkers[riderId] = L.marker(riderCoords, { icon: icon }).addTo(map).bindPopup(popupContent);
-                    }
+            // ================== LOGIKA BARU YANG DIPERBAIKI ==================
+            // Tampilkan rider jika mereka adalah anggota grup saya
+            const isInMyGroup = riderData.isSharing && currentGroupId && riderData.groupId === currentGroupId;
+            
+            // Tampilkan juga rider jika mereka tidak punya grup (rider solo)
+            const isPublicAndUngrouped = riderData.isSharing && !riderData.groupId;
+            
+            const shouldShow = isInMyGroup || isPublicAndUngrouped;
+            // ===============================================================
+
+            if (shouldShow && !isMySelf && riderData.lat && riderData.lng) {
+                currentVisibleMarkers.add(riderId);
+                const riderCoords = [riderData.lat, riderData.lng];
+                const role = currentGroupData?.members?.[riderId]?.role;
+                const icon = createProfilePinIcon(riderData.pinColor || '#34495e', riderData.photoURL, role);
+                
+                if (publicMarkers[riderId]) {
+                    publicMarkers[riderId].setLatLng(riderCoords);
+                    publicMarkers[riderId].setIcon(icon);
+                } else {
+                    const popupContent = `<div class="user-popup"><img src="${riderData.photoURL}" alt="foto"><div><strong>${riderData.name}</strong><br><button onclick="window.showRouteTo([${riderCoords}], '${riderData.name.replace(/'/g, "\\'")}')">Rute ke Sini</button></div></div>`;
+                    publicMarkers[riderId] = L.marker(riderCoords, { icon: icon }).addTo(map).bindPopup(popupContent);
                 }
-            });
+            }
+        });
 
-            Object.keys(publicMarkers).forEach(markerId => {
-                if (!currentVisibleMarkers.has(markerId)) {
+        // Bagian ini tetap sama, untuk menghapus marker yang sudah tidak terlihat
+        Object.keys(publicMarkers).forEach(markerId => {
+            if (!currentVisibleMarkers.has(markerId)) {
+                if (publicMarkers[markerId]) { // Pengecekan tambahan
                     map.removeLayer(publicMarkers[markerId]);
                     delete publicMarkers[markerId];
                 }
-            });
+            }
         });
-    }
+    });
+}
     
     window.showRouteTo = (destinationCoords, destinationName = 'Tujuan') => {
         if (currentRouteState !== 'IDLE') { DOM.status.textContent = 'Batalkan rute saat ini untuk membuat rute baru.'; return; }
@@ -956,5 +968,6 @@
 </script>
 </body>
 </html>
+
 
 
