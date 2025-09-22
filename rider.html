@@ -216,7 +216,8 @@
             cancelRouteBtn: document.getElementById('cancel-route-btn'),
             fabBottomLeft: document.getElementById('fab-bottom-left'),
             fabBottomRight: document.getElementById('fab-bottom-right'),
-            shareLocationFab: document.getElementById('share-location-fab'),
+            shareControl: document.getElementById('share-control'),
+            shareToggle: document.getElementById('share-public-toggle'),
             recenterFab: document.getElementById('recenter-fab'),
             cancelSettingsBtn: document.getElementById('cancel-settings-btn'), 
             saveSettingsBtn: document.getElementById('save-settings-btn'),
@@ -519,29 +520,6 @@
             if (userCoords) { map.setView(userCoords, 16, {animate: true}); } 
             else { DOM.status.textContent = 'Lokasi Anda belum ditemukan.'; }
         });
-
-        DOM.shareLocationFab.addEventListener('click', () => {
-            const user = auth.currentUser;
-            if (!user) return;
-
-            // Toggle status sharing
-            const newSharingStatus = !isSharingPublicly;
-
-            const userRef = doc(db, 'users', user.uid);
-            const dataToUpdate = { isSharing: newSharingStatus };
-
-            // Jika mengaktifkan sharing DAN koordinat sudah ada, kirimkan lokasi saat ini juga
-            if (newSharingStatus && userCoords) {
-                dataToUpdate.lat = userCoords[0];
-                dataToUpdate.lng = userCoords[1];
-                dataToUpdate.lastUpdate = serverTimestamp(); // Gunakan serverTimestamp untuk konsistensi
-                DOM.status.textContent = 'Lokasi Anda sekarang publik.';
-            } else if (!newSharingStatus) {
-                DOM.status.textContent = 'Berbagi lokasi dihentikan.';
-            }
-
-            updateDoc(userRef, dataToUpdate);
-        });
         
         async function updateLocationInFirestore(user) {
             if (!userCoords) return;
@@ -572,7 +550,11 @@
                 currentUserSettings.pinColor = userData?.pinColor || '#3498db';
 
                 isSharingPublicly = userData?.isSharing || false;
-                DOM.shareLocationFab.classList.toggle('active', isSharingPublicly);
+                if(DOM.shareLocationFab) {
+                    DOM.shareLocationFab.classList.toggle('active', isSharingPublicly);
+                } else if(DOM.shareToggle) {
+                    DOM.shareToggle.checked = isSharingPublicly;
+                }
 
                 if(myMarker && auth.currentUser){
                     const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
@@ -657,10 +639,10 @@
 
         DOM.searchInput.addEventListener('input', debounce(e => fetchSuggestions(e.target.value), 300));
         document.addEventListener('click', (e) => {
-            if (!DOM.searchModal.contains(e.target) && e.target !== DOM.searchFab && !DOM.searchFab.contains(e.target)) {
+            if (DOM.searchModal && !DOM.searchModal.contains(e.target) && e.target !== DOM.searchFab && !DOM.searchFab.contains(e.target)) {
                 DOM.searchModal.classList.add('hidden');
             }
-            if (!DOM.profileDropdown.parentElement.contains(e.target)) {
+            if (DOM.profileDropdown && !DOM.profileDropdown.parentElement.contains(e.target)) {
                 DOM.profileDropdown.classList.add('hidden');
             }
         });
@@ -937,5 +919,4 @@
     </script>
 </body>
 </html>
-
 
