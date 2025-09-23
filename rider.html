@@ -182,7 +182,7 @@
     import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, getDoc, writeBatch, updateDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 	import { getDatabase, ref, push, onChildAdded, off, serverTimestamp as rtdbServerTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 	
-    const firebaseConfig = { apiKey: "AIzaSyA9fthcIZ_VQXMUL6lPd-165NIFNb09JOA", authDomain: "aplikasi-touring.firebaseapp.com", projectId: "aplikasi-touring", storageBucket: "aplikasi-touring.appspot.com", messagingSenderId: "310021643774", appId: "1:310021643774:web:4943db8f567e66aef174af", measurementId: "G-ZRCCNLC8WB" };
+    const firebaseConfig = { apiKey: "AIzaSyA9fthcIZ_VQXMUL6lPd-165NIFNb09JOA", authDomain: "aplikasi-touring.firebaseapp.com", databaseURL: "https://aplikasi-touring-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "aplikasi-touring", storageBucket: "aplikasi-touring.appspot.com", messagingSenderId: "310021643774", appId: "1:310021643774:web:4943db8f567e66aef174af", measurementId: "G-ZRCCNLC8WB" };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -957,142 +957,113 @@ const listenForVoiceMessages = (groupId) => {
         initMap();
         setupModal();
 		
-		// === KODE LOGIKA PUSH-TO-TALK ===
-    let pttMode = 'hold'; // Bisa 'hold' atau 'toggle'
-    let isTalking = false;
-    let isLocked = false;
-    let pressTimer = null;
-	
-	// Variabel untuk menyimpan rekaman
-    let mediaRecorder;
-    let audioChunks = [];
+		// ==================================================
+//          KODE LOGIKA PUSH-TO-TALK (VERSI BARU)
+// ==================================================
+let isTalking = false;
+let isLocked = false;
+let pressTimer = null;
+let initialX = 0;
+let isDragging = false;
 
-    // Fungsi-fungsi baru untuk merekam
-    const startRecording = async () => {
-    // Reset wadah rekaman setiap kali mulai
-    audioChunks = [];
-
-    try {
-        // Meminta izin mikrofon
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        
-        // 1. Buat instance MediaRecorder baru dari stream
-        mediaRecorder = new MediaRecorder(stream);
-        
-        // 2. Saat ada data audio (on 'dataavailable'), masukkan ke dalam array audioChunks
-        mediaRecorder.addEventListener("dataavailable", event => {
-            audioChunks.push(event.data);
-        });
-        
-        // 3. Saat rekaman berhenti (on 'stop'), kirim datanya. INI SATU-SATUNYA YANG KITA PERLUKAN.
-        mediaRecorder.addEventListener("stop", async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            console.log("Rekaman selesai. Ukuran data:", audioBlob.size);
-            
-            if (audioBlob.size < 1000) {
-                console.log("Rekaman terlalu pendek, tidak dikirim.");
-                return;
-            }
-
-            try {
-                const base64Audio = await blobToBase64(audioBlob);
-                const payload = {
-                    senderId: auth.currentUser.uid,
-                    senderName: auth.currentUser.displayName,
-                    audioData: base64Audio,
-                    timestamp: rtdbServerTimestamp()
-                };
-                const voiceMessagesRef = ref(rtdb, `groups/${currentGroupId}/voice_messages`);
-                await push(voiceMessagesRef, payload);
-                console.log("Pesan suara terkirim!");
-            } catch (error) {
-                console.error("Gagal mengirim pesan suara:", error);
-                alert("Gagal mengirim pesan suara. Silakan coba lagi.");
-            }
-        });
-        
-        // 4. Mulai merekam
-        mediaRecorder.start();
-
-        console.log("Merekam suara...");
-
-    } catch (err) {
-        console.error("Error mengakses mikrofon:", err);
-        alert("Tidak bisa mengakses mikrofon. Pastikan Anda memberikan izin.");
-        isTalking = false;
-        DOM.pttBtn.classList.remove('bg-red-600');
-    }
-};
-
-    const stopRecording = () => {
-    // Pastikan mediaRecorder sedang aktif sebelum mencoba menghentikannya
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-        mediaRecorder.stop();
-        console.log("Perekaman dihentikan.");
-    }
-};
-	
-	
-    // Fungsi yang akan dipanggil saat mulai bicara
-    const startTalking = () => {
+// Fungsi yang akan dipanggil saat mulai bicara
+const startTalking = () => {
     if (isTalking) return;
     console.log("Mulai Bicara...");
     isTalking = true;
-    DOM.pttBtn.classList.add('bg-red-600');
-    startRecording(); // Panggil fungsi rekam
+    DOM.pttBtn.classList.add('bg-red-600', 'scale-110');
+    startRecording();
 };
 
-    // Fungsi yang akan dipanggil saat berhenti bicara
-    const stopTalking = () => {
+// Fungsi yang akan dipanggil saat berhenti bicara
+const stopTalking = () => {
+    // Hanya berhenti jika tidak dalam mode terkunci
     if (!isTalking || isLocked) return;
     console.log("Berhenti Bicara...");
     isTalking = false;
-    DOM.pttBtn.classList.remove('bg-red-600');
-    stopRecording(); // Panggil fungsi berhenti rekam
+    DOM.pttBtn.classList.remove('bg-red-600', 'scale-110');
+    stopRecording();
 };
 
-    // Saat tombol ditekan
-    DOM.pttBtn.addEventListener('mousedown', () => {
-        // Mulai timer untuk mendeteksi 'tekan dan tahan' vs 'klik singkat'
-        pressTimer = setTimeout(() => {
-            pttMode = 'hold'; // Jika ditahan >200ms, aktifkan mode 'hold'
-            startTalking();
-        }, 200);
-    });
+// Fungsi untuk mengunci PTT (mode toggle ON)
+const lockTalk = () => {
+    isLocked = true;
+    DOM.pttIconMic.classList.add('hidden');
+    DOM.pttIconStop.classList.remove('hidden');
+    // Jika belum bicara, mulai bicara
+    if (!isTalking) {
+        startTalking();
+    }
+};
 
-    // Saat tombol dilepas
-    DOM.pttBtn.addEventListener('mouseup', () => {
-        clearTimeout(pressTimer); // Hentikan timer
-        if (pttMode === 'hold') {
+// Fungsi untuk membuka kunci PTT (mode toggle OFF)
+const unlockTalk = () => {
+    isLocked = false;
+    DOM.pttIconMic.classList.remove('hidden');
+    DOM.pttIconStop.classList.add('hidden');
+    // Langsung hentikan pembicaraan
+    isTalking = false;
+    DOM.pttBtn.classList.remove('bg-red-600', 'scale-110');
+    stopRecording();
+};
+
+// --- Event Listeners Baru ---
+
+// Saat tombol pertama kali ditekan
+DOM.pttBtn.addEventListener('mousedown', (e) => {
+    initialX = e.clientX;
+    isDragging = false;
+
+    // Fungsi yang akan dijalankan saat mouse digerakkan
+    const handleMouseMove = (moveEvent) => {
+        const deltaX = initialX - moveEvent.clientX;
+        
+        // Cek apakah tarikan ke kiri sudah cukup jauh (misal, 30 pixel)
+        if (deltaX > 30) {
+            isDragging = true;
+            clearTimeout(pressTimer); // Batalkan timer untuk mode 'hold'
+            lockTalk(); // Langsung kunci PTT
+            
+            // Hentikan listener mousemove dan mouseup setelah gestur terdeteksi
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        }
+    };
+
+    // Fungsi yang akan dijalankan saat mouse dilepas
+    const handleMouseUp = () => {
+        clearTimeout(pressTimer);
+        // Hentikan PTT hanya jika tidak ada gestur drag
+        if (!isDragging) {
             stopTalking();
         }
-    });
-    
-    // Saat diklik (untuk mode toggle)
-    DOM.pttBtn.addEventListener('click', () => {
-        // Logika ini hanya berjalan jika tombol tidak ditahan lama (di bawah 200ms)
-        if (isTalking && pttMode === 'hold') return;
-        
-        pttMode = 'toggle';
-        if (!isLocked) {
-            // Mengunci PTT
-            isLocked = true;
-            DOM.pttIconMic.classList.add('hidden');
-            DOM.pttIconStop.classList.remove('hidden');
-            startTalking();
-        } else {
-            // Membuka kunci PTT
-            isLocked = false;
-            DOM.pttIconMic.classList.remove('hidden');
-            DOM.pttIconStop.classList.add('hidden');
-            stopTalking(); // Memanggil stopTalking secara manual
-            isTalking = false; // Reset status
-            DOM.pttBtn.classList.remove('bg-red-600');
-        }
-    });
+        // Selalu hapus listener setelah selesai
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+    };
 
-    // Mencegah menu konteks (klik kanan) muncul di tombol
-    DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
+    // Mulai mendengarkan gerakan mouse
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    // Mulai timer untuk mode 'hold' jika tidak ada gerakan drag
+    pressTimer = setTimeout(() => {
+        if (!isDragging) {
+            startTalking();
+        }
+    }, 250); // Sedikit lebih lama agar tidak bentrok dengan klik
+});
+
+// Saat tombol diklik (sekarang HANYA untuk membuka kunci)
+DOM.pttBtn.addEventListener('click', () => {
+    // Jika PTT sedang terkunci, klik ini akan membukanya
+    if (isLocked) {
+        unlockTalk();
+    }
+});
+
+// Mencegah menu konteks (klik kanan) muncul di tombol
+DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
 		
 
         DOM.shareLocationFab.addEventListener('click', async () => {
