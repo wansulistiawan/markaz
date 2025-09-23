@@ -117,7 +117,7 @@
         </div>
 		
 		<div id="ptt-container" class="hidden absolute right-4 top-1/2 -translate-y-1/2 z-[400]">
-        <button id="ptt-btn" class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-lg transition-transform duration-100 active:scale-90">
+        <button id="ptt-btn" class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ease-out active:scale-90">
             <svg id="ptt-icon-mic" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
             <svg id="ptt-icon-stop" class="w-8 h-8 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6" /></svg>
         </button>
@@ -966,7 +966,54 @@ let pressTimer = null;
 let initialX = 0;
 let isDragging = false;
 
-// Fungsi yang akan dipanggil saat mulai bicara
+// Variabel untuk menyimpan rekaman (sudah ada)
+let mediaRecorder;
+let audioChunks = [];
+
+// === FUNGSI LEVEL BAWAH (Perekaman) ===
+// Didefinisikan paling awal agar bisa dipanggil oleh fungsi lain
+const startRecording = async () => {
+    audioChunks = [];
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.addEventListener("dataavailable", event => {
+            audioChunks.push(event.data);
+        });
+        mediaRecorder.addEventListener("stop", async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            if (audioBlob.size < 1000) return;
+            try {
+                const base64Audio = await blobToBase64(audioBlob);
+                const payload = {
+                    senderId: auth.currentUser.uid,
+                    senderName: auth.currentUser.displayName,
+                    audioData: base64Audio,
+                    timestamp: rtdbServerTimestamp()
+                };
+                const voiceMessagesRef = ref(rtdb, `groups/${currentGroupId}/voice_messages`);
+                await push(voiceMessagesRef, payload);
+            } catch (error) {
+                console.error("Gagal mengirim pesan suara:", error);
+            }
+        });
+        mediaRecorder.start();
+        console.log("Merekam suara...");
+    } catch (err) {
+        console.error("Error mengakses mikrofon:", err);
+        isTalking = false;
+        DOM.pttBtn.classList.remove('bg-red-600', 'scale-110');
+    }
+};
+
+const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        console.log("Perekaman dihentikan.");
+    }
+};
+
+// === FUNGSI LEVEL ATAS (Aksi Pengguna) ===
 const startTalking = () => {
     if (isTalking) return;
     console.log("Mulai Bicara...");
@@ -975,9 +1022,7 @@ const startTalking = () => {
     startRecording();
 };
 
-// Fungsi yang akan dipanggil saat berhenti bicara
 const stopTalking = () => {
-    // Hanya berhenti jika tidak dalam mode terkunci
     if (!isTalking || isLocked) return;
     console.log("Berhenti Bicara...");
     isTalking = false;
@@ -985,84 +1030,80 @@ const stopTalking = () => {
     stopRecording();
 };
 
-// Fungsi untuk mengunci PTT (mode toggle ON)
 const lockTalk = () => {
     isLocked = true;
     DOM.pttIconMic.classList.add('hidden');
     DOM.pttIconStop.classList.remove('hidden');
-    // Jika belum bicara, mulai bicara
     if (!isTalking) {
         startTalking();
     }
 };
 
-// Fungsi untuk membuka kunci PTT (mode toggle OFF)
 const unlockTalk = () => {
     isLocked = false;
     DOM.pttIconMic.classList.remove('hidden');
     DOM.pttIconStop.classList.add('hidden');
-    // Langsung hentikan pembicaraan
     isTalking = false;
     DOM.pttBtn.classList.remove('bg-red-600', 'scale-110');
     stopRecording();
 };
 
-// --- Event Listeners Baru ---
-
-// Saat tombol pertama kali ditekan
+// === EVENT LISTENERS (Penghubung Aksi dan Fungsi) ===
 DOM.pttBtn.addEventListener('mousedown', (e) => {
     initialX = e.clientX;
     isDragging = false;
+    DOM.pttBtn.style.transition = 'none'; // Matikan transisi saat ditarik
 
-    // Fungsi yang akan dijalankan saat mouse digerakkan
     const handleMouseMove = (moveEvent) => {
         const deltaX = initialX - moveEvent.clientX;
         
-        // Cek apakah tarikan ke kiri sudah cukup jauh (misal, 30 pixel)
-        if (deltaX > 30) {
+        // KODE ANIMASI: Geser tombol mengikuti tarikan mouse
+        if (deltaX > 0) { // Hanya jika ditarik ke kiri
+             // Batasi tarikan maksimal 60px
+            const dragDistance = Math.max(-60, -deltaX);
+            DOM.pttBtn.style.transform = `translateX(${dragDistance}px)`;
+        }
+
+        if (deltaX > 40 && !isLocked) { // Threshold untuk swipe (lebih jauh dari 40px)
             isDragging = true;
-            clearTimeout(pressTimer); // Batalkan timer untuk mode 'hold'
-            lockTalk(); // Langsung kunci PTT
-            
-            // Hentikan listener mousemove dan mouseup setelah gestur terdeteksi
+            clearTimeout(pressTimer);
+            lockTalk();
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
+            // KODE ANIMASI: Kembalikan tombol ke posisi semula setelah lock
+            DOM.pttBtn.style.transition = 'transform 0.2s ease-out';
+            DOM.pttBtn.style.transform = 'translateX(0px)';
         }
     };
 
-    // Fungsi yang akan dijalankan saat mouse dilepas
     const handleMouseUp = () => {
         clearTimeout(pressTimer);
-        // Hentikan PTT hanya jika tidak ada gestur drag
         if (!isDragging) {
             stopTalking();
         }
-        // Selalu hapus listener setelah selesai
+        // KODE ANIMASI: Kembalikan tombol jika dilepas tanpa lock
+        DOM.pttBtn.style.transition = 'transform 0.2s ease-out';
+        DOM.pttBtn.style.transform = 'translateX(0px)';
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
     };
 
-    // Mulai mendengarkan gerakan mouse
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     
-    // Mulai timer untuk mode 'hold' jika tidak ada gerakan drag
     pressTimer = setTimeout(() => {
         if (!isDragging) {
             startTalking();
         }
-    }, 250); // Sedikit lebih lama agar tidak bentrok dengan klik
+    }, 250);
 });
 
-// Saat tombol diklik (sekarang HANYA untuk membuka kunci)
 DOM.pttBtn.addEventListener('click', () => {
-    // Jika PTT sedang terkunci, klik ini akan membukanya
     if (isLocked) {
         unlockTalk();
     }
 });
 
-// Mencegah menu konteks (klik kanan) muncul di tombol
 DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
 		
 
