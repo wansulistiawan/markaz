@@ -51,6 +51,8 @@
 </head>
 <body class="bg-gray-900 text-white antialiased overflow-hidden">
 
+    <div id="audio-container"></div>
+
     <div id="map-container" class="w-screen h-dvh relative">
         <div id="map"></div>
 
@@ -113,6 +115,14 @@
                 Masuk dengan Google
             </button>
         </div>
+		
+		<div id="ptt-container" class="hidden absolute right-4 top-1/2 -translate-y-1/2 z-[400]">
+        <button id="ptt-btn" class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-lg transition-transform duration-100 active:scale-90">
+            <svg id="ptt-icon-mic" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+            <svg id="ptt-icon-stop" class="w-8 h-8 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6" /></svg>
+        </button>
+    </div>
+		
     </div>
 
     <!-- Modals -->
@@ -170,12 +180,14 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
     import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, getDoc, writeBatch, updateDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
-
+	import { getDatabase, ref, push, onChildAdded, off, serverTimestamp as rtdbServerTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+	
     const firebaseConfig = { apiKey: "AIzaSyA9fthcIZ_VQXMUL6lPd-165NIFNb09JOA", authDomain: "aplikasi-touring.firebaseapp.com", projectId: "aplikasi-touring", storageBucket: "aplikasi-touring.appspot.com", messagingSenderId: "310021643774", appId: "1:310021643774:web:4943db8f567e66aef174af", measurementId: "G-ZRCCNLC8WB" };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+	const rtdb = getDatabase(app); 
 
     let map, myMarker, userCoords = null, routingControl = null, destinationMarker = null;
     let isSharingPublicly = false;
@@ -193,48 +205,55 @@
     let userUnsubscribe = null;
     let groupAlertsUnsubscribe = null;
     let groupCheckpointsUnsubscribe = null;
+	let voiceMessageListenerRef = null;
 
     const DOM = {
-        mapContainer: document.getElementById('map-container'),
-        status: document.getElementById('status'),
-        loginBtn: document.getElementById('login-btn'),
-        loginContainer: document.getElementById('login-container'),
-        logoutMenuBtn: document.getElementById('logout-menu-btn'),
-        profileFab: document.getElementById('profile-fab'),
-        profileFabContainer: document.getElementById('fab-top-right'),
-        profileDropdown: document.getElementById('profile-dropdown'),
-        settingsMenuBtn: document.getElementById('settings-menu-btn'), modal: document.getElementById('pin-settings-modal'),
-        groupFab: document.getElementById('group-fab'), groupModal: document.getElementById('group-modal'),
-        groupView: document.getElementById('group-view'), noGroupView: document.getElementById('no-group-view'),
-        groupInfoBar: document.getElementById('group-info-bar'),
-        groupInfoName: document.getElementById('group-info-name'),
-        groupInfoCount: document.getElementById('group-info-count'),
-        groupName: document.getElementById('group-name'), groupId: document.getElementById('group-id'),
-        groupMemberCount: document.getElementById('group-member-count'),
-        groupMembersList: document.getElementById('group-members-list'),
-        createGroupName: document.getElementById('create-group-name'), createGroupBtn: document.getElementById('create-group-btn'),
-        joinGroupId: document.getElementById('join-group-id'), joinGroupBtn: document.getElementById('join-group-btn'),
-        leaveGroupBtn: document.getElementById('leave-group-btn'), closeGroupModalBtn: document.getElementById('close-group-modal-btn'),
-        searchFab: document.getElementById('search-fab'), searchModal: document.getElementById('search-modal'),
-        searchInput: document.getElementById('search-input'), 
-        searchForm: document.getElementById('search-form'),
-        suggestionsContainer: document.getElementById('suggestions-container'),
-        navControls: document.getElementById('navigation-controls'),
-        setDestinationBtn: document.getElementById('set-destination-btn'),
-        addCheckpointBtn: document.getElementById('add-checkpoint-btn'),
-        addWaypointBtn: document.getElementById('add-waypoint-btn'),
-        startNavBtn: document.getElementById('start-nav-btn'),
-        stopNavBtn: document.getElementById('stop-nav-btn'),
-        cancelRouteBtn: document.getElementById('cancel-route-btn'),
-        fabBottomLeft: document.getElementById('fab-bottom-left'),
-        fabBottomRight: document.getElementById('fab-bottom-right'),
-        shareLocationFab: document.getElementById('share-location-fab'),
-		gmapsFab: document.getElementById('gmaps-fab'),
-        recenterFab: document.getElementById('recenter-fab'),
-        cancelSettingsBtn: document.getElementById('cancel-settings-btn'), 
-        saveSettingsBtn: document.getElementById('save-settings-btn'),
-        colorOptions: document.getElementById('color-options'),
-    };
+    mapContainer: document.getElementById('map-container'),
+    status: document.getElementById('status'),
+    loginBtn: document.getElementById('login-btn'),
+    loginContainer: document.getElementById('login-container'),
+    logoutMenuBtn: document.getElementById('logout-menu-btn'),
+    profileFab: document.getElementById('profile-fab'),
+    profileFabContainer: document.getElementById('fab-top-right'),
+    profileDropdown: document.getElementById('profile-dropdown'),
+    settingsMenuBtn: document.getElementById('settings-menu-btn'), modal: document.getElementById('pin-settings-modal'),
+    groupFab: document.getElementById('group-fab'), groupModal: document.getElementById('group-modal'),
+    groupView: document.getElementById('group-view'), noGroupView: document.getElementById('no-group-view'),
+    groupInfoBar: document.getElementById('group-info-bar'),
+    groupInfoName: document.getElementById('group-info-name'),
+    groupInfoCount: document.getElementById('group-info-count'),
+    groupName: document.getElementById('group-name'), groupId: document.getElementById('group-id'),
+    groupMemberCount: document.getElementById('group-member-count'),
+    groupMembersList: document.getElementById('group-members-list'),
+    createGroupName: document.getElementById('create-group-name'), createGroupBtn: document.getElementById('create-group-btn'),
+    joinGroupId: document.getElementById('join-group-id'), joinGroupBtn: document.getElementById('join-group-btn'),
+    leaveGroupBtn: document.getElementById('leave-group-btn'), closeGroupModalBtn: document.getElementById('close-group-modal-btn'),
+    searchFab: document.getElementById('search-fab'), searchModal: document.getElementById('search-modal'),
+    searchInput: document.getElementById('search-input'), 
+    searchForm: document.getElementById('search-form'),
+    suggestionsContainer: document.getElementById('suggestions-container'),
+    navControls: document.getElementById('navigation-controls'),
+    setDestinationBtn: document.getElementById('set-destination-btn'),
+    addCheckpointBtn: document.getElementById('add-checkpoint-btn'),
+    addWaypointBtn: document.getElementById('add-waypoint-btn'),
+    startNavBtn: document.getElementById('start-nav-btn'),
+    stopNavBtn: document.getElementById('stop-nav-btn'),
+    cancelRouteBtn: document.getElementById('cancel-route-btn'),
+    fabBottomLeft: document.getElementById('fab-bottom-left'),
+    fabBottomRight: document.getElementById('fab-bottom-right'),
+    shareLocationFab: document.getElementById('share-location-fab'),
+    gmapsFab: document.getElementById('gmaps-fab'),
+    recenterFab: document.getElementById('recenter-fab'),
+    cancelSettingsBtn: document.getElementById('cancel-settings-btn'), 
+    saveSettingsBtn: document.getElementById('save-settings-btn'),
+    colorOptions: document.getElementById('color-options'),
+    
+    // BARIS-BARIS PTT YANG PERLU DITAMBAHKAN
+    pttContainer: document.getElementById('ptt-container'),
+    pttBtn: document.getElementById('ptt-btn'),
+    pttIconMic: document.getElementById('ptt-icon-mic'),
+    pttIconStop: document.getElementById('ptt-icon-stop'),
+};
 
     const roles = {
         amir: '👑', penunjuk_jalan: '🧭', guard: '🛡️', sweeper: '🧹', logistik: '🛠️', member: '👤'
@@ -245,6 +264,60 @@
         macet: { icon: '🚗', text: 'Lalu Lintas Macet' }, pawai: { icon: '🎉', text: 'Ada Pawai/Keramaian' },
         bencana: { icon: '🌋', text: 'Ada Bencana Alam' }, jalan_rusak: { icon: '🚧', text: 'Ada Jalan Rusak' }
     };
+	
+	const blobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => {
+            resolve(reader.result);
+        };
+        reader.onerror = (error) => {
+            reject(error);
+        };
+    });
+};
+
+// Fungsi utilitas untuk mengubah Base64 kembali menjadi Blob (file audio)
+const base64ToBlob = (base64) => {
+    const byteCharacters = atob(base64.split(',')[1]);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: 'audio/webm' });
+};
+
+// Fungsi utama untuk "mendengarkan" pesan suara baru
+const listenForVoiceMessages = (groupId) => {
+    const voiceMessagesRef = ref(rtdb, `groups/${groupId}/voice_messages`);
+
+    // onChildAdded adalah listener yang hanya aktif saat ada ANAK BARU (pesan baru) ditambahkan
+    onChildAdded(voiceMessagesRef, (snapshot) => {
+        const payload = snapshot.val();
+
+        // Jangan putar suara kita sendiri
+        if (!payload || payload.senderId === auth.currentUser.uid) {
+            return;
+        }
+
+        console.log(`Pesan suara diterima dari: ${payload.senderName}`);
+
+        // Ubah data teks kembali menjadi file audio
+        const audioBlob = base64ToBlob(payload.audioData);
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        // Buat elemen audio, putar, lalu hapus
+        const audio = new Audio(audioUrl);
+        audio.play();
+
+        // Memberi notifikasi visual kecil (opsional tapi bagus)
+        DOM.status.textContent = `Pesan suara dari ${payload.senderName}`;
+    });
+
+    console.log(`Mendengarkan pesan suara di grup ${groupId}...`);
+};
     
     function createProfilePinIcon(color, imageUrl, role) {
         const uniqueId = `pattern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -705,6 +778,7 @@
         });
         listenToGroupAlerts(groupId);
         listenToCheckpoints(groupId);
+		listenForVoiceMessages(groupId);
     }
 
     async function leaveGroup(silent = false) {
@@ -739,56 +813,67 @@
         if (groupUnsubscribe) groupUnsubscribe();
         if (groupAlertsUnsubscribe) groupAlertsUnsubscribe();
         if (groupCheckpointsUnsubscribe) groupCheckpointsUnsubscribe();
+		 if (voiceMessageListenerRef) {
+        off(voiceMessageListenerRef); // 'off' adalah perintah untuk berhenti mendengarkan
+        voiceMessageListenerRef = null;
+        console.log("Berhenti mendengarkan pesan suara.");
+    }
         updateGroupMembersUI(null);
         Object.values(alertMarkers).forEach(marker => map.removeLayer(marker));
         Object.values(checkpointMarkers).forEach(marker => map.removeLayer(marker));
     }
     
     function updateGroupMembersUI(groupData) {
-        if (groupData && groupData.members) {
-            DOM.groupInfoBar.classList.remove('hidden');
-            DOM.groupView.classList.remove('hidden');
-            DOM.noGroupView.classList.add('hidden');
-            DOM.groupName.textContent = groupData.name;
-            DOM.groupInfoName.textContent = groupData.name;
-            DOM.groupId.textContent = currentGroupId;
-            const memberCount = Object.keys(groupData.members).length;
-            DOM.groupMemberCount.textContent = memberCount;
-            DOM.groupInfoCount.textContent = `${memberCount} Anggota`;
-            DOM.groupMembersList.innerHTML = '';
-            
-            const user = auth.currentUser;
-            const amIAmir = user && user.uid === groupData.amir;
+    if (groupData && groupData.members) {
+        DOM.groupInfoBar.classList.remove('hidden');
+        DOM.groupView.classList.remove('hidden');
+        DOM.noGroupView.classList.add('hidden');
+        DOM.groupName.textContent = groupData.name;
+        DOM.groupInfoName.textContent = groupData.name;
+        DOM.groupId.textContent = currentGroupId;
+        const memberCount = Object.keys(groupData.members).length;
+        DOM.groupMemberCount.textContent = memberCount;
+        DOM.groupInfoCount.textContent = `${memberCount} Anggota`;
+        DOM.groupMembersList.innerHTML = '';
+        
+        // BARIS BARU DITAMBAHKAN DI SINI
+        DOM.pttContainer.classList.remove('hidden');
+        
+        const user = auth.currentUser;
+        const amIAmir = user && user.uid === groupData.amir;
 
-            Object.entries(groupData.members).forEach(([uid, member]) => {
-                const memberEl = document.createElement('div');
-                memberEl.className = 'flex items-center justify-between bg-gray-700 p-2 rounded-lg';
-                memberEl.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <img src="${member.photoURL}" class="w-8 h-8 rounded-full">
-                        <span>${member.name} ${uid === user.uid ? '(Anda)' : ''}</span>
-                    </div>
-                    <div id="role-control-${uid}"></div>
-                `;
-                DOM.groupMembersList.appendChild(memberEl);
+        Object.entries(groupData.members).forEach(([uid, member]) => {
+            const memberEl = document.createElement('div');
+            memberEl.className = 'flex items-center justify-between bg-gray-700 p-2 rounded-lg';
+            memberEl.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <img src="${member.photoURL}" class="w-8 h-8 rounded-full">
+                    <span>${member.name} ${uid === user.uid ? '(Anda)' : ''}</span>
+                </div>
+                <div id="role-control-${uid}"></div>
+            `;
+            DOM.groupMembersList.appendChild(memberEl);
 
-                const roleControlContainer = document.getElementById(`role-control-${uid}`);
-                if (amIAmir && uid !== user.uid) {
-                    const select = document.createElement('select');
-                    select.className = 'role-select';
-                    select.innerHTML = Object.keys(roles).filter(r => r !== 'amir').map(r => `<option value="${r}" ${member.role === r ? 'selected' : ''}>${r.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>`).join('');
-                    select.onchange = (e) => updateMemberRole(uid, e.target.value);
-                    roleControlContainer.appendChild(select);
-                } else {
-                    roleControlContainer.innerHTML = `<span class="px-2 py-1 text-sm rounded-full bg-gray-600">${roles[member.role]} ${member.role.replace(/_/g, ' ')}</span>`;
-                }
-            });
-        } else {
-            DOM.groupInfoBar.classList.add('hidden');
-            DOM.groupView.classList.add('hidden');
-            DOM.noGroupView.classList.remove('hidden');
-        }
+            const roleControlContainer = document.getElementById(`role-control-${uid}`);
+            if (amIAmir && uid !== user.uid) {
+                const select = document.createElement('select');
+                select.className = 'role-select';
+                select.innerHTML = Object.keys(roles).filter(r => r !== 'amir').map(r => `<option value="${r}" ${member.role === r ? 'selected' : ''}>${r.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>`).join('');
+                select.onchange = (e) => updateMemberRole(uid, e.target.value);
+                roleControlContainer.appendChild(select);
+            } else {
+                roleControlContainer.innerHTML = `<span class="px-2 py-1 text-sm rounded-full bg-gray-600">${roles[member.role]} ${member.role.replace(/_/g, ' ')}</span>`;
+            }
+        });
+    } else {
+        DOM.groupInfoBar.classList.add('hidden');
+        DOM.groupView.classList.add('hidden');
+        DOM.noGroupView.classList.remove('hidden');
+        
+        // BARIS BARU DITAMBAHKAN DI SINI
+        DOM.pttContainer.classList.add('hidden');
     }
+}
 
     async function updateMemberRole(uid, newRole) {
         if (!currentGroupId) return;
@@ -871,6 +956,144 @@
     document.addEventListener('DOMContentLoaded', () => {
         initMap();
         setupModal();
+		
+		// === KODE LOGIKA PUSH-TO-TALK ===
+    let pttMode = 'hold'; // Bisa 'hold' atau 'toggle'
+    let isTalking = false;
+    let isLocked = false;
+    let pressTimer = null;
+	
+	// Variabel untuk menyimpan rekaman
+    let mediaRecorder;
+    let audioChunks = [];
+
+    // Fungsi-fungsi baru untuk merekam
+    const startRecording = async () => {
+    // Reset wadah rekaman setiap kali mulai
+    audioChunks = [];
+
+    try {
+        // Meminta izin mikrofon
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // 1. Buat instance MediaRecorder baru dari stream
+        mediaRecorder = new MediaRecorder(stream);
+        
+        // 2. Saat ada data audio (on 'dataavailable'), masukkan ke dalam array audioChunks
+        mediaRecorder.addEventListener("dataavailable", event => {
+            audioChunks.push(event.data);
+        });
+        
+        // 3. Saat rekaman berhenti (on 'stop'), kirim datanya. INI SATU-SATUNYA YANG KITA PERLUKAN.
+        mediaRecorder.addEventListener("stop", async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            console.log("Rekaman selesai. Ukuran data:", audioBlob.size);
+            
+            if (audioBlob.size < 1000) {
+                console.log("Rekaman terlalu pendek, tidak dikirim.");
+                return;
+            }
+
+            try {
+                const base64Audio = await blobToBase64(audioBlob);
+                const payload = {
+                    senderId: auth.currentUser.uid,
+                    senderName: auth.currentUser.displayName,
+                    audioData: base64Audio,
+                    timestamp: rtdbServerTimestamp()
+                };
+                const voiceMessagesRef = ref(rtdb, `groups/${currentGroupId}/voice_messages`);
+                await push(voiceMessagesRef, payload);
+                console.log("Pesan suara terkirim!");
+            } catch (error) {
+                console.error("Gagal mengirim pesan suara:", error);
+                alert("Gagal mengirim pesan suara. Silakan coba lagi.");
+            }
+        });
+        
+        // 4. Mulai merekam
+        mediaRecorder.start();
+
+        console.log("Merekam suara...");
+
+    } catch (err) {
+        console.error("Error mengakses mikrofon:", err);
+        alert("Tidak bisa mengakses mikrofon. Pastikan Anda memberikan izin.");
+        isTalking = false;
+        DOM.pttBtn.classList.remove('bg-red-600');
+    }
+};
+
+    const stopRecording = () => {
+    // Pastikan mediaRecorder sedang aktif sebelum mencoba menghentikannya
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        console.log("Perekaman dihentikan.");
+    }
+};
+	
+	
+    // Fungsi yang akan dipanggil saat mulai bicara
+    const startTalking = () => {
+    if (isTalking) return;
+    console.log("Mulai Bicara...");
+    isTalking = true;
+    DOM.pttBtn.classList.add('bg-red-600');
+    startRecording(); // Panggil fungsi rekam
+};
+
+    // Fungsi yang akan dipanggil saat berhenti bicara
+    const stopTalking = () => {
+    if (!isTalking || isLocked) return;
+    console.log("Berhenti Bicara...");
+    isTalking = false;
+    DOM.pttBtn.classList.remove('bg-red-600');
+    stopRecording(); // Panggil fungsi berhenti rekam
+};
+
+    // Saat tombol ditekan
+    DOM.pttBtn.addEventListener('mousedown', () => {
+        // Mulai timer untuk mendeteksi 'tekan dan tahan' vs 'klik singkat'
+        pressTimer = setTimeout(() => {
+            pttMode = 'hold'; // Jika ditahan >200ms, aktifkan mode 'hold'
+            startTalking();
+        }, 200);
+    });
+
+    // Saat tombol dilepas
+    DOM.pttBtn.addEventListener('mouseup', () => {
+        clearTimeout(pressTimer); // Hentikan timer
+        if (pttMode === 'hold') {
+            stopTalking();
+        }
+    });
+    
+    // Saat diklik (untuk mode toggle)
+    DOM.pttBtn.addEventListener('click', () => {
+        // Logika ini hanya berjalan jika tombol tidak ditahan lama (di bawah 200ms)
+        if (isTalking && pttMode === 'hold') return;
+        
+        pttMode = 'toggle';
+        if (!isLocked) {
+            // Mengunci PTT
+            isLocked = true;
+            DOM.pttIconMic.classList.add('hidden');
+            DOM.pttIconStop.classList.remove('hidden');
+            startTalking();
+        } else {
+            // Membuka kunci PTT
+            isLocked = false;
+            DOM.pttIconMic.classList.remove('hidden');
+            DOM.pttIconStop.classList.add('hidden');
+            stopTalking(); // Memanggil stopTalking secara manual
+            isTalking = false; // Reset status
+            DOM.pttBtn.classList.remove('bg-red-600');
+        }
+    });
+
+    // Mencegah menu konteks (klik kanan) muncul di tombol
+    DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
+		
 
         DOM.shareLocationFab.addEventListener('click', async () => {
             const user = auth.currentUser;
@@ -1021,6 +1244,5 @@
 </script>
 </body>
 </html>
-
 
 
