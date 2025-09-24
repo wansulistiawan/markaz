@@ -47,6 +47,24 @@
         .checkpoint-marker-icon { background-color: #f59e0b; color: white; width: 2.5rem; height: 2.5rem; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px black; text-align: center; font-weight: bold; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; }
 
         #group-info-bar { transition: opacity 0.3s ease-in-out; }
+		
+		.leaflet-routing-container {
+        /* Batasi tinggi maksimal hingga 60% layar */
+        max-height: 60vh; 
+        /* Pastikan lebarnya tidak berlebihan di layar kecil */
+        max-width: 90vw;
+        /* Tambahkan scrollbar jika kontennya panjang */
+        overflow-y: auto;
+        /* Atur agar selalu di atas tombol lain (z-index > 400) */
+        z-index: 401;
+        /* Hapus bayangan default yang kurang bagus */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+    }
+    /* Mengatur kontainer di dalamnya agar ikut bisa di-scroll */
+    .leaflet-routing-alternatives-container {
+        max-height: none;
+    }
+		
     </style>
 </head>
 <body class="bg-gray-900 text-white antialiased overflow-hidden">
@@ -100,7 +118,7 @@
     </button>
 </div>
         
-        <div id="navigation-controls" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[401] flex gap-2 sm:gap-4 bg-gray-800 bg-opacity-80 backdrop-blur-sm p-3 rounded-xl shadow-lg">
+        <div id="navigation-controls" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[401] flex flex-wrap justify-center gap-2 sm:gap-4 bg-gray-800 bg-opacity-80 backdrop-blur-sm p-3 rounded-xl shadow-lg">
             <button id="set-destination-btn" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm sm:text-base py-2 px-3 sm:px-5 rounded-lg">Tetapkan Tujuan</button>
             <button id="add-checkpoint-btn" class="hidden bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-sm sm:text-base py-2 px-3 sm:px-5 rounded-lg">Tambah Checkpoint</button>
             <button id="add-waypoint-btn" class="hidden bg-teal-500 hover:bg-teal-600 text-white font-bold text-sm sm:text-base py-2 px-3 sm:px-5 rounded-lg">Tambah Persinggahan</button>
@@ -130,7 +148,7 @@
     </div>
 
     <!-- Modals -->
-    <div id="search-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center z-50 p-4 pt-8 sm:pt-16">
+    <div id="search-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center z-[1000] p-4 pt-8 sm:pt-16">
     <div class="relative w-full max-w-lg">
         <form id="search-form" onsubmit="event.preventDefault();">
             <div class="relative">
@@ -366,41 +384,52 @@ const listenForVoiceMessages = (groupId) => {
     }
 
     async function fetchSuggestions(query) {
-        if (query.length < 3) {
-            DOM.suggestionsContainer.innerHTML = '';
-            DOM.suggestionsContainer.classList.add('hidden');
-            return;
-        }
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
-            const data = await res.json();
-            displaySuggestions(data);
-        } catch (error) {
-            console.error('Gagal mengambil saran:', error);
-            DOM.status.textContent = "Gagal mengambil saran lokasi. Periksa koneksi Anda.";
-        }
+    if (query.length < 3) {
+        DOM.suggestionsContainer.innerHTML = '';
+        DOM.suggestionsContainer.classList.add('hidden');
+        return;
     }
     
-    function displaySuggestions(suggestions) {
-        DOM.suggestionsContainer.innerHTML = '';
-        if (suggestions && suggestions.length > 0) {
-            suggestions.forEach(s => {
-                const item = document.createElement('div');
-                item.className = 'suggestion-item';
-                item.textContent = s.display_name;
-                item.onclick = () => {
-                    DOM.searchInput.value = s.display_name;
-                    DOM.suggestionsContainer.classList.add('hidden');
-                    DOM.searchModal.classList.add('hidden');
-                    window.showRouteTo([s.lat, s.lon], s.display_name);
-                };
-                DOM.suggestionsContainer.appendChild(item);
-            });
-            DOM.suggestionsContainer.classList.remove('hidden');
-        } else {
-            DOM.suggestionsContainer.classList.add('hidden');
-        }
+    // Kunci API Anda sudah dimasukkan di sini
+    const apiKey = '7ce7547ff4c941f9a0aef61c5e384890'; 
+    const apiUrl = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(query)}&key=${apiKey}&limit=5&countrycode=id`;
+
+    try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        // Sekarang kita kirim data.results ke fungsi display
+        displaySuggestions(data.results);
+    } catch (error) {
+        console.error('Gagal mengambil saran dari OpenCage:', error);
+        DOM.status.textContent = "Gagal mengambil saran lokasi. Periksa koneksi Anda.";
     }
+}
+    
+    function displaySuggestions(suggestions) {
+    DOM.suggestionsContainer.innerHTML = '';
+    if (suggestions && suggestions.length > 0) {
+        suggestions.forEach(s => {
+            const item = document.createElement('div');
+            item.className = 'suggestion-item';
+            // OpenCage menggunakan 'formatted' untuk nama lengkap
+            item.textContent = s.formatted;
+            
+            item.onclick = () => {
+                DOM.searchInput.value = s.formatted;
+                DOM.suggestionsContainer.classList.add('hidden');
+                DOM.searchModal.classList.add('hidden');
+                
+                // OpenCage menyimpan koordinat di dalam 'geometry'
+                const coords = [s.geometry.lat, s.geometry.lng];
+                window.showRouteTo(coords, s.formatted);
+            };
+            DOM.suggestionsContainer.appendChild(item);
+        });
+        DOM.suggestionsContainer.classList.remove('hidden');
+    } else {
+        DOM.suggestionsContainer.classList.add('hidden');
+    }
+}
 
     function initMap() {
         if (map) return;
@@ -727,7 +756,7 @@ const listenForVoiceMessages = (groupId) => {
     const url = prompt("Silakan paste link Google Maps di sini:");
     if (!url) return; // Batal jika pengguna tidak memasukkan apa-apa
 
-    // Fungsi internal untuk mengekstrak koordinat
+    // Fungsi internal untuk mengekstrak koordinat dari URL yang SUDAH PASTI PANJANG
     const extractCoords = (finalUrl) => {
         const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
         const match = finalUrl.match(regex);
@@ -738,16 +767,25 @@ const listenForVoiceMessages = (groupId) => {
             window.showRouteTo([lat, lng], 'Lokasi dari Google Maps');
             DOM.status.textContent = "Rute berhasil dibuat dari link.";
         } else {
-            alert("Link tidak valid atau tidak mengandung koordinat. Pastikan Anda menyalin URL Google Maps yang benar.");
+            // Notifikasi error ini sekarang hanya muncul jika link panjangnya pun tidak valid
+            alert("Link tidak valid atau tidak mengandung koordinat setelah diurai.");
             DOM.status.textContent = "Gagal memproses link.";
         }
     };
 
-    // Cek apakah ini link pendek yang perlu diurai
-    if (url.includes('goo.gl') || url.includes('maps.app.goo.gl')) {
+    // --- LOGIKA BARU YANG LEBIH CERDAS ---
+    // 1. Coba cari koordinat di URL yang ditempelkan
+    const directMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+
+    if (directMatch) {
+        // 2. JIKA KETEMU: Berarti ini link panjang, langsung proses.
+        console.log("Link panjang terdeteksi, memproses langsung...");
+        extractCoords(url);
+    } else {
+        // 3. JIKA TIDAK KETEMU: Anggap ini link pendek, kirim ke API unshorten.me
+        console.log("Link pendek terdeteksi, mencoba mengurai...");
         DOM.status.textContent = 'Mengurai link pendek, mohon tunggu...';
         try {
-            // Kita gunakan API dari unshorten.me untuk "memanjangkan" URL
             const response = await fetch(`https://unshorten.me/json/${url}`);
             if (!response.ok) {
                 throw new Error('Gagal menghubungi layanan pengurai link.');
@@ -755,19 +793,16 @@ const listenForVoiceMessages = (groupId) => {
             const data = await response.json();
             
             if (data.success && data.resolved_url) {
-                // Jika berhasil, proses URL panjangnya
+                // Setelah dapat link panjangnya, baru kita proses
                 extractCoords(data.resolved_url);
             } else {
                 throw new Error(data.error || 'Gagal mengurai link pendek.');
             }
         } catch (error) {
             console.error(error);
-            alert(`Terjadi masalah saat mengurai link pendek: ${error.message}`);
+            alert(`Terjadi masalah saat mengurai link: ${error.message}`);
             DOM.status.textContent = "Gagal memproses link.";
         }
-    } else {
-        // Jika bukan link pendek, langsung proses seperti biasa
-        extractCoords(url);
     }
 }
 	
