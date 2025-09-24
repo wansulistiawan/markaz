@@ -655,40 +655,64 @@ const listenForVoiceMessages = (groupId) => {
 }
     
     window.showRouteTo = (destinationCoords, destinationName = 'Tujuan') => {
-        if (currentRouteState !== 'IDLE') { DOM.status.textContent = 'Batalkan rute saat ini untuk membuat rute baru.'; return; }
-        if (!userCoords) { alert("Lokasi Anda belum ditemukan."); return; }
-        
-        if (routingControl) map.removeControl(routingControl);
-        if (destinationMarker) map.removeLayer(destinationMarker);
-
-        destinationMarker = L.marker(destinationCoords, { icon: createFlagIcon('#e74c3c'), draggable: true }).addTo(map).bindPopup(`<b>${destinationName}</b>`).openPopup();
-        
-        destinationMarker.on('dragend', function(event) {
-            if (currentRouteState !== 'PREVIEW') return;
-            const newCoords = event.target.getLatLng();
-            window.showRouteTo([newCoords.lat, newCoords.lng], 'Tujuan Baru');
-        });
-
-        routingControl = L.Routing.control({
-            waypoints: [ L.latLng(userCoords), L.latLng(destinationCoords) ],
-            routeWhileDragging: false,
-            lineOptions: { styles: [{color: '#6EE7B7', weight: 5}] },
-            createMarker: () => null
-        }).on('routesfound', function(e) {
-            const summary = e.routes[0].summary;
-            const totalDistance = (summary.totalDistance / 1000).toFixed(1);
-            const totalTime = Math.round(summary.totalTime / 60);
-            const hours = Math.floor(totalTime / 60);
-            const minutes = totalTime % 60;
-            let timeString = '';
-            if(hours > 0) timeString += `${hours} jam `;
-            if(minutes > 0) timeString += `${minutes} menit`;
-            
-            DOM.status.textContent = `Estimasi Rute: ${timeString} (${totalDistance} km)`;
-        }).addTo(map);
-
-        setRouteState('PREVIEW');
+    // Pengecekan awal tidak berubah
+    if (currentRouteState !== 'IDLE') { 
+        DOM.status.textContent = 'Batalkan rute saat ini untuk membuat rute baru.'; 
+        return; 
     }
+    if (!userCoords) { 
+        alert("Lokasi Anda belum ditemukan."); 
+        return; 
+    }
+    
+    // Menghapus kontrol lama jika ada (tidak berubah)
+    if (routingControl) map.removeControl(routingControl);
+    if (destinationMarker) map.removeLayer(destinationMarker);
+
+    // Membuat marker tujuan (tidak berubah)
+    destinationMarker = L.marker(destinationCoords, { icon: createFlagIcon('#e74c3c'), draggable: true })
+        .addTo(map)
+        .bindPopup(`<b>${destinationName}</b>`)
+        .openPopup();
+    
+    // === BAGIAN YANG DIPERBAIKI ===
+    destinationMarker.on('dragend', function(event) {
+        if (currentRouteState !== 'PREVIEW') return;
+        
+        // Dapatkan koordinat baru dari pin yang digeser
+        const newCoords = event.target.getLatLng();
+        
+        // Ambil waypoints yang ada saat ini
+        const waypoints = routingControl.getWaypoints();
+        
+        // Cukup perbarui koordinat titik tujuan (waypoint terakhir)
+        waypoints[waypoints.length - 1].latLng = newCoords;
+        
+        // Perintahkan routing untuk menghitung ulang dengan waypoints baru
+        routingControl.setWaypoints(waypoints);
+    });
+
+    // Membuat kontrol rute (tidak berubah)
+    routingControl = L.Routing.control({
+        waypoints: [ L.latLng(userCoords), L.latLng(destinationCoords) ],
+        routeWhileDragging: false,
+        lineOptions: { styles: [{color: '#6EE7B7', weight: 5}] },
+        createMarker: () => null
+    }).on('routesfound', function(e) {
+        const summary = e.routes[0].summary;
+        const totalDistance = (summary.totalDistance / 1000).toFixed(1);
+        const totalTime = Math.round(summary.totalTime / 60);
+        const hours = Math.floor(totalTime / 60);
+        const minutes = totalTime % 60;
+        let timeString = '';
+        if(hours > 0) timeString += `${hours} jam `;
+        if(minutes > 0) timeString += `${minutes} menit`;
+        
+        DOM.status.textContent = `Estimasi Rute: ${timeString} (${totalDistance} km)`;
+    }).addTo(map);
+
+    setRouteState('PREVIEW');
+}
 
     function setupModal() {
         DOM.colorOptions.innerHTML = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#ffffff'].map(c => `<div><input type="radio" name="color" value="${c}" id="c-${c}" class="sr-only modal-input"><label for="c-${c}" class="block w-8 h-8 rounded-full cursor-pointer border-2 border-gray-500" style="background-color:${c};"></label></div>`).join('');
@@ -966,12 +990,11 @@ let pressTimer = null;
 let initialX = 0;
 let isDragging = false;
 
-// Variabel untuk menyimpan rekaman (sudah ada)
+// Variabel untuk menyimpan rekaman
 let mediaRecorder;
 let audioChunks = [];
 
 // === FUNGSI LEVEL BAWAH (Perekaman) ===
-// Didefinisikan paling awal agar bisa dipanggil oleh fungsi lain
 const startRecording = async () => {
     audioChunks = [];
     try {
@@ -1049,54 +1072,71 @@ const unlockTalk = () => {
 };
 
 // === EVENT LISTENERS (Penghubung Aksi dan Fungsi) ===
-DOM.pttBtn.addEventListener('mousedown', (e) => {
-    initialX = e.clientX;
-    isDragging = false;
-    DOM.pttBtn.style.transition = 'none'; // Matikan transisi saat ditarik
 
-    const handleMouseMove = (moveEvent) => {
-        const deltaX = initialX - moveEvent.clientX;
+// Fungsi yang dijalankan saat tombol mulai ditekan/disentuh
+const handlePressStart = (e) => {
+    // Mencegah scroll di ponsel saat tombol disentuh
+    e.preventDefault();
+    
+    // Mengambil koordinat X, baik dari sentuhan (touches[0]) atau mouse
+    initialX = e.touches ? e.touches[0].clientX : e.clientX;
+    isDragging = false;
+    DOM.pttBtn.style.transition = 'none';
+
+    const handlePressMove = (moveEvent) => {
+        const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+        const deltaX = initialX - currentX;
         
-        // KODE ANIMASI: Geser tombol mengikuti tarikan mouse
-        if (deltaX > 0) { // Hanya jika ditarik ke kiri
-             // Batasi tarikan maksimal 60px
+        if (deltaX > 0) {
             const dragDistance = Math.max(-60, -deltaX);
             DOM.pttBtn.style.transform = `translateX(${dragDistance}px)`;
         }
 
-        if (deltaX > 40 && !isLocked) { // Threshold untuk swipe (lebih jauh dari 40px)
+        if (deltaX > 40 && !isLocked) {
             isDragging = true;
             clearTimeout(pressTimer);
             lockTalk();
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-            // KODE ANIMASI: Kembalikan tombol ke posisi semula setelah lock
             DOM.pttBtn.style.transition = 'transform 0.2s ease-out';
             DOM.pttBtn.style.transform = 'translateX(0px)';
+            // Hapus semua listener setelah gestur terdeteksi
+            cleanupListeners();
         }
     };
 
-    const handleMouseUp = () => {
+    const handlePressEnd = () => {
         clearTimeout(pressTimer);
         if (!isDragging) {
             stopTalking();
         }
-        // KODE ANIMASI: Kembalikan tombol jika dilepas tanpa lock
         DOM.pttBtn.style.transition = 'transform 0.2s ease-out';
         DOM.pttBtn.style.transform = 'translateX(0px)';
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
+        // Selalu hapus semua listener setelah selesai
+        cleanupListeners();
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    const cleanupListeners = () => {
+        window.removeEventListener('mousemove', handlePressMove);
+        window.removeEventListener('touchmove', handlePressMove);
+        window.removeEventListener('mouseup', handlePressEnd);
+        window.removeEventListener('touchend', handlePressEnd);
+    };
+
+    // Daftarkan listener untuk mouse DAN sentuhan
+    window.addEventListener('mousemove', handlePressMove);
+    window.addEventListener('touchmove', handlePressMove);
+    window.addEventListener('mouseup', handlePressEnd);
+    window.addEventListener('touchend', handlePressEnd);
     
     pressTimer = setTimeout(() => {
         if (!isDragging) {
             startTalking();
         }
     }, 250);
-});
+};
+
+// Menggabungkan listener untuk mouse dan sentuhan pada tombol PTT
+DOM.pttBtn.addEventListener('mousedown', handlePressStart);
+DOM.pttBtn.addEventListener('touchstart', handlePressStart);
 
 DOM.pttBtn.addEventListener('click', () => {
     if (isLocked) {
