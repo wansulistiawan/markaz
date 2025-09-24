@@ -87,14 +87,18 @@
             </button>
         </div>
 
-        <div id="fab-bottom-right" class="absolute bottom-20 sm:bottom-4 right-4 z-[400] fab-container hidden">
-            <button id="share-location-fab" class="fab" title="Bagikan Lokasi Anda">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6.002l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.368a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path></svg>
-            </button>
-            <button id="recenter-fab" class="fab" title="Pusatkan ke Lokasi Saya">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            </button>
-        </div>
+        <div id="fab-bottom-right" class="absolute bottom-20 sm:bottom-4 right-4 z-[400] fab-container hidden flex flex-col gap-3">
+    <button id="reload-fab" class="fab sm:hidden" title="Muat Ulang Halaman">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l5 5M20 20l-5-5"></path></svg>
+    </button>
+    
+    <button id="share-location-fab" class="fab" title="Bagikan Lokasi Anda">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6.002l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.368a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path></svg>
+    </button>
+    <button id="recenter-fab" class="fab" title="Pusatkan ke Lokasi Saya">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+    </button>
+</div>
         
         <div id="navigation-controls" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[401] flex gap-2 sm:gap-4 bg-gray-800 bg-opacity-80 backdrop-blur-sm p-3 rounded-xl shadow-lg">
             <button id="set-destination-btn" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm sm:text-base py-2 px-3 sm:px-5 rounded-lg">Tetapkan Tujuan</button>
@@ -244,6 +248,7 @@
     shareLocationFab: document.getElementById('share-location-fab'),
     gmapsFab: document.getElementById('gmaps-fab'),
     recenterFab: document.getElementById('recenter-fab'),
+	reloadFab: document.getElementById('reload-fab'),
     cancelSettingsBtn: document.getElementById('cancel-settings-btn'), 
     saveSettingsBtn: document.getElementById('save-settings-btn'),
     colorOptions: document.getElementById('color-options'),
@@ -986,7 +991,6 @@ const listenForVoiceMessages = (groupId) => {
 // ==================================================
 let isTalking = false;
 let isLocked = false;
-let pressTimer = null;
 let initialX = 0;
 let isDragging = false;
 
@@ -996,6 +1000,7 @@ let audioChunks = [];
 
 // === FUNGSI LEVEL BAWAH (Perekaman) ===
 const startRecording = async () => {
+    // (Fungsi ini sudah benar, tidak perlu diubah)
     audioChunks = [];
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -1030,6 +1035,7 @@ const startRecording = async () => {
 };
 
 const stopRecording = () => {
+    // (Fungsi ini sudah benar, tidak perlu diubah)
     if (mediaRecorder && mediaRecorder.state === "recording") {
         mediaRecorder.stop();
         console.log("Perekaman dihentikan.");
@@ -1039,7 +1045,6 @@ const stopRecording = () => {
 // === FUNGSI LEVEL ATAS (Aksi Pengguna) ===
 const startTalking = () => {
     if (isTalking) return;
-    console.log("Mulai Bicara...");
     isTalking = true;
     DOM.pttBtn.classList.add('bg-red-600', 'scale-110');
     startRecording();
@@ -1047,41 +1052,47 @@ const startTalking = () => {
 
 const stopTalking = () => {
     if (!isTalking || isLocked) return;
-    console.log("Berhenti Bicara...");
     isTalking = false;
     DOM.pttBtn.classList.remove('bg-red-600', 'scale-110');
     stopRecording();
 };
 
 const lockTalk = () => {
+    if (isLocked) return; // Jangan kunci jika sudah terkunci
     isLocked = true;
     DOM.pttIconMic.classList.add('hidden');
     DOM.pttIconStop.classList.remove('hidden');
+    // Jika belum bicara, mulai bicara. Jika sudah, biarkan saja.
     if (!isTalking) {
         startTalking();
     }
 };
 
 const unlockTalk = () => {
+    if (!isLocked) return; // Jangan buka kunci jika tidak terkunci
     isLocked = false;
+    isTalking = false; // Paksa status berhenti
     DOM.pttIconMic.classList.remove('hidden');
     DOM.pttIconStop.classList.add('hidden');
-    isTalking = false;
     DOM.pttBtn.classList.remove('bg-red-600', 'scale-110');
     stopRecording();
 };
 
-// === EVENT LISTENERS (Penghubung Aksi dan Fungsi) ===
-
-// Fungsi yang dijalankan saat tombol mulai ditekan/disentuh
+// === EVENT LISTENERS (YANG DIPERBAIKI) ===
 const handlePressStart = (e) => {
-    // Mencegah scroll di ponsel saat tombol disentuh
-    e.preventDefault();
+    // Jika PTT sedang terkunci, satu-satunya aksi yang diizinkan adalah 'click' untuk membuka,
+    // jadi kita abaikan 'touchstart' atau 'mousedown' untuk memulai rekaman baru.
+    if (isLocked) {
+        return;
+    }
     
-    // Mengambil koordinat X, baik dari sentuhan (touches[0]) atau mouse
-    initialX = e.touches ? e.touches[0].clientX : e.clientX;
+    e.preventDefault();
     isDragging = false;
+    initialX = e.touches ? e.touches[0].clientX : e.clientX;
     DOM.pttBtn.style.transition = 'none';
+
+    // Langsung mulai bicara saat tombol disentuh/ditekan
+    startTalking();
 
     const handlePressMove = (moveEvent) => {
         const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
@@ -1094,51 +1105,40 @@ const handlePressStart = (e) => {
 
         if (deltaX > 40 && !isLocked) {
             isDragging = true;
-            clearTimeout(pressTimer);
             lockTalk();
-            DOM.pttBtn.style.transition = 'transform 0.2s ease-out';
-            DOM.pttBtn.style.transform = 'translateX(0px)';
-            // Hapus semua listener setelah gestur terdeteksi
-            cleanupListeners();
+            cleanupListeners(); // Langsung bersihkan listener setelah lock
         }
     };
 
     const handlePressEnd = () => {
-        clearTimeout(pressTimer);
+        // Jika jari dilepas dan tidak ada gestur drag, itu artinya mode "Tekan & Tahan" selesai
         if (!isDragging) {
             stopTalking();
         }
-        DOM.pttBtn.style.transition = 'transform 0.2s ease-out';
-        DOM.pttBtn.style.transform = 'translateX(0px)';
-        // Selalu hapus semua listener setelah selesai
         cleanupListeners();
     };
 
     const cleanupListeners = () => {
+        DOM.pttBtn.style.transition = 'transform 0.2s ease-out';
+        DOM.pttBtn.style.transform = 'translateX(0px)';
         window.removeEventListener('mousemove', handlePressMove);
         window.removeEventListener('touchmove', handlePressMove);
         window.removeEventListener('mouseup', handlePressEnd);
         window.removeEventListener('touchend', handlePressEnd);
     };
 
-    // Daftarkan listener untuk mouse DAN sentuhan
     window.addEventListener('mousemove', handlePressMove);
     window.addEventListener('touchmove', handlePressMove);
     window.addEventListener('mouseup', handlePressEnd);
     window.addEventListener('touchend', handlePressEnd);
-    
-    pressTimer = setTimeout(() => {
-        if (!isDragging) {
-            startTalking();
-        }
-    }, 250);
 };
 
-// Menggabungkan listener untuk mouse dan sentuhan pada tombol PTT
+// --- Menghubungkan Aksi ke Fungsi ---
 DOM.pttBtn.addEventListener('mousedown', handlePressStart);
-DOM.pttBtn.addEventListener('touchstart', handlePressStart);
+DOM.pttBtn.addEventListener('touchstart', handlePressStart, { passive: false });
 
 DOM.pttBtn.addEventListener('click', () => {
+    // Event 'click' sekarang hanya punya satu tugas: membuka kunci jika terkunci.
     if (isLocked) {
         unlockTalk();
     }
@@ -1163,6 +1163,15 @@ DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
             }
         });
         DOM.gmapsFab.addEventListener('click', handleGoogleMapsLink);
+		
+		DOM.reloadFab.addEventListener('click', () => {
+        // Tampilkan notifikasi sebelum reload
+        DOM.status.textContent = "Memuat ulang halaman...";
+        // Beri jeda sedikit agar notifikasi terlihat, lalu reload
+        setTimeout(() => {
+            window.location.reload();
+        }, 300);
+    });
 		
         DOM.loginBtn.addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()));
         DOM.logoutMenuBtn.addEventListener('click', async () => { 
