@@ -497,15 +497,10 @@ const listenForVoiceMessages = (groupId) => {
                 return;
             }
             if (currentRouteState === 'IDLE' && auth.currentUser && userCoords) {
-                // Minta pengguna memasukkan nama tempat
-                const destinationName = prompt("Masukkan nama untuk tujuan ini:", "Titik Dipilih");
-
-                // Hanya lanjutkan jika pengguna memasukkan nama (tidak mengklik Batal)
-                if (destinationName) {
-                    const dest = [e.latlng.lat, e.latlng.lng];
-                    window.showRouteTo(dest, destinationName);
-                }
-            }
+        const dest = [e.latlng.lat, e.latlng.lng];
+        // Selalu gunakan nama default saat pertama kali membuat rute
+        window.showRouteTo(dest, 'Titik Dipilih');
+    }
         });
         DOM.status.textContent = "Peta dimuat. Silakan masuk untuk memulai.";
     }
@@ -780,6 +775,9 @@ const listenForVoiceMessages = (groupId) => {
         return; 
     }
     
+    // Simpan nama tujuan saat ini di variabel global
+    window.currentDestinationName = destinationName;
+
     if (routingControl) map.removeControl(routingControl);
     if (destinationMarker) map.removeLayer(destinationMarker);
 
@@ -788,22 +786,25 @@ const listenForVoiceMessages = (groupId) => {
         .bindPopup(`<b>${destinationName}</b>`)
         .openPopup();
     
+    // INI BAGIAN YANG DIPERBAIKI SECARA PERMANEN
     destinationMarker.on('dragend', function(event) {
-        if (currentRouteState !== 'PREVIEW') return;
-        const newCoords = event.target.getLatLng();
-        const waypoints = routingControl.getWaypoints();
-        waypoints[waypoints.length - 1].latLng = newCoords;
-        routingControl.setWaypoints(waypoints);
+        // Fungsi ini sekarang hanya bertugas memperbarui waypoints, tidak lebih.
+        if (routingControl && currentRouteState === 'PREVIEW') {
+            const newCoords = event.target.getLatLng();
+            routingControl.setWaypoints([
+                L.latLng(userCoords), // Titik awal tetap
+                newCoords // Titik tujuan baru
+            ]);
+        }
     });
 
     routingControl = L.Routing.control({
         waypoints: [ L.latLng(userCoords), L.latLng(destinationCoords) ],
-        routeWhileDragging: false,
+        routeWhileDragging: false, // Penting agar tidak konflik dengan logika drag kita
         lineOptions: { styles: [{color: '#6EE7B7', weight: 5}] },
         createMarker: () => null
     }).addTo(map);
 
-    // FUNGSI BARU UNTUK MEMPERBARUI INFO
     const updateRouteSummary = (summary) => {
         const totalDistance = (summary.totalDistance / 1000).toFixed(1);
         const totalTime = Math.round(summary.totalTime / 60);
@@ -813,13 +814,11 @@ const listenForVoiceMessages = (groupId) => {
         if(hours > 0) timeString += `${hours} jam `;
         if(minutes > 0) timeString += `${minutes} menit`;
         
-        // Perbarui panel info di atas
-        DOM.navInfoDestination.textContent = destinationName;
+        DOM.navInfoDestination.textContent = window.currentDestinationName; // Ambil dari variabel global
         DOM.navInfoDistance.textContent = `${totalDistance} km`;
         DOM.navInfoTime.textContent = timeString;
     };
 
-    // Listener ini sekarang akan aktif setiap kali rute dihitung/dihitung ulang
     routingControl.on('routesfound', function(e) {
         updateRouteSummary(e.routes[0].summary);
     });
@@ -1406,8 +1405,18 @@ DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
 
         DOM.startNavBtn.addEventListener('click', () => {
             if (currentRouteState !== 'SET') return;
-            setRouteState('NAVIGATING');
-            if(userCoords) map.setView(userCoords, 18, {animate: true});
+            const newName = prompt("Masukkan nama untuk tujuan ini:", window.currentDestinationName || "Tujuan");
+    
+    // Hanya lanjutkan jika pengguna tidak mengklik Batal
+    if (newName) {
+        // Perbarui nama tujuan secara global dan di panel info
+        window.currentDestinationName = newName;
+        DOM.navInfoDestination.textContent = newName;
+
+        // Lanjutkan untuk memulai navigasi
+        setRouteState('NAVIGATING');
+        if(userCoords) map.setView(userCoords, 18, {animate: true});
+    }
         });
 
         DOM.stopNavBtn.addEventListener('click', () => {
