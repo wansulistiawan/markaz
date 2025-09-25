@@ -367,10 +367,19 @@ const base64ToBlob = (base64) => {
 
 // Fungsi utama untuk "mendengarkan" pesan suara baru
 const listenForVoiceMessages = (groupId) => {
+    // Catat waktu saat pengguna ini mulai mendengarkan
+    const joinTime = Date.now();
     const voiceMessagesRef = ref(rtdb, `groups/${groupId}/voice_messages`);
 
-    // onChildAdded adalah listener yang hanya aktif saat ada ANAK BARU (pesan baru) ditambahkan
-    onChildAdded(voiceMessagesRef, (snapshot) => {
+    // Buat query untuk hanya mengambil pesan dengan timestamp > joinTime
+    const messagesQuery = query(
+        voiceMessagesRef,
+        orderByChild('timestamp'), // Urutkan pesan berdasarkan waktu
+        startAt(joinTime)          // Mulai dengarkan dari waktu sekarang
+    );
+
+    // Gunakan query baru ini, bukan voiceMessagesRef biasa
+    onChildAdded(messagesQuery, (snapshot) => {
         const payload = snapshot.val();
 
         // Jangan putar suara kita sendiri
@@ -378,21 +387,18 @@ const listenForVoiceMessages = (groupId) => {
             return;
         }
 
-        console.log(`Pesan suara diterima dari: ${payload.senderName}`);
+        console.log(`Pesan suara baru diterima dari: ${payload.senderName}`);
 
-        // Ubah data teks kembali menjadi file audio
         const audioBlob = base64ToBlob(payload.audioData);
         const audioUrl = URL.createObjectURL(audioBlob);
         
-        // Buat elemen audio, putar, lalu hapus
         const audio = new Audio(audioUrl);
         audio.play();
 
-        // Memberi notifikasi visual kecil (opsional tapi bagus)
         DOM.status.textContent = `Pesan suara dari ${payload.senderName}`;
     });
 
-    console.log(`Mendengarkan pesan suara di grup ${groupId}...`);
+    console.log(`Mendengarkan pesan suara baru di grup ${groupId}...`);
 };
     
     function createProfilePinIcon(color, imageUrl, role) {
@@ -790,9 +796,9 @@ async function promoteToAmir(newAmirId) {
         });
 
         // BAGIAN INI YANG DIPINDAHKAN KELUAR DARI LOOP
-        if (currentGroupId) {
+        /* if (currentGroupId) {
             updateGroupMembersUI(currentGroupData);
-        }
+        }*/
     });
 }
     
@@ -966,6 +972,10 @@ async function promoteToAmir(newAmirId) {
     async function leaveGroup(silent = false) {
         const user = auth.currentUser;
         if (!user || !currentGroupId) return;
+		
+		if (isLocked) {
+        unlockTalk();
+    }
 
         const batch = writeBatch(db);
         const userRef = doc(db, 'users', user.uid);
@@ -1217,7 +1227,7 @@ const startRecording = async () => {
                     senderId: auth.currentUser.uid,
                     senderName: auth.currentUser.displayName,
                     audioData: base64Audio,
-                    timestamp: rtdbServerTimestamp()
+                    timestamp: Date.now()
                 };
                 const voiceMessagesRef = ref(rtdb, `groups/${currentGroupId}/voice_messages`);
                 await push(voiceMessagesRef, payload);
