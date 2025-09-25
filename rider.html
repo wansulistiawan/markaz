@@ -81,7 +81,7 @@
     <div id="map-container" class="w-screen h-dvh relative">
         <div id="map"></div>
 		
-		<div id="ptt-notification" class="hidden absolute bottom-24 left-1/2 -translate-x-1/2 z-[900] p-3 bg-indigo-600 text-white rounded-lg shadow-lg cursor-pointer hover:bg-indigo-700 transition-all">
+		<div id="ptt-notification" class="hidden absolute bottom-24 left-1/2 -translate-x-1/2 z-[1200] p-3 bg-indigo-600 text-white rounded-lg shadow-lg cursor-pointer hover:bg-indigo-700 transition-all">
     <p id="ptt-notification-text" class="text-sm font-semibold">Pesan suara dari Wawan</p>
     <p class="text-xs">Ketuk untuk memutar</p>
 </div>
@@ -188,6 +188,12 @@
             <svg id="ptt-icon-mic" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
             <svg id="ptt-icon-stop" class="w-8 h-8 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6" /></svg>
         </button>
+		<div id="ptt-container" class="hidden absolute right-4 top-1/2 -translate-y-1/2 z-[400] flex flex-col items-center gap-3">
+    <button id="join-voice-btn" class="px-3 py-2 bg-green-600 text-white text-xs font-bold rounded-full shadow-lg">Gabung Suara</button>
+    
+    <button id="ptt-btn" class="w-16 h-16 ...">
+        </button>
+</div>
     </div>
 		
     </div>
@@ -337,6 +343,7 @@
     navInfoTime: document.getElementById('nav-info-time'),
 	pttNotification: document.getElementById('ptt-notification'),
     pttNotificationText: document.getElementById('ptt-notification-text'),
+	joinVoiceBtn: document.getElementById('join-voice-btn'),
 };
 
     const roles = {
@@ -375,51 +382,46 @@ const base64ToBlob = (base64) => {
 
 // Fungsi utama untuk "mendengarkan" pesan suara baru
 const listenForVoiceMessages = (groupId) => {
+    // Reset status saat berganti grup
+    audioUnlocked = false;
+    DOM.joinVoiceBtn.classList.remove('hidden');
+
     const joinTime = Date.now();
     const voiceMessagesRef = ref(rtdb, `groups/${groupId}/voice_messages`);
-    const messagesQuery = query(
-        voiceMessagesRef,
-        orderByChild('timestamp'),
-        startAt(joinTime)
-    );
-
+    const messagesQuery = rtdbQuery(voiceMessagesRef, orderByChild('timestamp'), startAt(joinTime));
     let notificationTimeout;
 
     onChildAdded(messagesQuery, (snapshot) => {
         const payload = snapshot.val();
-        if (!payload || payload.senderId === auth.currentUser.uid) {
-            return;
-        }
+        if (!payload || payload.senderId === auth.currentUser.uid) return;
 
-        console.log(`Pesan suara baru diterima dari: ${payload.senderName}`);
-        
-        // Tampilkan notifikasi
-        DOM.pttNotificationText.textContent = `Pesan suara dari ${payload.senderName}`;
-        DOM.pttNotification.classList.remove('hidden');
-
-        // Fungsi untuk memutar suara
-        const playSound = () => {
+        // Jika audio sudah "dibuka kuncinya", langsung putar
+        if (audioUnlocked) {
             const audioBlob = base64ToBlob(payload.audioData);
             const audioUrl = URL.createObjectURL(audioBlob);
             const audio = new Audio(audioUrl);
             audio.play();
-            // Sembunyikan notifikasi setelah diputar
-            DOM.pttNotification.classList.add('hidden');
-            // Hapus event listener ini agar tidak bisa diklik lagi
-            DOM.pttNotification.removeEventListener('click', playSound);
-        };
+        } else { // Jika belum, tampilkan notifikasi seperti biasa
+            DOM.pttNotificationText.textContent = `Pesan suara dari ${payload.senderName}`;
+            DOM.pttNotification.classList.remove('hidden');
 
-        // Pasang event listener ke notifikasi. Ini adalah AKSI PENGGUNA.
-        DOM.pttNotification.addEventListener('click', playSound);
+            const playSound = () => {
+                const audioBlob = base64ToBlob(payload.audioData);
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+                audio.play();
+                DOM.pttNotification.classList.add('hidden');
+                DOM.pttNotification.removeEventListener('click', playSound);
+            };
 
-        // Hapus notifikasi secara otomatis setelah 7 detik jika tidak diklik
-        clearTimeout(notificationTimeout);
-        notificationTimeout = setTimeout(() => {
-            DOM.pttNotification.classList.add('hidden');
-            DOM.pttNotification.removeEventListener('click', playSound); // Jangan lupa hapus listener
-        }, 7000);
+            DOM.pttNotification.addEventListener('click', playSound);
+            clearTimeout(notificationTimeout);
+            notificationTimeout = setTimeout(() => {
+                DOM.pttNotification.classList.add('hidden');
+                DOM.pttNotification.removeEventListener('click', playSound);
+            }, 7000);
+        }
     });
-
     console.log(`Mendengarkan pesan suara baru di grup ${groupId}...`);
 };
     
@@ -1364,6 +1366,16 @@ const handlePressStart = (e) => {
     window.addEventListener('mouseup', handlePressEnd);
     window.addEventListener('touchend', handlePressEnd);
 };
+
+DOM.joinVoiceBtn.addEventListener('click', () => {
+    // Trik: Memutar suara kosong yang sangat singkat untuk "membuka kunci"
+    const silentSound = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
+    silentSound.play();
+
+    audioUnlocked = true;
+    DOM.joinVoiceBtn.classList.add('hidden'); // Sembunyikan tombol setelah diklik
+    DOM.status.textContent = "Suara grup telah diaktifkan.";
+});
 
 // --- Menghubungkan Aksi ke Fungsi ---
 DOM.pttBtn.addEventListener('mousedown', handlePressStart);
