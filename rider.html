@@ -271,6 +271,7 @@
     let groupAlertsUnsubscribe = null;
     let groupCheckpointsUnsubscribe = null;
 	let voiceMessageListenerRef = null;
+	let allUsersData = {};
 
     const DOM = {
     mapContainer: document.getElementById('map-container'),
@@ -575,6 +576,8 @@ const listenForVoiceMessages = (groupId) => {
     }
 }
     
+	
+	
     function addWaypointToRoute(latlng) {
         if (!routingControl) return;
         const waypoints = routingControl.getWaypoints();
@@ -596,6 +599,34 @@ const listenForVoiceMessages = (groupId) => {
         DOM.mapContainer.classList.remove('adding-checkpoint');
         DOM.status.textContent = 'Mode navigasi aktif.';
     }
+	
+	// Fungsi untuk Amir mematikan/menyalakan visibilitas anggota
+async function toggleMemberVisibility(uid) {
+    if (!allUsersData[uid]) return;
+    const currentStatus = allUsersData[uid].isSharing;
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, { isSharing: !currentStatus });
+}
+
+// Fungsi untuk Amir memindahkan jabatannya
+async function promoteToAmir(newAmirId) {
+    const oldAmirId = auth.currentUser.uid;
+    if (newAmirId === oldAmirId) return;
+
+    const groupRef = doc(db, 'groups', currentGroupId);
+    const batch = writeBatch(db);
+
+    // 1. Turunkan jabatan Amir lama menjadi member
+    batch.update(groupRef, { [`members.${oldAmirId}.role`]: 'member' });
+    // 2. Naikkan jabatan anggota baru menjadi Amir
+    batch.update(groupRef, { [`members.${newAmirId}.role`]: 'amir' });
+    // 3. Perbarui penanda Amir utama di grup
+    batch.update(groupRef, { amir: newAmirId });
+
+    await batch.commit();
+    alert('Jabatan Amir telah dipindahkan.');
+}
+	
 
     async function createCheckpoint(latlng, description) {
         const user = auth.currentUser;
@@ -722,20 +753,16 @@ const listenForVoiceMessages = (groupId) => {
     publicRidersUnsubscribe = onSnapshot(q, (snapshot) => {
         const currentVisibleMarkers = new Set();
         
-        snapshot.forEach((doc) => {
-            const riderData = doc.data();
-            const riderId = doc.id;
-            const isMySelf = riderId === auth.currentUser?.uid;
+        allUsersData = {};
+        snapshot.forEach(doc => {
+            allUsersData[doc.id] = doc.data();
+        });
 
-            // ================== LOGIKA BARU YANG DIPERBAIKI ==================
-            // Tampilkan rider jika mereka adalah anggota grup saya
+        Object.entries(allUsersData).forEach(([riderId, riderData]) => {
+            const isMySelf = riderId === auth.currentUser?.uid;
             const isInMyGroup = riderData.isSharing && currentGroupId && riderData.groupId === currentGroupId;
-            
-            // Tampilkan juga rider jika mereka tidak punya grup (rider solo)
             const isPublicAndUngrouped = riderData.isSharing && !riderData.groupId;
-            
             const shouldShow = isInMyGroup || isPublicAndUngrouped;
-            // ===============================================================
 
             if (shouldShow && !isMySelf && riderData.lat && riderData.lng) {
                 currentVisibleMarkers.add(riderId);
@@ -753,15 +780,19 @@ const listenForVoiceMessages = (groupId) => {
             }
         });
 
-        // Bagian ini tetap sama, untuk menghapus marker yang sudah tidak terlihat
         Object.keys(publicMarkers).forEach(markerId => {
             if (!currentVisibleMarkers.has(markerId)) {
-                if (publicMarkers[markerId]) { // Pengecekan tambahan
+                if (publicMarkers[markerId]) {
                     map.removeLayer(publicMarkers[markerId]);
                     delete publicMarkers[markerId];
                 }
             }
         });
+
+        // BAGIAN INI YANG DIPINDAHKAN KELUAR DARI LOOP
+        if (currentGroupId) {
+            updateGroupMembersUI(currentGroupData);
+        }
     });
 }
     
@@ -885,43 +916,52 @@ const listenForVoiceMessages = (groupId) => {
 }
 	
     async function joinGroup(groupId, silent = false) {
-        const user = auth.currentUser;
-        if (!user) return;
-        
-        const groupRef = doc(db, "groups", groupId);
-        const groupSnap = await getDoc(groupRef);
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    const groupRef = doc(db, "groups", groupId);
+    const groupSnap = await getDoc(groupRef);
 
-        if (!groupSnap.exists()) {
-            if (!silent) alert("Grup tidak ditemukan!");
-            return;
-        }
-        
-        const groupData = groupSnap.data();
-        const userRef = doc(db, "users", user.uid);
-        
-        if (!groupData.members || !groupData.members[user.uid]) {
-            const newMember = { name: user.displayName, photoURL: user.photoURL, role: 'member' };
-            await updateDoc(groupRef, { [`members.${user.uid}`]: newMember });
-        }
-        
-        await updateDoc(userRef, { groupId: groupId });
-        
-        currentGroupId = groupId;
-        if (!silent) DOM.groupModal.classList.add('hidden');
-
-        if (groupUnsubscribe) groupUnsubscribe();
-        groupUnsubscribe = onSnapshot(groupRef, (doc) => {
-            currentGroupData = doc.data();
-            updateGroupMembersUI(currentGroupData);
-            if (myMarker && auth.currentUser) {
-                const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
-                myMarker.setIcon(createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole));
-            }
-        });
-        listenToGroupAlerts(groupId);
-        listenToCheckpoints(groupId);
-		listenForVoiceMessages(groupId);
+    if (!groupSnap.exists()) {
+        if (!silent) alert("Grup tidak ditemukan!");
+        return;
     }
+    
+    const groupData = groupSnap.data();
+    const userRef = doc(db, "users", user.uid);
+    
+    // PERUBAHAN DIMULAI DI SINI
+    const batch = writeBatch(db);
+
+    // 1. Paksa isSharing menjadi true di dokumen pengguna
+    batch.update(userRef, { groupId: groupId, isSharing: true });
+    
+    // 2. Tambahkan pengguna ke grup jika belum ada
+    if (!groupData.members || !groupData.members[user.uid]) {
+        const newMember = { name: user.displayName, photoURL: user.photoURL, role: 'member' };
+        batch.update(groupRef, { [`members.${user.uid}`]: newMember });
+    }
+    
+    // Jalankan kedua operasi sekaligus
+    await batch.commit();
+    // AKHIR PERUBAHAN
+    
+    currentGroupId = groupId;
+    if (!silent) DOM.groupModal.classList.add('hidden');
+
+    if (groupUnsubscribe) groupUnsubscribe();
+    groupUnsubscribe = onSnapshot(groupRef, (doc) => {
+        currentGroupData = doc.data();
+        updateGroupMembersUI(currentGroupData);
+        if (myMarker && auth.currentUser) {
+            const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
+            myMarker.setIcon(createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole));
+        }
+    });
+    listenToGroupAlerts(groupId);
+    listenToCheckpoints(groupId);
+    listenForVoiceMessages(groupId);
+}
 
     async function leaveGroup(silent = false) {
         const user = auth.currentUser;
@@ -929,7 +969,7 @@ const listenForVoiceMessages = (groupId) => {
 
         const batch = writeBatch(db);
         const userRef = doc(db, 'users', user.uid);
-        batch.update(userRef, { groupId: null });
+        batch.update(userRef, { groupId: null, isSharing: false });
 
         const groupRef = doc(db, 'groups', currentGroupId);
         const members = { ...currentGroupData.members };
@@ -938,14 +978,35 @@ const listenForVoiceMessages = (groupId) => {
         if (Object.keys(members).length === 0) {
             batch.delete(groupRef);
         } else {
-            if(currentGroupData.amir === user.uid && Object.keys(members).length > 0) {
-                const newAmirId = Object.keys(members)[0];
-                members[newAmirId].role = 'amir';
-                batch.update(groupRef, { members: members, amir: newAmirId });
-            } else {
-                batch.update(groupRef, { members: members });
+            // Jika yang keluar adalah Amir, cari penggantinya
+        if(currentGroupData.amir === user.uid) {
+            let newAmirId = null;
+            // Urutan prioritas jabatan
+            const priorityRoles = ['penunjuk_jalan', 'guard', 'sweeper', 'logistik'];
+            
+            for (const role of priorityRoles) {
+                // Cari anggota dengan peran prioritas
+                const candidateId = Object.keys(members).find(id => members[id].role === role);
+                if (candidateId) {
+                    newAmirId = candidateId;
+                    break; // Berhenti jika sudah menemukan
+                }
             }
+
+            // Jika tidak ada yang punya peran khusus, ambil anggota pertama
+            if (!newAmirId) {
+                newAmirId = Object.keys(members)[0];
+            }
+            
+            // Pindahkan jabatan Amir
+            members[newAmirId].role = 'amir';
+            batch.update(groupRef, { members: members, amir: newAmirId });
+
+        } else {
+            // Jika yang keluar bukan Amir, cukup update daftar anggota
+            batch.update(groupRef, { members: members });
         }
+    }
 
         await batch.commit();
 
@@ -977,9 +1038,11 @@ const listenForVoiceMessages = (groupId) => {
         DOM.groupMemberCount.textContent = memberCount;
         DOM.groupInfoCount.textContent = `${memberCount} Anggota`;
         DOM.groupMembersList.innerHTML = '';
-        
-        // BARIS BARU DITAMBAHKAN DI SINI
         DOM.pttContainer.classList.remove('hidden');
+        
+        DOM.shareLocationFab.disabled = true;
+        DOM.shareLocationFab.classList.add('opacity-50', 'cursor-not-allowed');
+        DOM.shareLocationFab.classList.remove('active');
         
         const user = auth.currentUser;
         const amIAmir = user && user.uid === groupData.amir;
@@ -987,35 +1050,43 @@ const listenForVoiceMessages = (groupId) => {
         Object.entries(groupData.members).forEach(([uid, member]) => {
             const memberEl = document.createElement('div');
             memberEl.className = 'flex items-center justify-between bg-gray-700 p-2 rounded-lg';
+            
+            const memberIsSharing = allUsersData[uid]?.isSharing ?? false;
+            let controlsHtml = '';
+
+            if (amIAmir && uid !== user.uid) {
+                const eyeIcon = memberIsSharing 
+                    ? `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>`
+                    : `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>`;
+                
+                controlsHtml += `<button onclick="window.toggleMemberVisibility('${uid}')" class="p-1 hover:bg-gray-600 rounded-full">${eyeIcon}</button>`;
+                controlsHtml += `<button onclick="window.promoteToAmir('${uid}')" class="text-xs bg-emerald-600 hover:bg-emerald-700 rounded px-2 py-1 ml-2">Jadikan Amir</button>`;
+            } else {
+                controlsHtml = `<span class="px-2 py-1 text-sm rounded-full bg-gray-600">${roles[member.role]} ${member.role.replace(/_/g, ' ')}</span>`;
+            }
+
+            // BAGIAN INI YANG DIPERBAIKI. Kode lama dihapus dan diganti dengan yang menggunakan 'controlsHtml'
             memberEl.innerHTML = `
                 <div class="flex items-center gap-3">
                     <img src="${member.photoURL}" class="w-8 h-8 rounded-full">
                     <span>${member.name} ${uid === user.uid ? '(Anda)' : ''}</span>
                 </div>
-                <div id="role-control-${uid}"></div>
+                <div class="flex items-center gap-2">${controlsHtml}</div>
             `;
             DOM.groupMembersList.appendChild(memberEl);
-
-            const roleControlContainer = document.getElementById(`role-control-${uid}`);
-            if (amIAmir && uid !== user.uid) {
-                const select = document.createElement('select');
-                select.className = 'role-select';
-                select.innerHTML = Object.keys(roles).filter(r => r !== 'amir').map(r => `<option value="${r}" ${member.role === r ? 'selected' : ''}>${r.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>`).join('');
-                select.onchange = (e) => updateMemberRole(uid, e.target.value);
-                roleControlContainer.appendChild(select);
-            } else {
-                roleControlContainer.innerHTML = `<span class="px-2 py-1 text-sm rounded-full bg-gray-600">${roles[member.role]} ${member.role.replace(/_/g, ' ')}</span>`;
-            }
         });
     } else {
         DOM.groupInfoBar.classList.add('hidden');
         DOM.groupView.classList.add('hidden');
         DOM.noGroupView.classList.remove('hidden');
-        
-        // BARIS BARU DITAMBAHKAN DI SINI
         DOM.pttContainer.classList.add('hidden');
+        DOM.shareLocationFab.disabled = false;
+        DOM.shareLocationFab.classList.remove('opacity-50', 'cursor-not-allowed');
     }
 }
+
+window.toggleMemberVisibility = toggleMemberVisibility;
+window.promoteToAmir = promoteToAmir;
 
     async function updateMemberRole(uid, newRole) {
         if (!currentGroupId) return;
