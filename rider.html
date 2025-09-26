@@ -9,7 +9,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
+	
+	
     <style>
         body { font-family: 'Inter', sans-serif; overflow: hidden; }
         #map { height: 100dvh; width: 100vw; z-index: 10; background-color: #4a5568; }
@@ -107,6 +109,7 @@
             <p class="text-sm text-gray-200">
                 <span id="nav-info-distance">-- km</span> - <span id="nav-info-time">-- min</span>
             </p>
+			<p id="nav-info-group" class="text-xs text-amber-300 mt-1 truncate"></p>
         </div>
 		
         <div id="fab-top-right" class="absolute top-4 right-4 z-[400] hidden">
@@ -221,6 +224,26 @@
                 <div class="mb-4">
                     <h3 class="font-semibold text-lg">Grup Saat Ini: <span id="group-name" class="text-amber-400"></span></h3>
                     <p class="text-sm text-gray-400">ID Grup: <span id="group-id" class="font-mono"></span></p>
+                </div>
+				<div id="amir-controls" class="hidden mb-4 p-3 bg-gray-700 rounded-lg space-y-3">
+                    <div class="flex items-center gap-4">
+                        <img id="group-icon-preview" src="https://placehold.co/100x100/4A5568/FFFFFF?text=Grup" class="w-16 h-16 rounded-full object-cover border-2 border-gray-500">
+                        <div>
+                            <label for="group-icon-upload" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg text-sm">
+                                Ganti Ikon Grup
+                            </label>
+                            <input type="file" id="group-icon-upload" class="hidden" accept="image/*">
+                            <p class="text-xs text-gray-400 mt-1">Gambar akan dikompres.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="group-visibility-select" class="block mb-1 text-sm font-medium text-gray-300">Visibilitas Grup untuk Umum:</label>
+                        <select id="group-visibility-select" class="role-select w-full">
+                            <option value="private">Privat (Hanya Anggota)</option>
+                            <option value="group_focus">Fokus Grup (Ikon Grup di Lokasi Amir)</option>
+                            <option value="public">Publik (Semua Anggota Terlihat)</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="mb-4 border-t border-gray-700 pt-4 overflow-y-auto" style="max-height: 40vh;">
                     <h4 class="font-semibold mb-2">Anggota Grup (<span id="group-member-count">0</span>):</h4>
@@ -338,7 +361,10 @@
     navInfoTime: document.getElementById('nav-info-time'),
 	pttNotification: document.getElementById('ptt-notification'),
     pttNotificationText: document.getElementById('ptt-notification-text'),
-	
+	amirControls: document.getElementById('amir-controls'),
+	groupIconPreview: document.getElementById('group-icon-preview'),
+	groupIconUpload: document.getElementById('group-icon-upload'),
+	groupVisibilitySelect: document.getElementById('group-visibility-select'),
 };
 
     const roles = {
@@ -408,6 +434,54 @@ const listenForVoiceMessages = (groupId) => {
     console.log(`Mendengarkan pesan suara baru di grup ${groupId}...`);
 };
     
+	async function handleGroupIconUpload(event) {
+    const file = event.target.files[0];
+    if (!file || !currentGroupId) return;
+
+    DOM.status.textContent = "Mengompres gambar...";
+
+    const options = {
+        maxSizeMB: 0.5, // Maksimal 500KB
+        maxWidthOrHeight: 800,
+        useWebWorker: true
+    };
+
+    try {
+        const compressedFile = await imageCompression(file, options);
+        DOM.status.textContent = "Mengunggah gambar...";
+
+        const formData = new FormData();
+        formData.append("file", compressedFile);
+        formData.append("upload_preset", "markaz"); // Preset dari Anda
+
+        const response = await fetch("https://api.cloudinary.com/v1_1/deva5eknr/image/upload", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+        if (data.secure_url) {
+            const groupRef = doc(db, 'groups', currentGroupId);
+            await updateDoc(groupRef, { iconUrl: data.secure_url });
+            DOM.status.textContent = "Ikon grup berhasil diperbarui!";
+        } else {
+            throw new Error("Gagal mendapatkan URL dari Cloudinary.");
+        }
+    } catch (error) {
+        console.error("Gagal mengunggah ikon:", error);
+        DOM.status.textContent = "Gagal memperbarui ikon grup.";
+        alert("Terjadi kesalahan saat mengunggah gambar.");
+    }
+}
+
+async function updateGroupVisibility() {
+    if (!currentGroupId) return;
+    const newVisibility = DOM.groupVisibilitySelect.value;
+    const groupRef = doc(db, 'groups', currentGroupId);
+    await updateDoc(groupRef, { visibility: newVisibility });
+    DOM.status.textContent = `Visibilitas grup diubah ke: ${newVisibility}`;
+}
+	
     function createProfilePinIcon(color, imageUrl, role) {
         const uniqueId = `pattern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const roleEmoji = roles[role] || '';
@@ -884,6 +958,14 @@ async function promoteToAmir(newAmirId) {
         DOM.navInfoDestination.textContent = window.currentDestinationName; // Ambil dari variabel global
         DOM.navInfoDistance.textContent = `${totalDistance} km`;
         DOM.navInfoTime.textContent = timeString;
+		
+		if (currentGroupData && currentGroupData.name) {
+            const memberCount = Object.keys(currentGroupData.members).length;
+            DOM.navInfoGroup.textContent = `${currentGroupData.name} (${memberCount} anggota)`;
+            DOM.navInfoGroup.classList.remove('hidden');
+        } else {
+            DOM.navInfoGroup.classList.add('hidden');
+        }
     };
 
     routingControl.on('routesfound', function(e) {
@@ -1067,7 +1149,8 @@ async function promoteToAmir(newAmirId) {
         Object.values(checkpointMarkers).forEach(marker => map.removeLayer(marker));
     }
     
-    function updateGroupMembersUI(groupData) {
+    // HAPUS FUNGSI LAMA 'updateGroupMembersUI' DAN GANTI DENGAN INI
+function updateGroupMembersUI(groupData) {
     if (groupData && groupData.members) {
         DOM.groupInfoBar.classList.remove('hidden');
         DOM.groupView.classList.remove('hidden');
@@ -1080,45 +1163,56 @@ async function promoteToAmir(newAmirId) {
         DOM.groupInfoCount.textContent = `${memberCount} Anggota`;
         DOM.groupMembersList.innerHTML = '';
         DOM.pttContainer.classList.remove('hidden');
-        
+
         DOM.shareLocationFab.disabled = true;
         DOM.shareLocationFab.classList.add('opacity-50', 'cursor-not-allowed');
         DOM.shareLocationFab.classList.remove('active');
-        
+
         const user = auth.currentUser;
         const amIAmir = user && user.uid === groupData.amir;
+
+        // === BAGIAN BARU UNTUK KONTROL AMIR ===
+        if (amIAmir) {
+            DOM.amirControls.classList.remove('hidden');
+            DOM.groupIconPreview.src = groupData.iconUrl || 'https://placehold.co/100x100/4A5568/FFFFFF?text=Grup';
+            DOM.groupVisibilitySelect.value = groupData.visibility || 'private';
+
+            // Hapus listener lama untuk mencegah duplikasi, lalu pasang yang baru
+            DOM.groupIconUpload.removeEventListener('change', handleGroupIconUpload);
+            DOM.groupIconUpload.addEventListener('change', handleGroupIconUpload);
+
+            DOM.groupVisibilitySelect.removeEventListener('change', updateGroupVisibility);
+            DOM.groupVisibilitySelect.addEventListener('change', updateGroupVisibility);
+        } else {
+            DOM.amirControls.classList.add('hidden');
+        }
+        // === AKHIR BAGIAN BARU ===
 
         Object.entries(groupData.members).forEach(([uid, member]) => {
             const memberEl = document.createElement('div');
             memberEl.className = 'flex items-center justify-between bg-gray-700 p-2 rounded-lg';
-            
+
             const memberIsSharing = allUsersData[uid]?.isSharing ?? false;
             let controlsHtml = '';
 
             if (amIAmir && uid !== user.uid) {
-                // === BAGIAN YANG DIPERBAIKI: Menggabungkan semua kontrol untuk Amir ===
-
-                // 1. Buat Dropdown Jabatan (seperti sebelumnya)
                 let roleDropdownHtml = `<select onchange="window.updateMemberRole('${uid}', this.value)" class="role-select">`;
                 roleDropdownHtml += Object.keys(roles)
-                    .filter(r => r !== 'amir') // Amir tidak bisa di-set dari dropdown
+                    .filter(r => r !== 'amir')
                     .map(r => `<option value="${r}" ${member.role === r ? 'selected' : ''}>${r.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>`)
                     .join('');
                 roleDropdownHtml += `</select>`;
 
-                // 2. Buat Tombol Visibilitas (Ikon Mata)
                 const eyeIcon = memberIsSharing 
                     ? `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>`
                     : `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>`;
                 const visibilityButtonHtml = `<button onclick="window.toggleMemberVisibility('${uid}')" class="p-1 hover:bg-gray-600 rounded-full">${eyeIcon}</button>`;
-                
-                // 3. Buat Tombol "Jadikan Amir"
+
                 const promoteButtonHtml = `<button onclick="window.promoteToAmir('${uid}')" class="text-xs bg-emerald-600 hover:bg-emerald-700 rounded px-2 py-1">Jadikan Amir</button>`;
-                
-                // Gabungkan semuanya menjadi satu
+
                 controlsHtml = visibilityButtonHtml + roleDropdownHtml + promoteButtonHtml;
 
-            } else { // Jika BUKAN Amir atau ini adalah DIRI SAYA SENDIRI
+            } else {
                 controlsHtml = `<span class="px-2 py-1 text-sm rounded-full bg-gray-600">${roles[member.role]} ${member.role.replace(/_/g, ' ')}</span>`;
             }
 
