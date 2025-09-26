@@ -300,6 +300,8 @@
     let groupAlertsUnsubscribe = null;
     let groupCheckpointsUnsubscribe = null;
 	let voiceMessageListenerRef = null;
+	let publicGroupsData = {};
+	const groupFocusMarkers = {};
 	let allUsersData = {};
 	let audioUnlocked = false;
 
@@ -365,6 +367,7 @@
 	groupIconPreview: document.getElementById('group-icon-preview'),
 	groupIconUpload: document.getElementById('group-icon-upload'),
 	groupVisibilitySelect: document.getElementById('group-visibility-select'),
+	navInfoGroup: document.getElementById('nav-info-group'),
 };
 
     const roles = {
@@ -473,6 +476,65 @@ const listenForVoiceMessages = (groupId) => {
         alert("Terjadi kesalahan saat mengunggah gambar.");
     }
 }
+
+function listenToPublicGroups() {
+    const groupsRef = query(collection(db, 'groups'));
+    onSnapshot(groupsRef, (snapshot) => {
+        const currentVisibleGroups = new Set();
+        snapshot.forEach(doc => {
+            const groupData = doc.data();
+            const groupId = doc.id;
+
+            // Lacak semua grup yang tidak privat
+            if (groupData.visibility === 'public' || groupData.visibility === 'group_focus') {
+                publicGroupsData[groupId] = groupData;
+                currentVisibleGroups.add(groupId);
+
+                // Logika khusus untuk mode FOKUS GRUP
+                if (groupData.visibility === 'group_focus') {
+                    const amirId = groupData.amir;
+                    const amirData = allUsersData[amirId];
+
+                    if (amirData && amirData.lat && amirData.lng) {
+                        const groupCoords = [amirData.lat, amirData.lng];
+                        const iconHtml = `<img src="${groupData.iconUrl || 'https://placehold.co/100x100/4A5568/FFFFFF?text=Grup'}" class="w-12 h-12 rounded-full border-2 border-amber-400 object-cover shadow-lg">`;
+                        const groupIcon = L.divIcon({
+                            html: iconHtml,
+                            className: 'custom-group-focus-icon',
+                            iconSize: [48, 48],
+                            iconAnchor: [24, 24]
+                        });
+
+                        if (groupFocusMarkers[groupId]) {
+                            groupFocusMarkers[groupId].setLatLng(groupCoords).setIcon(groupIcon);
+                        } else {
+                            groupFocusMarkers[groupId] = L.marker(groupCoords, { icon: groupIcon }).addTo(map)
+                                .bindPopup(`<b>Grup: ${groupData.name}</b>`);
+                        }
+                    }
+                } else {
+                     // Jika grup beralih dari mode fokus, hapus marker fokusnya
+                    if (groupFocusMarkers[groupId]) {
+                        map.removeLayer(groupFocusMarkers[groupId]);
+                        delete groupFocusMarkers[groupId];
+                    }
+                }
+            }
+        });
+
+        // Hapus data & marker dari grup yang tidak lagi publik
+        Object.keys(publicGroupsData).forEach(groupId => {
+            if (!currentVisibleGroups.has(groupId)) {
+                delete publicGroupsData[groupId];
+                if (groupFocusMarkers[groupId]) {
+                    map.removeLayer(groupFocusMarkers[groupId]);
+                    delete groupFocusMarkers[groupId];
+                }
+            }
+        });
+    });
+}
+
 
 async function updateGroupVisibility() {
     if (!currentGroupId) return;
@@ -770,6 +832,7 @@ async function promoteToAmir(newAmirId) {
             startLocationWatch();  
             listenToUserDoc(user.uid);
             listenToPublicRiders();
+			listenToPublicGroups(); 
         } else {
             DOM.loginContainer.classList.remove('hidden');
             DOM.profileFabContainer.classList.add('hidden');
@@ -858,31 +921,48 @@ async function promoteToAmir(newAmirId) {
 
     function listenToPublicRiders() {
     if (publicRidersUnsubscribe) publicRidersUnsubscribe();
-    
+
     const q = query(collection(db, 'users'));
     publicRidersUnsubscribe = onSnapshot(q, (snapshot) => {
         const currentVisibleMarkers = new Set();
-        
+
+        // 1. Perbarui data semua user terlebih dahulu
         allUsersData = {};
         snapshot.forEach(doc => {
             allUsersData[doc.id] = doc.data();
         });
 
+        // 2. Iterasi melalui data user yang sudah diperbarui
         Object.entries(allUsersData).forEach(([riderId, riderData]) => {
             const isMySelf = riderId === auth.currentUser?.uid;
-            const isInMyGroup = riderData.isSharing && currentGroupId && riderData.groupId === currentGroupId;
-            const isPublicAndUngrouped = riderData.isSharing && !riderData.groupId;
-            const shouldShow = isInMyGroup || isPublicAndUngrouped;
+            if (isMySelf || !riderData.isSharing || !riderData.lat) return; // Lewati diri sendiri, yang tidak berbagi, atau yang tidak punya lokasi
 
-            if (shouldShow && !isMySelf && riderData.lat && riderData.lng) {
+            let shouldShow = false;
+            let role = 'member'; // Default role
+
+            // LOGIKA VISIBILITAS BARU
+            const userIsInMyGroup = currentGroupId && riderData.groupId === currentGroupId;
+            const groupIsPublic = publicGroupsData[riderData.groupId] && publicGroupsData[riderData.groupId].visibility === 'public';
+            const isSoloRider = !riderData.groupId;
+
+            if (userIsInMyGroup) {
+                shouldShow = true;
+                role = currentGroupData?.members?.[riderId]?.role;
+            } else if (groupIsPublic) {
+                // Tampilkan jika grupnya 'public', tapi bukan 'group_focus'
+                shouldShow = true;
+                role = publicGroupsData[riderData.groupId]?.members?.[riderId]?.role;
+            } else if (isSoloRider) {
+                shouldShow = true; // Rider solo selalu terlihat
+            }
+
+            if (shouldShow) {
                 currentVisibleMarkers.add(riderId);
                 const riderCoords = [riderData.lat, riderData.lng];
-                const role = currentGroupData?.members?.[riderId]?.role;
                 const icon = createProfilePinIcon(riderData.pinColor || '#34495e', riderData.photoURL, role);
-                
+
                 if (publicMarkers[riderId]) {
-                    publicMarkers[riderId].setLatLng(riderCoords);
-                    publicMarkers[riderId].setIcon(icon);
+                    publicMarkers[riderId].setLatLng(riderCoords).setIcon(icon);
                 } else {
                     const popupContent = `<div class="user-popup"><img src="${riderData.photoURL}" alt="foto"><div><strong>${riderData.name}</strong><br><button onclick="window.showRouteTo([${riderCoords}], '${riderData.name.replace(/'/g, "\\'")}')">Rute ke Sini</button></div></div>`;
                     publicMarkers[riderId] = L.marker(riderCoords, { icon: icon }).addTo(map).bindPopup(popupContent);
@@ -890,6 +970,7 @@ async function promoteToAmir(newAmirId) {
             }
         });
 
+        // Hapus marker yang sudah tidak terlihat
         Object.keys(publicMarkers).forEach(markerId => {
             if (!currentVisibleMarkers.has(markerId)) {
                 if (publicMarkers[markerId]) {
@@ -899,7 +980,7 @@ async function promoteToAmir(newAmirId) {
             }
         });
 
-        // BARIS PENTING INI DIKEMBALIKAN DI POSISI YANG BENAR
+        // Perbarui UI daftar anggota jika sedang berada di dalam grup
         if (currentGroupId) {
             updateGroupMembersUI(currentGroupData);
         }
