@@ -464,7 +464,7 @@ function openAddPlaceModal(latlng) {
     DOM.placeModalTitle.textContent = "Beri Nama Tempat Ini";
     DOM.placeModalName.value = '';
     DOM.placeModalCategory.selectedIndex = 0;
-    DOM.placeModalInfo.textContent = '';
+    DOM.placeModalInfo.textContent = 'Perubahan akan diterapkan setelah disetujui';
     DOM.placeModalSaveBtn.textContent = "Simpan";
     DOM.placeModal.classList.remove('hidden');
 }
@@ -579,13 +579,23 @@ window.openEditPlaceModal = (placeId) => {
 async function submitEditSuggestion() {
     const user = auth.currentUser;
     const newName = DOM.placeModalName.value.trim();
+    
+    // PERBAIKAN: Dapatkan marker di awal dan langsung periksa
+    const marker = communityPlaceMarkers[editPlaceId];
+
     if (!user || !editPlaceId || !newName) {
         alert("Nama tempat tidak boleh kosong.");
         return;
     }
+
+    // PERBAIKAN: Jika marker tidak ada saat fungsi ini dipanggil, hentikan proses dengan aman.
+    if (!marker) {
+        alert("Marker untuk tempat ini tidak ditemukan. Mungkin sudah ada perubahan. Silakan tutup dan coba lagi.");
+        DOM.placeModal.classList.add('hidden');
+        return;
+    }
     
     const placeRef = doc(db, "community_places", editPlaceId);
-    const marker = communityPlaceMarkers[editPlaceId];
 
     try {
         const placeDoc = await getDoc(placeRef);
@@ -595,8 +605,7 @@ async function submitEditSuggestion() {
         const suggestions = placeData.suggestions || {};
         const newCategory = DOM.placeModalCategory.value;
 
-        // Buat "hash" unik untuk saran ini, SEKARANG TERMASUK KOORDINAT
-        const newLat = editedPlaceNewCoords.lat.toFixed(6); // Pembulatan untuk konsistensi
+        const newLat = editedPlaceNewCoords.lat.toFixed(6);
         const newLng = editedPlaceNewCoords.lng.toFixed(6);
         const suggestionHash = `${newName}|${newCategory}|${newLat}|${newLng}`;
         
@@ -609,7 +618,6 @@ async function submitEditSuggestion() {
         }
 
         if (suggestions[suggestionHash].length >= 3) {
-            // Lakukan perubahan, SEKARANG TERMASUK KOORDINAT
             await updateDoc(placeRef, {
                 name: newName,
                 category: newCategory,
@@ -630,11 +638,9 @@ async function submitEditSuggestion() {
         console.error("Gagal mengirim saran:", error);
         alert("Terjadi kesalahan saat mengirim saran.");
     } finally {
-        // PENTING: Matikan kembali mode geser & listener setelah selesai
-        if (marker) {
-            marker.dragging.disable();
-            marker.off('dragend');
-        }
+        // Bagian ini sekarang aman karena 'marker' sudah dipastikan ada di awal.
+        marker.dragging.disable();
+        marker.off('dragend');
     }
 }
 	
