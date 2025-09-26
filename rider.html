@@ -222,17 +222,6 @@
                     <h3 class="font-semibold text-lg">Grup Saat Ini: <span id="group-name" class="text-amber-400"></span></h3>
                     <p class="text-sm text-gray-400">ID Grup: <span id="group-id" class="font-mono"></span></p>
                 </div>
-				<div class="flex items-center gap-4 mb-4">
-        </div>
-
-    <div id="amir-controls-visibility" class="hidden mb-4 p-3 border border-gray-700 rounded-lg">
-        <h4 class="font-semibold mb-2 text-gray-300">Mode Visibilitas Grup</h4>
-        <div class="flex justify-around gap-2">
-            <button id="visibility-private-btn" class="flex-1 text-sm py-2 px-3 rounded-md">Privat</button>
-            <button id="visibility-public-btn" class="flex-1 text-sm py-2 px-3 rounded-md">Publik</button>
-            <button id="visibility-focus-btn" class="flex-1 text-sm py-2 px-3 rounded-md">Fokus Amir</button>
-        </div>
-    </div>
                 <div class="mb-4 border-t border-gray-700 pt-4 overflow-y-auto" style="max-height: 40vh;">
                     <h4 class="font-semibold mb-2">Anggota Grup (<span id="group-member-count">0</span>):</h4>
                     <div id="group-members-list" class="space-y-2"></div>
@@ -349,10 +338,6 @@
     navInfoTime: document.getElementById('nav-info-time'),
 	pttNotification: document.getElementById('ptt-notification'),
     pttNotificationText: document.getElementById('ptt-notification-text'),
-	amirControlsVisibility: document.getElementById('amir-controls-visibility'),
-    visibilityPrivateBtn: document.getElementById('visibility-private-btn'),
-    visibilityPublicBtn: document.getElementById('visibility-public-btn'),
-    visibilityFocusBtn: document.getElementById('visibility-focus-btn'),
 	
 };
 
@@ -678,14 +663,6 @@ async function promoteToAmir(newAmirId) {
     alert('Jabatan Amir telah dipindahkan.');
 }
 	
-async function setGroupVisibility(mode) {
-    if (!currentGroupId) return;
-    const groupRef = doc(db, 'groups', currentGroupId);
-    await updateDoc(groupRef, { visibility: mode });
-    console.log(`Visibilitas grup diubah menjadi: ${mode}`);
-}
-
-
 
     async function createCheckpoint(latlng, description) {
         const user = auth.currentUser;
@@ -1110,30 +1087,6 @@ async function setGroupVisibility(mode) {
         
         const user = auth.currentUser;
         const amIAmir = user && user.uid === groupData.amir;
-		
-		// Tampilkan tombol "Ubah Ikon" dan kontrol visibilitas hanya jika pengguna adalah Amir
-        if (amIAmir) {
-            DOM.changeGroupIconButton.classList.remove('hidden');
-            DOM.amirControlsVisibility.classList.remove('hidden');
-
-            // Perbarui tampilan tombol visibilitas sesuai data dari database
-            const currentMode = groupData.visibility || 'private';
-            [DOM.visibilityPrivateBtn, DOM.visibilityPublicBtn, DOM.visibilityFocusBtn].forEach(btn => {
-                btn.classList.remove('bg-emerald-600', 'text-white');
-                btn.classList.add('bg-gray-600', 'text-gray-300');
-            });
-            if (currentMode === 'private') {
-                DOM.visibilityPrivateBtn.classList.add('bg-emerald-600', 'text-white');
-            } else if (currentMode === 'public') {
-                DOM.visibilityPublicBtn.classList.add('bg-emerald-600', 'text-white');
-            } else if (currentMode === 'amir_focus') {
-                DOM.visibilityFocusBtn.classList.add('bg-emerald-600', 'text-white');
-            }
-            
-        } else {
-            DOM.changeGroupIconButton.classList.add('hidden');
-            DOM.amirControlsVisibility.classList.add('hidden');
-        }
 
         Object.entries(groupData.members).forEach(([uid, member]) => {
             const memberEl = document.createElement('div');
@@ -1427,10 +1380,6 @@ const handlePressStart = (e) => {
 DOM.pttBtn.addEventListener('mousedown', handlePressStart);
 DOM.pttBtn.addEventListener('touchstart', handlePressStart, { passive: false });
 
-DOM.visibilityPrivateBtn.addEventListener('click', () => setGroupVisibility('private'));
-DOM.visibilityPublicBtn.addEventListener('click', () => setGroupVisibility('public'));
-DOM.visibilityFocusBtn.addEventListener('click', () => setGroupVisibility('amir_focus'));
-
 DOM.pttBtn.addEventListener('click', () => {
     // Event 'click' sekarang hanya punya satu tugas: membuka kunci jika terkunci.
     if (isLocked) {
@@ -1545,7 +1494,6 @@ DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
             const groupRef = doc(db, 'groups', newGroupId);
             const newGroup = {
                 name: groupName, amir: user.uid, createdAt: new Date(),
-				visibility: 'private',
                 members: {
                     [user.uid]: { name: user.displayName, photoURL: user.photoURL, role: 'amir' }
                 }
