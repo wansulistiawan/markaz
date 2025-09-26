@@ -267,6 +267,27 @@
         </div>
     </div>
 
+	<div id="place-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[1100] p-4">
+    <div class="bg-gray-800 rounded-lg p-4 sm:p-6 w-full max-w-lg flex flex-col">
+        <h2 id="place-modal-title" class="text-2xl font-bold mb-4 text-cyan-400">Beri Nama Tempat Ini</h2>
+        <div class="space-y-4">
+            <div>
+                <label for="place-modal-name" class="block mb-1 text-sm font-medium text-gray-300">Nama Tempat</label>
+                <input type="text" id="place-modal-name" placeholder="Contoh: Warung Bakso Pak Kumis" class="w-full bg-gray-700 text-white rounded-lg py-2 px-3">
+            </div>
+            <div>
+                <label for="place-modal-category" class="block mb-1 text-sm font-medium text-gray-300">Kategori</label>
+                <select id="place-modal-category" class="w-full bg-gray-700 text-white rounded-lg py-2 px-3 appearance-none role-select"></select>
+            </div>
+            <p id="place-modal-info" class="text-xs text-amber-300"></p>
+        </div>
+        <div class="flex justify-end gap-4 mt-6">
+            <button id="place-modal-cancel-btn" class="bg-gray-600 hover:bg-gray-700 font-bold py-2 px-4 rounded-lg">Batal</button>
+            <button id="place-modal-save-btn" class="bg-cyan-600 hover:bg-cyan-700 font-bold py-2 px-4 rounded-lg">Simpan</button>
+        </div>
+    </div>
+</div>
+	
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
@@ -368,6 +389,13 @@
 	groupIconUpload: document.getElementById('group-icon-upload'),
 	groupVisibilitySelect: document.getElementById('group-visibility-select'),
 	navInfoGroup: document.getElementById('nav-info-group'),
+	placeModal: document.getElementById('place-modal'),
+    placeModalTitle: document.getElementById('place-modal-title'),
+    placeModalName: document.getElementById('place-modal-name'),
+    placeModalCategory: document.getElementById('place-modal-category'),
+    placeModalInfo: document.getElementById('place-modal-info'),
+    placeModalCancelBtn: document.getElementById('place-modal-cancel-btn'),
+    placeModalSaveBtn: document.getElementById('place-modal-save-btn'),
 };
 
     const roles = {
@@ -379,6 +407,218 @@
         macet: { icon: '🚗', text: 'Lalu Lintas Macet' }, pawai: { icon: '🎉', text: 'Ada Pawai/Keramaian' },
         bencana: { icon: '🌋', text: 'Ada Bencana Alam' }, jalan_rusak: { icon: '🚧', text: 'Ada Jalan Rusak' }
     };
+	
+	const placeCategories = {
+        rumah: { icon: '🏠', text: 'Rumah' },
+        toko: { icon: '🏪', text: 'Toko' },
+        spbu: { icon: '⛽', text: 'SPBU' },
+        hotel: { icon: '🏨', text: 'Hotel' },
+        wisata: { icon: '🏞️', text: 'Tempat Wisata' },
+        masjid: { icon: '🕌', text: 'Masjid' },
+        restoran: { icon: '🍽️', text: 'Restoran/Kafe' },
+        bengkel: { icon: '🔧', text: 'Bengkel' },
+        atm: { icon: '🏧', text: 'ATM' },
+        sekolah: { icon: '🏫', text: 'Sekolah' },
+		kantor: { text: 'Kantor', icon: '🏢' },
+        lainnya: { icon: '📍', text: 'Lainnya' },
+    };
+	
+	function populateCategoryOptions() {
+    DOM.placeModalCategory.innerHTML = Object.keys(placeCategories).map(key => {
+        return `<option value="${key}">${placeCategories[key].icon} ${placeCategories[key].text}</option>`;
+    }).join('');
+}
+	
+	// Variabel global untuk menyimpan data tempat sementara
+let communityPlacesData = {};
+const communityPlaceMarkers = {};
+let newPlaceCoords = null;
+let editPlaceId = null;
+
+// Fungsi utama yang dipanggil dari popup di peta
+window.handleMapClickAction = (action, lat, lng) => {
+    map.closePopup();
+    const latlng = { lat, lng };
+
+    if (action === 'route') {
+        if (currentRouteState !== 'IDLE') {
+             DOM.status.textContent = 'Batalkan rute saat ini untuk membuat rute baru.';
+             return;
+        }
+        window.showRouteTo([lat, lng], 'Titik Dipilih');
+    } else if (action === 'add_place') {
+        openAddPlaceModal(latlng);
+    }
+}
+
+// Membuka modal untuk MENAMBAH tempat baru
+function openAddPlaceModal(latlng) {
+    if (!auth.currentUser) {
+        alert("Anda harus login untuk menambahkan tempat.");
+        return;
+    }
+    newPlaceCoords = latlng;
+    editPlaceId = null; // Pastikan mode edit non-aktif
+
+    DOM.placeModalTitle.textContent = "Beri Nama Tempat Ini";
+    DOM.placeModalName.value = '';
+    DOM.placeModalCategory.selectedIndex = 0;
+    DOM.placeModalInfo.textContent = '';
+    DOM.placeModalSaveBtn.textContent = "Simpan";
+    DOM.placeModal.classList.remove('hidden');
+}
+
+// Fungsi untuk MENYIMPAN tempat baru ke database
+async function saveNewPlace() {
+    const user = auth.currentUser;
+    const placeName = DOM.placeModalName.value.trim();
+    if (!user || !placeName || !newPlaceCoords) {
+        alert("Nama tempat tidak boleh kosong.");
+        return;
+    }
+
+    try {
+        const placesRef = collection(db, 'community_places');
+        await addDoc(placesRef, {
+            name: placeName,
+            category: DOM.placeModalCategory.value,
+            lat: newPlaceCoords.lat,
+            lng: newPlaceCoords.lng,
+            creator: { uid: user.uid, name: user.displayName },
+            createdAt: serverTimestamp(),
+            suggestions: {} // Inisialisasi objek saran
+        });
+        DOM.status.textContent = `Tempat "${placeName}" berhasil ditambahkan!`;
+        DOM.placeModal.classList.add('hidden');
+    } catch (error) {
+        console.error("Gagal menyimpan tempat:", error);
+        alert("Terjadi kesalahan saat menyimpan tempat.");
+    }
+	
+	// Listener utama untuk semua tempat di database
+function listenToCommunityPlaces() {
+    const placesRef = collection(db, 'community_places');
+    onSnapshot(placesRef, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            const placeId = change.doc.id;
+            const placeData = change.doc.data();
+
+            if (change.type === 'removed') {
+                if (communityPlaceMarkers[placeId]) {
+                    map.removeLayer(communityPlaceMarkers[placeId]);
+                    delete communityPlaceMarkers[placeId];
+                }
+                return;
+            }
+
+            // Jika marker sudah ada, hapus dulu untuk digambar ulang
+            if (communityPlaceMarkers[placeId]) {
+                map.removeLayer(communityPlaceMarkers[placeId]);
+            }
+            
+            const categoryInfo = placeCategories[placeData.category] || placeCategories.lainnya;
+            const placeIcon = L.divIcon({
+                className: 'custom-place-icon',
+                html: `<div class="text-3xl">${categoryInfo.icon}</div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 30]
+            });
+
+            const popupContent = `
+                <div class="p-1">
+                    <div class="font-bold text-base">${placeData.name}</div>
+                    <div class="text-sm text-gray-300">${categoryInfo.text}</div>
+                    <div class="text-xs text-gray-400 border-t border-gray-600 mt-2 pt-2">Dibuat oleh: ${placeData.creator.name}</div>
+                    <button class="w-full mt-2 bg-yellow-500 hover:bg-yellow-600 text-black text-sm font-bold py-1 px-3 rounded-lg" onclick="window.openEditPlaceModal('${placeId}')">
+                        Sarankan Perubahan
+                    </button>
+                </div>
+            `;
+
+            communityPlaceMarkers[placeId] = L.marker([placeData.lat, placeData.lng], { icon: placeIcon })
+                .addTo(map)
+                .bindPopup(popupContent);
+            
+            communityPlacesData[placeId] = placeData; // Simpan data lokal
+        });
+    });
+}
+
+// Membuka modal untuk MENGEDIT tempat yang ada
+window.openEditPlaceModal = (placeId) => {
+    if (!auth.currentUser) {
+        alert("Anda harus login untuk menyarankan perubahan.");
+        return;
+    }
+    const placeData = communityPlacesData[placeId];
+    if (!placeData) return;
+
+    editPlaceId = placeId;
+    newPlaceCoords = null; // Pastikan mode tambah non-aktif
+
+    DOM.placeModalTitle.textContent = "Sarankan Perubahan";
+    DOM.placeModalName.value = placeData.name;
+    DOM.placeModalCategory.value = placeData.category;
+    DOM.placeModalInfo.textContent = 'Perubahan akan diterapkan jika 3 pengguna menyarankan hal yang sama.';
+    DOM.placeModalSaveBtn.textContent = "Kirim Saran";
+    DOM.placeModal.classList.remove('hidden');
+}
+
+// Fungsi untuk MENGIRIM SARAN PERUBAHAN
+async function submitEditSuggestion() {
+    const user = auth.currentUser;
+    const newName = DOM.placeModalName.value.trim();
+    if (!user || !editPlaceId || !newName) {
+        alert("Nama tempat tidak boleh kosong.");
+        return;
+    }
+    
+    const placeRef = doc(db, "community_places", editPlaceId);
+
+    try {
+        const placeDoc = await getDoc(placeRef);
+        if (!placeDoc.exists()) throw new Error("Tempat tidak ditemukan.");
+
+        const placeData = placeDoc.data();
+        const suggestions = placeData.suggestions || {};
+        const newCategory = DOM.placeModalCategory.value;
+
+        // Buat "hash" unik untuk saran ini
+        const suggestionHash = `${newName}|${newCategory}`;
+        
+        // Inisialisasi jika ini saran baru
+        if (!suggestions[suggestionHash]) {
+            suggestions[suggestionHash] = [];
+        }
+
+        // Tambahkan UID pengguna ke daftar pendukung (jika belum ada)
+        if (!suggestions[suggestionHash].includes(user.uid)) {
+            suggestions[suggestionHash].push(user.uid);
+        }
+
+        // Periksa apakah sudah mencapai 3 suara
+        if (suggestions[suggestionHash].length >= 3) {
+            // SUDAH 3 SUARA! Lakukan perubahan
+            await updateDoc(placeRef, {
+                name: newName,
+                category: newCategory,
+                suggestions: {} // Reset saran setelah berhasil diubah
+            });
+            DOM.status.textContent = `Perubahan pada "${newName}" berhasil diterapkan!`;
+        } else {
+            // BELUM 3 SUARA. Cukup simpan sarannya.
+            await updateDoc(placeRef, { suggestions: suggestions });
+            const voteCount = suggestions[suggestionHash].length;
+            DOM.status.textContent = `Saran Anda tersimpan. Butuh ${3 - voteCount} suara lagi.`;
+        }
+        DOM.placeModal.classList.add('hidden');
+
+    } catch (error) {
+        console.error("Gagal mengirim saran:", error);
+        alert("Terjadi kesalahan saat mengirim saran.");
+    }
+}
+	
 	
 	const blobToBase64 = (blob) => {
     return new Promise((resolve, reject) => {
@@ -639,21 +879,33 @@ async function updateGroupVisibility() {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         map.on('click', (e) => {
-            if (isAddingWaypoint) { addWaypointToRoute(e.latlng); return; }
-            if (isAddingCheckpoint) { showCheckpointPrompt(e.latlng); return; }
-            const userRole = currentGroupData?.members?.[auth.currentUser?.uid]?.role;
-            if (currentRouteState === 'NAVIGATING' && currentGroupId && ['amir', 'penunjuk_jalan', 'guard', 'sweeper', 'logistik'].includes(userRole)) {
-                showUIAlertSelection(e.latlng);
-                return;
-            }
-            if (currentRouteState === 'IDLE' && auth.currentUser && userCoords) {
-        const dest = [e.latlng.lat, e.latlng.lng];
-        // Selalu gunakan nama default saat pertama kali membuat rute
-        window.showRouteTo(dest, 'Titik Dipilih');
+    if (isAddingWaypoint || isAddingCheckpoint) {
+        if (isAddingWaypoint) addWaypointToRoute(e.latlng);
+        if (isAddingCheckpoint) showCheckpointPrompt(e.latlng);
+        return;
     }
-        });
-        DOM.status.textContent = "Peta dimuat. Silakan masuk untuk memulai.";
-    }
+
+    const latlng = e.latlng;
+    const popupContent = `
+        <div class="text-center space-y-2 p-1">
+            <h4 class="font-bold">Pilih Aksi</h4>
+            <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 px-3 rounded-lg" onclick="window.handleMapClickAction('route', ${latlng.lat}, ${latlng.lng})">
+                Tetapkan Tujuan
+            </button>
+            <button class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-bold py-2 px-3 rounded-lg" onclick="window.handleMapClickAction('add_place', ${latlng.lat}, ${latlng.lng})">
+                Beri Nama Tempat
+            </button>
+        </div>
+    `;
+
+    L.popup({ closeButton: true })
+        .setLatLng(latlng)
+        .setContent(popupContent)
+        .openOn(map);
+});
+
+DOM.status.textContent = "Peta dimuat. Silakan masuk untuk memulai.";
+}
 
     function startLocationWatch() {
         if (!navigator.geolocation) {
@@ -833,6 +1085,7 @@ async function promoteToAmir(newAmirId) {
             listenToUserDoc(user.uid);
             listenToPublicRiders();
 			listenToPublicGroups(); 
+			listenToCommunityPlaces();
         } else {
             DOM.loginContainer.classList.remove('hidden');
             DOM.profileFabContainer.classList.add('hidden');
@@ -1402,6 +1655,8 @@ window.updateMemberRole = updateMemberRole;
         initMap();
         setupModal();
 		
+		populateCategoryOptions();
+		
 		// ==================================================
 //          KODE LOGIKA PUSH-TO-TALK (VERSI BARU)
 // ==================================================
@@ -1748,6 +2003,27 @@ DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
         routingControl = null; destinationMarker = null; isAddingWaypoint = false; isAddingCheckpoint = false;
         setRouteState('IDLE');
     });
+	DOM.cancelMainBtn.addEventListener('click', () => {
+    if (routingControl) map.removeControl(routingControl);
+    if (destinationMarker) map.removeLayer(destinationMarker);
+    routingControl = null; destinationMarker = null; isAddingWaypoint = false; isAddingCheckpoint = false;
+    setRouteState('IDLE');
+});
+
+// ================= KODE BARU DIMULAI DI SINI =================
+DOM.placeModalCancelBtn.addEventListener('click', () => {
+    DOM.placeModal.classList.add('hidden');
+});
+
+DOM.placeModalSaveBtn.addEventListener('click', () => {
+    if (editPlaceId) {
+        // Jika dalam mode edit, jalankan fungsi saran
+        submitEditSuggestion();
+    } else {
+        // Jika dalam mode tambah, jalankan fungsi simpan baru
+        saveNewPlace();
+    }
+});
     });
 </script>
 </body>
