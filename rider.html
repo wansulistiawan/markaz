@@ -1312,149 +1312,131 @@ window.updateMemberRole = updateMemberRole;
 		// ==================================================
 //          KODE LOGIKA PUSH-TO-TALK (VERSI BARU)
 // ==================================================
-let isTalking = false;
-let isLocked = false;
-let initialX = 0;
-let isDragging = false;
+	let isTalking = false;
+    let isLocked = false;
+    let initialX = 0;
+    let isDragging = false;
+    let pressTimer = null;
 
-// Variabel untuk menyimpan rekaman
-let mediaRecorder;
-let audioChunks = [];
+    let mediaRecorder;
+    let audioChunks = [];
 
-// === FUNGSI LEVEL BAWAH (Perekaman) ===
-const startRecording = async () => {
-    // (Fungsi ini sudah benar, tidak perlu diubah)
-    audioChunks = [];
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.addEventListener("dataavailable", event => {
-            audioChunks.push(event.data);
-        });
-        mediaRecorder.addEventListener("stop", async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            if (audioBlob.size < 1000) return;
-            try {
-                const base64Audio = await blobToBase64(audioBlob);
-                const payload = {
-                    senderId: auth.currentUser.uid,
-                    senderName: auth.currentUser.displayName,
-                    audioData: base64Audio,
-                    timestamp: Date.now()
-                };
-                const voiceMessagesRef = ref(rtdb, `groups/${currentGroupId}/voice_messages`);
-                await push(voiceMessagesRef, payload);
-            } catch (error) {
-                console.error("Gagal mengirim pesan suara:", error);
-            }
-        });
-        mediaRecorder.start();
-        console.log("Merekam suara...");
-    } catch (err) {
-        console.error("Error mengakses mikrofon:", err);
+    const startRecording = async () => {
+        audioChunks = [];
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.addEventListener("dataavailable", event => {
+                audioChunks.push(event.data);
+            });
+            mediaRecorder.addEventListener("stop", async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                if (audioBlob.size < 1000) return;
+                try {
+                    const base64Audio = await blobToBase64(audioBlob);
+                    const payload = {
+                        senderId: auth.currentUser.uid,
+                        senderName: auth.currentUser.displayName,
+                        audioData: base64Audio,
+                        timestamp: Date.now()
+                    };
+                    const voiceMessagesRef = ref(rtdb, `groups/${currentGroupId}/voice_messages`);
+                    await push(voiceMessagesRef, payload);
+                } catch (error) {
+                    console.error("Gagal mengirim pesan suara:", error);
+                }
+            });
+            mediaRecorder.start();
+            console.log("Merekam suara...");
+        } catch (err) {
+            console.error("Error mengakses mikrofon:", err);
+            isTalking = false;
+            DOM.pttBtn.classList.remove('bg-red-600', 'scale-110');
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+            console.log("Perekaman dihentikan.");
+        }
+    };
+
+    const startTalking = () => {
+        if (isTalking) return;
+        isTalking = true;
+        DOM.pttBtn.classList.add('bg-red-600', 'scale-110');
+        startRecording();
+    };
+
+    const stopTalking = () => {
+        if (!isTalking || isLocked) return;
         isTalking = false;
         DOM.pttBtn.classList.remove('bg-red-600', 'scale-110');
-    }
-};
+        stopRecording();
+    };
 
-const stopRecording = () => {
-    // (Fungsi ini sudah benar, tidak perlu diubah)
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-        mediaRecorder.stop();
-        console.log("Perekaman dihentikan.");
-    }
-};
+    const lockTalk = () => {
+        if (isLocked) return;
+        isLocked = true;
+        DOM.pttIconMic.classList.add('hidden');
+        DOM.pttIconStop.classList.remove('hidden');
+        if (!isTalking) {
+            startTalking();
+        }
+    };
 
-// === FUNGSI LEVEL ATAS (Aksi Pengguna) ===
-const startTalking = () => {
-    if (isTalking) return;
-    isTalking = true;
-    DOM.pttBtn.classList.add('bg-red-600', 'scale-110');
-    startRecording();
-};
+    const unlockTalk = () => {
+        if (!isLocked) return;
+        isLocked = false;
+        isTalking = false;
+        DOM.pttIconMic.classList.remove('hidden');
+        DOM.pttIconStop.classList.add('hidden');
+        DOM.pttBtn.classList.remove('bg-red-600', 'scale-110');
+        stopRecording();
+    };
 
-const stopTalking = () => {
-    if (!isTalking || isLocked) return;
-    isTalking = false;
-    DOM.pttBtn.classList.remove('bg-red-600', 'scale-110');
-    stopRecording();
-};
-
-const lockTalk = () => {
-    if (isLocked) return; // Jangan kunci jika sudah terkunci
-    isLocked = true;
-    DOM.pttIconMic.classList.add('hidden');
-    DOM.pttIconStop.classList.remove('hidden');
-    // Jika belum bicara, mulai bicara. Jika sudah, biarkan saja.
-    if (!isTalking) {
+    const handlePressStart = (e) => {
+        if (isLocked) {
+            return;
+        }
+        e.preventDefault();
+        isDragging = false;
+        initialX = e.touches ? e.touches[0].clientX : e.clientX;
+        DOM.pttBtn.style.transition = 'none';
         startTalking();
-    }
-};
-
-const unlockTalk = () => {
-    if (!isLocked) return; // Jangan buka kunci jika tidak terkunci
-    isLocked = false;
-    isTalking = false; // Paksa status berhenti
-    DOM.pttIconMic.classList.remove('hidden');
-    DOM.pttIconStop.classList.add('hidden');
-    DOM.pttBtn.classList.remove('bg-red-600', 'scale-110');
-    stopRecording();
-};
-
-// === EVENT LISTENERS (YANG DIPERBAIKI) ===
-const handlePressStart = (e) => {
-    // Jika PTT sedang terkunci, satu-satunya aksi yang diizinkan adalah 'click' untuk membuka,
-    // jadi kita abaikan 'touchstart' atau 'mousedown' untuk memulai rekaman baru.
-    if (isLocked) {
-        return;
-    }
-    
-    e.preventDefault();
-    isDragging = false;
-    initialX = e.touches ? e.touches[0].clientX : e.clientX;
-    DOM.pttBtn.style.transition = 'none';
-
-    // Langsung mulai bicara saat tombol disentuh/ditekan
-    startTalking();
-
-    const handlePressMove = (moveEvent) => {
-        const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
-        const deltaX = initialX - currentX;
-        
-        if (deltaX > 0) {
-            const dragDistance = Math.max(-60, -deltaX);
-            DOM.pttBtn.style.transform = `translateX(${dragDistance}px)`;
-        }
-
-        if (deltaX > 40 && !isLocked) {
-            isDragging = true;
-            lockTalk();
-            cleanupListeners(); // Langsung bersihkan listener setelah lock
-        }
+        const handlePressMove = (moveEvent) => {
+            const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+            const deltaX = initialX - currentX;
+            if (deltaX > 0) {
+                const dragDistance = Math.max(-60, -deltaX);
+                DOM.pttBtn.style.transform = `translateX(${dragDistance}px)`;
+            }
+            if (deltaX > 40 && !isLocked) {
+                isDragging = true;
+                lockTalk();
+                cleanupListeners();
+            }
+        };
+        const handlePressEnd = () => {
+            if (!isDragging) {
+                stopTalking();
+            }
+            cleanupListeners();
+        };
+        const cleanupListeners = () => {
+            DOM.pttBtn.style.transition = 'transform 0.2s ease-out';
+            DOM.pttBtn.style.transform = 'translateX(0px)';
+            window.removeEventListener('mousemove', handlePressMove);
+            window.removeEventListener('touchmove', handlePressMove);
+            window.removeEventListener('mouseup', handlePressEnd);
+            window.removeEventListener('touchend', handlePressEnd);
+        };
+        window.addEventListener('mousemove', handlePressMove);
+        window.addEventListener('touchmove', handlePressMove);
+        window.addEventListener('mouseup', handlePressEnd);
+        window.addEventListener('touchend', handlePressEnd);
     };
-
-    const handlePressEnd = () => {
-        // Jika jari dilepas dan tidak ada gestur drag, itu artinya mode "Tekan & Tahan" selesai
-        if (!isDragging) {
-            stopTalking();
-        }
-        cleanupListeners();
-    };
-
-    const cleanupListeners = () => {
-        DOM.pttBtn.style.transition = 'transform 0.2s ease-out';
-        DOM.pttBtn.style.transform = 'translateX(0px)';
-        window.removeEventListener('mousemove', handlePressMove);
-        window.removeEventListener('touchmove', handlePressMove);
-        window.removeEventListener('mouseup', handlePressEnd);
-        window.removeEventListener('touchend', handlePressEnd);
-    };
-
-    window.addEventListener('mousemove', handlePressMove);
-    window.addEventListener('touchmove', handlePressMove);
-    window.addEventListener('mouseup', handlePressEnd);
-    window.addEventListener('touchend', handlePressEnd);
-};
 
 // Saat tombol "Ubah Ikon" diklik, ia akan memicu input file yang tersembunyi
     DOM.changeGroupIconButton.addEventListener('click', () => {
