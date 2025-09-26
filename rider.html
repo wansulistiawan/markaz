@@ -434,6 +434,7 @@ let communityPlacesData = {};
 const communityPlaceMarkers = {};
 let newPlaceCoords = null;
 let editPlaceId = null;
+let editedPlaceNewCoords = null; 
 
 // Fungsi utama yang dipanggil dari popup di peta
 window.handleMapClickAction = (action, lat, lng) => {
@@ -551,15 +552,25 @@ window.openEditPlaceModal = (placeId) => {
         return;
     }
     const placeData = communityPlacesData[placeId];
-    if (!placeData) return;
+    const marker = communityPlaceMarkers[placeId];
+    if (!placeData || !marker) return;
 
     editPlaceId = placeId;
-    newPlaceCoords = null; // Pastikan mode tambah non-aktif
+    newPlaceCoords = null; 
+    editedPlaceNewCoords = marker.getLatLng(); // Simpan posisi awal
+
+    // Aktifkan mode geser untuk marker ini
+    marker.dragging.enable();
+    // Tambahkan listener untuk menangkap posisi baru setelah digeser
+    marker.on('dragend', function(event) {
+        editedPlaceNewCoords = event.target.getLatLng();
+        console.log('Posisi baru disarankan:', editedPlaceNewCoords);
+    });
 
     DOM.placeModalTitle.textContent = "Sarankan Perubahan";
     DOM.placeModalName.value = placeData.name;
     DOM.placeModalCategory.value = placeData.category;
-    DOM.placeModalInfo.textContent = 'Perubahan akan diterapkan jika 3 pengguna menyarankan hal yang sama.';
+    DOM.placeModalInfo.textContent = 'Anda bisa menggeser pin di peta untuk menyarankan lokasi baru.'; // Info baru
     DOM.placeModalSaveBtn.textContent = "Kirim Saran";
     DOM.placeModal.classList.remove('hidden');
 }
@@ -574,6 +585,7 @@ async function submitEditSuggestion() {
     }
     
     const placeRef = doc(db, "community_places", editPlaceId);
+    const marker = communityPlaceMarkers[editPlaceId];
 
     try {
         const placeDoc = await getDoc(placeRef);
@@ -583,39 +595,46 @@ async function submitEditSuggestion() {
         const suggestions = placeData.suggestions || {};
         const newCategory = DOM.placeModalCategory.value;
 
-        // Buat "hash" unik untuk saran ini
-        const suggestionHash = `${newName}|${newCategory}`;
+        // Buat "hash" unik untuk saran ini, SEKARANG TERMASUK KOORDINAT
+        const newLat = editedPlaceNewCoords.lat.toFixed(6); // Pembulatan untuk konsistensi
+        const newLng = editedPlaceNewCoords.lng.toFixed(6);
+        const suggestionHash = `${newName}|${newCategory}|${newLat}|${newLng}`;
         
-        // Inisialisasi jika ini saran baru
         if (!suggestions[suggestionHash]) {
             suggestions[suggestionHash] = [];
         }
 
-        // Tambahkan UID pengguna ke daftar pendukung (jika belum ada)
         if (!suggestions[suggestionHash].includes(user.uid)) {
             suggestions[suggestionHash].push(user.uid);
         }
 
-        // Periksa apakah sudah mencapai 3 suara
         if (suggestions[suggestionHash].length >= 3) {
-            // SUDAH 3 SUARA! Lakukan perubahan
+            // Lakukan perubahan, SEKARANG TERMASUK KOORDINAT
             await updateDoc(placeRef, {
                 name: newName,
                 category: newCategory,
-                suggestions: {} // Reset saran setelah berhasil diubah
+                lat: editedPlaceNewCoords.lat,
+                lng: editedPlaceNewCoords.lng,
+                suggestions: {} 
             });
             DOM.status.textContent = `Perubahan pada "${newName}" berhasil diterapkan!`;
         } else {
-            // BELUM 3 SUARA. Cukup simpan sarannya.
             await updateDoc(placeRef, { suggestions: suggestions });
             const voteCount = suggestions[suggestionHash].length;
             DOM.status.textContent = `Saran Anda tersimpan. Butuh ${3 - voteCount} suara lagi.`;
         }
+        
         DOM.placeModal.classList.add('hidden');
 
     } catch (error) {
         console.error("Gagal mengirim saran:", error);
         alert("Terjadi kesalahan saat mengirim saran.");
+    } finally {
+        // PENTING: Matikan kembali mode geser & listener setelah selesai
+        if (marker) {
+            marker.dragging.disable();
+            marker.off('dragend');
+        }
     }
 }
 	
@@ -2012,6 +2031,14 @@ DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
 
 // ================= KODE BARU DIMULAI DI SINI =================
 DOM.placeModalCancelBtn.addEventListener('click', () => {
+    // Jika sedang dalam mode edit, reset posisi marker dan matikan mode geser
+    if (editPlaceId && communityPlaceMarkers[editPlaceId]) {
+        const marker = communityPlaceMarkers[editPlaceId];
+        const originalData = communityPlacesData[editPlaceId];
+        marker.setLatLng([originalData.lat, originalData.lng]); // Kembalikan ke posisi awal
+        marker.dragging.disable();
+        marker.off('dragend');
+    }
     DOM.placeModal.classList.add('hidden');
 });
 
