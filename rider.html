@@ -279,6 +279,16 @@
                 <label for="place-modal-category" class="block mb-1 text-sm font-medium text-gray-300">Kategori</label>
                 <select id="place-modal-category" class="w-full bg-gray-700 text-white rounded-lg py-2 px-3 appearance-none role-select"></select>
             </div>
+			 <div id="place-modal-move-container" class="hidden">
+                 <label class="block mb-1 text-sm font-medium text-gray-300">Ubah Posisi</label>
+                 <button id="place-modal-move-btn" class="w-full text-left bg-gray-700 hover:bg-gray-600 font-bold py-2 px-3 rounded-lg flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                    Pindahkan Pin di Peta
+                 </button>
+            </div>
             <p id="place-modal-info" class="text-xs text-amber-300"></p>
         </div>
         <div class="flex justify-end gap-4 mt-6">
@@ -396,6 +406,8 @@
     placeModalInfo: document.getElementById('place-modal-info'),
     placeModalCancelBtn: document.getElementById('place-modal-cancel-btn'),
     placeModalSaveBtn: document.getElementById('place-modal-save-btn'),
+	placeModalMoveContainer: document.getElementById('place-modal-move-container'),
+    placeModalMoveBtn: document.getElementById('place-modal-move-btn'),
 };
 
     const roles = {
@@ -435,6 +447,7 @@ const communityPlaceMarkers = {};
 let newPlaceCoords = null;
 let editPlaceId = null;
 let editedPlaceNewCoords = null; 
+let isMovingPlace = false;
 
 // Fungsi utama yang dipanggil dari popup di peta
 window.handleMapClickAction = (action, lat, lng) => {
@@ -496,6 +509,37 @@ async function saveNewPlace() {
         alert("Terjadi kesalahan saat menyimpan tempat.");
     }
 }
+
+function startMovePlaceMode() {
+    isMovingPlace = true;
+    DOM.placeModal.classList.add('hidden'); // Sembunyikan form
+    DOM.mapContainer.classList.add('adding-checkpoint'); // Ganti cursor jadi crosshair
+    DOM.status.textContent = "Klik di peta untuk memilih lokasi baru.";
+}
+
+window.confirmNewPlaceLocation = () => {
+    const marker = communityPlaceMarkers[editPlaceId];
+    editedPlaceNewCoords = marker.getLatLng(); // Simpan koordinat baru
+    
+    isMovingPlace = false;
+    map.closePopup(); // Tutup popup konfirmasi
+    DOM.mapContainer.classList.remove('adding-checkpoint'); // Kembalikan cursor
+    DOM.status.textContent = "Lokasi baru ditetapkan. Silakan simpan saran Anda.";
+    DOM.placeModal.classList.remove('hidden'); // Tampilkan lagi form edit
+}
+
+window.cancelNewPlaceLocation = () => {
+    const marker = communityPlaceMarkers[editPlaceId];
+    const originalData = communityPlacesData[editPlaceId];
+    marker.setLatLng([originalData.lat, originalData.lng]); // Kembalikan marker ke posisi semula
+    
+    isMovingPlace = false;
+    map.closePopup();
+    DOM.mapContainer.classList.remove('adding-checkpoint');
+    DOM.status.textContent = "Pemindahan lokasi dibatalkan.";
+    DOM.placeModal.classList.remove('hidden');
+}
+
 	// Listener utama untuk semua tempat di database
 function listenToCommunityPlaces() {
     const placesRef = collection(db, 'community_places');
@@ -552,26 +596,18 @@ window.openEditPlaceModal = (placeId) => {
         return;
     }
     const placeData = communityPlacesData[placeId];
-    const marker = communityPlaceMarkers[placeId];
-    if (!placeData || !marker) return;
+    if (!placeData) return;
 
     editPlaceId = placeId;
     newPlaceCoords = null; 
-    editedPlaceNewCoords = marker.getLatLng(); // Simpan posisi awal
-
-    // Aktifkan mode geser untuk marker ini
-    marker.dragging.enable();
-    // Tambahkan listener untuk menangkap posisi baru setelah digeser
-    marker.on('dragend', function(event) {
-        editedPlaceNewCoords = event.target.getLatLng();
-        console.log('Posisi baru disarankan:', editedPlaceNewCoords);
-    });
+    editedPlaceNewCoords = L.latLng(placeData.lat, placeData.lng); // Simpan posisi awal
 
     DOM.placeModalTitle.textContent = "Sarankan Perubahan";
     DOM.placeModalName.value = placeData.name;
     DOM.placeModalCategory.value = placeData.category;
-    DOM.placeModalInfo.textContent = 'Anda bisa menggeser pin di peta untuk menyarankan lokasi baru.'; // Info baru
+    DOM.placeModalInfo.textContent = '';
     DOM.placeModalSaveBtn.textContent = "Kirim Saran";
+    DOM.placeModalMoveContainer.classList.remove('hidden'); // Tampilkan tombol pindah posisi
     DOM.placeModal.classList.remove('hidden');
 }
 
@@ -579,19 +615,8 @@ window.openEditPlaceModal = (placeId) => {
 async function submitEditSuggestion() {
     const user = auth.currentUser;
     const newName = DOM.placeModalName.value.trim();
-    
-    // PERBAIKAN: Dapatkan marker di awal dan langsung periksa
-    const marker = communityPlaceMarkers[editPlaceId];
-
     if (!user || !editPlaceId || !newName) {
         alert("Nama tempat tidak boleh kosong.");
-        return;
-    }
-
-    // PERBAIKAN: Jika marker tidak ada saat fungsi ini dipanggil, hentikan proses dengan aman.
-    if (!marker) {
-        alert("Marker untuk tempat ini tidak ditemukan. Mungkin sudah ada perubahan. Silakan tutup dan coba lagi.");
-        DOM.placeModal.classList.add('hidden');
         return;
     }
     
@@ -619,10 +644,8 @@ async function submitEditSuggestion() {
 
         if (suggestions[suggestionHash].length >= 3) {
             await updateDoc(placeRef, {
-                name: newName,
-                category: newCategory,
-                lat: editedPlaceNewCoords.lat,
-                lng: editedPlaceNewCoords.lng,
+                name: newName, category: newCategory,
+                lat: editedPlaceNewCoords.lat, lng: editedPlaceNewCoords.lng,
                 suggestions: {} 
             });
             DOM.status.textContent = `Perubahan pada "${newName}" berhasil diterapkan!`;
@@ -633,14 +656,13 @@ async function submitEditSuggestion() {
         }
         
         DOM.placeModal.classList.add('hidden');
-
     } catch (error) {
         console.error("Gagal mengirim saran:", error);
         alert("Terjadi kesalahan saat mengirim saran.");
     } finally {
-        // Bagian ini sekarang aman karena 'marker' sudah dipastikan ada di awal.
-        marker.dragging.disable();
-        marker.off('dragend');
+        // Reset state setelah selesai
+        editPlaceId = null;
+        editedPlaceNewCoords = null;
     }
 }
 	
@@ -904,6 +926,31 @@ async function updateGroupVisibility() {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         map.on('click', (e) => {
+		// JIKA SEDANG DALAM MODE PINDAH LOKASI
+    if (isMovingPlace) {
+        const newCoords = e.latlng;
+        const marker = communityPlaceMarkers[editPlaceId];
+        if (marker) {
+            marker.setLatLng(newCoords); // Pindahkan marker ke lokasi klik
+
+            const confirmPopupContent = `
+                <div class="text-center space-y-2 p-1">
+                    <h4 class="font-bold">Gunakan Lokasi Ini?</h4>
+                    <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 px-3 rounded-lg" onclick="window.confirmNewPlaceLocation()">
+                        Tetapkan Lokasi
+                    </button>
+                    <button class="w-full bg-gray-600 hover:bg-gray-700 text-white text-sm font-bold py-2 px-3 rounded-lg" onclick="window.cancelNewPlaceLocation()">
+                        Batal
+                    </button>
+                </div>`;
+            
+            L.popup({ closeButton: false, closeOnClick: false, closeOnEscapeKey: false })
+                .setLatLng(newCoords)
+                .setContent(confirmPopupContent)
+                .openOn(map);
+        }
+        return; // Hentikan eksekusi lebih lanjut
+    }
     if (isAddingWaypoint || isAddingCheckpoint) {
         if (isAddingWaypoint) addWaypointToRoute(e.latlng);
         if (isAddingCheckpoint) showCheckpointPrompt(e.latlng);
@@ -2037,17 +2084,14 @@ DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
 
 // ================= KODE BARU DIMULAI DI SINI =================
 DOM.placeModalCancelBtn.addEventListener('click', () => {
-    // Jika sedang dalam mode edit, reset posisi marker dan matikan mode geser
-    if (editPlaceId && communityPlaceMarkers[editPlaceId]) {
-        const marker = communityPlaceMarkers[editPlaceId];
-        const originalData = communityPlacesData[editPlaceId];
-        marker.setLatLng([originalData.lat, originalData.lng]); // Kembalikan ke posisi awal
-        marker.dragging.disable();
-        marker.off('dragend');
-    }
     DOM.placeModal.classList.add('hidden');
+	
+	if (isMovingPlace) {
+        isMovingPlace = false;
+        DOM.mapContainer.classList.remove('adding-checkpoint');
+    }
 });
-
+DOM.placeModalMoveBtn.addEventListener('click', startMovePlaceMode);
 DOM.placeModalSaveBtn.addEventListener('click', () => {
     if (editPlaceId) {
         // Jika dalam mode edit, jalankan fungsi saran
