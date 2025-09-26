@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <script src="https://cdn.tailwindcss.com"></script>
+	<script src='https://storage.googleapis.com/leaflet-offline/leaflet.tilelayer.offline.js'></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
 	
@@ -94,6 +95,15 @@
     <button id="search-fab" class="fab bg-amber-500 hover:bg-amber-600" title="Cari Rute">
     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
 </button>
+<div class="p-2 bg-gray-800 bg-opacity-80 backdrop-blur-sm rounded-xl flex flex-col gap-2">
+         <button id="save-map-btn" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+            Simpan Peta
+        </button>
+         <button id="clear-map-btn" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-sm">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.033-2.134h-3.868c-1.123 0-2.033.954-2.033 2.134v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+             Hapus Cache
+        </button>
     <button id="gmaps-fab" class="fab bg-blue-500 hover:bg-blue-600" title="Buka dari Link Google Maps">
         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
     </button>
@@ -335,6 +345,7 @@
 	const groupFocusMarkers = {};
 	let allUsersData = {};
 	let audioUnlocked = false;
+	let tileLayer; 
 
     const DOM = {
     mapContainer: document.getElementById('map-container'),
@@ -563,11 +574,11 @@ function listenToCommunityPlaces() {
             
             const categoryInfo = placeCategories[placeData.category] || placeCategories.lainnya;
             const placeIcon = L.divIcon({
-                className: 'custom-place-icon',
-                html: `<div class="text-3xl">${categoryInfo.icon}</div>`,
-                iconSize: [30, 30],
-                iconAnchor: [15, 30]
-            });
+    className: 'custom-place-icon',
+    html: `<div class="text-xl">${categoryInfo.icon}</div>`, // <-- UBAH UKURAN FONT DI SINI
+    iconSize: [18, 18],   // <-- PERKECIL UKURAN KOTAK IKON
+    iconAnchor: [10, 18] // <-- SESUAIKAN JANGKARNYA
+});
 
             const popupContent = `
                 <div class="p-1">
@@ -922,9 +933,18 @@ async function updateGroupVisibility() {
 
     function initMap() {
         if (map) return;
-        map = L.map('map', { zoomControl: false }).setView([-2.5489, 118.0149], 5);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
+map = L.map('map', { zoomControl: false }).setView([2.9731, 99.6251], 13); // Center di Kisaran
+const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const tileLayerOptions = {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap',
+    subdomains: 'abc' // Diperlukan oleh plugin
+};
+tileLayer = L.tileLayer.offline(tileUrl, tileLayerOptions); 
+tileLayer.addTo(map);
+
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+
         map.on('click', (e) => {
 		// JIKA SEDANG DALAM MODE PINDAH LOKASI
     if (isMovingPlace) {
@@ -2100,6 +2120,27 @@ DOM.placeModalSaveBtn.addEventListener('click', () => {
         // Jika dalam mode tambah, jalankan fungsi simpan baru
         saveNewPlace();
     }
+	
+	const saveMapBtn = document.getElementById('save-map-btn');
+const clearMapBtn = document.getElementById('clear-map-btn');
+
+saveMapBtn.addEventListener('click', () => {
+    DOM.status.textContent = 'Menyimpan peta, jangan tutup halaman...';
+    // Plugin akan menyimpan semua tile yang terlihat di layar
+    tileLayer.saveTiles(map.getZoom(), () => {
+        DOM.status.textContent = 'Area peta berhasil disimpan!';
+        alert('Area peta yang terlihat di layar telah disimpan untuk penggunaan offline.');
+    });
+});
+
+clearMapBtn.addEventListener('click', () => {
+    if (confirm('Apakah Anda yakin ingin menghapus semua data peta offline?')) {
+        tileLayer.clearTiles(() => {
+            DOM.status.textContent = 'Cache peta berhasil dihapus.';
+            alert('Semua data peta offline telah dihapus.');
+        });
+    }
+});
 });
     });
 </script>
