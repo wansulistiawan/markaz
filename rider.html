@@ -1648,39 +1648,44 @@ function displaySharedRoute(routeData) {
 
     DOM.status.textContent = 'Memproses link, mohon tunggu...';
 
-    // Fungsi internal untuk memproses URL yang sudah final (panjang)
     const processResolvedUrl = async (resolvedUrl) => {
         // Metode 1: Mencari koordinat @-7.123,110.456 (paling akurat)
         const coordRegex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
         const coordMatch = resolvedUrl.match(coordRegex);
-
         if (coordMatch && coordMatch[1] && coordMatch[2]) {
-            console.log("Koordinat ditemukan langsung dari URL:", coordMatch);
             const lat = parseFloat(coordMatch[1]);
             const lng = parseFloat(coordMatch[2]);
-            
             let placeName = "Lokasi dari Google Maps";
             const placeNameRegex = /google\.com\/maps\/place\/([^\/]+)\//;
             const placeNameMatch = resolvedUrl.match(placeNameRegex);
             if (placeNameMatch && placeNameMatch[1]) {
                 placeName = decodeURIComponent(placeNameMatch[1].replace(/\+/g, ' '));
             }
-
             window.showRouteTo([lat, lng], placeName);
             DOM.status.textContent = "Rute berhasil dibuat dari link.";
             return;
         }
 
-        // Metode 2: Jika tidak ada koordinat, cari nama tempat dari /place/ atau /search/
-        const placeRegex = /google\.com\/maps\/(?:place|search)\/([^\/@?]+)/;
-        const placeMatch = resolvedUrl.match(placeRegex);
+        // METODE 2 BARU: Mencari Plus Code (contoh: XMFPK28JGQ)
+        const plusCodeRegex = /\b([2-9CFGHJ-MP-Z]{4}\+[2-9CFGHJ-MP-Z]{2,}|[A-Z0-9]{10,})\b/;
+        const plusCodeMatch = resolvedUrl.match(plusCodeRegex);
+        let query = null;
+        if (plusCodeMatch && plusCodeMatch[1]) {
+            query = plusCodeMatch[1];
+            console.log("Plus Code ditemukan dari URL:", query);
+        } else {
+            // Metode 3 (Fallback): Cari nama tempat dari /place/ atau /search/
+            const placeRegex = /google\.com\/maps\/(?:place|search)\/([^\/@?]+)/;
+            const placeMatch = resolvedUrl.match(placeRegex);
+            if (placeMatch && placeMatch[1]) {
+                query = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+                console.log("Nama tempat ditemukan dari URL:", query);
+            }
+        }
 
-        if (placeMatch && placeMatch[1]) {
-            const query = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-            console.log("Nama tempat ditemukan dari URL:", query);
+        // Jika kita punya query (baik dari Plus Code atau nama tempat), cari lokasinya
+        if (query) {
             DOM.status.textContent = `Mencari lokasi untuk "${query}"...`;
-            
-            // Gunakan API OpenCage yang sudah ada untuk mencari koordinat berdasarkan nama
             const apiKey = '7ce7547ff4c941f9a0aef61c5e384890';
             const apiUrl = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(query)}&key=${apiKey}&limit=1&countrycode=id`;
             try {
@@ -1692,38 +1697,31 @@ function displaySharedRoute(routeData) {
                     window.showRouteTo(coords, location.formatted);
                     DOM.status.textContent = "Rute berhasil dibuat dari nama tempat di link.";
                 } else {
-                    throw new Error("Tidak ada hasil ditemukan untuk nama tempat tersebut.");
+                    throw new Error(`Tidak ada hasil ditemukan untuk "${query}"`);
                 }
             } catch (error) {
-                 alert(`Gagal menemukan lokasi dari nama tempat di link: ${error.message}`);
+                 alert(`Gagal menemukan lokasi dari link: ${error.message}`);
                  DOM.status.textContent = "Gagal memproses link.";
             }
             return;
         }
         
         // Jika semua metode gagal
-        alert("Link tidak valid atau formatnya tidak didukung. Pastikan link berisi koordinat atau nama tempat yang jelas.");
+        alert("Link tidak valid atau formatnya tidak didukung.");
         DOM.status.textContent = "Gagal memproses link.";
     };
     
-    // Logika utama untuk memeriksa apakah link perlu diperpanjang atau tidak
+    // Logika Awal (diperbaiki agar lebih umum)
     if (url.includes('/maps/place/') || url.includes('/@')) {
-        console.log("Link panjang terdeteksi, memproses langsung...");
         await processResolvedUrl(url);
     } else {
-        // Jika tidak, anggap ini link pendek dan coba perpanjang
-        console.log("Link pendek terdeteksi, mencoba mengurai...");
         try {
             const response = await fetch(`https://unshorten.me/json/${encodeURIComponent(url)}`);
             if (!response.ok) throw new Error('Gagal menghubungi layanan pengurai link.');
-            
             const data = await response.json();
-            
             if (data.success && data.resolved_url) {
                 await processResolvedUrl(data.resolved_url);
             } else {
-                // Coba proses URL asli sebagai fallback jika unshorten gagal
-                console.warn("Gagal mengurai link, mencoba memproses URL asli...");
                 await processResolvedUrl(url);
             }
         } catch (error) {
