@@ -922,20 +922,17 @@ async function updateGroupVisibility() {
         DOM.suggestionsContainer.classList.add('hidden');
         return;
     }
-    
-    // Kunci API Anda sudah dimasukkan di sini
-    const apiKey = '7ce7547ff4c941f9a0aef61c5e384890'; 
-    const apiUrl = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(query)}&key=${apiKey}&limit=5&countrycode=id`;
 
-    try {
-        const res = await fetch(apiUrl);
-        const data = await res.json();
-        // Sekarang kita kirim data.results ke fungsi display
-        displaySuggestions(data.results);
-    } catch (error) {
-        console.error('Gagal mengambil saran dari OpenCage:', error);
-        DOM.status.textContent = "Gagal mengambil saran lokasi. Periksa koneksi Anda.";
-    }
+    // Jalankan kedua pencarian secara bersamaan untuk efisiensi
+    const [firestoreResults, openCageResults] = await Promise.all([
+        searchFirestorePlaces(query),
+        searchOpenCage(query)
+    ]);
+
+    // Gabungkan hasilnya, prioritaskan hasil dari Firestore (komunitas)
+    const combinedResults = [...firestoreResults, ...openCageResults];
+    
+    displaySuggestions(combinedResults);
 }
     
     function displaySuggestions(suggestions) {
@@ -944,17 +941,38 @@ async function updateGroupVisibility() {
         suggestions.forEach(s => {
             const item = document.createElement('div');
             item.className = 'suggestion-item';
-            // OpenCage menggunakan 'formatted' untuk nama lengkap
-            item.textContent = s.formatted;
+            
+            let itemName, itemDetails;
+            
+            // Periksa tipe hasil untuk menampilkan teks yang benar
+            if (s.type === 'firestore') {
+                const categoryInfo = placeCategories[s.category] || placeCategories.lainnya;
+                itemName = `${categoryInfo.icon} ${s.name}`;
+                itemDetails = ' (Komunitas)'; // Penanda hasil internal
+            } else { // type === 'opencage'
+                itemName = s.formatted;
+                itemDetails = '';
+            }
+            
+            item.innerHTML = `<div>${itemName}<span class="text-gray-400 text-xs">${itemDetails}</span></div>`;
             
             item.onclick = () => {
-                DOM.searchInput.value = s.formatted;
+                let coords, destinationName;
+
+                // Periksa tipe hasil untuk mengambil data yang benar saat di-klik
+                if (s.type === 'firestore') {
+                    coords = [s.lat, s.lng];
+                    destinationName = s.name;
+                } else { // type === 'opencage'
+                    coords = [s.geometry.lat, s.geometry.lng];
+                    destinationName = s.formatted;
+                }
+
+                DOM.searchInput.value = destinationName;
                 DOM.suggestionsContainer.classList.add('hidden');
                 DOM.searchModal.classList.add('hidden');
                 
-                // OpenCage menyimpan koordinat di dalam 'geometry'
-                const coords = [s.geometry.lat, s.geometry.lng];
-                window.showRouteTo(coords, s.formatted);
+                window.showRouteTo(coords, destinationName);
             };
             DOM.suggestionsContainer.appendChild(item);
         });
@@ -963,6 +981,46 @@ async function updateGroupVisibility() {
         DOM.suggestionsContainer.classList.add('hidden');
     }
 }
+
+// Fungsi baru untuk mencari HANYA di Firestore
+async function searchFirestorePlaces(queryText) {
+    const q = query(
+        collection(db, 'community_places'),
+        where('name', '>=', queryText),
+        where('name', '<=', queryText + '\uf8ff') // Trik untuk pencarian "starts-with"
+    );
+
+    try {
+        const querySnapshot = await getDocs(q);
+        const results = [];
+        querySnapshot.forEach((doc) => {
+            // Tambahkan tipe agar mudah dikenali nanti
+            results.push({ id: doc.id, type: 'firestore', ...doc.data() });
+        });
+        return results;
+    } catch (error) {
+        console.error("Gagal mencari di Firestore:", error);
+        return []; // Kembalikan array kosong jika error
+    }
+}
+
+// Fungsi baru untuk mencari HANYA di OpenCage
+async function searchOpenCage(queryText) {
+    const apiKey = '7ce7547ff4c941f9a0aef61c5e384890'; 
+    const apiUrl = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(queryText)}&key=${apiKey}&limit=5&countrycode=id`;
+
+    try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        // Tambahkan tipe agar mudah dikenali nanti
+        return data.results.map(r => ({ type: 'opencage', ...r }));
+    } catch (error) {
+        console.error('Gagal mengambil saran dari OpenCage:', error);
+        return []; // Kembalikan array kosong jika error
+    }
+}
+// ================= KODE BARU SELESAI DI SINI =================
+
 
     function initMap() {
         if (map) return;
@@ -1013,7 +1071,7 @@ map.on('mousedown', function(e) {
                 <button class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-bold py-2 px-3 rounded-lg" onclick="window.handleMapClickAction('add_place', ${latlng.lat}, ${latlng.lng})">Beri Nama Tempat</button>
             </div>`;
 
-        L.popup({ closeButton: true })
+        L.popup({ closeButton: true, closeOnClick: false })
             .setLatLng(latlng)
             .setContent(popupContent)
             .openOn(map);
