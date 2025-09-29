@@ -1027,36 +1027,7 @@ async function searchOpenCage(queryText) {
         map = L.map('map', { zoomControl: false }).setView([-2.5489, 118.0149], 5);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
-        map.on('click', function(e) {
-    // 1. Logika untuk mengonfirmasi pemindahan lokasi pin tempat
-    if (isMovingPlace) {
-        const newCoords = e.latlng;
-        const marker = communityPlaceMarkers[editPlaceId];
-        if (marker) {
-            marker.setLatLng(newCoords);
-            const confirmPopupContent = `
-                <div class="text-center space-y-2 p-1">
-                    <h4 class="font-bold">Gunakan Lokasi Ini?</h4>
-                    <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 px-3 rounded-lg" onclick="window.confirmNewPlaceLocation()">Tetapkan Lokasi</button>
-                    <button class="w-full bg-gray-600 hover:bg-gray-700 text-white text-sm font-bold py-2 px-3 rounded-lg" onclick="window.cancelNewPlaceLocation()">Batal</button>
-                </div>`;
-            
-            L.popup({ closeButton: false, closeOnClick: false, closeOnEscapeKey: false })
-                .setLatLng(newCoords)
-                .setContent(confirmPopupContent)
-                .openOn(map);
-        }
-        return; // Hentikan di sini
-    }
-
-    // 2. Logika untuk menambah waypoint atau checkpoint
-    if (isAddingWaypoint || isAddingCheckpoint) {
-        if (isAddingWaypoint) addWaypointToRoute(e.latlng);
-        if (isAddingCheckpoint) showCheckpointPrompt(e.latlng);
-        return; // Hentikan di sini
-    }
-});
-
+        
 // Listener untuk aksi TAHAN LAMA (long-press)
 const handlePressStart = function(e) {
     // Abaikan jika sedang dalam mode spesifik (pindah lokasi, tambah waypoint, dll)
@@ -1642,44 +1613,46 @@ function displaySharedRoute(routeData) {
         DOM.colorOptions.innerHTML = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#ffffff'].map(c => `<div><input type="radio" name="color" value="${c}" id="c-${c}" class="sr-only modal-input"><label for="c-${c}" class="block w-8 h-8 rounded-full cursor-pointer border-2 border-gray-500" style="background-color:${c};"></label></div>`).join('');
     }
     
-	async function handleGoogleMapsLink() {
+	// HAPUS FUNGSI LAMA 'handleGoogleMapsLink' DAN GANTI DENGAN VERSI FINAL INI
+
+async function handleGoogleMapsLink() {
     const url = prompt("Silakan paste link Google Maps di sini:");
     if (!url) return;
 
     DOM.status.textContent = 'Memproses link, mohon tunggu...';
 
     const processResolvedUrl = async (resolvedUrl) => {
-        // Metode 1: Mencari koordinat @-7.123,110.456 (paling akurat)
+        let query = null;
+        let placeNameForRoute = "Lokasi dari Google Maps";
+
+        // Metode 1 (Prioritas Utama): Mencari koordinat @-7.123,110.456
         const coordRegex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
         const coordMatch = resolvedUrl.match(coordRegex);
         if (coordMatch && coordMatch[1] && coordMatch[2]) {
+            console.log("Koordinat ditemukan langsung dari URL.");
             const lat = parseFloat(coordMatch[1]);
             const lng = parseFloat(coordMatch[2]);
-            let placeName = "Lokasi dari Google Maps";
-            const placeNameRegex = /google\.com\/maps\/place\/([^\/]+)\//;
-            const placeNameMatch = resolvedUrl.match(placeNameRegex);
-            if (placeNameMatch && placeNameMatch[1]) {
-                placeName = decodeURIComponent(placeNameMatch[1].replace(/\+/g, ' '));
-            }
-            window.showRouteTo([lat, lng], placeName);
+            window.showRouteTo([lat, lng], placeNameForRoute);
             DOM.status.textContent = "Rute berhasil dibuat dari link.";
             return;
         }
 
-        // METODE 2 BARU: Mencari Plus Code (contoh: XMFPK28JGQ)
-        const plusCodeRegex = /\b([2-9CFGHJ-MP-Z]{4}\+[2-9CFGHJ-MP-Z]{2,}|[A-Z0-9]{10,})\b/;
+        // Metode 2 (Prioritas Kedua): Mencari Plus Code yang valid
+        // Regex ini akan mencari string seperti '8V7XCQF6+XR' atau 'CQF6+XR Cikarang'
+        const plusCodeRegex = /([2-9CFGHJ-MP-Z]{4}\+[2-9CFGHJ-MP-Z]{2,})/;
         const plusCodeMatch = resolvedUrl.match(plusCodeRegex);
-        let query = null;
         if (plusCodeMatch && plusCodeMatch[1]) {
             query = plusCodeMatch[1];
-            console.log("Plus Code ditemukan dari URL:", query);
+            placeNameForRoute = `Plus Code: ${query}`;
+            console.log("Plus Code ditemukan:", query);
         } else {
             // Metode 3 (Fallback): Cari nama tempat dari /place/ atau /search/
             const placeRegex = /google\.com\/maps\/(?:place|search)\/([^\/@?]+)/;
             const placeMatch = resolvedUrl.match(placeRegex);
             if (placeMatch && placeMatch[1]) {
                 query = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-                console.log("Nama tempat ditemukan dari URL:", query);
+                placeNameForRoute = query;
+                console.log("Nama tempat ditemukan:", query);
             }
         }
 
@@ -1694,8 +1667,8 @@ function displaySharedRoute(routeData) {
                 if (data.results && data.results.length > 0) {
                     const location = data.results[0];
                     const coords = [location.geometry.lat, location.geometry.lng];
-                    window.showRouteTo(coords, location.formatted);
-                    DOM.status.textContent = "Rute berhasil dibuat dari nama tempat di link.";
+                    window.showRouteTo(coords, placeNameForRoute);
+                    DOM.status.textContent = "Rute berhasil dibuat dari info di link.";
                 } else {
                     throw new Error(`Tidak ada hasil ditemukan untuk "${query}"`);
                 }
