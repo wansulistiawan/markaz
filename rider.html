@@ -1694,49 +1694,53 @@ function displaySharedRoute(routeData) {
 	// HAPUS FUNGSI LAMA 'handleGoogleMapsLink' DAN GANTI DENGAN VERSI FINAL INI
 
 async function handleGoogleMapsLink() {
-    const url = prompt("Silakan paste link Google Maps di sini:");
+    const url = prompt("Silahkan paste link Google Maps di sini:");
     if (!url) return;
 
     DOM.status.textContent = 'Memproses link, mohon tunggu...';
 
     const processResolvedUrl = async (rawUrl) => {
-        // ==========================================================
-        //         PERBAIKAN KUNCI DITAMBAHKAN DI SINI
-        // ==========================================================
-        // Decode semua karakter URL (%2B -> +, %20 -> spasi, dll) SEBELUM diproses.
-        const resolvedUrl = decodeURIComponent(rawUrl);
-        // ==========================================================
-
+        // Decode URL di awal untuk membersihkan karakter seperti %2B
+        const decodedUrl = decodeURIComponent(rawUrl);
+        
         let query = null;
-        let placeNameForRoute = "Lokasi dari Google Maps";
+
+        // ==========================================================
+        //         LOGIKA PRIORITAS YANG DIPERBAIKI TOTAL
+        // ==========================================================
 
         // Prioritas 1: Cari koordinat @lat,lng
         const coordRegex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
-        const coordMatch = resolvedUrl.match(coordRegex);
-        if (coordMatch && coordMatch[1] && coordMatch[2]) {
+        const coordMatch = decodedUrl.match(coordRegex);
+
+        // Prioritas 2: Cari Plus Code
+        const plusCodeRegex = /([2-9CFGHJ-MP-Z]{4}\+[2-9CFGHJ-MP-Z]{2,})/;
+        const plusCodeMatch = decodedUrl.match(plusCodeRegex);
+
+        if (coordMatch) {
+            // JIKA KOORDINAT DITEMUKAN, LANGSUNG GUNAKAN DAN SELESAI.
+            console.log("Prioritas 1 Ditemukan: Koordinat");
             const lat = parseFloat(coordMatch[1]);
             const lng = parseFloat(coordMatch[2]);
             window.showRouteTo([lat, lng], "Lokasi dari Koordinat Link");
             DOM.status.textContent = "Rute berhasil dibuat dari link.";
-            return;
-        }
-
-        // Prioritas 2: Cari Plus Code
-        const plusCodeRegex = /([2-9CFGHJ-MP-Z]{4}\+[2-9CFGHJ-MP-Z]{2,})/;
-        const plusCodeMatch = resolvedUrl.match(plusCodeRegex);
-        if (plusCodeMatch && plusCodeMatch[1]) {
-            query = plusCodeMatch[1];
-            placeNameForRoute = `Plus Code: ${query}`;
+            return; // Hentikan fungsi di sini
+        } 
+        
+        if (plusCodeMatch) {
+            // JIKA PLUS CODE DITEMUKAN, GUNAKAN HANYA ITU DAN SELESAI.
+            console.log("Prioritas 2 Ditemukan: Plus Code");
+            query = plusCodeMatch[1]; // Query HANYA berisi "XMFP+JGQ"
         } else {
-            // Prioritas 3: Cari nama tempat
+            // JIKA KEDUANYA GAGAL, BARU AMBIL NAMA TEMPAT SEBAGAI PILIHAN TERAKHIR.
+            console.log("Prioritas 3 Ditemukan: Nama Tempat");
             const placeRegex = /google\.com\/maps\/(?:place|search)\/([^\/]+)/;
-            const placeMatch = resolvedUrl.match(placeRegex);
-            if (placeMatch && placeMatch[1]) {
-                // Untuk nama tempat, kita decode lagi untuk memastikan '+' menjadi spasi
-                query = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-                placeNameForRoute = query;
+            const placeMatch = decodedUrl.match(placeRegex);
+            if (placeMatch) {
+                query = placeMatch[1].replace(/\+/g, ' ');
             }
         }
+        // ==========================================================
 
         if (query) {
             DOM.status.textContent = `Mencari lokasi untuk "${query}"...`;
@@ -1747,8 +1751,7 @@ async function handleGoogleMapsLink() {
                 const data = await response.json();
                 if (data.results && data.results.length > 0) {
                     const location = data.results[0];
-                    const coords = [location.geometry.lat, location.geometry.lng];
-                    window.showRouteTo(coords, location.formatted);
+                    window.showRouteTo([location.geometry.lat, location.geometry.lng], location.formatted);
                     DOM.status.textContent = "Rute berhasil dibuat dari info di link.";
                 } else {
                     throw new Error(`Tidak ada hasil ditemukan untuk "${query}"`);
@@ -1764,7 +1767,7 @@ async function handleGoogleMapsLink() {
         DOM.status.textContent = "Gagal memproses link.";
     };
     
-    // Logika untuk mengurai link pendek
+    // Bagian untuk mengurai link pendek (tidak perlu diubah)
     if (url.includes('/maps/place/') || url.includes('/@')) {
         await processResolvedUrl(url);
     } else {
