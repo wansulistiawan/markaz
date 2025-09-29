@@ -344,6 +344,7 @@
 	let audioUnlocked = false;
 	let isNavPaused = false;
 	let wakeLock = null;
+	let displayedSharedRouteTimestamp = null;
 
 const requestWakeLock = async () => {
     if ('wakeLock' in navigator) {
@@ -606,15 +607,21 @@ function listenToCommunityPlaces() {
             });
 
             const popupContent = `
-                <div class="p-1">
-                    <div class="font-bold text-base">${placeData.name}</div>
-                    <div class="text-sm text-gray-300">${categoryInfo.text}</div>
-                    <div class="text-xs text-gray-400 border-t border-gray-600 mt-2 pt-2">Dibuat oleh: ${placeData.creator.name}</div>
-                    <button class="w-full mt-2 bg-yellow-500 hover:bg-yellow-600 text-black text-sm font-bold py-1 px-3 rounded-lg" onclick="window.openEditPlaceModal('${placeId}')">
-                        Sarankan Perubahan
-                    </button>
-                </div>
-            `;
+    <div class="p-1">
+        <div class="font-bold text-base">${placeData.name}</div>
+        <div class="text-sm text-gray-300">${categoryInfo.text}</div>
+        <div class="text-xs text-gray-400 border-t border-gray-600 mt-2 pt-2">Dibuat oleh: ${placeData.creator.name}</div>
+        
+        <div class="flex gap-2 mt-2">
+            <button class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-1 px-3 rounded-lg" onclick="window.showRouteTo([${placeData.lat}, ${placeData.lng}], '${placeData.name.replace(/'/g, "\\'")}')">
+                Rute
+            </button>
+            <button class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black text-sm font-bold py-1 px-3 rounded-lg" onclick="window.openEditPlaceModal('${placeId}')">
+                Edit
+            </button>
+        </div>
+        </div>
+`;
 
             communityPlaceMarkers[placeId] = L.marker([placeData.lat, placeData.lng], { icon: placeIcon })
                 .addTo(map)
@@ -1043,17 +1050,47 @@ DOM.status.textContent = "Peta dimuat. Silakan masuk untuk memulai.";
         DOM.status.textContent = message + " Peta tetap dapat digunakan untuk pencarian.";
     }
     
-    function setRouteState(newState) {
-	
-		if (newState === 'NAVIGATING' && currentRouteState !== 'NAVIGATING') {
+    
+function setRouteState(newState) {
+    if (newState === 'NAVIGATING' && currentRouteState !== 'NAVIGATING') {
         requestWakeLock();
     } else if (newState !== 'NAVIGATING' && currentRouteState === 'NAVIGATING') {
         releaseWakeLock();
     }
-	
-        currentRouteState = newState;
-        updateNavControlsUI();
+
+    // ================= KODE BARU DIMULAI DI SINI =================
+    // Cek jika pengguna adalah Amir dan baru saja menetapkan rute
+    const user = auth.currentUser;
+    if (user && currentGroupData && user.uid === currentGroupData.amir) {
+        if (newState === 'SET' && routingControl) {
+            // Ambil semua titik dari rute
+            const waypoints = routingControl.getWaypoints();
+            // Ubah menjadi format yang bisa disimpan di Firestore
+            const serializableWaypoints = waypoints.map(wp => ({
+                lat: wp.latLng.lat,
+                lng: wp.latLng.lng
+            }));
+
+            // Siapkan data rute untuk disimpan
+            const sharedRouteData = {
+                waypoints: serializableWaypoints,
+                destinationName: window.currentDestinationName || 'Tujuan Bersama',
+                setBy: user.displayName,
+                timestamp: serverTimestamp() // Tandai waktu rute dibuat
+            };
+
+            // Simpan ke Firestore
+            const groupRef = doc(db, 'groups', currentGroupId);
+            updateDoc(groupRef, { sharedRoute: sharedRouteData });
+            console.log('Rute Amir telah dibagikan ke grup.');
+        }
     }
+    // ================= KODE BARU SELESAI DI SINI =================
+
+    currentRouteState = newState;
+    updateNavControlsUI();
+}
+
 
 // Fungsi untuk memformat ulang teks jarak di panel petunjuk arah
 function formatRoutingInstructions() {
@@ -1435,6 +1472,60 @@ async function promoteToAmir(newAmirId) {
     setRouteState('PREVIEW');
 }
 
+function displaySharedRoute(routeData) {
+    if (!userCoords) {
+        alert("Lokasi Anda belum ditemukan untuk menampilkan rute bersama.");
+        return;
+    }
+
+    // Hapus rute lama jika ada
+    if (routingControl) map.removeControl(routingControl);
+    if (destinationMarker) map.removeLayer(destinationMarker);
+
+    // Ubah data dari Firestore kembali menjadi format waypoints Leaflet
+    const waypoints = routeData.waypoints.map(wp => L.latLng(wp.lat, wp.lng));
+    // Titik awal rute selalu lokasi pengguna saat ini
+    waypoints[0] = L.latLng(userCoords); 
+    
+    const destinationName = routeData.destinationName;
+    const destinationCoords = waypoints[waypoints.length - 1];
+
+    // Tampilkan penanda tujuan, tapi TIDAK BISA DIGESER oleh anggota
+    destinationMarker = L.marker(destinationCoords, { icon: createFlagIcon('#e74c3c'), draggable: false })
+        .addTo(map)
+        .bindPopup(`<b>${destinationName}</b><br><small>Rute dari ${routeData.setBy}</small>`)
+        .openPopup();
+    
+    routingControl = L.Routing.control({
+        waypoints: waypoints,
+        routeWhileDragging: false,
+        lineOptions: { styles: [{color: '#6EE7B7', weight: 5}] },
+        createMarker: () => null
+    }).addTo(map);
+
+    // Set status menjadi navigasi agar UI sesuai
+    setRouteState('NAVIGATING');
+    DOM.status.textContent = `Mengikuti rute dari ${routeData.setBy}.`;
+    window.currentDestinationName = destinationName; // Simpan nama tujuan
+    
+    routingControl.on('routesfound', function(e) {
+        // Logika untuk update panel info (sama seperti sebelumnya)
+        const summary = e.routes[0].summary;
+        const totalDistance = (summary.totalDistance / 1000).toFixed(1);
+        const totalTime = Math.round(summary.totalTime / 60);
+        const hours = Math.floor(totalTime / 60);
+        const minutes = totalTime % 60;
+        let timeString = '';
+        if(hours > 0) timeString += `${hours} jam `;
+        if(minutes > 0) timeString += `${minutes} menit`;
+        
+        DOM.navInfoDestination.textContent = destinationName;
+        DOM.navInfoDistance.textContent = `${totalDistance} km`;
+        DOM.navInfoTime.textContent = timeString;
+        formatRoutingInstructions();
+    });
+}
+
     function setupModal() {
         DOM.colorOptions.innerHTML = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#ffffff'].map(c => `<div><input type="radio" name="color" value="${c}" id="c-${c}" class="sr-only modal-input"><label for="c-${c}" class="block w-8 h-8 rounded-full cursor-pointer border-2 border-gray-500" style="background-color:${c};"></label></div>`).join('');
     }
@@ -1528,14 +1619,46 @@ async function promoteToAmir(newAmirId) {
     if (!silent) DOM.groupModal.classList.add('hidden');
 
     if (groupUnsubscribe) groupUnsubscribe();
+    // UBAH TOTAL BLOK LISTENER DI BAWAH INI
     groupUnsubscribe = onSnapshot(groupRef, (doc) => {
-        currentGroupData = doc.data();
+        const groupData = doc.data();
+        if (!groupData) return; // Keluar jika grup sudah tidak ada
+
+        currentGroupData = groupData; // Simpan data grup saat ini
         updateGroupMembersUI(currentGroupData);
         if (myMarker && auth.currentUser) {
             const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
             myMarker.setIcon(createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole));
         }
+
+        // --- LOGIKA BARU UNTUK RUTE BERSAMA ---
+        const user = auth.currentUser;
+        // Jangan lakukan apa-apa jika pengguna adalah Amir (karena dia yang membuat rute)
+        if (user && groupData.amir === user.uid) return;
+
+        const newRoute = groupData.sharedRoute;
+        const newRouteTimestamp = newRoute ? newRoute.timestamp?.toMillis() : null;
+
+        // Jika ada rute baru dan belum pernah kita tampilkan
+        if (newRoute && newRouteTimestamp !== displayedSharedRouteTimestamp) {
+            console.log("Rute bersama baru terdeteksi, menampilkan...");
+            displaySharedRoute(newRoute);
+            displayedSharedRouteTimestamp = newRouteTimestamp;
+
+        // Jika rute dihapus (null) dan kita sedang menampilkannya
+        } else if (!newRoute && displayedSharedRouteTimestamp !== null) {
+            console.log("Rute bersama telah dibatalkan.");
+            // Hapus rute dari peta anggota
+            if (routingControl) map.removeControl(routingControl);
+            if (destinationMarker) map.removeLayer(destinationMarker);
+            routingControl = null;
+            destinationMarker = null;
+            setRouteState('IDLE');
+            DOM.status.textContent = "Rute bersama telah dihentikan oleh Amir.";
+            displayedSharedRouteTimestamp = null;
+        }
     });
+
     listenToGroupAlerts(groupId);
     listenToCheckpoints(groupId);
     listenForVoiceMessages(groupId);
@@ -2117,6 +2240,12 @@ DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
         });
 
         DOM.cancelRouteBtn.addEventListener('click', () => {
+			const user = auth.currentUser;
+    if (user && currentGroupData && user.uid === currentGroupData.amir && currentGroupData.sharedRoute) {
+        const groupRef = doc(db, 'groups', currentGroupId);
+        updateDoc(groupRef, { sharedRoute: null }); // Hapus rute bersama
+        console.log('Rute bersama telah dibatalkan oleh Amir.');
+    }
             if (routingControl) map.removeControl(routingControl);
             if (destinationMarker) map.removeLayer(destinationMarker);
             routingControl = null; destinationMarker = null; isAddingWaypoint = false; isAddingCheckpoint = false;
@@ -2129,6 +2258,12 @@ DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
         setRouteState('IDLE');
     });
 	DOM.cancelMainBtn.addEventListener('click', () => {
+	 const user = auth.currentUser;
+    if (user && currentGroupData && user.uid === currentGroupData.amir && currentGroupData.sharedRoute) {
+        const groupRef = doc(db, 'groups', currentGroupId);
+        updateDoc(groupRef, { sharedRoute: null }); // Hapus rute bersama
+        console.log('Rute bersama telah dibatalkan oleh Amir.');
+    }
     if (routingControl) map.removeControl(routingControl);
     if (destinationMarker) map.removeLayer(destinationMarker);
     routingControl = null; destinationMarker = null; isAddingWaypoint = false; isAddingCheckpoint = false;
