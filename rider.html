@@ -1703,36 +1703,45 @@ async function handleGoogleMapsLink() {
         let query = null;
         let placeNameForRoute = "Lokasi dari Google Maps";
 
-        // Metode 1 (Prioritas Utama): Mencari koordinat @-7.123,110.456
+        // ==========================================================
+        //         LOGIKA PENCARIAN DENGAN PRIORITAS BARU
+        // ==========================================================
+
+        // Prioritas 1: Cari koordinat @lat,lng (paling akurat)
         const coordRegex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
         const coordMatch = resolvedUrl.match(coordRegex);
         if (coordMatch && coordMatch[1] && coordMatch[2]) {
-            console.log("Koordinat ditemukan langsung dari URL.");
+            console.log("Prioritas 1: Koordinat ditemukan.", coordMatch[0]);
             const lat = parseFloat(coordMatch[1]);
             const lng = parseFloat(coordMatch[2]);
-            window.showRouteTo([lat, lng], placeNameForRoute);
+            // Jika koordinat ditemukan, langsung buat rute dan hentikan fungsi
+            window.showRouteTo([lat, lng], "Lokasi dari Koordinat Link");
             DOM.status.textContent = "Rute berhasil dibuat dari link.";
             return;
         }
 
-        // Metode 2 (Prioritas Kedua): Mencari Plus Code yang valid
-        // Regex ini akan mencari string seperti '8V7XCQF6+XR' atau 'CQF6+XR Cikarang'
+        // Prioritas 2: Cari Plus Code di seluruh URL (sangat akurat)
         const plusCodeRegex = /([2-9CFGHJ-MP-Z]{4}\+[2-9CFGHJ-MP-Z]{2,})/;
         const plusCodeMatch = resolvedUrl.match(plusCodeRegex);
         if (plusCodeMatch && plusCodeMatch[1]) {
+            console.log("Prioritas 2: Plus Code ditemukan.", plusCodeMatch[1]);
+            // Jika Plus Code ditemukan, HANYA gunakan itu untuk query
             query = plusCodeMatch[1];
             placeNameForRoute = `Plus Code: ${query}`;
-            console.log("Plus Code ditemukan:", query);
         } else {
-            // Metode 3 (Fallback): Cari nama tempat dari /place/ atau /search/
-            const placeRegex = /google\.com\/maps\/(?:place|search)\/([^\/@?]+)/;
+            // Prioritas 3: Jika tidak ada koordinat & plus code, baru cari nama tempat (kurang akurat)
+            const placeRegex = /google\.com\/maps\/(?:place|search)\/([^\/]+)/;
             const placeMatch = resolvedUrl.match(placeRegex);
             if (placeMatch && placeMatch[1]) {
+                console.log("Prioritas 3: Nama tempat ditemukan.", placeMatch[1]);
                 query = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
                 placeNameForRoute = query;
-                console.log("Nama tempat ditemukan:", query);
             }
         }
+        
+        // ==========================================================
+        //          AKHIR DARI PERUBAHAN LOGIKA
+        // ==========================================================
 
         // Jika kita punya query (baik dari Plus Code atau nama tempat), cari lokasinya
         if (query) {
