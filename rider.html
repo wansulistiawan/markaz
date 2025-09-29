@@ -1099,16 +1099,33 @@ map.on('click', function(e) {
     }
 });
 
-// Listener untuk memulai aksi TAHAN LAMA
-map.on('mousedown', handlePressStart);
-map.on('touchstart', handlePressStart);
+// Listener untuk aksi TAHAN LAMA (long-press di ponsel, klik-kanan di komputer)
+map.on('contextmenu', function(e) {
+    // Abaikan jika sedang dalam mode spesifik
+    if (isMovingPlace || isAddingWaypoint || isAddingCheckpoint) return;
 
-// Listener untuk MEMBATALKAN aksi TAHAN LAMA
-map.on('mouseup', handlePressCancel);
-map.on('touchend', handlePressCancel);
+    const latlng = e.latlng;
+    const popupContent = `
+        <div class="text-center space-y-2 p-1">
+            <h4 class="font-bold">Pilih Aksi</h4>
+            <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 px-3 rounded-lg" onclick="window.handleMapClickAction('route', ${latlng.lat}, ${latlng.lng})">Tetapkan Tujuan</button>
+            <button class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-bold py-2 px-3 rounded-lg" onclick="window.handleMapClickAction('add_place', ${latlng.lat}, ${latlng.lng})">Beri Nama Tempat</button>
+        </div>`;
 
-// Listener untuk GESER atau ZOOM
-map.on('dragstart zoomstart', handleDragOrZoomStart);
+    L.popup({ closeButton: true, closeOnClick: false })
+        .setLatLng(latlng)
+        .setContent(popupContent)
+        .openOn(map);
+});
+
+// Listener untuk GESER atau ZOOM (TIDAK BERUBAH)
+map.on('dragstart zoomstart', function() {
+    if (currentRouteState === 'NAVIGATING') {
+        isNavPaused = true;
+        DOM.resumeNavFab.classList.remove('hidden');
+        DOM.status.textContent = "Navigasi dijeda. Geser peta sesuka Anda.";
+    }
+});
 
 DOM.status.textContent = "Peta dimuat. Silakan masuk untuk memulai.";
 }
