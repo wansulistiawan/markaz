@@ -311,7 +311,7 @@
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
     import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, getDoc, writeBatch, updateDoc, query, orderBy, serverTimestamp, addDoc, where } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, getDoc, writeBatch, updateDoc, query, orderBy, serverTimestamp, addDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 	import { getDatabase, ref, push, onChildAdded, off, serverTimestamp as rtdbServerTimestamp, query as rtdbQuery, orderByChild, startAt } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 	
     const firebaseConfig = { apiKey: "AIzaSyA9fthcIZ_VQXMUL6lPd-165NIFNb09JOA", authDomain: "aplikasi-touring.firebaseapp.com", databaseURL: "https://aplikasi-touring-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "aplikasi-touring", storageBucket: "aplikasi-touring.appspot.com", messagingSenderId: "310021643774", appId: "1:310021643774:web:4943db8f567e66aef174af", measurementId: "G-ZRCCNLC8WB" };
@@ -1058,10 +1058,11 @@ async function searchOpenCage(queryText) {
 });
 
 // Listener untuk aksi TAHAN LAMA (long-press)
-map.on('mousedown touchstart', function(e) {
-    // Abaikan jika sedang dalam mode spesifik
+const handlePressStart = function(e) {
+    // Abaikan jika sedang dalam mode spesifik (pindah lokasi, tambah waypoint, dll)
     if (isMovingPlace || isAddingWaypoint || isAddingCheckpoint) return;
     
+    // Mulai timer saat mouse/jari ditekan
     pressTimer = setTimeout(() => {
         const latlng = e.latlng;
         const popupContent = `
@@ -1075,12 +1076,17 @@ map.on('mousedown touchstart', function(e) {
             .setLatLng(latlng)
             .setContent(popupContent)
             .openOn(map);
-    }, 1000); // Durasi tahan: 500 milidetik
-});
 
-// Listener untuk MEMBATALKAN long-press dan MENJEDA navigasi
-map.on('mouseup dragstart touchend touchmove zoomstart', function() { 
-    // 1. Selalu batalkan timer long-press jika mouse dilepas atau digeser
+    }, 1000); // Durasi 1000ms (1 detik) sesuai permintaan Anda
+};
+
+const handlePressCancel = function() {
+    // Batalkan timer jika mouse/jari dilepas atau digeser sebelum waktu habis
+    clearTimeout(pressTimer);
+};
+
+const handleDragOrZoomStart = function() {
+    // 1. Batalkan timer long-press jika pengguna mulai menggeser
     clearTimeout(pressTimer);
 
     // 2. Jika sedang navigasi, jeda navigasi saat digeser/zoom
@@ -1089,7 +1095,49 @@ map.on('mouseup dragstart touchend touchmove zoomstart', function() {
         DOM.resumeNavFab.classList.remove('hidden');
         DOM.status.textContent = "Navigasi dijeda. Geser peta sesuka Anda.";
     }
+};
+
+// Listener untuk aksi CEPAT (klik biasa atau tap)
+map.on('click', function(e) {
+    // 1. Logika untuk mengonfirmasi pemindahan lokasi pin tempat
+    if (isMovingPlace) {
+        const newCoords = e.latlng;
+        const marker = communityPlaceMarkers[editPlaceId];
+        if (marker) {
+            marker.setLatLng(newCoords);
+            const confirmPopupContent = `
+                <div class="text-center space-y-2 p-1">
+                    <h4 class="font-bold">Gunakan Lokasi Ini?</h4>
+                    <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 px-3 rounded-lg" onclick="window.confirmNewPlaceLocation()">Tetapkan Lokasi</button>
+                    <button class="w-full bg-gray-600 hover:bg-gray-700 text-white text-sm font-bold py-2 px-3 rounded-lg" onclick="window.cancelNewPlaceLocation()">Batal</button>
+                </div>`;
+            
+            L.popup({ closeButton: false, closeOnClick: false, closeOnEscapeKey: false })
+                .setLatLng(newCoords)
+                .setContent(confirmPopupContent)
+                .openOn(map);
+        }
+        return;
+    }
+
+    // 2. Logika untuk menambah waypoint atau checkpoint
+    if (isAddingWaypoint || isAddingCheckpoint) {
+        if (isAddingWaypoint) addWaypointToRoute(e.latlng);
+        if (isAddingCheckpoint) showCheckpointPrompt(e.latlng);
+        return;
+    }
 });
+
+// Listener untuk memulai aksi TAHAN LAMA
+map.on('mousedown', handlePressStart);
+map.on('touchstart', handlePressStart);
+
+// Listener untuk MEMBATALKAN aksi TAHAN LAMA
+map.on('mouseup', handlePressCancel);
+map.on('touchend', handlePressCancel);
+
+// Listener untuk GESER atau ZOOM
+map.on('dragstart zoomstart', handleDragOrZoomStart);
 
 DOM.status.textContent = "Peta dimuat. Silakan masuk untuk memulai.";
 }
@@ -1600,7 +1648,7 @@ function displaySharedRoute(routeData) {
 
     DOM.status.textContent = 'Memproses link, mohon tunggu...';
 
-    // --- FUNGSI INTERNAL BARU YANG LEBIH CERDAS ---
+    // Fungsi internal untuk memproses URL yang sudah final (panjang)
     const processResolvedUrl = async (resolvedUrl) => {
         // Metode 1: Mencari koordinat @-7.123,110.456 (paling akurat)
         const coordRegex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
@@ -1610,16 +1658,17 @@ function displaySharedRoute(routeData) {
             console.log("Koordinat ditemukan langsung dari URL:", coordMatch);
             const lat = parseFloat(coordMatch[1]);
             const lng = parseFloat(coordMatch[2]);
-            // Coba ambil nama tempat dari URL jika ada
+            
             let placeName = "Lokasi dari Google Maps";
             const placeNameRegex = /google\.com\/maps\/place\/([^\/]+)\//;
             const placeNameMatch = resolvedUrl.match(placeNameRegex);
             if (placeNameMatch && placeNameMatch[1]) {
                 placeName = decodeURIComponent(placeNameMatch[1].replace(/\+/g, ' '));
             }
+
             window.showRouteTo([lat, lng], placeName);
             DOM.status.textContent = "Rute berhasil dibuat dari link.";
-            return; // Selesai
+            return;
         }
 
         // Metode 2: Jika tidak ada koordinat, cari nama tempat dari /place/ atau /search/
@@ -1632,7 +1681,7 @@ function displaySharedRoute(routeData) {
             DOM.status.textContent = `Mencari lokasi untuk "${query}"...`;
             
             // Gunakan API OpenCage yang sudah ada untuk mencari koordinat berdasarkan nama
-            const apiKey = '7ce7547ff4c941f9a0aef61c5e384890'; 
+            const apiKey = '7ce7547ff4c941f9a0aef61c5e384890';
             const apiUrl = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(query)}&key=${apiKey}&limit=1&countrycode=id`;
             try {
                 const response = await fetch(apiUrl);
@@ -1649,7 +1698,7 @@ function displaySharedRoute(routeData) {
                  alert(`Gagal menemukan lokasi dari nama tempat di link: ${error.message}`);
                  DOM.status.textContent = "Gagal memproses link.";
             }
-            return; // Selesai
+            return;
         }
         
         // Jika semua metode gagal
@@ -1657,26 +1706,31 @@ function displaySharedRoute(routeData) {
         DOM.status.textContent = "Gagal memproses link.";
     };
     
-    // --- Logika Awal (tetap sama) ---
-    // Jika ini link pendek, perpanjang dulu
-    if (url.includes('maps.app.goo.gl')) {
+    // Logika utama untuk memeriksa apakah link perlu diperpanjang atau tidak
+    if (url.includes('/maps/place/') || url.includes('/@')) {
+        console.log("Link panjang terdeteksi, memproses langsung...");
+        await processResolvedUrl(url);
+    } else {
+        // Jika tidak, anggap ini link pendek dan coba perpanjang
+        console.log("Link pendek terdeteksi, mencoba mengurai...");
         try {
-            const response = await fetch(`https://unshorten.me/json/${url}`);
+            const response = await fetch(`https://unshorten.me/json/${encodeURIComponent(url)}`);
             if (!response.ok) throw new Error('Gagal menghubungi layanan pengurai link.');
+            
             const data = await response.json();
+            
             if (data.success && data.resolved_url) {
-                processResolvedUrl(data.resolved_url);
+                await processResolvedUrl(data.resolved_url);
             } else {
-                throw new Error(data.error || 'Gagal mengurai link pendek.');
+                // Coba proses URL asli sebagai fallback jika unshorten gagal
+                console.warn("Gagal mengurai link, mencoba memproses URL asli...");
+                await processResolvedUrl(url);
             }
         } catch (error) {
             console.error(error);
             alert(`Terjadi masalah saat mengurai link: ${error.message}`);
             DOM.status.textContent = "Gagal memproses link.";
         }
-    } else {
-        // Jika bukan link pendek, langsung proses
-        processResolvedUrl(url);
     }
 }
 	
