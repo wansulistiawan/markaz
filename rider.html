@@ -346,6 +346,7 @@
 	let wakeLock = null;
 	let displayedSharedRouteTimestamp = null;
 	let pressTimer = null;
+	let pendingSessionToRestore = null;
 
 const requestWakeLock = async () => {
     if ('wakeLock' in navigator) {
@@ -405,25 +406,10 @@ function clearNavigationSession() {
 // Fungsi untuk MEMERIKSA dan MENAWARKAN untuk melanjutkan sesi
 function checkForSavedSession() {
     const savedSessionJSON = localStorage.getItem('savedNavigationSession');
-    
-    // Jika ada data sesi yang tersimpan
     if (savedSessionJSON) {
-        // Tampilkan dialog konfirmasi kepada pengguna
-        if (confirm('Anda memiliki sesi navigasi yang belum selesai. Lanjutkan?')) {
-            const sessionData = JSON.parse(savedSessionJSON);
-
-            // Kita bisa gunakan kembali fungsi displaySharedRoute yang sudah ada
-            // karena fungsinya mirip: menampilkan rute dari data yang sudah jadi.
-            displaySharedRoute({
-                waypoints: sessionData.waypoints,
-                destinationName: sessionData.destinationName,
-                setBy: 'Anda (sesi sebelumnya)'
-            });
-            console.log('Memuat ulang sesi navigasi...');
-        } else {
-            // Jika pengguna memilih tidak, hapus data sesi agar tidak ditanya lagi
-            clearNavigationSession();
-        }
+        // Jangan tampilkan pop up dulu, cukup simpan datanya untuk nanti
+        pendingSessionToRestore = JSON.parse(savedSessionJSON);
+        console.log('Sesi navigasi ditemukan, menunggu lokasi pengguna...');
     }
 }
 // ================= KODE BARU SELESAI DI SINI =================
@@ -1433,6 +1419,24 @@ async function promoteToAmir(newAmirId) {
             const myRole = currentGroupData?.members?.[auth.currentUser.uid]?.role;
             myMarker = L.marker(userCoords, { icon: createProfilePinIcon(currentUserSettings.pinColor, auth.currentUser.photoURL, myRole) }).addTo(map).bindPopup('<b>Ini Lokasi Anda!</b>');
             if (currentRouteState === 'IDLE') map.setView(userCoords, 16);
+			
+			// Setelah lokasi ditemukan dan pin dibuat, periksa apakah ada sesi yang menunggu
+    if (pendingSessionToRestore) {
+        if (confirm('Anda memiliki sesi navigasi yang belum selesai. Lanjutkan?')) {
+            displaySharedRoute({
+                waypoints: pendingSessionToRestore.waypoints,
+                destinationName: pendingSessionToRestore.destinationName,
+                setBy: 'Anda (sesi sebelumnya)'
+            });
+            console.log('Memuat ulang sesi navigasi...');
+        } else {
+            // Jika pengguna menolak, hapus sesi agar tidak ditanya lagi
+            clearNavigationSession();
+        }
+        // Kosongkan data tunggu, apa pun pilihan pengguna
+        pendingSessionToRestore = null;
+    }
+	
         } else if (myMarker) { myMarker.setLatLng(userCoords); }
         
          if (currentRouteState === 'NAVIGATING') { 
