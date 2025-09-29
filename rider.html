@@ -372,6 +372,62 @@ const releaseWakeLock = async () => {
     }
 };
 
+// Fungsi untuk MENYIMPAN sesi navigasi saat ini ke localStorage
+function saveNavigationSession() {
+    // Pastikan ada rute yang aktif untuk disimpan
+    if (!routingControl) return;
+    const waypoints = routingControl.getWaypoints();
+    // Rute yang valid minimal punya titik awal dan tujuan
+    if (waypoints.length < 2) return;
+
+    // Ubah waypoints menjadi format JSON yang bisa disimpan
+    const serializableWaypoints = waypoints.map(wp => ({
+        lat: wp.latLng.lat,
+        lng: wp.latLng.lng
+    }));
+
+    const sessionData = {
+        waypoints: serializableWaypoints,
+        destinationName: window.currentDestinationName || 'Tujuan Tersimpan'
+    };
+
+    // Simpan sebagai string di localStorage
+    localStorage.setItem('savedNavigationSession', JSON.stringify(sessionData));
+    console.log('Sesi navigasi disimpan ke localStorage.');
+}
+
+// Fungsi untuk MENGHAPUS sesi navigasi dari localStorage
+function clearNavigationSession() {
+    localStorage.removeItem('savedNavigationSession');
+    console.log('Sesi navigasi yang tersimpan telah dihapus.');
+}
+
+// Fungsi untuk MEMERIKSA dan MENAWARKAN untuk melanjutkan sesi
+function checkForSavedSession() {
+    const savedSessionJSON = localStorage.getItem('savedNavigationSession');
+    
+    // Jika ada data sesi yang tersimpan
+    if (savedSessionJSON) {
+        // Tampilkan dialog konfirmasi kepada pengguna
+        if (confirm('Anda memiliki sesi navigasi yang belum selesai. Lanjutkan?')) {
+            const sessionData = JSON.parse(savedSessionJSON);
+
+            // Kita bisa gunakan kembali fungsi displaySharedRoute yang sudah ada
+            // karena fungsinya mirip: menampilkan rute dari data yang sudah jadi.
+            displaySharedRoute({
+                waypoints: sessionData.waypoints,
+                destinationName: sessionData.destinationName,
+                setBy: 'Anda (sesi sebelumnya)'
+            });
+            console.log('Memuat ulang sesi navigasi...');
+        } else {
+            // Jika pengguna memilih tidak, hapus data sesi agar tidak ditanya lagi
+            clearNavigationSession();
+        }
+    }
+}
+// ================= KODE BARU SELESAI DI SINI =================
+
     const DOM = {
     mapContainer: document.getElementById('map-container'),
     status: document.getElementById('status'),
@@ -1346,6 +1402,7 @@ async function promoteToAmir(newAmirId) {
             listenToPublicRiders();
 			listenToPublicGroups(); 
 			listenToCommunityPlaces();
+			checkForSavedSession();
         } else {
             DOM.loginContainer.classList.remove('hidden');
             DOM.profileFabContainer.classList.add('hidden');
@@ -2358,20 +2415,20 @@ DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
         });
 
         DOM.startNavBtn.addEventListener('click', () => {
-            if (currentRouteState !== 'SET') return;
-            const newName = prompt("Masukkan nama untuk tujuan ini:", window.currentDestinationName || "Tujuan");
+    if (currentRouteState !== 'SET') return;
+    const newName = prompt("Masukkan nama untuk tujuan ini:", window.currentDestinationName || "Tujuan");
     
-    // Hanya lanjutkan jika pengguna tidak mengklik Batal
     if (newName) {
-        // Perbarui nama tujuan secara global dan di panel info
         window.currentDestinationName = newName;
         DOM.navInfoDestination.textContent = newName;
 
-        // Lanjutkan untuk memulai navigasi
+        // TAMBAHKAN PEMANGGILAN FUNGSI DI SINI
+        saveNavigationSession(); 
+        
         setRouteState('NAVIGATING');
         if(userCoords) map.setView(userCoords, 18, {animate: true});
     }
-        });
+});
 
         DOM.stopNavBtn.addEventListener('click', () => {
             if (currentRouteState !== 'NAVIGATING') return;
@@ -2385,6 +2442,8 @@ DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
         updateDoc(groupRef, { sharedRoute: null }); // Hapus rute bersama
         console.log('Rute bersama telah dibatalkan oleh Amir.');
     }
+			clearNavigationSession();
+			
             if (routingControl) map.removeControl(routingControl);
             if (destinationMarker) map.removeLayer(destinationMarker);
             routingControl = null; destinationMarker = null; isAddingWaypoint = false; isAddingCheckpoint = false;
@@ -2403,6 +2462,9 @@ DOM.pttBtn.addEventListener('contextmenu', e => e.preventDefault());
         updateDoc(groupRef, { sharedRoute: null }); // Hapus rute bersama
         console.log('Rute bersama telah dibatalkan oleh Amir.');
     }
+	
+	clearNavigationSession();
+	
     if (routingControl) map.removeControl(routingControl);
     if (destinationMarker) map.removeLayer(destinationMarker);
     routingControl = null; destinationMarker = null; isAddingWaypoint = false; isAddingCheckpoint = false;
