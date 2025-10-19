@@ -8649,48 +8649,59 @@ const studentContainer = document.getElementById('student-attendance-container')
 const studentPlaceholder = document.getElementById('student-list-placeholder');
 
 classSelect.addEventListener('change', async function() {
-    const selectedClass = this.value;
-    const selectedDate = document.getElementById('attendanceDateGuru').value;
+    // Value dari dropdown adalah nama materi lengkap, contoh: "MAT-101: Operasi Bilangan..."
+    const selectedClass = this.value; 
 
     if (!selectedClass) {
         studentContainer.classList.add('hidden');
+        studentPlaceholder.innerHTML = '<p class="text-gray-500">Pilih kelas untuk menampilkan daftar santri.</p>';
         return;
     }
+
+    // --- PERUBAHAN UTAMA DI SINI ---
+    // 1. Ekstrak KODE MATERI dari string nama lengkap
+    const kodeMateri = selectedClass.split(':')[0].trim();
+    // --- AKHIR PERUBAHAN UTAMA ---
 
     studentContainer.classList.remove('hidden');
     studentPlaceholder.innerHTML = '<p class="text-gray-500">Memuat daftar santri...</p>';
 
     try {
-        // Memanggil fungsi baru di Apps Script
+        // Memanggil fungsi Apps Script dengan 'kodeMateri'
         const response = await fetch(CONFIG.SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({
                 action: 'getStudentsByClass',
-                namaMateri: selectedClass
+                kodeMateri: kodeMateri // Kirim KODE-nya saja
             })
         });
         const result = await response.json();
 
+        // (Sisa kode untuk menampilkan daftar santri tetap sama...)
         if (result.status === 'success' && result.students.length > 0) {
             let studentHTML = '<table class="w-full text-sm"><tbody>';
             result.students.forEach(studentName => {
+                const radioName = `status_${studentName.replace(/\s+/g, '_')}`;
                 studentHTML += `
                     <tr class="border-b">
-                        <td class="py-2">${studentName}</td>
-                        <td class="py-2 text-right">
-                            <input type="radio" name="status_${studentName.replace(/\s/g, '_')}" value="Hadir" required> H
-                            <input type="radio" name="status_${studentName.replace(/\s/g, '_')}" value="Izin"> I
-                            <input type="radio" name="status_${studentName.replace(/\s/g, '_')}" value="Sakit"> S
-                            <input type="radio" name="status_${studentName.replace(/\s/g, '_')}" value="Tanpa Keterangan"> A
+                        <td class="py-2 pr-4">${studentName}</td>
+                        <td class="py-2 text-right whitespace-nowrap">
+                            <label class="mr-2"><input type="radio" name="${radioName}" value="Hadir" required class="mr-1"> H</label>
+                            <label class="mr-2"><input type="radio" name="${radioName}" value="Izin" class="mr-1"> I</label>
+                            <label class="mr-2"><input type="radio" name="${radioName}" value="Sakit" class="mr-1"> S</label>
+                            <label><input type="radio" name="${radioName}" value="Tanpa Keterangan" class="mr-1"> A</label>
                         </td>
                     </tr>
                 `;
             });
             studentHTML += '</tbody></table>';
             studentPlaceholder.innerHTML = studentHTML;
-        } else {
-            studentPlaceholder.innerHTML = '<p class="text-red-500">Tidak ada santri yang mengambil materi ini di KRS.</p>';
+        } else if (result.status === 'success' && result.students.length === 0) {
+             studentPlaceholder.innerHTML = '<p class="text-orange-500">Tidak ada santri yang mengambil materi ini di KRS.</p>';
+         } else {
+            studentPlaceholder.innerHTML = `<p class="text-red-500">Gagal memuat data santri: ${result.message || 'Error tidak diketahui'}</p>`;
         }
+
     } catch (error) {
         studentPlaceholder.innerHTML = `<p class="text-red-500">Gagal memuat data santri: ${error.message}</p>`;
     }
