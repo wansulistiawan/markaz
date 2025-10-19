@@ -6459,23 +6459,26 @@ function handleLoginSubmit(event) {
 
         // --- KUMPULKAN DATA ABSENSI SANTRI ---
         const studentAttendanceData = [];
-        const studentRows = document.querySelectorAll('#student-list-placeholder tr');
-        for (const row of studentRows) {
-            const studentName = row.querySelector('td:first-child').textContent;
-            const checkedRadio = row.querySelector('input[type="radio"]:checked');
+// Dapatkan semua baris santri
+const studentRows = document.querySelectorAll('.student-attendance-row');
+for (const row of studentRows) {
+    // Ambil nama santri dari atribut data-student-name
+    const studentName = row.dataset.studentName;
+    // Cari checkbox yang tercentang DALAM baris ini
+    const checkedCheckbox = row.querySelector('.attendance-checkbox:checked');
 
-            if (!checkedRadio) {
-                showMessage(`Harap isi status kehadiran untuk santri: ${studentName}.`, 'error');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Kirim Absensi Guru';
-                return; // Hentikan proses jika ada santri yang belum diabsen
-            }
+    if (!checkedCheckbox) {
+        showMessage(`Harap isi status kehadiran untuk santri: ${studentName}.`, 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Kirim Absensi Guru';
+        return; // Hentikan proses jika ada santri yang belum diabsen
+    }
 
-            studentAttendanceData.push({
-                nama: studentName,
-                status: checkedRadio.value
-            });
-        }
+    studentAttendanceData.push({
+        nama: studentName,
+        status: checkedCheckbox.value
+    });
+}
 
         // --- SIAPKAN DATA LENGKAP UNTUK DIKIRIM ---
         let finalRemarks = remarksInput.value;
@@ -8679,23 +8682,57 @@ classSelect.addEventListener('change', async function() {
 
         // (Sisa kode untuk menampilkan daftar santri tetap sama...)
         if (result.status === 'success' && result.students.length > 0) {
-            let studentHTML = '<table class="w-full text-sm"><tbody>';
-            result.students.forEach(studentName => {
-                const radioName = `status_${studentName.replace(/\s+/g, '_')}`;
-                studentHTML += `
-                    <tr class="border-b">
-                        <td class="py-2 pr-4">${studentName}</td>
-                        <td class="py-2 text-right whitespace-nowrap">
-                            <label class="mr-2"><input type="radio" name="${radioName}" value="Hadir" required class="mr-1"> H</label>
-                            <label class="mr-2"><input type="radio" name="${radioName}" value="Izin" class="mr-1"> I</label>
-                            <label class="mr-2"><input type="radio" name="${radioName}" value="Sakit" class="mr-1"> S</label>
-                            <label><input type="radio" name="${radioName}" value="Tanpa Keterangan" class="mr-1"> A</label>
-                        </td>
-                    </tr>
-                `;
-            });
-            studentHTML += '</tbody></table>';
-            studentPlaceholder.innerHTML = studentHTML;
+    let studentHTML = '<table class="w-full text-sm"><tbody>';
+    result.students.forEach((studentName, index) => {
+        // Buat ID unik untuk setiap baris santri
+        const rowId = `student_row_${index}`;
+        studentHTML += `
+            <tr class="border-b student-attendance-row" id="${rowId}" data-student-name="${studentName}">
+                <td class="py-2 pr-4">${studentName}</td>
+                <td class="py-2 text-right whitespace-nowrap">
+                    <label class="mr-3">
+                        <input type="checkbox" name="status_${index}" value="Hadir" class="mr-1 attendance-checkbox"> Hadir
+                    </label>
+                    <label class="mr-3">
+                        <input type="checkbox" name="status_${index}" value="Izin" class="mr-1 attendance-checkbox"> Izin
+                    </label>
+                    <label class="mr-3">
+                        <input type="checkbox" name="status_${index}" value="Sakit" class="mr-1 attendance-checkbox"> Sakit
+                    </label>
+                    <label>
+                        <input type="checkbox" name="status_${index}" value="Tanpa Keterangan" class="mr-1 attendance-checkbox"> Alfa
+                    </label>
+                </td>
+            </tr>
+        `;
+    });
+    studentHTML += '</tbody></table>';
+    studentPlaceholder.innerHTML = studentHTML;
+
+    // --- LOGIKA BARU UNTUK SINGLE CHECKBOX ---
+    // Gunakan event delegation pada container
+    studentPlaceholder.addEventListener('change', function(event) {
+        // Pastikan yang berubah adalah checkbox absensi
+        if (event.target.classList.contains('attendance-checkbox')) {
+            const checkbox = event.target;
+            // Dapatkan baris (tr) tempat checkbox ini berada
+            const currentRow = checkbox.closest('.student-attendance-row');
+            if (!currentRow) return;
+
+            // Dapatkan semua checkbox dalam baris yang sama
+            const checkboxesInRow = currentRow.querySelectorAll('.attendance-checkbox');
+
+            // Jika checkbox saat ini dicentang
+            if (checkbox.checked) {
+                // Hapus centang pada checkbox lain di baris yang sama
+                checkboxesInRow.forEach(cb => {
+                    if (cb !== checkbox) {
+                        cb.checked = false;
+                    }
+                });
+            }
+        }
+    });
         } else if (result.status === 'success' && result.students.length === 0) {
              studentPlaceholder.innerHTML = '<p class="text-orange-500">Tidak ada santri yang mengambil materi ini di KRS.</p>';
          } else {
