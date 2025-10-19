@@ -8684,24 +8684,37 @@ classSelect.addEventListener('change', async function() {
         if (result.status === 'success' && result.students.length > 0) {
     let studentHTML = '<table class="w-full text-sm"><tbody>';
     result.students.forEach((studentName, index) => {
-        // Buat ID unik untuk setiap baris santri
         const rowId = `student_row_${index}`;
+        // Grup nama untuk memastikan hanya satu checkbox per santri yang bisa dipilih
+        const checkboxGroupName = `status_${studentName.replace(/\s+/g, '_')}`;
+
         studentHTML += `
             <tr class="border-b student-attendance-row" id="${rowId}" data-student-name="${studentName}">
-                <td class="py-2 pr-4">${studentName}</td>
-                <td class="py-2 text-right whitespace-nowrap">
-                    <label class="mr-3">
-                        <input type="checkbox" name="status_${index}" value="Hadir" class="mr-1 attendance-checkbox"> Hadir
-                    </label>
-                    <label class="mr-3">
-                        <input type="checkbox" name="status_${index}" value="Izin" class="mr-1 attendance-checkbox"> Izin
-                    </label>
-                    <label class="mr-3">
-                        <input type="checkbox" name="status_${index}" value="Sakit" class="mr-1 attendance-checkbox"> Sakit
-                    </label>
-                    <label>
-                        <input type="checkbox" name="status_${index}" value="Tanpa Keterangan" class="mr-1 attendance-checkbox"> Alfa
-                    </label>
+                <td class="py-3 pr-4 align-middle">${studentName}</td>
+                <td class="py-3 text-right whitespace-nowrap align-middle">
+                    <div class="flex justify-end items-start space-x-5">
+
+                        <div class="flex flex-col items-center">
+                            <label for="hadir_${index}" class="text-xs mb-1 cursor-pointer">Hadir</label>
+                            <input type="checkbox" id="hadir_${index}" name="${checkboxGroupName}" value="Hadir" class="attendance-checkbox h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500 cursor-pointer">
+                        </div>
+
+                        <div class="flex flex-col items-center">
+                            <label for="izin_${index}" class="text-xs mb-1 cursor-pointer">Izin</label>
+                            <input type="checkbox" id="izin_${index}" name="${checkboxGroupName}" value="Izin" class="attendance-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
+                        </div>
+
+                        <div class="flex flex-col items-center">
+                            <label for="sakit_${index}" class="text-xs mb-1 cursor-pointer">Sakit</label>
+                            <input type="checkbox" id="sakit_${index}" name="${checkboxGroupName}" value="Sakit" class="attendance-checkbox h-4 w-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500 cursor-pointer">
+                        </div>
+
+                        <div class="flex flex-col items-center">
+                            <label for="alfa_${index}" class="text-xs mb-1 cursor-pointer">Alfa</label>
+                            <input type="checkbox" id="alfa_${index}" name="${checkboxGroupName}" value="Tanpa Keterangan" class="attendance-checkbox h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500 cursor-pointer">
+                        </div>
+
+                    </div>
                 </td>
             </tr>
         `;
