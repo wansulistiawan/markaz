@@ -1428,7 +1428,13 @@
             <!-- AKHIR PERUBAHAN -->
 
             <div class="form-group"><label for="remarksGuru">Keterangan</label><textarea id="remarksGuru" rows="3"></textarea></div>
-            <button type="submit" class="submit-btn">Kirim Absensi Guru</button>
+            <div id="student-attendance-container" class="form-group hidden mt-6 pt-6 border-t">
+    <label class="font-bold mb-2">Absensi Santri</label>
+    <div id="student-list-placeholder">
+        <p class="text-gray-500">Pilih kelas untuk menampilkan daftar santri.</p>
+    </div>
+</div>
+			<button type="submit" class="submit-btn">Kirim Absensi Guru</button>
         </form>
         <form id="attendanceFormStaf" class="custom-form hidden">
             <div class="form-group"><label for="stafNameDisplay">Nama Staf</label><input type="text" id="stafNameDisplay" readonly style="background-color: #e9ecef;"></div>
@@ -6414,60 +6420,125 @@ function handleLoginSubmit(event) {
     function handleForgotVerifySubmit(event) { event.preventDefault(); const submitBtn = event.target.querySelector('button[type="submit"]'); submitBtn.textContent = "Memeriksa..."; submitBtn.disabled = true; const data = { action: 'verifyUser', username: document.getElementById('forgotUsername').value, dob: document.getElementById('forgotDob').value }; fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.json()).then(result => { if (result.status === "success") { window.verifiedUsername = data.username; document.getElementById('forgotPasswordStep1').classList.add('hidden'); document.getElementById('forgotPasswordStep2').classList.remove('hidden'); } else { showMessage(result.message || 'Verifikasi gagal.', 'error'); } }).catch(error => console.error('Error:', error)).finally(() => { submitBtn.textContent = "Verifikasi"; submitBtn.disabled = false; }); }
     function handleForgotResetSubmit(event) { event.preventDefault(); const newPassword = document.getElementById('forgotNewPassword').value; if (newPassword.length < 6) { showMessage('Password baru minimal 6 karakter.', 'error'); return; } if (newPassword !== document.getElementById('forgotConfirmPassword').value) { showMessage('Konfirmasi password tidak cocok.', 'error'); return; } const submitBtn = event.target.querySelector('button[type="submit"]'); submitBtn.textContent = "Menyimpan..."; submitBtn.disabled = true; const data = { action: 'resetPassword', username: window.verifiedUsername, newPassword: newPassword }; fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.json()).then(result => { if (result.status === "success") { showMessage('Password berhasil direset! Silakan login.', 'success'); document.getElementById('forgotPasswordModal').style.display = 'none'; event.target.reset(); document.getElementById('forgotPasswordStep2').classList.add('hidden'); document.getElementById('forgotPasswordStep1').classList.remove('hidden'); } else { showMessage(result.message || 'Gagal reset password.', 'error'); } }).catch(error => console.error('Error:', error)).finally(() => { submitBtn.textContent = "Simpan"; submitBtn.disabled = false; }); }
     function handleAttendanceSubmit(event, role) {
-        event.preventDefault();
-        const session = getActiveSession();
-        if (!session || !session.loggedIn) {
-            showMessage('Anda harus login.', 'error');
-            window.location.hash = '#login';
+    event.preventDefault();
+    const session = getActiveSession();
+    if (!session || !session.loggedIn) {
+        showMessage('Anda harus login.', 'error');
+        window.location.hash = '#login';
+        return;
+    }
+    const form = event.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.textContent = "Mengirim...";
+    submitBtn.disabled = true;
+    let data;
+
+    if (role === 'guru') {
+        // --- DEKLARASI VARIABEL YANG HILANG (DITAMBAHKAN) ---
+        const isSubstitute = form.querySelector('#isSubstituteTeacher').checked;
+        const substituteFor = form.querySelector('#substituteTeacherName').value;
+        const className = form.querySelector('#className').value;
+        const remarksInput = form.querySelector('#remarksGuru');
+        const lateMinutesInput = form.querySelector('#lateMinutesGuru');
+
+        // --- VALIDASI REQUIRED FIELDS ---
+        if (lateMinutesInput.value === '') {
+            showMessage('Kolom "Menit Terlambat" harus diisi. Isi dengan angka 0 jika tidak terlambat.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Kirim Absensi Guru';
             return;
         }
-        const form = event.target;
-        const submitBtn = form.querySelector('button[type="submit"]');
-        submitBtn.textContent = "Mengirim...";
-        submitBtn.disabled = true;
-        let data;
-        if (role === 'guru') {
-            const isSubstitute = form.querySelector('#isSubstituteTeacher').checked;
-            const substituteFor = form.querySelector('#substituteTeacherName').value;
-            const className = form.querySelector('#className').value;
-            const remarksInput = form.querySelector('#remarksGuru');
-            if (isSubstitute && (!substituteFor || !className)) {
-                showMessage('Silakan pilih guru dan kelas yang Anda gantikan.', 'error');
-                submitBtn.disabled = false;
-                submitBtn.textContent = `Kirim Absensi Guru`;
-                return;
-            }
-            let finalRemarks = remarksInput.value;
-            if (isSubstitute) {
-                const substituteRemark = `[Guru Pengganti untuk ${substituteFor} di kelas: ${className}]`;
-                finalRemarks = substituteRemark + (finalRemarks ? `\n${finalRemarks}` : '');
-            }
-            data = { action: 'submitAttendance', role: 'guru', teacherName: session.userData.profileName, attendanceDate: form.querySelector('#attendanceDateGuru').value, className: className, lateMinutes: form.querySelector('#lateMinutesGuru').value || '0', remarks: finalRemarks, substituteFor: isSubstitute ? substituteFor : '' };
-        } else if (role === 'staf') {
-            data = { action: 'submitAttendance', role: 'staf', stafName: session.userData.profileName, attendanceDate: form.querySelector('#attendanceDateStaf').value, jabatan: form.querySelector('#jabatanStaf').value, lateMinutes: form.querySelector('#lateMinutesStaf').value || '0', remarks: form.querySelector('#remarksStaf').value };
-        } else {
-            data = { action: 'submitAttendance', role: 'rapat', name: session.userData.profileName, date: form.querySelector('#rapatDate').value, startTime: form.querySelector('#rapatStartTime').value, endTime: form.querySelector('#rapatEndTime').value, remarks: form.querySelector('#rapatRemarks').value };
+        
+        // Validasi tambahan untuk guru pengganti (DITAMBAHKAN)
+        if (isSubstitute && (!substituteFor || !className)) {
+            showMessage('Silakan pilih guru dan kelas yang Anda gantikan.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = `Kirim Absensi Guru`;
+            return;
         }
-        fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.ok ? res.json() : Promise.reject(res)).then(result => {
-		if (result.status === "success") {
-    showMessage('Absensi berhasil direkam!', 'success');
-    const session = getActiveSession();
-    const currentName = session.userData.profileName;
 
-    form.reset(); // Reset seluruh isian form
+        // --- KUMPULKAN DATA ABSENSI SANTRI ---
+        const studentAttendanceData = [];
+        const studentRows = document.querySelectorAll('#student-list-placeholder tr');
+        for (const row of studentRows) {
+            const studentName = row.querySelector('td:first-child').textContent;
+            const checkedRadio = row.querySelector('input[type="radio"]:checked');
 
-    // PERBAIKAN: Isi kembali nama HANYA pada form yang sesuai
-    if (role === 'guru') {
-        form.querySelector('#teacherNameDisplay').value = currentName;
+            if (!checkedRadio) {
+                showMessage(`Harap isi status kehadiran untuk santri: ${studentName}.`, 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Kirim Absensi Guru';
+                return; // Hentikan proses jika ada santri yang belum diabsen
+            }
+
+            studentAttendanceData.push({
+                nama: studentName,
+                status: checkedRadio.value
+            });
+        }
+
+        // --- SIAPKAN DATA LENGKAP UNTUK DIKIRIM ---
+        let finalRemarks = remarksInput.value;
+        if (isSubstitute) {
+            const substituteRemark = `[Guru Pengganti untuk ${substituteFor} di kelas: ${className}]`;
+            finalRemarks = substituteRemark + (finalRemarks ? `\n${finalRemarks}` : '');
+        }
+        
+        data = { 
+            action: 'submitAttendance', 
+            role: 'guru', 
+            teacherName: session.userData.profileName, 
+            attendanceDate: form.querySelector('#attendanceDateGuru').value, 
+            className: className, 
+            lateMinutes: lateMinutesInput.value || '0', 
+            remarks: finalRemarks, 
+            substituteFor: isSubstitute ? substituteFor : '',
+            studentAttendance: studentAttendanceData // Data absensi santri
+        };
+
     } else if (role === 'staf') {
-		const currentJabatan = session.userData.jabatan; // Ambil jabatan dari sesi
-        form.querySelector('#stafNameDisplay').value = currentName;
-		form.querySelector('#jabatanStaf').value = currentJabatan; // Isi kembali jabatan
-    } else if (role === 'rapat') {
-        form.querySelector('#rapatNameDisplay').value = currentName;
+        data = { action: 'submitAttendance', role: 'staf', stafName: session.userData.profileName, attendanceDate: form.querySelector('#attendanceDateStaf').value, jabatan: form.querySelector('#jabatanStaf').value, lateMinutes: form.querySelector('#lateMinutesStaf').value || '0', remarks: form.querySelector('#remarksStaf').value };
+    } else {
+        data = { action: 'submitAttendance', role: 'rapat', name: session.userData.profileName, date: form.querySelector('#rapatDate').value, startTime: form.querySelector('#rapatStartTime').value, endTime: form.querySelector('#rapatEndTime').value, remarks: form.querySelector('#rapatRemarks').value };
     }
-		setTodayDate();fetchAndRenderAttendanceHistory(session.userData.profileName);} else if (result.status === "duplicate") {showMessage(result.message, 'error');} else {showMessage(result.message || 'Gagal mengirim absensi.', 'error');}}).catch(error => { console.error('Attendance Error:', error); showMessage('Gagal terhubung.', 'error'); }).finally(() => { submitBtn.textContent = `Kirim Absensi ${role.charAt(0).toUpperCase() + role.slice(1)}`; submitBtn.disabled = false; });
-    }
+    
+    fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }).then(res => res.ok ? res.json() : Promise.reject(res)).then(result => {
+		if (result.status === "success") {
+            showMessage(result.message || 'Absensi berhasil direkam!', 'success');
+            const session = getActiveSession();
+            const currentName = session.userData.profileName;
+            const currentJabatan = session.userData.jabatan;
+
+            form.reset(); // Reset seluruh isian form
+            
+            // Mengatur ulang tampilan setelah reset
+            setTodayDate();
+            fetchAndRenderAttendanceHistory(currentName);
+            document.getElementById('student-attendance-container').classList.add('hidden'); // Sembunyikan lagi daftar santri
+            document.getElementById('substituteTeacherSection').classList.add('hidden'); // Sembunyikan bagian guru pengganti
+
+            // Isi kembali field yang read-only
+            if (role === 'guru') {
+                form.querySelector('#teacherNameDisplay').value = currentName;
+            } else if (role === 'staf') {
+                form.querySelector('#stafNameDisplay').value = currentName;
+                form.querySelector('#jabatanStaf').value = currentJabatan;
+            } else if (role === 'rapat') {
+                form.querySelector('#rapatNameDisplay').value = currentName;
+            }
+        } else if (result.status === "duplicate") {
+            showMessage(result.message, 'error');
+        } else {
+            throw new Error(result.message);
+        }
+	}).catch(error => {
+        console.error('Attendance Error:', error);
+        showMessage('Gagal terhubung ke server.', 'error');
+    }).finally(() => {
+        submitBtn.textContent = `Kirim Absensi ${role.charAt(0).toUpperCase() + role.slice(1)}`;
+        submitBtn.disabled = false;
+    });
+}
 
 // =======================================================
 // === FUNGSI-FUNGSI BARU UNTUK FITUR SLIP GAJI ===
@@ -8570,6 +8641,61 @@ function handleInputMateriFromModal() {
         const editButton = event.target.closest('.btn-edit-fundraising');
         
     });
+
+// Tambahkan ini di dalam blok <script>
+
+const classSelect = document.getElementById('className');
+const studentContainer = document.getElementById('student-attendance-container');
+const studentPlaceholder = document.getElementById('student-list-placeholder');
+
+classSelect.addEventListener('change', async function() {
+    const selectedClass = this.value;
+    const selectedDate = document.getElementById('attendanceDateGuru').value;
+
+    if (!selectedClass) {
+        studentContainer.classList.add('hidden');
+        return;
+    }
+
+    studentContainer.classList.remove('hidden');
+    studentPlaceholder.innerHTML = '<p class="text-gray-500">Memuat daftar santri...</p>';
+
+    try {
+        // Memanggil fungsi baru di Apps Script
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'getStudentsByClass',
+                namaMateri: selectedClass,
+                tanggal: selectedDate
+            })
+        });
+        const result = await response.json();
+
+        if (result.status === 'success' && result.students.length > 0) {
+            let studentHTML = '<table class="w-full text-sm"><tbody>';
+            result.students.forEach(studentName => {
+                studentHTML += `
+                    <tr class="border-b">
+                        <td class="py-2">${studentName}</td>
+                        <td class="py-2 text-right">
+                            <input type="radio" name="status_${studentName.replace(/\s/g, '_')}" value="Hadir" required> H
+                            <input type="radio" name="status_${studentName.replace(/\s/g, '_')}" value="Izin"> I
+                            <input type="radio" name="status_${studentName.replace(/\s/g, '_')}" value="Sakit"> S
+                            <input type="radio" name="status_${studentName.replace(/\s/g, '_')}" value="Tanpa Keterangan"> A
+                        </td>
+                    </tr>
+                `;
+            });
+            studentHTML += '</tbody></table>';
+            studentPlaceholder.innerHTML = studentHTML;
+        } else {
+            studentPlaceholder.innerHTML = '<p class="text-red-500">Tidak ada santri yang terdaftar di kelas ini pada bulan ini.</p>';
+        }
+    } catch (error) {
+        studentPlaceholder.innerHTML = `<p class="text-red-500">Gagal memuat data santri: ${error.message}</p>`;
+    }
+});
 
 		if (ui.userProfile) ui.userProfile.onclick = () => openProfileModal();
 		
