@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modul ULQ-204: Muhkam & Mutasyabih</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'quran-dark': '#1A202C', // Very Dark Blue
+                    'quran-darker': '#111827', // Almost Black
+                    'quran-light': '#F7FAFC', // Off-white
+                    'quran-accent': '#D69E2E', // Gold
+                    'quran-accent-hover': '#B8860B',
+                    'quran-secondary': '#A0AEC0', // Medium Gray for text
+                    'correct': '#38A169',
+                    'incorrect': '#E53E3E',
+                },
+                fontFamily: {
+                    'sans': ['Inter', 'sans-serif'],
+                    'arabic': ['"Noto Naskh Arabic"', 'serif']
+                }
+            }
+        }
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #F7FAFC;
+        }
+        .arabic, .arabic-text {
+            font-family: 'Noto Naskh Arabic', serif;
+            font-size: 1.6rem;
+            line-height: 2.8rem;
+            direction: rtl;
+        }
+        .tab-btn.active {
+            background-color: #D69E2E;
+            color: #111827;
+            font-weight: 600;
+        }
+        .teacher-note {
+            background-color: rgba(214, 158, 46, 0.1);
+            border-left: 4px solid #D69E2E;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .simulation-card, .quiz-card {
+            background-color: #1A202C;
+            border: 1px solid #2D3748;
+        }
+        .draggable {
+            cursor: move;
+            user-select: none;
+        }
+        .drop-zone {
+            transition: background-color 0.3s ease;
+        }
+        .drop-zone.drag-over {
+            background-color: #2D3748;
+        }
+        /* Custom styles for quiz options */
+        .option-label {
+            display: block;
+            padding: 0.75rem;
+            background-color: #2d3748;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .option-label:hover {
+            background-color: #4a5568;
+        }
+        .option-label.correct {
+            background-color: #38a169;
+            color: white;
+            font-weight: bold;
+        }
+        .option-label.incorrect {
+            background-color: #e53e3e;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <header class="text-center mb-8 border-b-2 border-quran-accent pb-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-white">Modul Ulumul Qur'an</h1>
+            <p class="text-xl text-quran-accent font-semibold mt-1">ULQ-204: Muhkam & Mutasyabih dalam Al-Qur'an</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center mb-8 gap-2">
+            <button class="tab-btn active w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-quran-accent-hover" data-tab="pertemuan1">Pertemuan 1</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-quran-accent-hover" data-tab="pertemuan2">Pertemuan 2</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-quran-accent-hover" data-tab="pertemuan3">Pertemuan 3</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-quran-accent-hover" data-tab="pertemuan4">Pertemuan 4</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out bg-red-700 hover:bg-red-600" data-tab="tesSumatif">Tes Sumatif</button>
+        </nav>
+
+        <main id="tab-content">
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 1 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan1" class="tab-pane active space-y-8">
+                <div class="p-6 bg-quran-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-quran-accent mb-1">Pertemuan 1: Pengantar Muhkam & Mutasyabih</h2>
+                    <p class="mb-6 text-quran-secondary">Memahami definisi, dalil pokok, dan hikmah keberadaan ayat Muhkam dan Mutasyabih.</p>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-quran-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                            <li>Santri mampu mendefinisikan ayat Muhkam dan ayat Mutasyabih dengan tepat.</li>
+                            <li>Santri mampu melafalkan dan menjelaskan dalil pokok tentang Muhkam dan Mutasyabih dari QS. Ali 'Imran ayat 7.</li>
+                            <li>Santri mampu menjelaskan sikap orang yang lurus hatinya dan orang yang hatinya condong pada kesesatan terhadap ayat Mutasyabih.</li>
+                            <li>Santri mampu menjelaskan minimal dua hikmah adanya ayat-ayat Mutasyabih dalam Al-Qur'an.</li>
+                            <li>Santri memahami bahwa Al-Qur'an seluruhnya adalah Muhkam (kokoh) dari sisi lafaz dan susunannya.</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-quran-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Adab seorang muslim di hadapan Al-Qur'an adalah taslim (berserah diri) dan mengimaninya secara total. Pembagian ayat menjadi Muhkam dan Mutasyabih adalah ujian keimanan dari Allah. Sikap yang benar adalah mengamalkan yang Muhkam—karena maknanya jelas—dan mengimani yang Mutasyabih sambil menyerahkan hakikat maknanya kepada Allah. Ini menanamkan sifat tawadhu' (<i class="arabic">التواضع</i>) di hadapan ilmu Allah yang tak terbatas dan mengakui keterbatasan akal manusia. Orang yang ilmunya mendalam (<i class="arabic">الراسخون في العلم</i>) akan berkata, "Kami beriman kepadanya (Al-Qur'an), semuanya datang dari sisi Rabb kami."</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic text-2xl text-white">هُوَ الَّذِي أَنْزَلَ عَلَيْكَ الْكِتَابَ مِنْهُ آيَاتٌ مُحْكَمَاتٌ هُنَّ أُمُّ الْكِتَابِ وَأُخَرُ مُتَشَابِهَاتٌ</p>
+                            <p class="mt-2 text-quran-light">"Dialah yang menurunkan Al-Kitab (Al-Qur'an) kepadamu. Di antara (isi)nya ada ayat-ayat yang muhkamat, itulah pokok-pokok isi Al-Qur'an dan yang lain (ayat-ayat) mutasyabihat..."</p>
+                            <p class="text-sm text-quran-accent mt-1">(QS. Ali 'Imran: 7)</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-quran-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">1. Definisi Muhkam dan Mutasyabih (30 Menit)</h4>
+                                <p><strong>Ayat Muhkam (المحكم):</strong> Ayat yang maknanya jelas, gamblang, dan tidak mengandung kemungkinan makna lain. Inilah "Ummul Kitab" atau induk dari Al-Qur'an.</p>
+                                <ul class="list-disc list-inside pl-4">
+                                    <li><strong>Contoh:</strong> Ayat-ayat tentang perintah shalat, larangan syirik, kewajiban berbakti pada orang tua. (Contoh: QS. Al-Isra': 23)</li>
+                                </ul>
+                                <p class="mt-2"><strong>Ayat Mutasyabih (المتشابه):</strong> Ayat yang maknanya tidak jelas bagi kebanyakan manusia atau mengandung beberapa kemungkinan makna, sehingga hakikatnya hanya diketahui oleh Allah.</p>
+                                <ul class="list-disc list-inside pl-4">
+                                    <li><strong>Contoh:</strong> Ayat-ayat tentang sifat Allah (Tangan Allah, Wajah Allah), hakikat ruh, dan huruf-huruf muqatha'ah di awal surat (Alif Lam Mim).</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">2. Sikap Manusia dan Hikmah (45 Menit)</h4>
+                                <p>Berdasarkan QS. Ali 'Imran: 7, manusia terbagi dua dalam menyikapi ayat Mutasyabih:</p>
+                                <ul class="list-decimal list-inside pl-4 mt-2">
+                                    <li><strong>Orang yang hatinya condong pada kesesatan:</strong> Mereka mengikuti ayat Mutasyabih untuk mencari-cari fitnah dan mentakwilnya sesuai hawa nafsu.</li>
+                                    <li><strong>Orang yang ilmunya mendalam (Ar-Rasikhuna fil 'Ilm):</strong> Mereka mengimaninya dan mengembalikannya kepada ayat yang Muhkam.</li>
+                                </ul>
+                                <p class="mt-2"><strong class="text-quran-accent">Hikmah Adanya Mutasyabih:</strong></p>
+                                <ul class="list-disc list-inside pl-4">
+                                    <li>Membedakan antara orang yang imannya kokoh dengan orang yang hatinya ragu-ragu.</li>
+                                    <li>Mendorong para ulama untuk terus belajar dan mengerahkan kemampuannya.</li>
+                                    <li>Menunjukkan kelemahan akal manusia di hadapan kemahaluasan ilmu Allah.</li>
+                                </ul>
+                                <div class="teacher-note">
+                                    <p class="font-bold">Poin Diskusi Guru:</p>
+                                    <p>Gunakan analogi: "Al-Qur'an itu seperti lautan. Ayat Muhkam adalah pantai yang dangkal di mana semua orang bisa berenang dan mengambil manfaat dengan aman. Ayat Mutasyabih adalah palung yang sangat dalam. Hanya penyelam ahli (ulama) yang boleh mendekat dengan hati-hati, sementara kita cukup mengagumi keindahannya dari kejauhan tanpa harus menyelaminya, karena kita akan tenggelam."</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">3. Rangkuman & Penutup (15 Menit)</h4>
+                                <p>Ulas kembali definisi Muhkam dan Mutasyabih serta dalil utamanya. Tekankan bahwa jalan keselamatan adalah berpegang pada yang Muhkam dan beriman pada yang Mutasyabih.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-quran-accent pl-3">D. Penilaian Modul</h3>
+                        <p class="mb-4">Penilaian selama pembelajaran modul ini mencakup tiga aspek utama untuk memastikan pemahaman yang holistik:</p>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="p-4 bg-gray-900 rounded"><h4 class="font-semibold text-quran-accent">1. Sikap / Adab (20%)</h4><p class="text-sm">Meliputi adab terhadap Al-Qur'an, semangat mengimani seluruh ayat-Nya, dan ketundukan hati terhadap ilmu Allah.</p></div>
+                            <div class="p-4 bg-gray-900 rounded"><h4 class="font-semibold text-quran-accent">2. Pengetahuan (50%)</h4><p class="text-sm">Diukur dari hasil Latihan Formatif di setiap pertemuan dan hasil Tes Sumatif di akhir modul. Ini menunjukkan penguasaan definisi, dalil, dan contoh.</p></div>
+                            <div class="p-4 bg-gray-900 rounded"><h4 class="font-semibold text-quran-accent">3. Keterampilan (30%)</h4><p class="text-sm">Dinilai dari partisipasi aktif dalam simulasi, kemampuan mengklasifikasikan ayat, dan kemampuan menjelaskan kembali sikap yang benar terhadap ayat mutasyabih.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-semibold text-quran-accent mb-2">Simulasi 1: Filter Ayat</h4>
+                            <p class="text-sm mb-4">Baca potongan ayat berikut dan tentukan apakah maknanya Muhkam (Jelas) atau Mutasyabih (Samar/Membutuhkan Iman).</p>
+                            <div id="sim1-container" class="space-y-2">
+                                <div class="sim1-ayat p-3 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600" data-tipe="muhkam">"Dan dirikanlah shalat..." (QS. Al-Baqarah: 43)</div>
+                                <div class="sim1-ayat p-3 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600" data-tipe="mutasyabih">"Tangan Allah di atas tangan mereka..." (QS. Al-Fath: 10)</div>
+                                <div class="sim1-ayat p-3 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600" data-tipe="muhkam">"Dan janganlah kamu mendekati zina..." (QS. Al-Isra': 32)</div>
+                                <div class="sim1-ayat p-3 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600" data-tipe="mutasyabih">"Alif, Laam, Miim." (QS. Al-Baqarah: 1)</div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                             <h4 class="font-semibold text-quran-accent mb-2">Simulasi 2: Puzzle Sikap</h4>
+                            <p class="text-sm mb-4">Seret setiap sikap ke kelompok yang benar: Sikap Orang Beriman atau Sikap Orang Sesat terhadap ayat Mutasyabih.</p>
+                             <div id="sim2-source" class="flex flex-wrap gap-2 mb-3 p-2 bg-gray-900 rounded justify-center">
+                               <div class="draggable p-2 bg-gray-600 rounded text-xs" draggable="true" data-type="iman">Mengimani</div>
+                               <div class="draggable p-2 bg-gray-600 rounded text-xs" draggable="true" data-type="sesat">Mencari fitnah</div>
+                               <div class="draggable p-2 bg-gray-600 rounded text-xs" draggable="true" data-type="iman">Berserah diri (Taslim)</div>
+                               <div class="draggable p-2 bg-gray-600 rounded text-xs" draggable="true" data-type="sesat">Mentakwil sesuai hawa nafsu</div>
+                            </div>
+                             <div class="grid grid-cols-2 gap-4">
+                                <div class="drop-zone p-2 border-2 border-dashed border-correct rounded-lg min-h-[80px]" data-target="iman"><p class="text-center font-bold text-correct text-sm">Orang Beriman</p></div>
+                                <div class="drop-zone p-2 border-2 border-dashed border-incorrect rounded-lg min-h-[80px]" data-target="sesat"><p class="text-center font-bold text-incorrect text-sm">Orang Sesat</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 1</h3>
+                    <div id="quiz1" class="space-y-6"></div>
+                </div>
+            </div>
+
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 2 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan2" class="tab-pane hidden space-y-8">
+                <div class="p-6 bg-quran-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-quran-accent mb-1">Pertemuan 2: Mendalami Ayat-Ayat Muhkam</h2>
+                    <p class="mb-6 text-quran-secondary">Mengenali ragam dan contoh ayat-ayat Muhkam yang menjadi pondasi ajaran Islam.</p>
+                     
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-quran-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                           <li>Santri mampu mengidentifikasi tiga jenis utama ayat Muhkam: Hukum, Kisah, dan Wa'ad/Wa'id.</li>
+                           <li>Santri mampu memberikan minimal satu contoh ayat untuk setiap jenis ayat Muhkam.</li>
+                           <li>Santri memahami bahwa ayat-ayat hukum adalah panduan praktis dalam kehidupan sehari-hari.</li>
+                           <li>Santri dapat mengambil pelajaran ('ibrah) dari ayat-ayat kisah yang muhkam.</li>
+                           <li>Santri termotivasi untuk meraih janji (Wa'ad) dan takut terhadap ancaman (Wa'id) Allah.</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-quran-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Inti dari diturunkannya Al-Qur'an adalah sebagai petunjuk (<i class="arabic">هدى</i>) bagi manusia. Petunjuk ini paling jelas termanifestasi dalam ayat-ayat Muhkam. Mengkaji ayat-ayat Muhkam menanamkan nilai ketaatan (<i class="arabic">الطاعة</i>) dan kepatuhan dalam menjalankan syariat. Ketika Allah berfirman dengan jelas "Lakukan A" atau "Jangan lakukan B", seorang mukmin akan berkata "Sami'na wa atha'na" (Kami dengar dan kami taat). Mempelajari kisah-kisah yang muhkam menumbuhkan 'ibrah (kemampuan mengambil pelajaran), sementara mempelajari janji dan ancaman yang muhkam akan menyeimbangkan rasa harap (<i class="arabic">الرجاء</i>) dan takut (<i class="arabic">الخوف</i>) kepada Allah.</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic-text">قُلْ تَعَالَوْا أَتْلُ مَا حَرَّمَ رَبُّكُمْ عَلَيْكُمْ ۖ أَلَّا تُشْرِكُوا بِهِ شَيْئًا ۖ وَبِالْوَالِدَيْنِ إِحْسَانًا</p>
+                            <p class="mt-2 text-quran-light">"Katakanlah: 'Marilah kubacakan apa yang diharamkan atas kamu oleh Tuhanmu yaitu: janganlah kamu mempersekutukan sesuatu dengan Dia, berbuat baiklah terhadap kedua orang ibu bapak...'"</p>
+                            <p class="text-sm text-quran-accent mt-1">(QS. Al-An'am: 151)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-quran-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                         <div class="space-y-6">
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">1. Jenis-Jenis Ayat Muhkam (75 Menit)</h4>
+                               <p class="mb-4">Ayat-ayat Muhkam dapat dikelompokkan menjadi beberapa kategori utama:</p>
+                               <div class="space-y-4">
+                                   <div>
+                                       <strong class="text-quran-accent">a. Ayat-ayat Hukum (Ahkam):</strong> Berisi perintah, larangan, halal, haram, dan aturan ibadah muamalah. Ini adalah bagian paling praktis dari Al-Qur'an.
+                                       <ul class="list-disc list-inside pl-4 mt-1 text-sm">
+                                           <li><strong>Contoh:</strong> Larangan memakan harta riba (QS. Al-Baqarah: 275), perintah puasa (QS. Al-Baqarah: 183), hukum waris (QS. An-Nisa': 11-12).</li>
+                                       </ul>
+                                   </div>
+                                   <div>
+                                       <strong class="text-quran-accent">b. Ayat-ayat Kisah (Qashash):</strong> Berisi cerita para nabi dan umat terdahulu yang maknanya jelas untuk diambil pelajaran ('ibrah).
+                                       <ul class="list-disc list-inside pl-4 mt-1 text-sm">
+                                           <li><strong>Contoh:</strong> Kisah kesabaran Nabi Ayyub (QS. Shad: 41-44), kisah tenggelamnya Fir'aun (QS. Yunus: 90-92), kisah Ashabul Kahfi (QS. Al-Kahfi: 9-26).</li>
+                                       </ul>
+                                   </div>
+                                   <div>
+                                       <strong class="text-quran-accent">c. Ayat-ayat Janji & Ancaman (Wa'ad wa Wa'id):</strong> Berisi gambaran tentang surga, neraka, pahala, dan siksa yang maknanya jelas.
+                                       <ul class="list-disc list-inside pl-4 mt-1 text-sm">
+                                           <li><strong>Contoh Wa'ad (Janji):</strong> Balasan surga bagi orang bertakwa (QS. Muhammad: 15).</li>
+                                           <li><strong>Contoh Wa'id (Ancaman):</strong> Siksaan bagi para pendusta agama (QS. Al-Ma'un: 1-7).</li>
+                                       </ul>
+                                   </div>
+                               </div>
+                               <div class="teacher-note">
+                                   <p class="font-bold">Poin Diskusi Guru:</p>
+                                   <p>Ajak santri membuka mushaf dan mencari contoh lain untuk setiap kategori. Misal, "Coba temukan satu ayat muhkam tentang perintah berhijab!" atau "Siapa bisa sebutkan satu kisah nabi yang paling berkesan dan apa pelajaran muhkam darinya?" Ini akan membuat sesi lebih interaktif.</p>
+                               </div>
+                            </div>
+
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">2. Rangkuman (15 Menit)</h4>
+                               <p>Ulas kembali tiga jenis utama ayat Muhkam. Tekankan bahwa mayoritas isi Al-Qur'an adalah Muhkam, yang menunjukkan bahwa Al-Qur'an adalah kitab petunjuk yang jelas dan dapat diamalkan oleh seluruh manusia.</p>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-semibold text-quran-accent mb-2">Simulasi 1: Klasifikasi Ayat Muhkam</h4>
+                            <p class="text-sm mb-4">Seret setiap contoh ayat ke dalam kategori Muhkam yang tepat.</p>
+                             <div id="sim3-source" class="space-y-2 mb-3 p-2 bg-gray-900 rounded min-h-[40px]">
+                               <div class="draggable p-2 bg-gray-600 rounded text-xs" draggable="true" data-type="hukum">"Diharamkan bagimu (memakan) bangkai, darah, daging babi..."</div>
+                               <div class="draggable p-2 bg-gray-600 rounded text-xs" draggable="true" data-type="kisah">"Dan (ingatlah) ketika Musa berkata kepada kaumnya..."</div>
+                               <div class="draggable p-2 bg-gray-600 rounded text-xs" draggable="true" data-type="ancaman">"Maka celakalah bagi orang-orang yang shalat, (yaitu) orang-orang yang lalai..."</div>
+                            </div>
+                             <div class="grid grid-cols-3 gap-2">
+                                <div class="drop-zone p-2 border-2 border-dashed border-sky-400 rounded-lg min-h-[80px]" data-target="hukum"><p class="text-center font-bold text-sky-400 text-xs">Hukum</p></div>
+                                <div class="drop-zone p-2 border-2 border-dashed border-green-400 rounded-lg min-h-[80px]" data-target="kisah"><p class="text-center font-bold text-green-400 text-xs">Kisah</p></div>
+                                <div class="drop-zone p-2 border-2 border-dashed border-red-400 rounded-lg min-h-[80px]" data-target="ancaman"><p class="text-center font-bold text-red-400 text-xs">Ancaman</p></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                             <h4 class="font-semibold text-quran-accent mb-2">Simulasi 2: Mengambil 'Ibrah dari Kisah</h4>
+                            <p class="text-sm mb-4">Dari kisah Nabi Yusuf 'alaihissalam yang difitnah lalu dimasukkan ke penjara, namun akhirnya menjadi pembesar Mesir, 'ibrah (pelajaran) muhkam apa yang bisa kita ambil?</p>
+                             <div id="sim4-options" class="space-y-2">
+                                <button class="sim4-option w-full p-3 bg-gray-700 hover:bg-gray-600 rounded">Kita harus selalu berprasangka buruk kepada orang lain.</button>
+                                <button class="sim4-option w-full p-3 bg-gray-700 hover:bg-gray-600 rounded">Kesabaran dan ketakwaan akan berbuah hasil yang baik di akhir.</button>
+                                <button class="sim4-option w-full p-3 bg-gray-700 hover:bg-gray-600 rounded">Menjadi pembesar adalah tujuan utama hidup.</button>
+                             </div>
+                             <p id="sim4-feedback" class="text-center mt-3 font-bold h-5"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 2</h3>
+                    <div id="quiz2" class="space-y-6"></div>
+                </div>
+            </div>
+            
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 3 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan3" class="tab-pane hidden space-y-8">
+                <div class="p-6 bg-quran-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-quran-accent mb-1">Pertemuan 3: Mendalami Ayat-Ayat Mutasyabih</h2>
+                    <p class="mb-6 text-quran-secondary">Mengenali ragam ayat Mutasyabih dan sikap Ahlussunnah wal Jama'ah terhadapnya.</p>
+                     
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-quran-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                           <li>Santri mampu mengidentifikasi tiga jenis utama ayat Mutasyabih: Sifat Allah, Alam Ghaib, dan Huruf Muqatha'ah.</li>
+                           <li>Santri mampu menjelaskan kaidah Ahlussunnah dalam mengimani ayat-ayat Sifat.</li>
+                           <li>Santri dapat menyebutkan 4 larangan dalam membahas ayat Sifat (Tahrif, Ta'thil, Takyif, Tamtsil).</li>
+                           <li>Santri memahami bahwa hakikat alam ghaib (seperti ruh) hanya diketahui oleh Allah.</li>
+                           <li>Santri mengetahui sikap yang benar terhadap huruf-huruf di awal surat.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-quran-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Puncak adab kepada Allah adalah meyakini kesempurnaan-Nya dan mensucikan-Nya dari segala kekurangan. Ayat-ayat Mutasyabih, khususnya tentang Sifat Allah, adalah ujian bagi adab ini. Manhaj Salaf mengajarkan kita untuk menetapkan apa yang Allah tetapkan bagi diri-Nya tanpa menyerupakannya dengan makhluk (<i class="arabic">تمثيل</i>), tanpa menanyakan "bagaimana"-nya (<i class="arabic">تكييف</i>), tanpa mengubah maknanya (<i class="arabic">تحريف</i>), dan tanpa menolaknya (<i class="arabic">تعطيل</i>). Ini adalah jalan tengah yang lurus, yang memadukan antara penetapan (itsbat) dan pensucian (tanzih), sesuai dengan firman-Nya:</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic-text">لَيْسَ كَمِثْلِهِ شَيْءٌ ۖ وَهُوَ السَّمِيعُ الْبَصِيرُ</p>
+                            <p class="mt-2 text-quran-light">"Tidak ada sesuatu pun yang serupa dengan Dia, dan Dia-lah yang Maha Mendengar lagi Maha Melihat."</p>
+                            <p class="text-sm text-quran-accent mt-1">(QS. Asy-Syura: 11)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-quran-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                         <div class="space-y-6">
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">1. Jenis-Jenis Ayat Mutasyabih (75 Menit)</h4>
+                               <div class="space-y-4">
+                                   <div>
+                                       <strong class="text-quran-accent">a. Ayat-ayat tentang Sifat Allah:</strong> Ini adalah jenis mutasyabih dari segi hakikat (kaifiyyah), bukan dari segi makna dasar. Kita tahu makna 'tangan' atau 'wajah', tapi kita tidak tahu hakikat Tangan atau Wajah Allah.
+                                       <ul class="list-disc list-inside pl-4 mt-1 text-sm">
+                                           <li><strong>Contoh:</strong> "Wajah Rabb-mu" (QS. Ar-Rahman: 27), "Tangan Allah" (QS. Al-Fath: 10), "Allah ber-istiwa' di atas 'Arsy" (QS. Thaha: 5).</li>
+                                           <li><strong>Sikap kita:</strong> Mengimani maknanya, menyerahkan hakikatnya kepada Allah.</li>
+                                       </ul>
+                                   </div>
+                                   <div>
+                                       <strong class="text-quran-accent">b. Ayat-ayat tentang Hakikat Alam Ghaib:</strong> Ayat yang mengabarkan tentang alam ghaib, namun hakikatnya tidak bisa dijangkau akal manusia.
+                                       <ul class="list-disc list-inside pl-4 mt-1 text-sm">
+                                           <li><strong>Contoh:</strong> "Dan mereka bertanya kepadamu tentang ruh. Katakanlah: 'Ruh itu termasuk urusan Rabb-ku'..." (QS. Al-Isra': 85).</li>
+                                       </ul>
+                                   </div>
+                                   <div>
+                                       <strong class="text-quran-accent">c. Huruf-Huruf Muqatha'ah:</strong> Potongan huruf di awal beberapa surat.
+                                       <ul class="list-disc list-inside pl-4 mt-1 text-sm">
+                                           <li><strong>Contoh:</strong> <i class="arabic">الم</i>, <i class="arabic">كهيعص</i>, <i class="arabic">يس</i>.</li>
+                                           <li><strong>Sikap kita:</strong> Mengimaninya sebagai bagian dari Al-Qur'an dan menyerahkan ilmunya kepada Allah. Inilah pendapat mayoritas ulama salaf.</li>
+                                       </ul>
+                                   </div>
+                               </div>
+                               <div class="teacher-note">
+                                   <p class="font-bold">Poin Diskusi Guru:</p>
+                                   <p>Tekankan 4 larangan: "Coba jelaskan apa bedanya Tahrif dan Ta'thil?" Tahrif itu mengubah makna (misal: tangan diartikan kekuasaan). Ta'thil itu menolak sifatnya sama sekali. Keduanya adalah penyimpangan. Manhaj Salaf selamat dari keduanya.</p>
+                               </div>
+                            </div>
+
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">2. Rangkuman (15 Menit)</h4>
+                               <p>Ulas kembali jenis-jenis ayat Mutasyabih dan sikap yang benar terhadapnya. Tekankan bahwa keselamatan aqidah terletak pada mengikuti pemahaman para sahabat dan ulama salaf.</p>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+                
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-semibold text-quran-accent mb-2">Simulasi 1: Kaidah Emas Ahlussunnah</h4>
+                            <p class="text-sm mb-4">Terhadap ayat <i class="arabic">الرَّحْمَٰنُ عَلَى الْعَرْشِ اسْتَوَىٰ</i>, manakah sikap yang sesuai dengan kaidah emas Ahlussunnah?</p>
+                            <div id="sim5-options" class="space-y-2">
+                                <button class="sim5-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded">Menolaknya karena tidak masuk akal.</button>
+                                <button class="sim5-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded">Mengartikan 'istiwa' sebagai 'menguasai'.</button>
+                                <button class="sim5-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded">Mengimaninya, tapi bertanya-tanya bagaimana cara Allah ber-istiwa'.</button>
+                                <button class="sim5-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded">Mengimani bahwa Allah ber-istiwa', sesuai keagungan-Nya, tanpa bertanya bagaimana.</button>
+                            </div>
+                            <p id="sim5-feedback" class="text-center mt-3 font-bold h-5"></p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-quran-accent mb-2">Simulasi 2: Identifikasi Penyimpangan</h4>
+                            <p class="text-sm mb-4">Jodohkan setiap pernyataan sesat dengan jenis penyimpangannya.</p>
+                            <div id="sim6-container" class="space-y-2">
+                                <div class="flex items-center justify-between bg-gray-800 p-2 rounded">
+                                    <span class="text-sm">"Tangan Allah artinya kekuasaan"</span>
+                                    <select class="sim6-select bg-gray-700 text-white text-sm rounded p-1">
+                                        <option value="">Pilih</option>
+                                        <option value="tahrif">Tahrif</option>
+                                        <option value="takyif">Takyif</option>
+                                        <option value="tamtsil">Tamtsil</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center justify-between bg-gray-800 p-2 rounded">
+                                    <span class="text-sm">"Tangan Allah seperti tangan saya"</span>
+                                    <select class="sim6-select bg-gray-700 text-white text-sm rounded p-1">
+                                        <option value="">Pilih</option>
+                                        <option value="tahrif">Tahrif</option>
+                                        <option value="takyif">Takyif</option>
+                                        <option value="tamtsil">Tamtsil</option>
+                                    </select>
+                                </div>
+                                 <div class="flex items-center justify-between bg-gray-800 p-2 rounded">
+                                    <span class="text-sm">"Bagaimana cara Allah turun ke langit dunia?"</span>
+                                    <select class="sim6-select bg-gray-700 text-white text-sm rounded p-1">
+                                        <option value="">Pilih</option>
+                                        <option value="tahrif">Tahrif</option>
+                                        <option value="takyif">Takyif</option>
+                                        <option value="tamtsil">Tamtsil</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 3</h3>
+                    <div id="quiz3" class="space-y-6"></div>
+                </div>
+            </div>
+
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 4 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan4" class="tab-pane hidden space-y-8">
+                <div class="p-6 bg-quran-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-quran-accent mb-1">Pertemuan 4: Sikap Ulama & Bahaya Penyimpangan</h2>
+                    <p class="mb-6 text-quran-secondary">Meneladani sikap para ulama salaf dan mewaspadai bahaya menyelewengkan ayat Mutasyabih.</p>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-quran-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                           <li>Santri mampu menukil dan menjelaskan perkataan Imam Malik tentang Istiwa'.</li>
+                           <li>Santri memahami makna "Ar-Rasikhuna fil 'Ilm" (orang yang ilmunya mendalam).</li>
+                           <li>Santri dapat menjelaskan metode tafsir yang benar, yaitu mengembalikan yang mutasyabih kepada yang muhkam.</li>
+                           <li>Santri mampu menyebutkan contoh kelompok menyimpang dan kesalahan mereka dalam memahami ayat mutasyabih.</li>
+                           <li>Santri semakin yakin bahwa jalan keselamatan adalah manhaj salaf.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-quran-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Mengikuti jejak para salafus shalih (<i class="arabic">اتباع السلف</i>) adalah prinsip fundamental dalam Ahlussunnah wal Jama'ah. Mereka adalah generasi terbaik yang pemahamannya paling murni terhadap Al-Qur'an dan Sunnah. Dalam menghadapi ayat-ayat mutasyabih, sikap mereka adalah puncak dari ilmu dan adab. Meneladani mereka akan melindungi kita dari ketergelinciran pemikiran dan hawa nafsu. Ini adalah wujud dari firman Allah yang memerintahkan kita untuk mengikuti jalan orang-orang yang beriman sebelum kita.</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic-text">وَالرَّاسِخُونَ فِي الْعِلْمِ يَقُولُونَ آمَنَّا بِهِ كُلٌّ مِنْ عِنْدِ رَبِّنَا</p>
+                            <p class="mt-2 text-quran-light">"Dan orang-orang yang mendalam ilmunya berkata: 'Kami beriman kepada ayat-ayat yang mutasyabihat, semuanya itu dari sisi Tuhan kami'."</p>
+                            <p class="text-sm text-quran-accent mt-1">(QS. Ali 'Imran: 7)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-quran-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                         <div class="space-y-6">
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">1. Kaidah Emas Imam Malik (35 Menit)</h4>
+                               <p>Ketika Imam Malik rahimahullah ditanya tentang firman Allah <i class="arabic">الرَّحْمَٰنُ عَلَى الْعَرْشِ اسْتَوَىٰ</i>, "Bagaimana cara Allah ber-istiwa'?", beliau menunduk hingga berkeringat, lalu menjawab dengan kaidah emas yang menjadi pedoman Ahlussunnah:</p>
+                               <div class="p-4 my-2 text-center bg-gray-900 rounded-lg">
+                                 <p class="text-lg font-semibold text-quran-accent">الإِسْتِوَاءُ مَعْلُوْمٌ، وَالْكَيْفُ مَجْهُوْلٌ، وَالإِيْمَانُ بِهِ وَاجِبٌ، وَالسُّؤَالُ عَنْهُ بِدْعَةٌ</p>
+                                 <p class="text-sm italic mt-2">"Istiwa'-nya ma'lum (maknanya diketahui), Kaif-nya (caranya/hakikatnya) majhul (tidak diketahui), mengimaninya wajib, dan bertanya tentangnya adalah bid'ah."</p>
+                               </div>
+                               <p>Kaidah ini berlaku untuk semua sifat Allah yang lain.</p>
+                            </div>
+                            
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">2. Bahaya Penyimpangan (40 Menit)</h4>
+                               <p>Kelompok-kelompok sesat muncul karena mereka mendahulukan akal daripada dalil dan salah dalam menyikapi ayat mutasyabih.</p>
+                               <ul class="list-disc list-inside mt-2 pl-4 space-y-2">
+                                   <li><strong>Jahmiyyah:</strong> Menolak semua nama dan sifat Allah (Ta'thil).</li>
+                                   <li><strong>Mu'tazilah:</strong> Menetapkan nama-nama Allah tapi menolak sifat-sifat-Nya. Mereka mentakwil (Tahrif) ayat sifat, misal 'Tangan Allah' diartikan 'kekuasaan'.</li>
+                                   <li><strong>Musyabbihah:</strong> Menetapkan sifat Allah tapi menyerupakannya dengan sifat makhluk (Tamtsil).</li>
+                               </ul>
+                               <p class="mt-2">Jalan keselamatan adalah manhaj Ahlussunnah wal Jama'ah (Salafus Shalih) yang berada di tengah-tengah, yaitu menetapkan sifat tanpa menyerupakan dan mensucikan tanpa menolak.</p>
+                               <div class="teacher-note">
+                                   <p class="font-bold">Poin Diskusi Guru:</p>
+                                   <p>Tegaskan: "Metode yang benar adalah mengembalikan yang mutasyabih kepada yang muhkam. Contoh: Kita membaca ayat mutasyabih tentang Tangan Allah. Lalu kita kembalikan kepada ayat muhkam 'Laisa kamitslihi syaiun' (Tidak ada yang serupa dengan-Nya). Kesimpulannya: Kita tetapkan Allah punya Tangan, tapi Tangan yang tidak serupa dengan tangan makhluk."</p>
+                               </div>
+                            </div>
+                             
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">3. Rangkuman & Persiapan Ujian (15 Menit)</h4>
+                               <p>Ulas kembali kaidah Imam Malik dan bahaya penyimpangan kelompok sesat. Kuatkan keyakinan santri untuk selalu berpegang pada pemahaman salaf dalam urusan aqidah.</p>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md-grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-semibold text-quran-accent mb-2">Simulasi 1: Menjawab Seperti Imam Malik</h4>
+                            <p class="text-sm mb-4">Seseorang bertanya kepada Anda, "Bagaimana cara Allah Tertawa?". Berdasarkan kaidah Imam Malik, bagian mana dari jawaban beliau yang paling tepat untuk menjawabnya?</p>
+                             <div class="bg-gray-800 p-4 rounded-md">
+                               <input id="sim7-input" type="text" class="w-full bg-gray-700 p-2 rounded text-white text-center" placeholder="Ketik jawabanmu di sini...">
+                               <button id="sim7-check" class="w-full mt-3 py-2 bg-quran-accent hover:bg-quran-accent-hover rounded">Cek Jawaban</button>
+                               <p id="sim7-feedback" class="text-center mt-2 font-bold h-5"></p>
+                             </div>
+                        </div>
+                        
+                        <div>
+                             <h4 class="font-semibold text-quran-accent mb-2">Simulasi 2: Benteng Manhaj Salaf</h4>
+                            <p class="text-sm mb-4">Seret setiap konsep ke dalam benteng Ahlussunnah atau ke luar (area penyimpangan).</p>
+                             <div id="sim8-source" class="flex flex-wrap gap-2 mb-3 p-2 bg-gray-900 rounded justify-center">
+                               <div class="draggable p-2 bg-gray-600 rounded text-xs" draggable="true" data-type="dalam">Itsbat (Menetapkan)</div>
+                               <div class="draggable p-2 bg-gray-600 rounded text-xs" draggable="true" data-type="luar">Tamtsil (Menyerupakan)</div>
+                               <div class="draggable p-2 bg-gray-600 rounded text-xs" draggable="true" data-type="dalam">Tanzih (Mensucikan)</div>
+                               <div class="draggable p-2 bg-gray-600 rounded text-xs" draggable="true" data-type="luar">Ta'thil (Menolak)</div>
+                            </div>
+                            <div class="drop-zone p-2 border-2 border-dashed border-quran-accent rounded-lg min-h-[80px] text-center" data-target="dalam"><p class="font-bold text-quran-accent text-sm">Di Dalam Benteng</p></div>
+                            <div class="drop-zone p-2 border-2 border-dashed border-incorrect rounded-lg min-h-[80px] mt-2 text-center" data-target="luar"><p class="font-bold text-incorrect text-sm">Di Luar Benteng</p></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 4</h3>
+                    <div id="quiz4" class="space-y-6"></div>
+                </div>
+            </div>
+            
+            <!-- =================================================================== -->
+            <!-- ======================= KONTEN TES SUMATIF ======================== -->
+            <!-- =================================================================== -->
+            <div id="tesSumatif" class="tab-pane hidden space-y-6">
+                <div class="p-6 bg-red-900/30 border border-red-500 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-red-300 mb-2">Tes Sumatif: ULQ-204</h2>
+                    <p class="mb-6 text-red-200">Ujian akhir untuk mengukur pemahaman Anda tentang Muhkam & Mutasyabih. Bismillah!</p>
+                    
+                    <div id="sumatif-questions-container"></div>
+                    
+                    <div id="sumatif-result-container" class="hidden text-center p-6 bg-quran-darker rounded-lg">
+                        <h3 class="text-2xl font-bold text-white">Hasil Tes Sumatif</h3>
+                        <p id="sumatif-score" class="text-4xl font-bold text-quran-accent my-4"></p>
+                        <p id="sumatif-feedback" class="text-lg mb-6"></p>
+                        <button id="sumatif-retry-btn" class="py-2 px-6 bg-quran-accent text-white font-semibold rounded-lg hover:bg-quran-accent-hover transition-colors">Ulangi Tes</button>
+                    </div>
+
+                    <button id="sumatif-submit-btn" class="w-full mt-6 py-3 bg-quran-accent text-white font-bold rounded-lg text-lg hover:bg-quran-accent-hover transition-colors">Selesaikan Tes</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+// THIS SCRIPT BLOCK IS MANDATORY AND MUST BE COMPLETE
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ================== DATA BANK ==================
+    const quizData = {
+        quiz1: [
+            { q: "Ayat yang maknanya jelas, gamblang, dan menjadi pokok isi Al-Qur'an disebut...", options: ["Mutasyabih", "Muhkam", "Makkiyah", "Madaniyah"], a: 1, exp: "Benar. Ayat Muhkam adalah 'Ummul Kitab' atau induk Al-Qur'an." },
+            { q: "Dalil utama yang menjelaskan tentang pembagian ayat Muhkam dan Mutasyabih adalah...", options: ["QS. Al-Baqarah: 255", "QS. Yasin: 1-3", "QS. Ali 'Imran: 7", "QS. Al-Ikhlas: 1-4"], a: 2, exp: "Benar. Surat Ali 'Imran ayat 7 adalah landasan utama bab ini." },
+            { q: "Menurut QS. Ali 'Imran: 7, orang yang hatinya condong pada kesesatan akan mengikuti ayat Mutasyabih untuk tujuan...", options: ["Mencari hidayah dan ilmu", "Mencari fitnah dan takwil sesat", "Mengkajinya dengan para ulama", "Menghafalkannya saja"], a: 1, exp: "Benar. 'Fa ammalladziina fii quluubihim zaighun fayattabi'uuna maa tasyaabaha minhu-btighaa-al fitnati wa-btighaa-a ta'wiilihi'." },
+            { q: "Manakah dari berikut ini yang merupakan contoh ayat Muhkam?", options: ["Alif, Laam, Miim.", "Perintah untuk berbakti kepada orang tua.", "Ayat tentang hakikat Ruh.", "Ayat tentang Wajah Allah."], a: 1, exp: "Benar. Perintah berbakti adalah hukum yang maknanya sangat jelas." },
+            { q: "Sikap orang yang ilmunya mendalam (Ar-Rasikhuna fil 'Ilm) terhadap ayat Mutasyabih adalah...", options: ["Menolaknya karena tidak masuk akal", "Mengatakan 'Kami beriman kepadanya, semua dari sisi Rabb kami'", "Mencoba menafsirkannya dengan akal semata", "Mendiamkannya dan tidak mau membahasnya"], a: 1, exp: "Benar. Mereka mengimaninya secara total dan menyerahkan hakikatnya kepada Allah." },
+            { q: "Berikut ini adalah hikmah adanya ayat Mutasyabih, KECUALI...", options: ["Membedakan antara orang yang imannya kokoh dan yang ragu", "Agar manusia bingung dan meninggalkan Al-Qur'an", "Menunjukkan keluasan ilmu Allah dan keterbatasan akal manusia", "Mendorong para ulama untuk terus belajar"], a: 1, exp: "Benar. Allah menurunkan Al-Qur'an sebagai petunjuk, bukan untuk membingungkan." },
+            { q: "Pokok-pokok ajaran Al-Qur'an terdapat dalam ayat-ayat...", options: ["Mutasyabih", "Muhkam", "Nasikh", "Mansukh"], a: 1, exp: "Benar. 'Hunna ummul kitab' (merekalah Ummul Kitab/induk kitab)." },
+            { q: "Manakah dari berikut ini yang merupakan contoh ayat Mutasyabih?", options: ["Larangan membunuh.", "Kisah Nabi Musa.", "Ayat tentang Istiwa' Allah di atas 'Arsy.", "Hukum warisan."], a: 2, exp: "Benar. Istiwa' adalah sifat Allah, maknanya kita imani, namun hakikatnya mutasyabih (tidak kita ketahui)." },
+            { q: "Al-Qur'an disebut Muhkam seluruhnya dari sisi...", options: ["Maknanya yang semua jelas", "Lafaznya yang kokoh, indah, dan tanpa cela", "Hukumnya yang mudah semua", "Sejarahnya"], a: 1, exp: "Benar. Dari sisi susunan bahasa dan keindahan lafaznya, seluruh Al-Qur'an adalah muhkam (sempurna)." },
+            { q: "Jalan keselamatan dalam menyikapi Al-Qur'an adalah...", options: ["Hanya mengambil ayat Muhkam dan menolak Mutasyabih", "Hanya fokus pada ayat Mutasyabih", "Mengimani keduanya, mengamalkan yang Muhkam dan menyerahkan hakikat Mutasyabih pada Allah", "Menafsirkan semua ayat sesuai logika"], a: 2, exp: "Benar. Ini adalah manhaj Ahlussunnah wal Jama'ah." }
+        ],
+        quiz2: [
+            { q: "Ayat-ayat yang berisi perintah, larangan, halal, dan haram termasuk kategori ayat Muhkam...", options: ["Kisah (Qashash)", "Hukum (Ahkam)", "Janji & Ancaman (Wa'ad wa Wa'id)", "Perumpamaan (Amtsal)"], a: 1, exp: "Benar. Ayat hukum menjadi panduan amalan sehari-hari." },
+            { q: "Kisah tenggelamnya Fir'aun dalam Al-Qur'an adalah contoh ayat Muhkam kategori...", options: ["Hukum", "Kisah", "Ancaman", "Janji"], a: 1, exp: "Benar. Pelajaran ('ibrah) dari kisah ini sangat jelas dan muhkam." },
+            { q: "Gambaran tentang keindahan surga bagi orang bertakwa dalam Al-Qur'an adalah contoh dari...", options: ["Wa'id (Ancaman)", "Qashash (Kisah)", "Ahkam (Hukum)", "Wa'ad (Janji Baik)"], a: 3, exp: "Benar. Wa'ad adalah janji baik dari Allah untuk memotivasi hamba-Nya." },
+            { q: "Tujuan utama dari ayat-ayat kisah yang muhkam adalah untuk...", options: ["Hiburan semata", "Mengetahui sejarah kuno", "Diambil pelajaran ('ibrah)", "Bahan perdebatan"], a: 2, exp: "Benar. 'Sesungguhnya pada kisah-kisah mereka itu terdapat pengajaran bagi orang-orang yang mempunyai akal.' (QS. Yusuf: 111)." },
+            { q: "Ayat 'Maka celakalah bagi orang-orang yang shalat, (yaitu) orang-orang yang lalai dari shalatnya' (QS. Al-Ma'un) adalah contoh dari...", options: ["Wa'ad (Janji Baik)", "Wa'id (Ancaman)", "Kisah", "Hukum"], a: 1, exp: "Benar. Ini adalah ancaman yang jelas bagi orang yang melalaikan shalat." },
+            { q: "Ayat yang mengharamkan riba (QS. Al-Baqarah: 275) termasuk dalam kategori...", options: ["Hukum", "Kisah", "Wa'ad", "Wa'id"], a: 0, exp: "Benar. Ayat ini secara jelas menetapkan hukum haramnya riba." },
+            { q: "Mempelajari ayat-ayat Wa'ad dan Wa'id akan menumbuhkan keseimbangan antara...", options: ["Dunia dan akhirat", "Rasa harap (Raja') dan takut (Khauf)", "Ilmu dan amal", "Kaya dan miskin"], a: 1, exp: "Benar. Seorang mukmin selalu berada di antara harap akan rahmat Allah dan takut akan azab-Nya." },
+            { q: "Kewajiban berpuasa di bulan Ramadhan yang disebutkan dalam QS. Al-Baqarah: 183 adalah contoh ayat...", options: ["Kisah", "Ancaman", "Hukum", "Janji"], a: 2, exp: "Benar. Ini adalah perintah hukum yang sangat jelas." },
+            { q: "Manakah yang BUKAN termasuk jenis ayat Muhkam?", options: ["Ayat tentang hukum waris", "Ayat tentang kisah Ashabul Kahfi", "Ayat tentang huruf-huruf Muqatha'ah", "Ayat tentang balasan bagi orang yang bersedekah"], a: 2, exp: "Benar. Huruf Muqatha'ah termasuk dalam kategori Mutasyabih." },
+            { q: "Mayoritas isi Al-Qur'an terdiri dari ayat-ayat...", options: ["Mutasyabih", "Muhkam", "Yang sudah dihapus hukumnya", "Tentang astronomi"], a: 1, exp: "Benar. Karena fungsi utamanya adalah sebagai petunjuk yang jelas bagi manusia." }
+        ],
+        quiz3: [
+            { q: "Ayat-ayat yang menyebutkan 'Tangan Allah', 'Wajah Allah', atau 'Mata Allah' termasuk jenis ayat Mutasyabih tentang...", options: ["Alam Ghaib", "Sifat Allah", "Huruf Muqatha'ah", "Kiamat"], a: 1, exp: "Benar. Ini adalah ayat-ayat Sifat." },
+            { q: "Sikap Ahlussunnah terhadap ayat Sifat adalah...", options: ["Menolaknya karena tidak logis", "Menyerupakannya dengan sifat makhluk", "Mengimani maknanya dan menyerahkan hakikatnya kepada Allah", "Mengubah maknanya menjadi makna lain (takwil)"], a: 2, exp: "Benar. Ini adalah manhaj salaf yang selamat." },
+            { q: "Mengartikan 'Tangan Allah' sebagai 'kekuasaan Allah' adalah contoh penyimpangan yang disebut...", options: ["Takyif", "Tamtsil", "Tahrif (Takwil)", "Ta'thil"], a: 2, exp: "Benar. Tahrif adalah memalingkan lafaz dari makna zahirnya tanpa dalil." },
+            { q: "Menanyakan 'Bagaimana cara Allah ber-istiwa' di atas Arsy?' adalah contoh penyimpangan yang disebut...", options: ["Takyif", "Tamtsil", "Tahrif", "Ta'thil"], a: 0, exp: "Benar. Takyif adalah mempertanyakan 'bagaimana' hakikat dari sifat Allah." },
+            { q: "Huruf 'Alif, Laam, Miim' di awal surat Al-Baqarah termasuk ayat Mutasyabih kategori...", options: ["Sifat Allah", "Alam Ghaib", "Huruf Muqatha'ah", "Hukum"], a: 2, exp: "Benar. Sikap yang benar adalah mengatakan 'Allahu a'lamu bi muradihi' (Allah lebih tahu maksudnya)." },
+            { q: "Ayat 'Tidak ada sesuatu pun yang serupa dengan Dia...' (QS. Asy-Syura: 11) adalah dalil untuk membantah penyimpangan...", options: ["Ta'thil (menolak sifat)", "Tamtsil (menyerupakan dengan makhluk)", "Tahrif (mengubah makna)", "Semua jawaban benar"], a: 1, exp: "Benar. Ayat ini dengan jelas menolak penyerupaan (tamtsil)." },
+            { q: "Menolak sifat Istiwa' bagi Allah sama sekali adalah contoh penyimpangan...", options: ["Tamtsil", "Takyif", "Ta'thil", "Tafwid"], a: 2, exp: "Benar. Ta'thil adalah pengosongan atau penolakan sifat yang telah Allah tetapkan." },
+            { q: "Ayat tentang hakikat Ruh (QS. Al-Isra': 85) menunjukkan bahwa ada perkara ghaib yang ilmunya...", options: ["Bisa dipelajari manusia", "Hanya milik Allah", "Sudah tidak relevan", "Bisa ditanyakan pada jin"], a: 1, exp: "Benar. 'Ruh itu termasuk urusan Rabb-ku'." },
+            { q: "Manakah dari pernyataan berikut yang paling sesuai dengan manhaj salaf?", options: ["Allah punya Tangan, tapi kita tidak tahu bagaimana hakikatnya.", "Allah tidak punya Tangan.", "Tangan Allah seperti tangan manusia.", "Tangan Allah artinya nikmat."], a: 0, exp: "Benar. Menetapkan sifat tanpa takyif dan tamtsil." },
+            { q: "Mengatakan 'Wajah Allah seperti bulan purnama' adalah contoh penyimpangan...", options: ["Takyif", "Tamtsil", "Ta'thil", "Tahrif"], a: 1, exp: "Benar. Tamtsil adalah menyerupakan sifat Allah dengan sifat makhluk." }
+        ],
+        quiz4: [
+            { q: "Perkataan emas 'Istiwa'-nya ma'lum, kaif-nya majhul, mengimaninya wajib, dan bertanya tentangnya adalah bid'ah' diucapkan oleh...", options: ["Imam Syafi'i", "Imam Abu Hanifah", "Imam Ahmad", "Imam Malik"], a: 3, exp: "Benar. Ini adalah jawaban legendaris Imam Malik ketika ditanya tentang Istiwa'." },
+            { q: "Metode tafsir yang benar menurut Ahlussunnah adalah...", options: ["Mengembalikan ayat muhkam kepada mutasyabih", "Mengembalikan ayat mutasyabih kepada muhkam", "Hanya menggunakan akal", "Mengabaikan ayat mutasyabih"], a: 1, exp: "Benar. Yang samar maknanya harus dikembalikan kepada yang sudah jelas untuk memahaminya." },
+            { q: "Kelompok sesat yang menolak semua nama dan sifat Allah adalah...", options: ["Mu'tazilah", "Jahmiyyah", "Khawarij", "Musyabbihah"], a: 1, exp: "Benar. Jahmiyyah adalah kelompok yang paling ekstrem dalam menolak sifat (Ta'thil)." },
+            { q: "Kelompok yang menyerupakan sifat Allah dengan sifat makhluk disebut...", options: ["Jahmiyyah", "Mu'tazilah", "Musyabbihah", "Qadariyah"], a: 2, exp: "Benar. Mereka melakukan Tamtsil atau Tasybih." },
+            { q: "Jalan keselamatan dalam memahami aqidah, terutama ayat-ayat Sifat, adalah dengan mengikuti pemahaman...", options: ["Filsuf Yunani", "Para ilmuwan modern", "Salafus Shalih (generasi sahabat, tabi'in, dan tabi'ut tabi'in)", "Tokoh sufi"], a: 2, exp: "Benar. Pemahaman mereka adalah yang paling murni dan paling dekat dengan kebenaran." },
+            { q: "Kaidah Imam Malik berlaku untuk...", options: ["Hanya sifat Istiwa'", "Hanya sifat Wajah dan Tangan", "Semua sifat-sifat Allah", "Hanya untuk madzhab Maliki"], a: 2, exp: "Benar. Ini adalah kaidah umum untuk memahami semua ayat dan hadits Sifat." },
+            { q: "Bahaya utama dari mengikuti ayat-ayat mutasyabih tanpa ilmu adalah...", options: ["Menjadi lebih pintar", "Terjerumus dalam kesesatan dan fitnah", "Mendapat banyak harta", "Menjadi terkenal"], a: 1, exp: "Benar. Sesuai dengan peringatan dalam QS. Ali 'Imran: 7." },
+            { q: "Ciri orang yang ilmunya mendalam (Ar-Rasikhuna fil 'Ilm) adalah...", options: ["Banyak bicara tentang hakikat yang ghaib", "Selalu mendahulukan akalnya", "Tawadhu' dan mengatakan 'Kami beriman'", "Sombong dengan ilmunya"], a: 2, exp: "Benar. Mereka mengakui keterbatasan ilmunya di hadapan ilmu Allah." },
+            { q: "Kelompok Mu'tazilah menyimpang dengan cara...", options: ["Menyerupakan Allah dengan makhluk", "Mentakwil (tahrif) ayat-ayat Sifat dengan akal mereka", "Menolak Al-Qur'an seluruhnya", "Mengkafirkan pelaku dosa besar"], a: 1, exp: "Benar. Mereka dikenal sebagai kelompok yang sangat mendewakan akal." },
+            { q: "Ketika membaca ayat mutasyabih tentang Sifat, lalu kita kembalikan ke ayat muhkam 'Laisa kamitslihi syaiun', maka kesimpulannya adalah...", options: ["Sifat itu tidak ada", "Sifat itu ada, dan serupa dengan makhluk", "Sifat itu ada, namun tidak serupa dengan makhluk", "Kita harus diam saja"], a: 2, exp: "Benar. Ini adalah cara menggabungkan dalil (jam'u bainal adillah) yang benar." }
+        ]
+    };
+
+    const sumatifData = [
+        ...quizData.quiz1.slice(0, 5), ...quizData.quiz2.slice(0, 5),
+        ...quizData.quiz3.slice(0, 5), ...quizData.quiz4.slice(0, 5)
+    ].sort(() => Math.random() - 0.5);
+
+    // ================== CORE FUNCTIONS ==================
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panes = document.querySelectorAll('.tab-pane');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            panes.forEach(p => p.classList.add('hidden'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.remove('hidden');
+        });
+    });
+
+    function createQuiz(quizId, data) {
+        const container = document.getElementById(quizId);
+        if (!container) return;
+        container.innerHTML = '';
+        data.forEach((item, index) => {
+            const questionBlock = document.createElement('div');
+            questionBlock.innerHTML = `
+                <p class="mb-3">${index + 1}. ${item.q}</p>
+                <div class="space-y-2 options-container">
+                    ${item.options.map((option, i) => `
+                        <label class="option-label">
+                            <input type="radio" name="${quizId}-q${index}" value="${i}" class="sr-only">
+                            <span>${option}</span>
+                        </label>
+                    `).join('')}
+                </div>
+                <div class="p-3 mt-3 rounded-lg text-sm hidden feedback-box"></div>
+            `;
+            container.appendChild(questionBlock);
+
+            const optionsContainer = questionBlock.querySelector('.options-container');
+            const feedbackBox = questionBlock.querySelector('.feedback-box');
+            optionsContainer.addEventListener('change', (e) => {
+                const selectedValue = parseInt(e.target.value);
+                const isCorrect = selectedValue === item.a;
+                
+                optionsContainer.querySelectorAll('label').forEach((label, i) => {
+                    const radio = label.querySelector('input');
+                    radio.disabled = true;
+                    if (i === item.a) {
+                        label.classList.add('correct');
+                    }
+                });
+
+                if (!isCorrect) {
+                    e.target.parentElement.classList.add('incorrect');
+                }
+                
+                feedbackBox.innerHTML = item.exp;
+                feedbackBox.classList.remove('hidden');
+                feedbackBox.classList.add(isCorrect ? 'bg-green-900/50' : 'bg-red-900/50');
+            });
+        });
+    }
+
+    function createSumatifTest() {
+        const container = document.getElementById('sumatif-questions-container');
+        if (!container) return;
+        container.innerHTML = '';
+        sumatifData.forEach((item, index) => {
+            const questionBlock = document.createElement('div');
+            questionBlock.className = 'mb-6 p-4 bg-quran-dark rounded-lg';
+            questionBlock.innerHTML = `
+                <p class="mb-3">${index + 1}. ${item.q}</p>
+                <div class="space-y-2">
+                    ${item.options.map((option, i) => `
+                        <label class="option-label">
+                            <input type="radio" name="sumatif-q${index}" value="${i}" data-correct="${item.a}" class="sr-only">
+                            <span>${option}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(questionBlock);
+        });
+    }
+    
+    // ================== SIMULATION LOGIC ==================
+    // Sim 1: Filter Ayat
+    document.querySelectorAll('.sim1-ayat').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tipe = btn.dataset.tipe;
+            if (tipe === 'muhkam') {
+                btn.classList.add('bg-correct', 'text-black', 'font-bold');
+                btn.textContent += ' (Muhkam)';
+            } else {
+                btn.classList.add('bg-quran-accent', 'text-black', 'font-bold');
+                btn.textContent += ' (Mutasyabih)';
+            }
+            btn.style.pointerEvents = 'none';
+        });
+    });
+
+    // General Drag & Drop Initializer
+    function initDragDrop(sourceId, targetClass) {
+        const source = document.getElementById(sourceId);
+        if (!source) return;
+        const draggables = source.querySelectorAll('.draggable');
+        const dropZones = document.querySelectorAll(`.${targetClass}`);
+        let draggedItem = null;
+
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', () => {
+                draggedItem = draggable;
+                setTimeout(() => draggable.style.display = 'none', 0);
+            });
+            draggable.addEventListener('dragend', () => {
+                setTimeout(() => {
+                    if (draggedItem) {
+                       draggedItem.style.display = 'block';
+                       draggedItem = null;
+                    }
+                }, 0);
+            });
+        });
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', e => {
+                e.preventDefault();
+                zone.classList.add('drag-over');
+            });
+            zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                if (draggedItem && draggedItem.dataset.type === zone.dataset.target) {
+                    zone.appendChild(draggedItem);
+                }
+            });
+        });
+    }
+    initDragDrop('sim2-source', 'drop-zone');
+    initDragDrop('sim3-source', 'drop-zone');
+
+    // Sim 4: Mengambil 'Ibrah
+    document.querySelectorAll('.sim4-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const feedback = document.getElementById('sim4-feedback');
+            document.querySelectorAll('.sim4-option').forEach(b => b.disabled = true);
+            if (btn.textContent.includes("Kesabaran")) {
+                btn.classList.add('bg-correct', 'text-black');
+                feedback.textContent = "Benar! Inilah 'ibrah yang paling utama.";
+                feedback.className = "text-center mt-3 font-bold h-5 text-correct";
+            } else {
+                btn.classList.add('bg-incorrect', 'text-black');
+                feedback.textContent = "Kurang Tepat.";
+                feedback.className = "text-center mt-3 font-bold h-5 text-incorrect";
+            }
+        });
+    });
+
+    // Sim 5: Kaidah Emas
+    document.querySelectorAll('.sim5-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const feedback = document.getElementById('sim5-feedback');
+            document.querySelectorAll('.sim5-option').forEach(b => b.disabled = true);
+            if (btn.textContent.includes("tanpa bertanya bagaimana")) {
+                btn.classList.add('bg-correct', 'text-black');
+                feedback.textContent = "Sikap yang Tepat! Ini manhaj salaf.";
+                feedback.className = "text-center mt-3 font-bold h-5 text-correct";
+            } else {
+                btn.classList.add('bg-incorrect', 'text-black');
+                feedback.textContent = "Ini adalah penyimpangan.";
+                feedback.className = "text-center mt-3 font-bold h-5 text-incorrect";
+            }
+        });
+    });
+
+    // Sim 6: Identifikasi Penyimpangan
+    document.querySelectorAll('.sim6-select').forEach(select => {
+        select.addEventListener('change', () => {
+            const value = select.value;
+            const parent = select.parentElement;
+            const text = parent.querySelector('span').textContent;
+            let correct = false;
+            if (text.includes('kekuasaan') && value === 'tahrif') correct = true;
+            if (text.includes('seperti saya') && value === 'tamtsil') correct = true;
+            if (text.includes('Bagaimana cara') && value === 'takyif') correct = true;
+
+            if (correct) {
+                select.classList.add('bg-correct', 'text-white');
+                select.classList.remove('bg-incorrect');
+            } else {
+                select.classList.add('bg-incorrect', 'text-white');
+                select.classList.remove('bg-correct');
+            }
+        });
+    });
+
+    // Sim 7: Menjawab seperti Imam
+     document.getElementById('sim7-check')?.addEventListener('click', () => {
+        const input = document.getElementById('sim7-input');
+        const feedback = document.getElementById('sim7-feedback');
+        const answer = input.value.toLowerCase();
+        if (answer.includes('majhul') || answer.includes('tidak diketahui') || answer.includes('bidah')) {
+            feedback.textContent = "Jawaban Tepat! Pertanyaan tentang 'kaif' adalah bid'ah.";
+            feedback.className = "text-center mt-2 font-bold h-5 text-correct";
+        } else {
+            feedback.textContent = "Kurang Tepat. Fokus pada hakikat (kaif) yang tidak diketahui.";
+            feedback.className = "text-center mt-2 font-bold h-5 text-incorrect";
+        }
+    });
+
+    // Sim 8: Benteng Manhaj
+    initDragDrop('sim8-source', 'drop-zone');
+
+    // ================== INITIALIZATION ==================
+    createQuiz('quiz1', quizData.quiz1);
+    createQuiz('quiz2', quizData.quiz2);
+    createQuiz('quiz3', quizData.quiz3);
+    createQuiz('quiz4', quizData.quiz4);
+    createSumatifTest();
+    
+    const sumatifSubmitBtn = document.getElementById('sumatif-submit-btn');
+    const sumatifRetryBtn = document.getElementById('sumatif-retry-btn');
+    
+    if (sumatifSubmitBtn) {
+        sumatifSubmitBtn.addEventListener('click', () => {
+            let score = 0;
+            const total = sumatifData.length;
+            const answers = document.querySelectorAll('#sumatif-questions-container input[type="radio"]:checked');
+            answers.forEach(radio => {
+                if (parseInt(radio.value) === parseInt(radio.dataset.correct)) { score++; }
+            });
+            const percentage = (score / total) * 100;
+            let feedbackText = '';
+            if (percentage >= 85) feedbackText = "Mumtaz! Pemahaman Anda sangat baik. Barakallahu fiik.";
+            else if (percentage >= 70) feedbackText = "Jayyid Jiddan. Hasil yang bagus, terus tingkatkan!";
+            else if (percentage >= 50) feedbackText = "Jayyid. Cukup baik, muraja'ah lagi materi yang kurang dipahami.";
+            else feedbackText = "Perlu belajar lebih giat lagi. Jangan putus asa, ulangi tes setelah muraja'ah.";
+            document.getElementById('sumatif-score').textContent = `${score} / ${total}`;
+            document.getElementById('sumatif-feedback').textContent = feedbackText;
+            document.getElementById('sumatif-questions-container').classList.add('hidden');
+            sumatifSubmitBtn.classList.add('hidden');
+            document.getElementById('sumatif-result-container').classList.remove('hidden');
+        });
+    }
+
+    if (sumatifRetryBtn) {
+        sumatifRetryBtn.addEventListener('click', () => {
+            document.getElementById('sumatif-result-container').classList.add('hidden');
+            document.getElementById('sumatif-questions-container').classList.remove('hidden');
+            sumatifSubmitBtn.classList.remove('hidden');
+            createSumatifTest();
+        });
+    }
+});
+</script>
+</body>
+</html>
