@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modul FIQ-104: Shalat Berjamaah, Jum'at, & Musafir</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'fiqh-dark': '#064e3b', // Dark Emerald Green
+                    'fiqh-darker': '#062f23', // Very Dark Green
+                    'fiqh-light': '#f0fdf4', // Very Light Green/Off-white
+                    'fiqh-accent': '#10b981', // Emerald Green
+                    'fiqh-accent-hover': '#059669',
+                    'fiqh-secondary': '#a1a1aa', // Zinc Gray for text
+                    'correct': '#4ade80',
+                    'incorrect': '#f87171',
+                },
+                fontFamily: {
+                    'sans': ['Inter', 'sans-serif'],
+                    'arabic': ['"Scheherazade New"', 'serif']
+                }
+            }
+        }
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #062f23;
+            color: #f0fdf4;
+        }
+        .arabic, .arabic-text {
+            font-family: 'Scheherazade New', serif;
+            font-size: 1.5rem;
+            line-height: 2.5rem;
+            direction: rtl;
+        }
+        .tab-btn.active {
+            background-color: #10b981;
+            color: #f0fdf4;
+            font-weight: 600;
+        }
+        .teacher-note {
+            background-color: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid #10b981;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .simulation-card, .quiz-card {
+            background-color: #064e3b;
+            border: 1px solid #047857;
+        }
+        .draggable {
+            cursor: move;
+            user-select: none;
+        }
+        .drop-zone {
+            transition: background-color 0.3s ease;
+        }
+        .drop-zone.drag-over {
+            background-color: #047857;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <header class="text-center mb-8 border-b-2 border-fiqh-accent pb-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-white">Modul Pembelajaran Fiqih Ibadah</h1>
+            <p class="text-xl text-fiqh-accent font-semibold mt-1">FIQ-104: Shalat Berjamaah, Jum'at, & Musafir</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center mb-8 gap-2">
+            <button class="tab-btn active w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-fiqh-accent-hover" data-tab="pertemuan1">Pertemuan 1</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-fiqh-accent-hover" data-tab="pertemuan2">Pertemuan 2</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-fiqh-accent-hover" data-tab="pertemuan3">Pertemuan 3</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-fiqh-accent-hover" data-tab="pertemuan4">Pertemuan 4</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out bg-red-700 hover:bg-red-600" data-tab="tesSumatif">Tes Sumatif</button>
+        </nav>
+
+        <main id="tab-content">
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 1 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan1" class="tab-pane active space-y-8">
+                <div class="p-6 bg-fiqh-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-fiqh-accent mb-1">Pertemuan 1: Keutamaan & Hukum Shalat Berjamaah</h2>
+                    <p class="mb-6 text-fiqh-secondary">Memahami urgensi, hukum, dan keutamaan agung dari shalat berjamaah di masjid.</p>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-fiqh-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                            <li>Santri mampu menjelaskan definisi shalat berjamaah.</li>
+                            <li>Santri mampu menjelaskan hukum shalat berjamaah bagi laki-laki di masjid (wajib 'ain).</li>
+                            <li>Santri mampu menyebutkan keutamaan shalat berjamaah yang 27 derajat lebih utama.</li>
+                            <li>Santri mampu menjelaskan adab-adab menuju masjid dan merapikan shaf.</li>
+                            <li>Santri mampu menyebutkan minimal 3 uzur syar'i yang membolehkan meninggalkan shalat berjamaah.</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-fiqh-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Shalat berjamaah adalah salah satu syi'ar Islam yang paling agung. Ia bukan sekadar ritual, melainkan cerminan persatuan (<i class="arabic">إتحاد</i>), persaudaraan (<i class="arabic">أخوة</i>), dan kedisiplinan umat Islam. Ketika kaum muslimin berdiri dalam shaf yang lurus, bahu-membahu, di belakang satu imam, mereka sedang menampakkan kekuatan dan keteraturan. Ini mengajarkan bahwa dalam Islam, kebersamaan dan ketaatan kepada pemimpin (selama dalam kebaikan) adalah kunci kekuatan. Meninggalkannya tanpa uzur adalah tanda lemahnya kepedulian terhadap syi'ar agama.</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic-text">عَنْ عَبْدِ اللَّهِ بْنِ عُمَرَ أَنَّ رَسُولَ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ قَالَ: «صَلَاةُ الْجَمَاعَةِ تَفْضُلُ صَلَاةَ الْفَذِّ بِسَبْعٍ وَعِشْرِينَ دَرَجَةً»</p>
+                            <p class="mt-2 text-fiqh-light">Dari Abdullah bin 'Umar, bahwasanya Rasulullah ﷺ bersabda: "Shalat berjamaah lebih utama daripada shalat sendirian dengan dua puluh tujuh derajat."</p>
+                            <p class="text-sm text-fiqh-accent mt-1">(HR. Bukhari dan Muslim)</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-fiqh-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">1. Definisi & Hukum Shalat Berjamaah (30 Menit)</h4>
+                                <p>Shalat berjamaah adalah shalat yang dikerjakan oleh dua orang atau lebih secara bersama-sama, salah seorang menjadi imam dan yang lainnya menjadi makmum. Hukumnya bagi laki-laki yang baligh, berakal, dan tidak memiliki uzur syar'i adalah <strong class="text-fiqh-accent">Wajib 'Ain</strong> (kewajiban individu) untuk melaksanakannya di masjid. Dalilnya adalah perintah Allah untuk ruku' bersama orang-orang yang ruku', serta ancaman Nabi ﷺ yang hendak membakar rumah orang-orang yang tidak shalat berjamaah di masjid.</p>
+                                
+                                <p class="text-xs text-center text-gray-500">Sumber: unsplash.com - Ilustrasi persatuan umat dalam shalat berjamaah.</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">2. Adab & Uzur Syar'i (40 Menit)</h4>
+                                <p><strong>Adab Berjamaah:</strong></p>
+                                <ul class="list-disc list-inside mt-2 pl-4 space-y-2">
+                                    <li>Berwudhu dengan sempurna dari rumah.</li>
+                                    <li>Berjalan ke masjid dengan tenang (<i class="arabic">سكينة</i>) dan tidak tergesa-gesa.</li>
+                                    <li>Merapatkan dan meluruskan shaf, mengisi shaf yang kosong di depan terlebih dahulu.</li>
+                                    <li>Tidak mendahului gerakan Imam.</li>
+                                </ul>
+                                <p class="mt-2"><strong class="text-fiqh-accent">Uzur yang Membolehkan Meninggalkan Berjamaah:</strong></p>
+                                <ul class="list-disc list-inside mt-2 pl-4 space-y-2">
+                                    <li><strong>Sakit:</strong> Sakit yang menyulitkan untuk pergi ke masjid.</li>
+                                    <li><strong>Hujan lebat, angin kencang, atau sangat dingin:</strong> Kondisi cuaca ekstrem yang membahayakan atau sangat merepotkan.</li>
+                                    <li><strong>Makanan telah terhidang:</strong> Jika makanan yang sangat diinginkan telah siap disantap, dianjurkan makan dulu agar shalat lebih khusyu'.</li>
+                                </ul>
+                                <div class="teacher-note">
+                                    <p class="font-bold">Poin Diskusi Guru:</p>
+                                    <p>Tanyakan, "Mengapa meluruskan dan merapatkan shaf itu sangat penting?" Arahkan jawaban pada hadits tentang lurusnya shaf adalah bagian dari kesempurnaan shalat dan dapat menyatukan hati kaum muslimin, sementara shaf yang bengkok dapat menyebabkan perselisihan hati.</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">3. Rangkuman & Penutup (20 Menit)</h4>
+                                <p>Ulas kembali hukum shalat berjamaah (wajib bagi laki-laki), keutamaannya (27 derajat), serta adab dan uzur yang berkaitan dengannya. Tekankan bahwa semangat berjamaah adalah cermin kekuatan iman dan persatuan.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-fiqh-accent pl-3">D. Penilaian Modul</h3>
+                        <p class="mb-4">Penilaian selama pembelajaran modul ini mencakup tiga aspek utama untuk memastikan pemahaman yang holistik:</p>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="p-4 bg-gray-900 rounded"><h4 class="font-semibold text-fiqh-accent">1. Sikap / Adab (20%)</h4><p class="text-sm">Meliputi semangat dan antusiasme untuk shalat berjamaah di masjid, adab dalam bertanya, dan ketenangan dalam mengikuti pembelajaran.</p></div>
+                            <div class="p-4 bg-gray-900 rounded"><h4 class="font-semibold text-fiqh-accent">2. Pengetahuan (50%)</h4><p class="text-sm">Diukur dari hasil Latihan Formatif di setiap pertemuan dan hasil Tes Sumatif di akhir modul. Ini menunjukkan penguasaan dalil dan rincian hukum fiqih.</p></div>
+                            <div class="p-4 bg-gray-900 rounded"><h4 class="font-semibold text-fiqh-accent">3. Keterampilan (30%)</h4><p class="text-sm">Dinilai dari partisipasi aktif dalam simulasi, kemampuan mempraktikkan cara shalat yang benar, dan kemampuan menganalisis studi kasus fiqih.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-semibold text-fiqh-accent mb-2">Simulasi 1: Cek Uzur Syar'i</h4>
+                            <p class="text-sm mb-4">Klik pada setiap kondisi untuk mengetahui apakah itu termasuk uzur yang dibolehkan untuk tidak shalat berjamaah.</p>
+                            <div id="sim1-options" class="space-y-2">
+                                <button class="sim1-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded" data-uzur="true">Demam tinggi hingga sulit berdiri</button>
+                                <button class="sim1-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded" data-uzur="false">Sedang seru menonton pertandingan bola</button>
+                                <button class="sim1-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded" data-uzur="true">Hujan badai dan jalanan banjir</button>
+                                <button class="sim1-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded" data-uzur="false">Malas karena mengantuk</button>
+                            </div>
+                        </div>
+                        
+                        <div>
+                             <h4 class="font-semibold text-fiqh-accent mb-2">Simulasi 2: Pembangun Shaf</h4>
+                            <p class="text-sm mb-4">Seret jamaah ke dalam shaf di belakang Imam dengan urutan yang benar (Laki-laki dewasa dulu, baru anak-anak).</p>
+                             <div class="bg-gray-800 p-4 rounded-md">
+                                <div class="w-full text-center mb-2 p-2 bg-fiqh-accent text-white rounded">IMAM</div>
+                                <div id="sim2-dropzone" class="drop-zone w-full h-16 bg-gray-900 rounded flex justify-center items-center gap-2 border-2 border-dashed border-gray-600"></div>
+                                <div id="sim2-source" class="flex flex-wrap gap-2 mt-3 p-2 justify-center">
+                                   <div class="draggable p-2 bg-blue-500 rounded text-xs" draggable="true" data-type="dewasa">Laki-laki Dewasa</div>
+                                   <div class="draggable p-2 bg-green-500 rounded text-xs" draggable="true" data-type="anak">Anak Laki-laki</div>
+                                   <div class="draggable p-2 bg-blue-500 rounded text-xs" draggable="true" data-type="dewasa">Laki-laki Dewasa</div>
+                                </div>
+                                <p id="sim2-feedback" class="text-center mt-2 font-bold h-5"></p>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 1</h3>
+                    <div id="quiz1" class="space-y-6"></div>
+                </div>
+            </div>
+
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 2 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan2" class="tab-pane hidden space-y-8">
+                <div class="p-6 bg-fiqh-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-fiqh-accent mb-1">Pertemuan 2: Fiqih Shalat Jum'at</h2>
+                    <p class="mb-6 text-fiqh-secondary">Mempelajari hukum, syarat, dan adab-adab pada hari yang paling mulia dalam sepekan.</p>
+                     
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-fiqh-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                           <li>Santri mampu menjelaskan hukum shalat Jum'at bagi laki-laki.</li>
+                           <li>Santri mampu menyebutkan syarat wajib dan syarat sah shalat Jum'at.</li>
+                           <li>Santri mampu mempraktikkan minimal 5 sunnah di hari Jum'at.</li>
+                           <li>Santri mampu menjelaskan adab-adab ketika mendengarkan khutbah Jum'at.</li>
+                           <li>Santri memahami konsekuensi meninggalkan shalat Jum'at tanpa uzur.</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-fiqh-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Hari Jum'at adalah hari raya pekanan bagi kaum muslimin. Allah Ta'ala secara khusus memerintahkan hamba-Nya untuk berkumpul pada hari itu untuk mendirikan shalat dan mendengarkan nasihat (khutbah). Ini adalah momen penguatan iman dan ilmu secara kolektif. Menghadiri shalat Jum'at dengan adab yang benar menunjukkan pengagungan kita terhadap syi'ar Allah. Sebaliknya, meremehkannya dengan sengaja adalah tanda kelalaian yang bisa berakibat ditutupnya hati dari hidayah. </p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic-text">يَا أَيُّهَا الَّذِينَ آمَنُوا إِذَا نُودِيَ لِلصَّلَاةِ مِنْ يَوْمِ الْجُمُعَةِ فَاسْعَوْا إِلَىٰ ذِكْرِ اللَّهِ وَذَرُوا الْبَيْعَ</p>
+                            <p class="mt-2 text-fiqh-light">"Wahai orang-orang yang beriman! Apabila telah diseru untuk melaksanakan shalat pada hari Jum'at, maka segeralah kamu mengingat Allah dan tinggalkanlah jual beli."</p>
+                            <p class="text-sm text-fiqh-accent mt-1">(QS. Al-Jumu'ah: 9)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-fiqh-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                         <div class="space-y-6">
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">1. Hukum & Syarat Shalat Jum'at (30 Menit)</h4>
+                               <p>Hukum shalat Jum'at adalah <strong class="text-fiqh-accent">Fardhu 'Ain</strong> bagi setiap laki-laki muslim yang baligh, berakal, merdeka, dan mukim (bukan musafir).</p>
+                               <p class="font-semibold mt-2">Syarat Wajib (Syarat bagi orangnya):</p>
+                               <ul class="list-disc list-inside"><li>Islam, Baligh, Berakal, Laki-laki, Merdeka, Mukim.</li></ul>
+                               <p class="font-semibold mt-2">Syarat Sah (Syarat bagi shalatnya):</p>
+                               <ul class="list-disc list-inside"><li>Dilaksanakan di waktu Dzuhur, didahului dua khutbah, dilaksanakan secara berjamaah.</li></ul>
+                               <p>Konsekuensi meninggalkannya 3 kali berturut-turut tanpa uzur, maka hatinya akan ditutup oleh Allah.</p>
+                            </div>
+                            
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">2. Sunnah & Adab Hari Jum'at (45 Menit)</h4>
+                               <p>Banyak amalan sunnah yang bisa dilakukan untuk memaksimalkan pahala di hari Jum'at:</p>
+                               <ul class="list-decimal list-inside mt-2 pl-4 space-y-2">
+                                   <li>Mandi sebagaimana mandi junub.</li>
+                                   <li>Memakai pakaian terbaik dan memakai wangi-wangian.</li>
+                                   <li>Memotong kuku dan merapikan diri.</li>
+                                   <li>Datang lebih awal ke masjid.</li>
+                                   <li>Memperbanyak shalawat kepada Nabi ﷺ.</li>
+                                   <li>Membaca Surat Al-Kahfi.</li>
+                                   <li>Memperbanyak doa, terutama di waktu mustajab (akhir waktu Ashar).</li>
+                               </ul>
+                               <p class="font-semibold mt-2">Adab saat Khutbah:</p>
+                               <p>Wajib diam dan mendengarkan khutbah dengan seksama. Berbicara saat khatib berkhutbah dapat menghilangkan pahala Jum'at, meskipun shalatnya tetap sah. Dilarang melakukan perbuatan sia-sia seperti memainkan kerikil atau gawai.</p>
+                               <div class="teacher-note">
+                                   <p class="font-bold">Poin Diskusi Guru:</p>
+                                   <p>Ajak santri berdiskusi tentang realita di masyarakat. Apa saja perbuatan sia-sia yang sering mereka lihat saat khutbah Jum'at berlangsung? Bagaimana cara menasihatinya dengan baik?</p>
+                               </div>
+                            </div>
+
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">3. Rangkuman (15 Menit)</h4>
+                               <p>Ulas kembali hukum, syarat, dan sunnah-sunnah hari Jum'at. Tekankan pentingnya adab mendengarkan khutbah sebagai inti dari ibadah Jum'at.</p>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-semibold text-fiqh-accent mb-2">Simulasi 1: Rangkai Sunnah Jum'at</h4>
+                            <p class="text-sm mb-4">Seret dan susun amalan sunnah berikut berdasarkan urutan waktu pelaksanaannya di hari Jum'at.</p>
+                            <div class="bg-gray-800 p-4 rounded-md">
+                                 <div id="sim3-target" class="space-y-2 p-2 bg-gray-900 rounded min-h-[200px] border border-dashed border-gray-600"></div>
+                                 <div id="sim3-source" class="flex flex-wrap gap-2 mt-2">
+                                    <div class="draggable p-2 bg-gray-600 rounded text-sm" draggable="true" data-order="2">Pakai Parfum & Baju Terbaik</div>
+                                    <div class="draggable p-2 bg-gray-600 rounded text-sm" draggable="true" data-order="1">Mandi Jum'at</div>
+                                    <div class="draggable p-2 bg-gray-600 rounded text-sm" draggable="true" data-order="4">Dengar Khutbah</div>
+                                    <div class="draggable p-2 bg-gray-600 rounded text-sm" draggable="true" data-order="3">Berangkat Awal ke Masjid</div>
+                                 </div>
+                                 <button id="sim3-check" class="w-full mt-2 py-1 bg-fiqh-secondary text-fiqh-darker rounded">Cek Urutan</button>
+                                 <p id="sim3-feedback" class="text-center mt-2 font-bold h-5"></p>
+                             </div>
+                        </div>
+                        
+                        <div>
+                             <h4 class="font-semibold text-fiqh-accent mb-2">Simulasi 2: Penjaga Pahala Jum'at</h4>
+                            <p class="text-sm mb-4">Anda sedang mendengarkan khutbah. Klik 'Fokus' untuk mengabaikan gangguan dan menjaga pahala Jum'at Anda.</p>
+                             <div class="bg-gray-800 p-4 rounded-md text-center">
+                                <p class="text-lg">Khatib sedang berkhutbah...</p>
+                                <div id="sim4-gangguan-box" class="my-3 h-12 flex justify-center items-center">
+                                    <!-- Gangguan akan muncul di sini -->
+                                </div>
+                                <button id="sim4-fokus" class="py-2 px-6 bg-fiqh-accent hover:bg-fiqh-accent-hover rounded">FOKUS</button>
+                                <p class="mt-3">Skor Pahala: <span id="sim4-skor" class="font-bold">100</span></p>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 2</h3>
+                    <div id="quiz2" class="space-y-6"></div>
+                </div>
+            </div>
+            
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 3 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan3" class="tab-pane hidden space-y-8">
+                <div class="p-6 bg-fiqh-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-fiqh-accent mb-1">Pertemuan 3: Rukhshah Safar - Shalat Qashar</h2>
+                    <p class="mb-6 text-fiqh-secondary">Memahami keringanan (rukhshah) bagi musafir untuk meringkas shalat.</p>
+                     
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-fiqh-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                           <li>Santri mampu menjelaskan makna rukhshah dan safar syar'i.</li>
+                           <li>Santri mampu mendefinisikan shalat Qashar.</li>
+                           <li>Santri mampu menyebutkan dalil disyariatkannya shalat Qashar.</li>
+                           <li>Santri mampu menyebutkan shalat-shalat apa saja yang boleh diqashar.</li>
+                           <li>Santri mampu menjelaskan syarat-syarat diperbolehkannya mengqashar shalat.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-fiqh-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Agama Islam adalah agama yang mudah dan tidak menyulitkan. Salah satu bukti keindahan dan kemudahan syariat adalah adanya rukhshah (keringanan) bagi mereka yang berada dalam kondisi tertentu, seperti musafir. Disyariatkannya shalat Qashar menunjukkan kasih sayang Allah (<i class="arabic">رحمة</i>) kepada hamba-Nya. Allah tidak ingin memberatkan hamba-Nya yang sedang dalam perjalanan. Mengambil rukhshah ini adalah bentuk syukur kita atas kemudahan yang Allah berikan dan merupakan sunnah yang dicintai oleh-Nya.</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic-text">وَإِذَا ضَرَبْتُمْ فِي الْأَرْضِ فَلَيْسَ عَلَيْكُمْ جُنَاحٌ أَنْ تَقْصُرُوا مِنَ الصَّلَاةِ</p>
+                            <p class="mt-2 text-fiqh-light">"Dan apabila kamu bepergian di muka bumi, maka tidaklah mengapa kamu mengqashar shalat(mu)."</p>
+                            <p class="text-sm text-fiqh-accent mt-1">(QS. An-Nisa': 101)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-fiqh-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                         <div class="space-y-6">
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">1. Definisi Rukhshah, Safar, dan Qashar (30 Menit)</h4>
+                               <p><strong class="text-fiqh-accent">Rukhshah:</strong> Keringanan hukum syar'i karena adanya sebab tertentu. <strong class="text-fiqh-accent">Safar:</strong> Perjalanan keluar dari daerah tempat tinggal dengan maksud tujuan tertentu. <strong class="text-fiqh-accent">Qashar:</strong> Meringkas shalat yang jumlah rakaatnya empat menjadi dua rakaat.</p>
+                               <p>Shalat yang boleh diqashar hanyalah shalat yang berjumlah 4 rakaat, yaitu: <strong class="text-fiqh-accent">Dzuhur, Ashar, dan Isya</strong>. Shalat Shubuh dan Maghrib tidak boleh diqashar.</p>
+                            </div>
+                            
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">2. Syarat-Syarat Mengqashar Shalat (45 Menit)</h4>
+                               <p>Seorang musafir boleh mengqashar shalat jika memenuhi syarat-syarat berikut:</p>
+                               <ul class="list-decimal list-inside mt-2 pl-4 space-y-2">
+                                   <li><strong>Jarak Tempuh:</strong> Mayoritas ulama berpendapat jarak minimalnya adalah sekitar 80-90 km.</li>
+                                   <li><strong>Jenis Safar:</strong> Safar yang dilakukan bukanlah untuk tujuan maksiat.</li>
+                                   <li><strong>Niat:</strong> Berniat untuk mengqashar shalat ketika takbiratul ihram.</li>
+                                   <li><strong>Telah Melewati Batas Kota:</strong> Sudah benar-benar keluar dari batas pemukiman tempat tinggalnya.</li>
+                                   <li><strong>Tidak Bermakmum di Belakang Imam yang Mukim:</strong> Jika bermakmum di belakang imam yang shalat sempurna (tidak mengqashar), maka ia wajib ikut shalat sempurna 4 rakaat.</li>
+                               </ul>
+                               <div class="teacher-note">
+                                   <p class="font-bold">Poin Diskusi Guru:</p>
+                                   <p>Berikan studi kasus. "Fulan pergi ke kota sebelah yang jaraknya 30 km untuk main game di warnet. Bolehkah ia mengqashar shalat?" Arahkan diskusi untuk menganalisis setiap syarat: jaraknya tidak cukup, dan tujuannya kurang baik (bukan maksiat tapi sia-sia).</p>
+                               </div>
+                            </div>
+
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">3. Rangkuman (15 Menit)</h4>
+                               <p>Ulas kembali definisi Qashar, shalat apa saja yang boleh diqashar, dan 5 syarat utama untuk boleh melakukannya. Tekankan bahwa rukhshah adalah hadiah dari Allah yang sebaiknya diterima.</p>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+                
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-semibold text-fiqh-accent mb-2">Simulasi 1: Kalkulator Rukhshah Qashar</h4>
+                            <p class="text-sm mb-4">Masukkan data perjalanan Anda untuk mengetahui apakah Anda boleh mengqashar shalat.</p>
+                            <div class="bg-gray-800 p-4 rounded-md space-y-3">
+                               <div>
+                                   <label for="sim5-jarak" class="text-sm">Jarak Perjalanan (km):</label>
+                                   <input type="number" id="sim5-jarak" class="w-full bg-gray-700 p-2 rounded mt-1 text-white" placeholder="Contoh: 90">
+                               </div>
+                               <div>
+                                   <label for="sim5-tujuan" class="text-sm">Tujuan Safar:</label>
+                                   <select id="sim5-tujuan" class="w-full bg-gray-700 p-2 rounded mt-1 text-white">
+                                       <option value="baik">Silaturahmi / Dakwah / Belajar</option>
+                                       <option value="maksiat">Mencuri / Merampok</option>
+                                   </select>
+                               </div>
+                               <button id="sim5-cek" class="w-full py-2 bg-fiqh-accent hover:bg-fiqh-accent-hover rounded">Cek Kelayakan</button>
+                               <p id="sim5-feedback" class="text-center font-bold h-5 mt-2"></p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-fiqh-accent mb-2">Simulasi 2: Mana yang Boleh Diqashar?</h4>
+                            <p class="text-sm mb-4">Klik pada nama-nama shalat di bawah. Shalat yang boleh diqashar akan berubah menjadi hijau.</p>
+                             <div id="sim6-container" class="bg-gray-800 p-4 rounded-md grid grid-cols-2 gap-3">
+                                <div class="sim6-shalat p-4 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600">Shubuh</div>
+                                <div class="sim6-shalat p-4 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600">Dzuhur</div>
+                                <div class="sim6-shalat p-4 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600">Ashar</div>
+                                <div class="sim6-shalat p-4 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600">Maghrib</div>
+                                <div class="sim6-shalat p-4 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600">Isya</div>
+                                <div class="sim6-shalat p-4 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600">Witir</div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 3</h3>
+                    <div id="quiz3" class="space-y-6"></div>
+                </div>
+            </div>
+
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 4 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan4" class="tab-pane hidden space-y-8">
+                <div class="p-6 bg-fiqh-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-fiqh-accent mb-1">Pertemuan 4: Rukhshah Safar - Shalat Jamak</h2>
+                    <p class="mb-6 text-fiqh-secondary">Memahami keringanan (rukhshah) bagi musafir untuk menggabungkan shalat.</p>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-fiqh-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                           <li>Santri mampu mendefinisikan shalat Jamak.</li>
+                           <li>Santri mampu membedakan antara Jamak Taqdim dan Jamak Ta'khir.</li>
+                           <li>Santri mampu menyebutkan pasangan shalat yang boleh dijamak.</li>
+                           <li>Santri mampu menjelaskan tata cara pelaksanaan shalat Jamak Taqdim dan Jamak Ta'khir.</li>
+                           <li>Santri mampu mempraktikkan shalat jamak sekaligus qashar.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-fiqh-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Selain Qashar, Allah juga memberikan rukhshah berupa Jamak. Ini semakin menegaskan prinsip kemudahan dalam syariat Islam (<i class="arabic">التيسير</i>). Keringanan ini memastikan seorang muslim tetap dapat menjaga shalat lima waktu dalam kondisi sesibuk dan sesulit apapun perjalanannya. Hal ini mengajarkan bahwa shalat adalah tiang agama yang tidak boleh ditinggalkan dalam kondisi apapun, namun Allah dengan kasih sayang-Nya memberikan solusi dan jalan keluar agar kita tetap mampu melaksanakannya tepat waktu.</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic-text">عَنِ ابْنِ عَبَّاسٍ، قَالَ: "جَمَعَ رَسُولُ اللَّهِ صلى الله عليه وسلم بَيْنَ الظُّهْرِ وَالْعَصْرِ وَالْمَغْرِبِ وَالْعِشَاءِ بِالْمَدِينَةِ فِي غَيْرِ خَوْفٍ وَلاَ مَطَرٍ"</p>
+                            <p class="mt-2 text-fiqh-light">Dari Ibnu 'Abbas ia berkata: "Rasulullah ﷺ pernah menjamak antara shalat Dzuhur dan Ashar, serta Maghrib dan Isya di Madinah bukan karena keadaan takut dan bukan pula karena hujan."</p>
+                            <p class="text-sm text-fiqh-accent mt-1">(HR. Muslim) - [Hadits ini menjadi dalil bolehnya menjamak karena hajat, apalagi safar yang lebih berat].</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-fiqh-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                         <div class="space-y-6">
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">1. Definisi & Jenis Shalat Jamak (30 Menit)</h4>
+                               <p><strong class="text-fiqh-accent">Shalat Jamak (<i class="arabic">الجمع</i>)</strong> adalah menggabungkan dua shalat fardhu dan mengerjakannya dalam satu waktu. Shalat yang boleh dijamak adalah: Dzuhur dengan Ashar, dan Maghrib dengan Isya. Shalat Shubuh tidak boleh dijamak dengan shalat apapun.</p>
+                               <p class="font-semibold mt-2">Jenis-jenis Jamak:</p>
+                               <ul class="list-disc list-inside">
+                                   <li><strong>Jamak Taqdim:</strong> Menggabungkan dua shalat dan dikerjakan di waktu shalat yang PERTAMA. (Contoh: Mengerjakan Dzuhur dan Ashar di waktu Dzuhur).</li>
+                                   <li><strong>Jamak Ta'khir:</strong> Menggabungkan dua shalat dan dikerjakan di waktu shalat yang KEDUA. (Contoh: Mengerjakan Dzuhur dan Ashar di waktu Ashar).</li>
+                               </ul>
+                            </div>
+                            
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">2. Tata Cara Pelaksanaan Jamak & Qashar (45 Menit)</h4>
+                               <p>Seorang musafir bisa melakukan Jamak sekaligus Qashar. Contoh praktik Jamak Taqdim Qashar antara Dzuhur dan Ashar:</p>
+                               <ol class="list-decimal list-inside mt-2 pl-4 space-y-2">
+                                   <li>Masuk waktu Dzuhur.</li>
+                                   <li>Adzan (jika belum ada), lalu Iqamah.</li>
+                                   <li>Niat shalat Dzuhur dijamak dengan Ashar, sekaligus diqashar.</li>
+                                   <li>Shalat Dzuhur 2 rakaat, lalu salam.</li>
+                                   <li>Langsung berdiri (tanpa dzikir panjang), lalu Iqamah lagi.</li>
+                                   <li>Niat shalat Ashar (dijamak ke Dzuhur), sekaligus diqashar.</li>
+                                   <li>Shalat Ashar 2 rakaat, lalu salam.</li>
+                               </ol>
+                               <p>Untuk Jamak Ta'khir, caranya sama, hanya niatnya disesuaikan dan dilakukan di waktu shalat yang kedua.</p>
+                               <div class="teacher-note">
+                                   <p class="font-bold">Poin Diskusi Guru:</p>
+                                   <p>Ajak satu atau dua santri untuk maju ke depan mempraktikkan secara langsung (tanpa gerakan, hanya urutan niat, iqamah, dan shalatnya) cara shalat jamak qashar. Ini akan memperkuat pemahaman praktis mereka.</p>
+                               </div>
+                            </div>
+                             
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">3. Rangkuman & Persiapan Ujian (15 Menit)</h4>
+                               <p>Ulas kembali perbedaan Jamak Taqdim dan Ta'khir, serta pasangan shalat yang bisa dijamak. Lakukan tanya jawab cepat untuk memastikan semua santri siap menghadapi Tes Sumatif.</p>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-semibold text-fiqh-accent mb-2">Simulasi 1: Tentukan Jenis Jamak</h4>
+                            <p class="text-sm mb-4">Anda seorang musafir. Baca skenario, lalu pilih jenis jamak yang paling sesuai.</p>
+                            <div class="bg-gray-800 p-4 rounded-md">
+                                <p id="sim7-scenario" class="mb-3 text-sm italic"></p>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button class="sim7-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded">Jamak Taqdim</button>
+                                    <button class="sim7-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded">Jamak Ta'khir</button>
+                                    <button class="sim7-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded col-span-2">Tidak Perlu Jamak</button>
+                                </div>
+                                <button id="sim7-next" class="w-full mt-2 py-1 bg-fiqh-secondary text-fiqh-darker rounded">Skenario Berikutnya</button>
+                                <p id="sim7-feedback" class="text-center mt-2 font-bold h-5"></p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                             <h4 class="font-semibold text-fiqh-accent mb-2">Simulasi 2: Panduan Praktik Jamak Qashar</h4>
+                            <p class="text-sm mb-4">Klik 'Mulai' lalu ikuti langkah demi langkah praktik shalat Jamak Taqdim Qashar (Dzuhur & Ashar).</p>
+                             <div class="bg-gray-800 p-4 rounded-md text-center">
+                                <div id="sim8-step-display" class="p-4 h-24 bg-gray-900 rounded flex justify-center items-center">
+                                    <p>Tekan Mulai</p>
+                                </div>
+                                <div class="flex justify-center gap-4 mt-3">
+                                   <button id="sim8-start" class="py-2 px-4 bg-fiqh-accent hover:bg-fiqh-accent-hover rounded">Mulai</button>
+                                   <button id="sim8-next" class="py-2 px-4 bg-gray-600 hover:bg-gray-500 rounded hidden">Langkah Berikutnya &rarr;</button>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 4</h3>
+                    <div id="quiz4" class="space-y-6"></div>
+                </div>
+            </div>
+            
+            <!-- =================================================================== -->
+            <!-- ======================= KONTEN TES SUMATIF ======================== -->
+            <!-- =================================================================== -->
+            <div id="tesSumatif" class="tab-pane hidden space-y-6">
+                <div class="p-6 bg-red-900/30 border border-red-500 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-red-300 mb-2">Tes Sumatif: FIQ-104</h2>
+                    <p class="mb-6 text-red-200">Ujian akhir untuk mengukur pemahaman Anda tentang Shalat Berjamaah, Jum'at, dan Musafir. Bismillah, semoga dimudahkan!</p>
+                    
+                    <div id="sumatif-questions-container"></div>
+                    
+                    <div id="sumatif-result-container" class="hidden text-center p-6 bg-fiqh-darker rounded-lg">
+                        <h3 class="text-2xl font-bold text-white">Hasil Tes Sumatif</h3>
+                        <p id="sumatif-score" class="text-4xl font-bold text-fiqh-accent my-4"></p>
+                        <p id="sumatif-feedback" class="text-lg mb-6"></p>
+                        <button id="sumatif-retry-btn" class="py-2 px-6 bg-fiqh-accent text-white font-semibold rounded-lg hover:bg-fiqh-accent-hover transition-colors">Ulangi Tes</button>
+                    </div>
+
+                    <button id="sumatif-submit-btn" class="w-full mt-6 py-3 bg-fiqh-accent text-white font-bold rounded-lg text-lg hover:bg-fiqh-accent-hover transition-colors">Selesaikan Tes</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+// THIS SCRIPT BLOCK IS MANDATORY AND MUST BE COMPLETE
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ================== DATA BANK ==================
+    const quizData = {
+        quiz1: [
+            { q: "Hukum shalat berjamaah di masjid bagi laki-laki yang mampu menurut pendapat yang paling kuat adalah...", options: ["Sunnah Muakkadah", "Fardhu Kifayah", "Wajib 'Ain", "Mubah"], a: 2, exp: "Benar. Berdasarkan dalil-dalil perintah dan ancaman, hukumnya adalah Wajib 'Ain (kewajiban bagi setiap individu)." },
+            { q: "Keutamaan shalat berjamaah dibandingkan shalat sendirian adalah dilipatgandakan sebanyak...", options: ["10 derajat", "25 derajat", "27 derajat", "100 derajat"], a: 2, exp: "Benar. Sesuai hadits riwayat Bukhari dan Muslim." },
+            { q: "Manakah dari berikut ini yang BUKAN termasuk uzur syar'i untuk meninggalkan shalat berjamaah?", options: ["Sakit parah", "Hujan sangat deras", "Ada pertandingan sepak bola", "Makanan sudah terhidang"], a: 2, exp: "Benar. Urusan dunia seperti pertandingan bukanlah uzur yang dibenarkan syariat." },
+            { q: "Sikap yang benar ketika mendengar iqamah sementara kita baru masuk masjid adalah...", options: ["Berlari agar tidak ketinggalan rakaat pertama", "Berjalan dengan tenang dan santai", "Menunggu sampai imam ruku'", "Langsung takbir di pintu masjid"], a: 1, exp: "Benar. Nabi ﷺ memerintahkan untuk berjalan menuju shalat dengan sakinah (ketenangan)." },
+            { q: "Hal pertama yang harus dilakukan ketika berdiri dalam shaf adalah...", options: ["Membaca doa iftitah", "Meluruskan dan merapatkan shaf", "Memperhatikan imam", "Bersedekap"], a: 1, exp: "Benar. Nabi ﷺ selalu memerintahkan untuk meluruskan dan merapatkan shaf sebelum memulai shalat." },
+            { q: "Minimal jumlah orang untuk mendirikan shalat berjamaah adalah...", options: ["Satu orang", "Dua orang", "Tiga orang", "Empat puluh orang"], a: 1, exp: "Benar. Satu orang sebagai imam dan satu orang sebagai makmum." },
+            { q: "Jika shaf pertama masih ada celah, maka yang harus dilakukan makmum di shaf kedua adalah...", options: ["Membuat shaf baru", "Membiarkannya saja", "Maju untuk mengisi celah di shaf pertama", "Menarik satu orang dari shaf pertama"], a: 2, exp: "Benar. Prioritas utama adalah menyempurnakan shaf yang lebih depan." },
+            { q: "Hukum shalat seorang laki-laki yang sendirian di belakang shaf sementara shaf di depannya masih kosong adalah...", options: ["Sah", "Tidak sah dan harus diulang", "Makruh", "Dianjurkan"], a: 1, exp: "Benar. Berdasarkan hadits yang memerintahkan orang tersebut untuk mengulangi shalatnya." },
+            { q: "Makmum yang terlambat dan mendapati imam sedang ruku', maka ia...", options: ["Menunggu imam berdiri", "Langsung takbiratul ihram lalu ikut ruku' dan terhitung mendapat rakaat", "Takbiratul ihram lalu sujud", "Menunggu hingga rakaat berikutnya"], a: 1, exp: "Benar. Mendapati ruku' bersama imam sama dengan mendapati satu rakaat." },
+            { q: "Tujuan utama disyariatkannya shalat berjamaah adalah untuk menampakkan...", options: ["Kekayaan individu", "Syi'ar Islam dan persatuan kaum muslimin", "Bangunan masjid yang megah", "Suara imam yang merdu"], a: 1, exp: "Benar. Shalat berjamaah adalah syi'ar yang menunjukkan kekuatan dan persatuan." }
+        ],
+        quiz2: [
+            { q: "Hukum shalat Jum'at bagi laki-laki muslim yang mukim dan tidak ada uzur adalah...", options: ["Sunnah", "Fardhu Kifayah", "Fardhu 'Ain", "Mubah"], a: 2, exp: "Benar. Berdasarkan perintah tegas dalam QS. Al-Jumu'ah ayat 9." },
+            { q: "Berikut ini adalah syarat WAJIB shalat Jum'at, kecuali...", options: ["Laki-laki", "Baligh", "Musafir", "Mukim (menetap)"], a: 2, exp: "Benar. Musafir tidak diwajibkan shalat Jum'at, ia shalat Dzuhur sebagai gantinya." },
+            { q: "Salah satu sunnah yang sangat dianjurkan sebelum berangkat shalat Jum'at adalah...", options: ["Sarapan yang banyak", "Tidur siang", "Mandi besar", "Berlari ke masjid"], a: 2, exp: "Benar. Nabi ﷺ bersabda, 'Barangsiapa yang mandi pada hari Jum'at seperti mandi junub...'" },
+            { q: "Bagaimana hukum berbicara atau bermain-main ketika khatib sedang menyampaikan khutbah?", options: ["Dianjurkan agar tidak mengantuk", "Boleh saja asal tidak keras", "Haram dan dapat menghapus pahala Jum'at", "Makruh"], a: 2, exp: "Benar. Nabi ﷺ melarang perbuatan sia-sia (lagha) saat khutbah berlangsung." },
+            { q: "Membaca surat apakah yang dianjurkan pada malam atau hari Jum'at?", options: ["Surat Yasin", "Surat Al-Waqi'ah", "Surat Al-Kahfi", "Surat Al-Mulk"], a: 2, exp: "Benar. Berdasarkan hadits, membacanya akan diterangi cahaya di antara dua Jum'at." },
+            { q: "Shalat Jum'at terdiri dari...", options: ["Dua khutbah dan empat rakaat shalat", "Satu khutbah dan dua rakaat shalat", "Dua khutbah dan dua rakaat shalat", "Tidak ada khutbah, hanya dua rakaat shalat"], a: 2, exp: "Benar. Shalat Jum'at didahului oleh dua khutbah dan shalatnya dua rakaat." },
+            { q: "Konsekuensi bagi orang yang meninggalkan shalat Jum'at tiga kali berturut-turut tanpa uzur adalah...", options: ["Dikenai denda", "Diusir dari kampung", "Hatinya akan ditutup oleh Allah", "Tidak terjadi apa-apa"], a: 2, exp: "Benar. Sesuai dengan ancaman yang disebutkan dalam hadits shahih." },
+            { q: "Waktu pelaksanaan shalat Jum'at adalah pada waktu...", options: ["Dhuha", "Dzuhur", "Ashar", "Kapan saja"], a: 1, exp: "Benar. Shalat Jum'at adalah pengganti dari shalat Dzuhur pada hari itu." },
+            { q: "Waktu yang paling mustajab untuk berdoa pada hari Jum'at menurut pendapat yang kuat adalah...", options: ["Setelah terbit fajar", "Saat khatib naik mimbar", "Antara dua khutbah", "Setelah Ashar hingga terbenam matahari"], a: 3, exp: "Benar. Ini adalah salah satu waktu yang paling diharapkan untuk terkabulnya doa." },
+            { q: "Jika seseorang terlambat datang shalat Jum'at dan hanya mendapati imam sedang tasyahud akhir, apa yang harus ia lakukan?", options: ["Ikut tasyahud lalu salam", "Ikut tasyahud lalu menyempurnakan shalat Jum'at 2 rakaat", "Niat shalat Dzuhur dan menyempurnakannya 4 rakaat setelah imam salam", "Pulang dan tidak shalat"], a: 2, exp: "Benar. Ia telah ketinggalan shalat Jum'at dan wajib menggantinya dengan shalat Dzuhur 4 rakaat." }
+        ],
+        quiz3: [
+            { q: "Meringkas shalat empat rakaat menjadi dua rakaat bagi musafir disebut...", options: ["Jamak", "Rukhshah", "Qashar", "Safar"], a: 2, exp: "Benar. Qashar artinya meringkas atau memendekkan." },
+            { q: "Berikut ini adalah shalat yang Boleh diqashar, KECUALI...", options: ["Dzuhur", "Ashar", "Maghrib", "Isya"], a: 2, exp: "Benar. Shalat Maghrib (3 rakaat) dan Shubuh (2 rakaat) tidak boleh diqashar." },
+            { q: "Menurut pendapat mayoritas ulama, jarak minimal seseorang dibolehkan mengqashar shalat adalah sekitar...", options: ["10 km", "40 km", "85 km", "200 km"], a: 2, exp: "Benar. Jarak ini setara dengan perjalanan sehari semalam dengan unta di masa lalu." },
+            { q: "Seorang musafir bermakmum kepada imam yang merupakan penduduk setempat (mukim). Apa yang harus ia lakukan?", options: ["Mengqashar shalat menjadi 2 rakaat", "Mengikuti imam shalat sempurna 4 rakaat", "Memisahkan diri dari jamaah", "Menunggu jamaah selesai lalu shalat sendiri"], a: 1, exp: "Benar. Hukum makmum adalah mengikuti imam. Jika imam shalat sempurna, makmum wajib ikut sempurna." },
+            { q: "Keringanan dalam syariat Islam karena adanya sebab tertentu disebut...", options: ["Azimah", "Rukhshah", "Wajib", "Haram"], a: 1, exp: "Benar. Rukhshah adalah kemudahan dan keringanan dari Allah." },
+            { q: "Kapan seorang musafir mulai boleh mengqashar shalatnya?", options: ["Sejak berniat akan bepergian", "Sejak keluar dari rumah", "Setelah melewati batas wilayah pemukimannya", "Setelah sampai di tujuan"], a: 2, exp: "Benar. Hukum safar baru berlaku ketika seseorang telah benar-benar keluar dari batas kotanya." },
+            { q: "Seseorang bepergian dengan tujuan untuk berjudi. Apakah ia boleh mengambil rukhshah qashar?", options: ["Ya, karena ia musafir", "Ya, tapi pahalanya berkurang", "Tidak, karena safarnya untuk tujuan maksiat", "Tergantung jaraknya"], a: 2, exp: "Benar. Rukhshah tidak berlaku untuk perjalanan yang bertujuan maksiat." },
+            { q: "Niat untuk mengqashar shalat dilakukan pada saat...", options: ["Sebelum wudhu", "Sebelum iqamah", "Takbiratul Ihram", "Setelah salam"], a: 2, exp: "Benar. Niat harus menyertai awal dari perbuatan, yaitu saat takbiratul ihram." },
+            { q: "Hukum mengambil rukhshah qashar bagi musafir yang memenuhi syarat adalah...", options: ["Wajib", "Haram", "Makruh", "Sunnah Muakkadah (sangat dianjurkan)"], a: 3, exp: "Benar. Allah suka jika rukhshah-Nya diambil, dan Nabi ﷺ selalu mengqashar dalam safarnya." },
+            { q: "Berapa lama seorang musafir boleh terus mengqashar shalatnya di tempat tujuan?", options: ["Selamanya", "Maksimal 3 hari", "Maksimal 4 hari (selain hari datang dan pergi)", "Maksimal 19 hari"], a: 3, exp: "Benar. Menurut pendapat yang kuat berdasarkan perbuatan Nabi ﷺ di Mekkah, jika berniat mukim lebih dari 19 hari, ia shalat sempurna. Jika kurang, atau tidak tahu kapan pulang, ia boleh terus mengqashar." }
+        ],
+        quiz4: [
+            { q: "Menggabungkan dua shalat fardhu dalam satu waktu disebut shalat...", options: ["Qashar", "Jamak", "Witir", "Rawatib"], a: 1, exp: "Benar. Jamak artinya menggabungkan atau mengumpulkan." },
+            { q: "Mengerjakan shalat Dzuhur dan Ashar pada waktu Dzuhur disebut...", options: ["Jamak Ta'khir", "Jamak Qashar", "Jamak Taqdim", "Bukan Jamak"], a: 2, exp: "Benar. Taqdim artinya didahulukan, yaitu dikerjakan di waktu shalat yang pertama." },
+            { q: "Manakah pasangan shalat berikut yang TIDAK BOLEH dijamak?", options: ["Dzuhur dan Ashar", "Maghrib dan Isya", "Ashar dan Maghrib", "Semua boleh dijamak"], a: 2, exp: "Benar. Shalat Ashar tidak boleh dijamak dengan Maghrib. Pasangannya harus Dzuhur-Ashar dan Maghrib-Isya." },
+            { q: "Seorang musafir tiba di tujuan pada waktu Isya, dan ia belum shalat Maghrib. Sebaiknya ia melakukan...", options: ["Jamak Taqdim", "Jamak Ta'khir", "Qadha Maghrib", "Tidak perlu shalat Maghrib"], a: 1, exp: "Benar. Ia mengerjakan Maghrib lalu Isya di waktu Isya, ini disebut Jamak Ta'khir (mengakhirkan)." },
+            { q: "Bagaimana cara melakukan shalat Jamak Taqdim Qashar Dzuhur dan Ashar?", options: ["Dzuhur 4 rakaat lalu Ashar 2 rakaat", "Dzuhur 2 rakaat lalu Ashar 2 rakaat", "Dzuhur 2 rakaat lalu Ashar 4 rakaat", "Dzuhur 4 rakaat lalu Ashar 4 rakaat"], a: 1, exp: "Benar. Dilakukan di waktu Dzuhur, masing-masing diringkas menjadi 2 rakaat." },
+            { q: "Apakah shalat Shubuh bisa dijamak dengan shalat Isya?", options: ["Bisa, jika safar jauh", "Bisa, jika ada hajat", "Tidak bisa sama sekali", "Hanya boleh saat perang"], a: 2, exp: "Benar. Shalat Shubuh adalah shalat yang berdiri sendiri dan tidak bisa dijamak dengan shalat apapun." },
+            { q: "Setelah selesai shalat pertama pada Jamak Taqdim, apa yang harus segera dilakukan?", options: ["Berdzikir panjang", "Makan dulu", "Langsung iqamah untuk shalat kedua", "Tidur sejenak"], a: 2, exp: "Benar. Syaratnya adalah muwalah (berkesinambungan), tidak boleh ada jeda yang lama antara shalat pertama dan kedua." },
+            { q: "Berapa jumlah rakaat shalat Jamak Ta'khir Qashar antara Maghrib dan Isya?", options: ["Maghrib 3, Isya 4", "Maghrib 2, Isya 2", "Maghrib 3, Isya 2", "Maghrib 3, Isya 3"], a: 2, exp: "Benar. Maghrib tidak bisa diqashar (tetap 3 rakaat), sedangkan Isya diqashar menjadi 2 rakaat." },
+            { q: "Bolehkah menjamak shalat karena hujan deras yang menyulitkan untuk bolak-balik ke masjid?", options: ["Tidak boleh sama sekali", "Boleh, ini termasuk uzur", "Hanya boleh untuk shalat Jum'at", "Hanya boleh bagi musafir"], a: 1, exp: "Benar. Menjamak karena hujan adalah rukhshah yang juga dicontohkan dalam hadits, berlaku bagi orang yang mukim." },
+            { q: "Niat untuk menjamak ta'khir harus ada pada...", options: ["Waktu shalat yang pertama", "Waktu shalat yang kedua", "Antara dua waktu shalat", "Setelah selesai shalat"], a: 0, exp: "Benar. Seseorang harus sudah berniat di waktu shalat pertama (misal di waktu Dzuhur) bahwa ia akan menjamak shalatnya nanti di waktu Ashar." }
+        ]
+    };
+
+    const sumatifData = [
+        ...quizData.quiz1.slice(0, 5), ...quizData.quiz2.slice(0, 5),
+        ...quizData.quiz3.slice(0, 5), ...quizData.quiz4.slice(0, 5)
+    ].sort(() => Math.random() - 0.5);
+
+    // ================== CORE FUNCTIONS ==================
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panes = document.querySelectorAll('.tab-pane');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            panes.forEach(p => p.classList.add('hidden'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.remove('hidden');
+        });
+    });
+
+    function createQuiz(quizId, data) {
+        const container = document.getElementById(quizId);
+        if (!container) return;
+        container.innerHTML = '';
+        data.forEach((item, index) => {
+            const questionBlock = document.createElement('div');
+            questionBlock.innerHTML = `
+                <p class="mb-3">${index + 1}. ${item.q}</p>
+                <div class="space-y-2 options-container">
+                    ${item.options.map((option, i) => `
+                        <label class="block p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                            <input type="radio" name="${quizId}-q${index}" value="${i}" class="mr-3">
+                            <span>${option}</span>
+                        </label>
+                    `).join('')}
+                </div>
+                <div class="p-3 mt-3 rounded-lg text-sm hidden feedback-box"></div>
+            `;
+            container.appendChild(questionBlock);
+
+            const optionsContainer = questionBlock.querySelector('.options-container');
+            const feedbackBox = questionBlock.querySelector('.feedback-box');
+            optionsContainer.addEventListener('change', (e) => {
+                const selectedValue = parseInt(e.target.value);
+                const isCorrect = selectedValue === item.a;
+                
+                optionsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
+                    radio.disabled = true;
+                    const parentLabel = radio.parentElement;
+                    if (parseInt(radio.value) === item.a) {
+                        parentLabel.classList.add('bg-correct', 'text-black', 'font-bold');
+                    }
+                });
+
+                if (!isCorrect) {
+                    e.target.parentElement.classList.add('bg-incorrect', 'text-black', 'font-bold');
+                }
+                
+                feedbackBox.innerHTML = item.exp;
+                feedbackBox.classList.remove('hidden');
+                feedbackBox.classList.add(isCorrect ? 'bg-green-200/20' : 'bg-red-200/20');
+            });
+        });
+    }
+
+    function createSumatifTest() {
+        const container = document.getElementById('sumatif-questions-container');
+        if (!container) return;
+        container.innerHTML = '';
+        sumatifData.forEach((item, index) => {
+            const questionBlock = document.createElement('div');
+            questionBlock.className = 'mb-6 p-4 bg-fiqh-dark rounded-lg';
+            questionBlock.innerHTML = `
+                <p class="mb-3">${index + 1}. ${item.q}</p>
+                <div class="space-y-2">
+                    ${item.options.map((option, i) => `
+                        <label class="block p-3 bg-gray-900 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                            <input type="radio" name="sumatif-q${index}" value="${i}" data-correct="${item.a}" class="mr-3">
+                            <span>${option}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(questionBlock);
+        });
+    }
+    
+    // ================== SIMULATION LOGIC ==================
+    // Sim 1: Cek Uzur
+    document.querySelectorAll('.sim1-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const isUzur = btn.dataset.uzur === 'true';
+            btn.classList.remove('bg-gray-700');
+            if (isUzur) {
+                btn.classList.add('bg-correct', 'text-black');
+                btn.textContent += " - Termasuk Uzur";
+            } else {
+                btn.classList.add('bg-incorrect', 'text-black');
+                btn.textContent += " - Bukan Uzur";
+            }
+            btn.disabled = true;
+        });
+    });
+
+    // Sim 2: Pembangun Shaf
+    function initShafBuilder() {
+        const dropzone = document.getElementById('sim2-dropzone');
+        const source = document.getElementById('sim2-source');
+        const feedback = document.getElementById('sim2-feedback');
+        let draggedItem = null;
+
+        source.addEventListener('dragstart', e => {
+            if (e.target.classList.contains('draggable')) {
+                draggedItem = e.target;
+                setTimeout(() => e.target.classList.add('opacity-50'), 0);
+            }
+        });
+
+        source.addEventListener('dragend', e => {
+            if (draggedItem) {
+                draggedItem.classList.remove('opacity-50');
+                draggedItem = null;
+            }
+        });
+        
+        dropzone.addEventListener('dragover', e => e.preventDefault());
+
+        dropzone.addEventListener('drop', e => {
+            e.preventDefault();
+            if (!draggedItem) return;
+
+            const isDewasa = draggedItem.dataset.type === 'dewasa';
+            const anakExists = dropzone.querySelector('[data-type="anak"]');
+
+            if (isDewasa && anakExists) {
+                feedback.textContent = "Salah! Laki-laki dewasa di depan.";
+                feedback.className = "text-center mt-2 font-bold h-5 text-incorrect";
+            } else {
+                dropzone.appendChild(draggedItem);
+                feedback.textContent = "Benar!";
+                feedback.className = "text-center mt-2 font-bold h-5 text-correct";
+            }
+            setTimeout(() => feedback.textContent = "", 2000);
+        });
+    }
+    initShafBuilder();
+    
+    // Sim 3: Rangkai Sunnah Jumat
+    function initSunnahSequence() {
+        const target = document.getElementById('sim3-target');
+        const source = document.getElementById('sim3-source');
+        const checkBtn = document.getElementById('sim3-check');
+        const feedback = document.getElementById('sim3-feedback');
+
+        let draggedItem = null;
+        source.addEventListener('dragstart', e => { if (e.target.classList.contains('draggable')) draggedItem = e.target; });
+        target.addEventListener('dragover', e => e.preventDefault());
+        target.addEventListener('drop', e => { if (draggedItem) target.appendChild(draggedItem); });
+        source.addEventListener('dragover', e => e.preventDefault());
+        source.addEventListener('drop', e => { if (draggedItem) source.appendChild(draggedItem); });
+        document.body.addEventListener('dragend', () => { draggedItem = null; });
+        
+        checkBtn.addEventListener('click', () => {
+            const items = Array.from(target.children);
+            let isCorrect = true;
+            if (items.length < 4) {
+                 isCorrect = false;
+            } else {
+                for(let i=0; i<items.length; i++) {
+                    if (parseInt(items[i].dataset.order) !== i + 1) {
+                        isCorrect = false;
+                        break;
+                    }
+                }
+            }
+            if (isCorrect) {
+                feedback.textContent = "Urutan Benar! Mumtaz!";
+                feedback.className = "text-center mt-2 font-bold h-5 text-correct";
+            } else {
+                feedback.textContent = "Urutan belum tepat. Coba lagi.";
+                feedback.className = "text-center mt-2 font-bold h-5 text-incorrect";
+            }
+        });
+    }
+    initSunnahSequence();
+
+    // Sim 4: Penjaga Pahala Jumat
+    function initKhutbahFocus() {
+        const skorEl = document.getElementById('sim4-skor');
+        const gangguanBox = document.getElementById('sim4-gangguan-box');
+        const fokusBtn = document.getElementById('sim4-fokus');
+        let skor = 100;
+        let gameInterval;
+        
+        const gangguan = ["Teman mengajak bicara", "Pesan WA masuk", "Ada yang lewat di depan", "Teringat urusan dunia"];
+
+        fokusBtn.addEventListener('click', () => {
+            fokusBtn.textContent = "FOKUS TERJAGA";
+            fokusBtn.disabled = true;
+            skor = 100;
+            skorEl.textContent = skor;
+            gangguanBox.textContent = "";
+
+            gameInterval = setInterval(() => {
+                const randomChance = Math.random();
+                if (randomChance < 0.4) { // 40% chance of distraction
+                    const randomGangguan = gangguan[Math.floor(Math.random() * gangguan.length)];
+                    gangguanBox.textContent = randomGangguan;
+                    skor -= 10;
+                    skorEl.textContent = skor;
+                    
+                    const distractionTimeout = setTimeout(() => {
+                        gangguanBox.textContent = "";
+                    }, 2000);
+
+                    gangguanBox.onclick = () => {
+                        skor -= 20; // bigger penalty for interacting
+                        skorEl.textContent = skor;
+                        gangguanBox.textContent = "PAHALA BERKURANG!";
+                        clearTimeout(distractionTimeout);
+                        setTimeout(() => gangguanBox.textContent = "", 1000);
+                        gangguanBox.onclick = null;
+                    };
+                }
+                if(skor <= 0) {
+                     gangguanBox.textContent = "Pahala Jum'at hilang!";
+                     clearInterval(gameInterval);
+                }
+            }, 2500);
+        });
+    }
+    initKhutbahFocus();
+
+    // Sim 5: Kalkulator Rukhshah
+    document.getElementById('sim5-cek').addEventListener('click', () => {
+        const jarak = parseInt(document.getElementById('sim5-jarak').value) || 0;
+        const tujuan = document.getElementById('sim5-tujuan').value;
+        const feedback = document.getElementById('sim5-feedback');
+        
+        if (tujuan === 'maksiat') {
+            feedback.textContent = "Tidak boleh, safar maksiat.";
+            feedback.className = "text-center font-bold h-5 mt-2 text-incorrect";
+        } else if (jarak >= 85) {
+            feedback.textContent = "Boleh mengqashar shalat.";
+            feedback.className = "text-center font-bold h-5 mt-2 text-correct";
+        } else {
+            feedback.textContent = "Tidak boleh, jarak tidak cukup.";
+            feedback.className = "text-center font-bold h-5 mt-2 text-incorrect";
+        }
+    });
+
+    // Sim 6: Mana yg Boleh Diqashar
+    document.querySelectorAll('.sim6-shalat').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const shalat = btn.textContent;
+            if (shalat === 'Dzuhur' || shalat === 'Ashar' || shalat === 'Isya') {
+                btn.classList.add('bg-correct', 'text-black');
+            } else {
+                btn.classList.add('bg-incorrect', 'text-black');
+            }
+            btn.style.pointerEvents = 'none';
+        });
+    });
+
+    // Sim 7: Tentukan Jenis Jamak
+    const sim7scenarios = [
+        { s: "Anda akan berangkat setelah Dzuhur dan diperkirakan tiba di tujuan setelah Maghrib.", a: "Jamak Taqdim" },
+        { s: "Anda akan tiba di tujuan saat waktu Ashar, tapi belum shalat Dzuhur.", a: "Jamak Ta'khir" },
+        { s: "Anda berhenti di rest area jam 10 pagi untuk istirahat.", a: "Tidak Perlu Jamak" }
+    ];
+    let sim7Index = 0;
+    const sim7ScenarioEl = document.getElementById('sim7-scenario');
+    const sim7FeedbackEl = document.getElementById('sim7-feedback');
+    const sim7Options = document.querySelectorAll('.sim7-option');
+    function loadSim7() {
+        sim7ScenarioEl.textContent = `Skenario: ${sim7scenarios[sim7Index].s}`;
+        sim7FeedbackEl.textContent = '';
+        sim7Options.forEach(btn => { btn.disabled = false; btn.className = 'sim7-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded'; });
+    }
+    sim7Options.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const correctAnswer = sim7scenarios[sim7Index].a;
+            sim7Options.forEach(b => b.disabled = true);
+            if (btn.textContent === correctAnswer) {
+                btn.classList.add('bg-correct', 'text-black');
+                sim7FeedbackEl.textContent = "Pilihan Tepat!";
+                sim7FeedbackEl.className = "text-center mt-2 font-bold h-5 text-correct";
+            } else {
+                btn.classList.add('bg-incorrect', 'text-black');
+                sim7FeedbackEl.textContent = "Kurang Tepat.";
+                sim7FeedbackEl.className = "text-center mt-2 font-bold h-5 text-incorrect";
+            }
+        });
+    });
+    document.getElementById('sim7-next').addEventListener('click', () => { sim7Index = (sim7Index + 1) % sim7scenarios.length; loadSim7(); });
+
+    // Sim 8: Panduan Praktik
+    const sim8Steps = ["Masuk Waktu Dzuhur", "Adzan & Iqamah", "Niat Dzuhur Jamak Taqdim Qashar", "Shalat Dzuhur 2 Rakaat", "Salam", "Langsung Iqamah (tanpa jeda)", "Niat Shalat Ashar Qashar", "Shalat Ashar 2 Rakaat", "Salam", "Selesai"];
+    let sim8Index = 0;
+    const sim8Display = document.getElementById('sim8-step-display');
+    const sim8StartBtn = document.getElementById('sim8-start');
+    const sim8NextBtn = document.getElementById('sim8-next');
+    sim8StartBtn.addEventListener('click', () => {
+        sim8Index = 0;
+        sim8Display.textContent = sim8Steps[sim8Index];
+        sim8StartBtn.classList.add('hidden');
+        sim8NextBtn.classList.remove('hidden');
+    });
+    sim8NextBtn.addEventListener('click', () => {
+        sim8Index++;
+        if (sim8Index < sim8Steps.length) {
+            sim8Display.textContent = sim8Steps[sim8Index];
+        } else {
+            sim8Display.textContent = "Praktik Selesai! Barakallah fiik.";
+            sim8NextBtn.classList.add('hidden');
+            sim8StartBtn.classList.remove('hidden');
+            sim8StartBtn.textContent = "Ulangi";
+        }
+    });
+
+
+    // ================== INITIALIZATION ==================
+    createQuiz('quiz1', quizData.quiz1);
+    createQuiz('quiz2', quizData.quiz2);
+    createQuiz('quiz3', quizData.quiz3);
+    createQuiz('quiz4', quizData.quiz4);
+    createSumatifTest();
+    loadSim7();
+    
+    document.getElementById('sumatif-submit-btn').addEventListener('click', () => {
+        let score = 0;
+        const total = sumatifData.length;
+        const answers = document.querySelectorAll('#sumatif-questions-container input[type="radio"]:checked');
+        answers.forEach(radio => {
+            if (parseInt(radio.value) === parseInt(radio.dataset.correct)) { score++; }
+        });
+        const percentage = (score / total) * 100;
+        let feedbackText = '';
+        if (percentage >= 85) feedbackText = "Mumtaz! Pemahaman Anda sangat baik. Barakallahu fiik.";
+        else if (percentage >= 70) feedbackText = "Jayyid Jiddan. Hasil yang bagus, terus tingkatkan!";
+        else if (percentage >= 50) feedbackText = "Jayyid. Cukup baik, muraja'ah lagi materi yang kurang dipahami.";
+        else feedbackText = "Perlu belajar lebih giat lagi. Jangan putus asa, ulangi tes setelah muraja'ah.";
+        document.getElementById('sumatif-score').textContent = `${score} / ${total}`;
+        document.getElementById('sumatif-feedback').textContent = feedbackText;
+        document.getElementById('sumatif-questions-container').classList.add('hidden');
+        document.getElementById('sumatif-submit-btn').classList.add('hidden');
+        document.getElementById('sumatif-result-container').classList.remove('hidden');
+    });
+
+    document.getElementById('sumatif-retry-btn').addEventListener('click', () => {
+        document.getElementById('sumatif-result-container').classList.add('hidden');
+        document.getElementById('sumatif-questions-container').classList.remove('hidden');
+        document.getElementById('sumatif-submit-btn').classList.remove('hidden');
+        createSumatifTest();
+    });
+});
+</script>
+</body>
+</html>
