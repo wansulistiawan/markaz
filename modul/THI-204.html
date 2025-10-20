@@ -6,996 +6,788 @@
     <title>Modul THI-204: Praktik Pengobatan Lanjutan (Ruqyah & Bekam)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    'thibbun-dark': '#2d3748', // Dark Slate Blue
-                    'thibbun-darker': '#1a202c', // Very Dark Blue
-                    'thibbun-light': '#e2e8f0', // Light Slate Gray
-                    'thibbun-accent': '#68d391', // Soft Green
-                    'thibbun-accent-hover': '#48bb78', // Darker Green
-                    'thibbun-secondary': '#a0aec0', // Medium Gray
-                    'correct': '#48bb78',
-                    'incorrect': '#f56565',
-                },
-                fontFamily: {
-                    'sans': ['Inter', 'sans-serif'],
-                    'arabic': ['"Scheherazade New"', 'serif']
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#0d9488', // Teal-600
+                        'primary-dark': '#134e4a', // Teal-900
+                        'primary-light': '#f0fdfa', // Teal-50
+                        'secondary': '#facc15', // Yellow-400
+                        'accent': '#6366f1', // Indigo-500
+                    }
                 }
             }
         }
-    }
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #1a202c;
-            color: #e2e8f0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        .arabic, .arabic-text {
-            font-family: 'Scheherazade New', serif;
-            font-size: 1.5rem;
-            line-height: 2.5rem;
-            direction: rtl;
+        .tab-content {
+            display: none;
         }
-        .tab-btn.active {
-            background-color: #68d391;
-            color: #1a202c;
-            font-weight: 600;
+        .tab-content.active {
+            display: block;
         }
         .teacher-note {
-            background-color: rgba(104, 211, 145, 0.1);
-            border-left: 4px solid #68d391;
-            padding: 1rem;
-            margin: 1.5rem 0;
-            border-radius: 0 0.5rem 0.5rem 0;
+            border-left: 4px solid #facc15; /* secondary color */
         }
-        .simulation-card, .quiz-card {
-            background-color: #2d3748;
-            border: 1px solid #4a5568;
+        .quiz-option.selected.correct {
+            background-color: #dcfce7; /* Green-100 */
+            border-color: #22c55e; /* Green-500 */
         }
-        .draggable {
-            cursor: move;
-            user-select: none;
+        .quiz-option.selected.incorrect {
+            background-color: #fee2e2; /* Red-100 */
+            border-color: #ef4444; /* Red-500 */
         }
-        .drop-zone {
-            transition: background-color 0.3s ease;
+        .point-map-dot {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            fill: #0d9488;
         }
-        .drop-zone.drag-over {
-            background-color: #4a5568;
+        .point-map-dot:hover {
+            transform: scale(1.5);
+            fill: #f59e0b;
         }
     </style>
 </head>
-<body>
+<body class="bg-primary-dark text-gray-800 font-sans leading-relaxed">
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-        
-        <header class="text-center mb-8 border-b-2 border-thibbun-accent pb-4">
-            <h1 class="text-3xl md:text-4xl font-bold text-white">Modul Pembelajaran Thibbun Nabawi</h1>
-            <p class="text-xl text-thibbun-accent font-semibold mt-1">THI-204: Praktik Pengobatan Lanjutan (Ruqyah & Bekam)</p>
+        <header class="bg-white rounded-xl shadow-2xl p-6 mb-6">
+            <h1 class="text-3xl md:text-4xl font-bold text-primary-dark text-center">Modul THI-204</h1>
+            <p class="text-xl text-primary text-center mt-2">Praktik Pengobatan Lanjutan (Ruqyah & Bekam)</p>
         </header>
 
-        <nav class="flex flex-wrap justify-center mb-8 gap-2">
-            <button class="tab-btn active w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-thibbun-accent-hover" data-tab="pertemuan1">Pertemuan 1</button>
-            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-thibbun-accent-hover" data-tab="pertemuan2">Pertemuan 2</button>
-            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-thibbun-accent-hover" data-tab="pertemuan3">Pertemuan 3</button>
-            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-thibbun-accent-hover" data-tab="pertemuan4">Pertemuan 4</button>
-            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out bg-red-700 hover:bg-red-600" data-tab="tesSumatif">Tes Sumatif</button>
-        </nav>
+        <!-- Navigasi Tab -->
+        <div class="flex flex-wrap justify-center border-b-2 border-primary-light mb-6">
+            <button data-tab="1" class="tab-button text-sm sm:text-base flex-grow sm:flex-grow-0 py-3 px-4 font-semibold text-white hover:bg-white hover:text-primary transition-colors duration-300 rounded-t-lg">Pertemuan 1</button>
+            <button data-tab="2" class="tab-button text-sm sm:text-base flex-grow sm:flex-grow-0 py-3 px-4 font-semibold text-white hover:bg-white hover:text-primary transition-colors duration-300 rounded-t-lg">Pertemuan 2</button>
+            <button data-tab="3" class="tab-button text-sm sm:text-base flex-grow sm:flex-grow-0 py-3 px-4 font-semibold text-white hover:bg-white hover:text-primary transition-colors duration-300 rounded-t-lg">Pertemuan 3</button>
+            <button data-tab="4" class="tab-button text-sm sm:text-base flex-grow sm:flex-grow-0 py-3 px-4 font-semibold text-white hover:bg-white hover:text-primary transition-colors duration-300 rounded-t-lg">Pertemuan 4</button>
+            <button data-tab="5" class="tab-button text-sm sm:text-base flex-grow sm:flex-grow-0 py-3 px-4 font-semibold text-white hover:bg-white hover:text-primary transition-colors duration-300 rounded-t-lg bg-secondary text-primary-dark">Tes Sumatif</button>
+        </div>
 
-        <main id="tab-content">
-            <!-- =================================================================== -->
-            <!-- ==================== KONTEN PERTEMUAN 1 =========================== -->
-            <!-- =================================================================== -->
-            <div id="pertemuan1" class="tab-pane active space-y-8">
-                <div class="p-6 bg-thibbun-darker rounded-lg shadow-lg">
-                    <h2 class="text-2xl font-bold text-thibbun-accent mb-1">Pertemuan 1: Fondasi Ruqyah Syar'iyyah</h2>
-                    <p class="mb-6 text-thibbun-secondary">Memahami hakikat, syarat, dan rukun Ruqyah yang sesuai dengan tuntunan Syariat.</p>
+        <main id="main-content">
+            <!-- Konten Pertemuan 1 -->
+            <div id="tab-content-1" class="tab-content">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-primary-dark mb-1">Pertemuan 1: Diagnosa Gangguan Non-Medis & Ruqyah Lanjutan</h2>
+                    <p class="text-lg text-gray-600 mb-6">Membedakan Gejala dan Mengenal Ayat-Ayat Spesifik</p>
 
-                    <div class="mb-6">
-                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-thibbun-accent pl-3">A. Tujuan Pembelajaran</h3>
-                        <ul class="list-disc list-inside space-y-2 pl-2">
-                            <li>Santri mampu mendefinisikan Ruqyah secara bahasa dan istilah syar'i.</li>
-                            <li>Santri mampu membedakan dengan tegas antara Ruqyah Syar'iyyah dan Ruqyah Syirkiyyah.</li>
-                            <li>Santri mampu menjelaskan tiga syarat diterimanya Ruqyah.</li>
-                            <li>Santri mampu mengidentifikasi tiga rukun (pilar) utama dalam prosesi Ruqyah.</li>
-                            <li>Santri mampu menghafal bacaan-bacaan pokok untuk Ruqyah mandiri (Al-Fatihah, Ayat Kursi, Tiga Qul).</li>
+                    <div class="space-y-6">
+                        <h3 class="font-bold text-xl text-primary border-b-2 border-primary-light pb-2">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-4">
+                            <li>Mampu membedakan gejala penyakit medis murni dengan gejala yang mengindikasikan gangguan non-medis ('ain, sihir, jin).</li>
+                            <li>Mengenali ciri-ciri spesifik dari gangguan 'ain (penyakit mata hasad).</li>
+                            <li>Mengenali ciri-ciri umum dari gangguan sihir dan jin.</li>
+                            <li>Mengetahui dan menghafal ayat-ayat Al-Qur'an yang lebih spesifik untuk penanganan 'ain dan sihir.</li>
                         </ul>
-                    </div>
 
-                    <div class="mb-6">
-                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-thibbun-accent pl-3">B. Keterkaitan Nilai Islam</h3>
-                        <p class="mb-4">Dasar dari pengobatan cara Nabi, khususnya Ruqyah, adalah tauhid dan tawakal yang murni kepada Allah. Ruqyah mengajarkan bahwa kesembuhan hakikatnya datang hanya dari Allah, sedangkan bacaan Al-Qur'an dan doa adalah sebab syar'i yang kita tempuh. Ini menguatkan keyakinan bahwa tidak ada kekuatan yang bisa memberi manfaat atau mudharat selain atas izin-Nya. Dengan meruqyah, kita tidak hanya mencari kesembuhan fisik, tetapi juga mengokohkan akidah dan mendekatkan diri kepada Sang Penyembuh Sejati (<i class="arabic">الشَّافِي</i>).</p>
-                        <div class="p-4 bg-gray-900 rounded-lg text-center">
-                            <p class="arabic text-2xl text-white">وَإِذَا مَرِضْتُ فَهُوَ يَشْفِينِ</p>
-                            <p class="mt-2 text-thibbun-light">"dan apabila aku sakit, Dialah yang menyembuhkan aku."</p>
-                            <p class="text-sm text-thibbun-accent mt-1">(QS. Asy-Syu'ara: 80)</p>
+                        <h3 class="font-bold text-xl text-primary border-b-2 border-primary-light pb-2">B. Keterkaitan Nilai Islam</h3>
+                        <p>Iman kepada yang ghaib adalah salah satu pilar keimanan. Termasuk di dalamnya adalah meyakini adanya 'ain, sihir, dan jin sebagai makhluk Allah yang dapat memberi pengaruh dengan izin-Nya. Mempelajari cara mendiagnosa dan menanganinya sesuai syariat adalah wujud dari kesempurnaan ikhtiar dan tawakal. Ini mengajarkan kita untuk tidak meremehkan perkara ghaib, tidak pula berlebihan hingga menjadi paranoid, serta yang terpenting adalah senantiasa menyandarkan segala bentuk perlindungan hanya kepada Allah, Sang Penjaga Yang Maha Sempurna.</p>
+                        <div class="bg-primary-light border-l-4 border-primary text-primary-dark p-4 rounded-r-lg mt-4">
+                            <p class="font-semibold">Dalil:</p>
+                             <p class="italic">Rasulullah shallallahu 'alaihi wa sallam bersabda:</p>
+                            <p class="text-4xl text-right font-serif my-2">الْعَيْنُ حَقٌّ، وَلَوْ كَانَ شَيْءٌ سَابَقَ الْقَدَرَ سَبَقَتْهُ الْعَيْنُ</p>
+                            <p>"'Ain (mata hasad) itu benar-benar ada. Andaikan ada sesuatu yang bisa mendahului takdir, sungguh 'ain itu bisa."</p>
+                            <p class="text-sm">(HR. Muslim no. 2188)</p>
                         </div>
-                    </div>
 
-                    <div class="mb-6">
-                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-thibbun-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
-                        <div class="space-y-6">
-                            <div>
-                                <h4 class="font-semibold text-lg text-gray-200">1. Muqaddimah: Apa itu Ruqyah? (20 Menit)</h4>
-                                <p>Ruqyah (<i class="arabic">الرُّقْيَةُ</i>) secara bahasa berarti jampi-jampi atau mantera. Namun, dalam Islam, hukumnya terperinci. Ruqyah menjadi <span class="text-thibbun-accent font-semibold">Syar'iyyah (diperbolehkan)</span> jika memenuhi syarat, dan menjadi <span class="text-incorrect font-semibold">Syirkiyyah (diharamkan)</span> jika melanggar syarat tersebut. Intinya, Ruqyah Syar'iyyah adalah metode penyembuhan dengan membacakan ayat-ayat Al-Qur'an dan doa-doa yang ma'tsur (dicontohkan Nabi ﷺ) untuk memohon kesembuhan dari Allah.</p>
-                                <p class="mt-2">Imam As-Suyuthi rahimahullah menjelaskan bahwa para ulama telah sepakat (ijma') atas bolehnya ruqyah jika terpenuhi tiga syarat:</p>
-                                <ul class="list-decimal list-inside mt-2 pl-4 space-y-1">
-                                    <li>Menggunakan Kalamullah (Al-Qur'an), nama-nama dan sifat-sifat-Nya, atau doa yang ma'tsur.</li>
-                                    <li>Menggunakan bahasa Arab atau bahasa lain yang dipahami maknanya (tidak mengandung kesyirikan).</li>
-                                    <li>Meyakini bahwa bukan Ruqyah itu sendiri yang memberi pengaruh, melainkan kesembuhan datang dari Allah Ta'ala.</li>
+                        <h3 class="font-bold text-xl text-primary border-b-2 border-primary-light pb-2">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                        <div class="space-y-4">
+                            <p><b class="text-primary-dark">Pendahuluan (10 Menit):</b> Guru bercerita tentang sahabat Sahl bin Hunaif yang tiba-tiba jatuh sakit setelah dipuji karena keindahan tubuhnya, hingga Rasulullah mengajarkan cara menangani 'ain. Ini menjadi pengantar bahwa gangguan non-medis itu nyata.</p>
+                            
+                            <p><b class="text-primary-dark">Materi Inti (50 Menit):</b></p>
+                            <div class="pl-4">
+                                <p><b>1. Medis vs Non-Medis:</b> Gejala non-medis seringkali aneh, berpindah-pindah, tidak terdeteksi oleh peralatan medis, dan seringkali muncul atau memburuk pada waktu-waktu tertentu (misal: saat mendengar Al-Qur'an, menjelang maghrib).</p>
+                                
+                                <p class="mt-4"><b>2. Ciri Khas Gangguan:</b></p>
+                                <ul class="list-disc list-inside pl-4 mt-2 space-y-2">
+                                    <li><b>'Ain (Mata Hasad):</b> Sering menyerang anak-anak atau orang yang memiliki kelebihan (fisik, harta, kecerdasan). Gejalanya bisa berupa sakit kepala, wajah pucat/kusam, sering menguap, malas beribadah, atau penyakit fisik mendadak tanpa sebab medis yang jelas.</li>
+                                    <li><b>Sihir & Jin:</b> Gejalanya sangat beragam. Umumnya berupa mimpi buruk yang berulang, rasa was-was dan takut berlebihan, benci/sesak saat mendengar Al-Qur'an, sakit di salah satu anggota badan yang berpindah-pindah, atau emosi yang tidak terkontrol (mudah marah).</li>
                                 </ul>
-                                <div class="teacher-note">
-                                    <p class="font-bold">Poin Diskusi Guru:</p>
-                                    <p>Tanyakan kepada santri, "Pernahkah kalian melihat praktik pengobatan alternatif di masyarakat? Sebutkan ciri-cirinya!" Arahkan diskusi untuk mengidentifikasi potensi kesyirikan, seperti penggunaan jimat, sesajen, atau mantera yang tidak dipahami maknanya.</p>
+                                
+                                <p class="mt-4"><b>3. Ayat-Ayat Ruqyah Spesifik (Tambahan):</b></p>
+                                <ul class="list-decimal list-inside pl-4 mt-2">
+                                    <li><b>Untuk Gangguan 'Ain:</b> Selain bacaan dasar, ditambah dengan doa perlindungan yang diajarkan Nabi untuk Hasan & Husain.</li>
+                                    <li><b>Untuk Sihir:</b> Fokus mengulang-ulang ayat-ayat pembatal sihir, yaitu:
+                                        <ul class="list-disc list-inside pl-6 text-sm">
+                                            <li>QS. Al-A'raf: 117-122</li>
+                                            <li>QS. Yunus: 81-82</li>
+                                            <li>QS. Thaha: 69</li>
+                                        </ul>
+                                    </li>
+                                     <li><b>Untuk Mengusir Jin:</b> Fokus pada ayat-ayat yang "mengancam" dan menunjukkan kebesaran Allah, seperti Ayat Kursi (diulang-ulang), dua ayat terakhir Al-Baqarah, dan keseluruhan surat Al-Baqarah jika memungkinkan.</li>
+                                </ul>
+
+                                <div class="teacher-note bg-yellow-50 p-4 mt-6 rounded-lg">
+                                    <p class="font-bold text-yellow-800 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" /></svg>Poin Diskusi Guru</p>
+                                    <p class="mt-2 text-yellow-700">Tekankan pentingnya "diagnosa tauhid": jangan terburu-buru menyimpulkan setiap penyakit sebagai gangguan jin. Prinsip dasarnya adalah berobat medis terlebih dahulu. Jika pengobatan medis tidak membuahkan hasil dan ada gejala-gejala non-medis yang kuat, barulah ikhtiar dengan ruqyah lebih diintensifkan. Hindari sikap was-was berlebihan (paranoid).</p>
                                 </div>
                             </div>
                             
-                            <div>
-                                <h4 class="font-semibold text-lg text-gray-200">2. Rukun-Rukun Ruqyah (25 Menit)</h4>
-                                <p>Agar prosesi Ruqyah berjalan dengan benar, ada tiga pilar atau rukun yang harus terpenuhi:</p>
-                                <div class="flex flex-col md:flex-row justify-around items-center my-4 text-center gap-4">
-                                    <div class="p-3">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-thibbun-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                                        <h5 class="font-semibold mt-2">1. Ar-Raaqi (<i class="arabic">الرَّاقِي</i>)</h5>
-                                        <p class="text-sm">Orang yang meruqyah. Harus seorang muslim yang lurus akidahnya, ikhlas, dan memahami tata cara yang benar.</p>
-                                    </div>
-                                     <div class="p-3">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-thibbun-light" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v11.494m-9-5.747h18" /></svg>
-                                        <h5 class="font-semibold mt-2">2. Al-Marqiy (<i class="arabic">الْمَرْقِيُّ</i>)</h5>
-                                        <p class="text-sm">Orang yang diruqyah (pasien). Harus memiliki keyakinan penuh kepada Allah dan sabar dalam menjalani proses terapi.</p>
-                                    </div>
-                                     <div class="p-3">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-thibbun-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v11.494m-9-5.747h18" /></svg>
-                                        <h5 class="font-semibold mt-2">3. Ar-Ruqyah (<i class="arabic">الرُّقْيَةُ</i>)</h5>
-                                        <p class="text-sm">Bacaan yang digunakan. Harus bersumber dari Al-Qur'an dan doa yang shahih, diucapkan dengan tartil dan penuh penghayatan.</p>
-                                    </div>
-                                </div>
-                                <p>Ketiga pilar ini harus bersandar pada satu fondasi utama: <strong>Tawakal kepada Allah</strong>. Tanpa ini, ruqyah hanya akan menjadi ritual kosong tanpa kekuatan.</p>
-                            </div>
+                            <p><b class="text-primary-dark">Aktivitas (20 Menit):</b> Guru membacakan beberapa skenario kasus (misal: "Seorang santri yang selalu rangking 1 tiba-tiba menjadi linglung dan malas belajar setelah dipuji banyak orang"). Santri diminta mendiskusikan kemungkinan diagnosa non-medisnya dan ayat apa yang paling tepat untuk meruqyahnya.</p>
 
-                            <div>
-                                <h4 class="font-semibold text-lg text-gray-200">3. Bacaan-Bacaan Asas dalam Ruqyah (30 Menit)</h4>
-                                <p>Ada beberapa surat dan ayat yang menjadi "jantung" dalam setiap prosesi ruqyah karena keutamaannya yang agung. Ini adalah bacaan minimal yang harus dikuasai untuk ruqyah mandiri:</p>
-                                <ul class="list-inside list-disc mt-2 pl-4 space-y-2">
-                                    <li><strong>Surat Al-Fatihah:</strong> Disebut juga <i class="arabic">الشَّافِيَةُ</i> (Penyembuh) dan <i class="arabic">الرُّقْيَةُ</i> itu sendiri.</li>
-                                    <li><strong>Ayat Kursi (Al-Baqarah: 255):</strong> Ayat paling agung dalam Al-Qur'an, benteng terkuat dari gangguan setan.</li>
-                                    <li><strong>Tiga Surat Qul (Al-Ikhlas, Al-Falaq, An-Nas):</strong> Disebut juga <i class="arabic">الْمُعَوِّذَاتُ</i> (surat-surat perlindungan), dibaca untuk memohon perlindungan dari segala keburukan.</li>
-                                </ul>
-                                <div class="teacher-note">
-                                    <p class="font-bold">Poin Diskusi Guru:</p>
-                                    <p>Ajak santri untuk membaca bersama-sama ayat-ayat di atas dengan tartil. Jelaskan keutamaan masing-masing ayat berdasarkan dalil. Misalnya, hadits tentang sahabat yang meruqyah kepala suku dengan Al-Fatihah dan disetujui oleh Nabi ﷺ.</p>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <h4 class="font-semibold text-lg text-gray-200">4. Rangkuman & Penutup (15 Menit)</h4>
-                                <p>Ringkas kembali 3 syarat dan 3 rukun ruqyah. Tegaskan bahwa ruqyah adalah ibadah dan bentuk doa, sehingga adab dan keyakinan adalah kuncinya. Siapkan santri untuk praktik ruqyah mandiri di pertemuan berikutnya.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-6">
-                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-thibbun-accent pl-3">D. Penilaian Modul</h3>
-                        <p class="mb-4">Penilaian selama pembelajaran modul ini mencakup tiga aspek utama untuk memastikan pemahaman yang holistik:</p>
-                        <div class="grid md:grid-cols-3 gap-4">
-                            <div class="p-4 bg-gray-900 rounded"><h4 class="font-semibold text-thibbun-accent">1. Sikap / Adab (20%)</h4><p class="text-sm">Meliputi adab dalam bertanya, keseriusan dalam mengikuti pelajaran, dan semangat dalam berdiskusi. Menghormati ilmu dan guru adalah kunci keberkahan.</p></div>
-                            <div class="p-4 bg-gray-900 rounded"><h4 class="font-semibold text-thibbun-accent">2. Pengetahuan (50%)</h4><p class="text-sm">Diukur dari hasil Latihan Formatif di setiap pertemuan dan hasil Tes Sumatif di akhir modul. Ini menunjukkan penguasaan materi secara kognitif.</p></div>
-                            <div class="p-4 bg-gray-900 rounded"><h4 class="font-semibold text-thibbun-accent">3. Keterampilan (30%)</h4><p class="text-sm">Dinilai dari partisipasi aktif dalam simulasi interaktif dan kemampuan mempraktikkan kaidah ruqyah mandiri dan prosedur bekam secara simulatif.</p></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-6 simulation-card rounded-lg shadow-lg">
-                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div>
-                            <h4 class="font-semibold text-thibbun-accent mb-2">Simulasi 1: Filter Ruqyah</h4>
-                            <p class="text-sm mb-4">Seret setiap praktik ke dalam kategori yang benar: Syar'iyyah atau Syirkiyyah.</p>
-                            <div id="sim1-source" class="flex flex-wrap gap-3 mb-4 p-3 bg-gray-800 rounded-md min-h-[50px]">
-                                <div class="draggable bg-thibbun-accent text-thibbun-darker p-2 rounded shadow-md" draggable="true" data-type="syariyyah">Membaca Al-Fatihah</div>
-                                <div class="draggable bg-thibbun-accent text-thibbun-darker p-2 rounded shadow-md" draggable="true" data-type="syirkiyyah">Memakai Jimat</div>
-                                <div class="draggable bg-thibbun-accent text-thibbun-darker p-2 rounded shadow-md" draggable="true" data-type="syariyyah">Doa dengan Asmaul Husna</div>
-                                <div class="draggable bg-thibbun-accent text-thibbun-darker p-2 rounded shadow-md" draggable="true" data-type="syirkiyyah">Minta tolong ke jin</div>
-                                <div class="draggable bg-thibbun-accent text-thibbun-darker p-2 rounded shadow-md" draggable="true" data-type="syirkiyyah">Mantera tak jelas</div>
-                                <div class="draggable bg-thibbun-accent text-thibbun-darker p-2 rounded shadow-md" draggable="true" data-type="syariyyah">Meniup ke telapak tangan</div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="drop-zone p-4 border-2 border-dashed border-green-400 rounded-lg min-h-[100px]" data-target="syariyyah"><p class="text-center font-bold text-green-400">Syar'iyyah</p></div>
-                                <div class="drop-zone p-4 border-2 border-dashed border-red-400 rounded-lg min-h-[100px]" data-target="syirkiyyah"><p class="text-center font-bold text-red-400">Syirkiyyah</p></div>
-                            </div>
-                            <p id="sim1-feedback" class="text-sm mt-3 h-4"></p>
+                            <p><b class="text-primary-dark">Penutup (10 Menit):</b> Guru mengingatkan kembali bahwa senjata utama seorang muslim adalah doa dan dzikir harian (terutama dzikir pagi & petang) sebagai perisai dari segala macam gangguan.</p>
                         </div>
                         
-                        <div>
-                             <h4 class="font-semibold text-thibbun-accent mb-2">Simulasi 2: Pembangun Benteng Diri</h4>
-                            <p class="text-sm mb-4">Klik pada ayat/surat yang menjadi bacaan pokok dalam Ruqyah untuk menambahkannya ke "Perisai Dzikir".</p>
-                            <div id="sim2-options" class="flex flex-wrap gap-3 p-3 bg-gray-800 rounded-md mb-4">
-                                <button class="sim2-option p-2 rounded bg-gray-600 hover:bg-gray-500" data-correct="true">Al-Fatihah</button>
-                                <button class="sim2-option p-2 rounded bg-gray-600 hover:bg-gray-500" data-correct="false">Al-Baqarah: 1-5</button>
-                                <button class="sim2-option p-2 rounded bg-gray-600 hover:bg-gray-500" data-correct="true">Ayat Kursi</button>
-                                <button class="sim2-option p-2 rounded bg-gray-600 hover:bg-gray-500" data-correct="true">Al-Ikhlas</button>
-                                <button class="sim2-option p-2 rounded bg-gray-600 hover:bg-gray-500" data-correct="false">Yasin</button>
-                                <button class="sim2-option p-2 rounded bg-gray-600 hover:bg-gray-500" data-correct="true">Al-Falaq</button>
-                                <button class="sim2-option p-2 rounded bg-gray-600 hover:bg-gray-500" data-correct="true">An-Nas</button>
+                        <h3 class="font-bold text-xl text-primary border-b-2 border-primary-light pb-2">D. Penilaian Modul</h3>
+                        <p>Penilaian terhadap santri selama proses pembelajaran modul lanjutan ini mencakup tiga ranah yang sama:</p>
+                        <div class="grid md:grid-cols-3 gap-4 mt-4">
+                            <div class="bg-primary-light p-4 rounded-lg">
+                                <h4 class="font-bold text-primary-dark">1. Sikap / Adab (Afektif)</h4>
+                                <p class="text-sm mt-2">Fokus pada adab dalam mendiagnosa (tidak menuduh), menjaga rahasia pasien, serta sikap tenang dan tidak panik saat mendengar kasus-kasus gangguan non-medis.</p>
                             </div>
-                            <div class="p-4 bg-gray-900 rounded-lg">
-                                <h5 class="font-semibold">Perisai Dzikir:</h5>
-                                <ul id="sim2-shield" class="list-disc list-inside mt-2 text-thibbun-accent"></ul>
+                            <div class="bg-primary-light p-4 rounded-lg">
+                                <h4 class="font-bold text-primary-dark">2. Pengetahuan (Kognitif)</h4>
+                                <p class="text-sm mt-2">Diukur melalui Latihan Formatif dan Tes Sumatif, dengan penekanan pada kemampuan membedakan gejala dan memilih ayat-ayat ruqyah yang spesifik.</p>
+                            </div>
+                            <div class="bg-primary-light p-4 rounded-lg">
+                                <h4 class="font-bold text-primary-dark">3. Keterampilan (Psikomotorik)</h4>
+                                <p class="text-sm mt-2">Dinilai dari partisipasi aktif dalam studi kasus, simulasi penanganan reaksi, dan praktik lanjutan yang akan dibahas di pertemuan berikutnya.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="p-6 quiz-card rounded-lg shadow-lg">
-                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 1</h3>
-                    <div id="quiz1" class="space-y-6"></div>
+                <!-- Konten Tambahan Pertemuan 1 -->
+                <div class="mt-8 grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-xl font-bold text-primary-dark mb-4">Simulasi 1: 'Ain atau Sakit Biasa?</h3>
+                        <p class="mb-4 text-sm">Seorang bayi yang tadinya sehat dan lucu, setelah banyak dipuji dan diunggah fotonya di media sosial, tiba-tiba menjadi sering menangis tanpa henti dan tidak mau menyusu. Dokter tidak menemukan kelainan. Ini lebih mengarah ke gejala apa?</p>
+                        <div id="sim1-container" class="space-y-2">
+                            <button data-correct="false" class="sim1-option w-full text-left p-3 border rounded-lg hover:bg-gray-50">Sakit perut biasa</button>
+                            <button data-correct="true" class="sim1-option w-full text-left p-3 border rounded-lg hover:bg-gray-50">Gangguan 'Ain</button>
+                            <button data-correct="false" class="sim1-option w-full text-left p-3 border rounded-lg hover:bg-gray-50">Gejala masuk angin</button>
+                        </div>
+                        <div id="sim1-result" class="p-4 rounded-lg mt-4 text-center font-semibold" style="display: none;"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-xl font-bold text-primary-dark mb-4">Simulasi 2: Pasangkan Ayat & Gangguan</h3>
+                        <p class="mb-4 text-sm">Seret dan letakkan ayat-ayat berikut ke kotak gangguan yang paling sesuai untuk penanganannya.</p>
+                        <div id="sim2-container">
+                            <div class="grid grid-cols-2 gap-2 text-center mb-4">
+                                <div class="p-2 bg-primary-light rounded"><b>Sihir</b></div>
+                                <div class="p-2 bg-primary-light rounded"><b>Gangguan Jin Umum</b></div>
+                                <div id="drop-sihir" class="drop-zone border-2 border-dashed rounded min-h-[50px] p-2"></div>
+                                <div id="drop-jin" class="drop-zone border-2 border-dashed rounded min-h-[50px] p-2"></div>
+                            </div>
+                            <div id="drag-elements" class="grid grid-cols-2 gap-2">
+                                <div class="drag-item p-2 bg-secondary rounded text-center cursor-move" draggable="true" data-target="sihir">QS. Yunus: 81-82</div>
+                                <div class="drag-item p-2 bg-secondary rounded text-center cursor-move" draggable="true" data-target="jin">Ayat Kursi (diulang)</div>
+                                <div class="drag-item p-2 bg-secondary rounded text-center cursor-move" draggable="true" data-target="sihir">QS. Al-Falaq</div>
+                                <div class="drag-item p-2 bg-secondary rounded text-center cursor-move" draggable="true" data-target="jin">2 Ayat Terakhir Al-Baqarah</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg md:col-span-2">
+                        <h3 class="text-xl font-bold text-primary-dark mb-4">Latihan Formatif Pertemuan 1</h3>
+                        <div id="quiz-1-container" class="space-y-6"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- =================================================================== -->
-            <!-- ==================== KONTEN PERTEMUAN 2 =========================== -->
-            <!-- =================================================================== -->
-            <div id="pertemuan2" class="tab-pane hidden space-y-8">
-                <div class="p-6 bg-thibbun-darker rounded-lg shadow-lg">
-                    <h2 class="text-2xl font-bold text-thibbun-accent mb-1">Pertemuan 2: Praktik Ruqyah Mandiri & Diagnosa Gangguan</h2>
-                    <p class="mb-6 text-thibbun-secondary">Mempelajari cara meruqyah diri sendiri dan mengenali gejala gangguan 'ain, sihir, dan jin.</p>
-                     
-                    <div class="mb-6">
-                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-thibbun-accent pl-3">A. Tujuan Pembelajaran</h3>
-                        <ul class="list-disc list-inside space-y-2 pl-2">
-                           <li>Santri mampu menjelaskan langkah-langkah praktis melakukan ruqyah mandiri (self-ruqyah).</li>
-                           <li>Santri mampu mendefinisikan 'Ain (penyakit mata hasad) dan dalil keberadaannya.</li>
-                           <li>Santri mampu menyebutkan setidaknya 3 gejala umum gangguan 'Ain.</li>
-                           <li>Santri mampu menyebutkan setidaknya 3 gejala umum gangguan sihir.</li>
-                           <li>Santri memahami pentingnya dzikir pagi dan petang sebagai benteng perlindungan.</li>
+            <!-- Konten Pertemuan 2 -->
+            <div id="tab-content-2" class="tab-content">
+                 <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-primary-dark mb-1">Pertemuan 2: Teknik Lanjutan Ruqyah & Penanganan Reaksi</h2>
+                    <p class="text-lg text-gray-600 mb-6">Menjadi Peruqyah yang Tenang dan Profesional</p>
+                    <div class="space-y-6">
+                        <h3 class="font-bold text-xl text-primary border-b-2 border-primary-light pb-2">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-4">
+                            <li>Mempelajari teknik ruqyah lanjutan seperti usapan dan tepukan ringan.</li>
+                            <li>Mampu mengidentifikasi dan menangani reaksi umum pasien saat diruqyah (misal: pusing, mual, menangis, bergetar).</li>
+                            <li>Memahami adab-adab penting yang harus dimiliki seorang peruqyah (Ra'qi).</li>
+                            <li>Mampu menyusun program ruqyah mandiri lanjutan untuk pasien.</li>
                         </ul>
-                    </div>
-
-                    <div class="mb-6">
-                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-thibbun-accent pl-3">B. Keterkaitan Nilai Islam</h3>
-                        <p class="mb-4">Islam mendorong seorang muslim untuk mandiri dan proaktif dalam menjaga diri, baik secara fisik maupun spiritual. Praktik ruqyah mandiri adalah wujud dari kemandirian tersebut, di mana kita secara langsung memohon perlindungan dan kesembuhan kepada Allah tanpa bergantung pada orang lain. Ini adalah bentuk realisasi dari hadits yang memuji orang-orang yang tidak meminta diruqyah, karena kesempurnaan tawakal mereka. Meskipun meminta ruqyah kepada orang shalih diperbolehkan, berusaha untuk mencukupi diri sendiri adalah tingkat keimanan yang lebih tinggi.</p>
-                        <div class="p-4 bg-gray-900 rounded-lg text-center">
-                            <p class="arabic-text">كَانَ رَسُولُ اللَّهِ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ إِذَا أَوَى إِلَى فِرَاشِهِ، نَفَثَ فِي كَفَّيْهِ بِـ {قُلْ هُوَ اللَّهُ أَحَدٌ} وَبِالْمُعَوِّذَتَيْنِ جَمِيعًا، ثُمَّ يَمْسَحُ بِهِمَا وَجْهَهُ، وَمَا بَلَغَتْ يَدَاهُ مِنْ جَسَدِهِ</p>
-                            <p class="mt-2 text-thibbun-light">"Rasulullah ﷺ apabila hendak tidur, beliau meniup kedua telapak tangannya sambil membaca Qul Huwallahu Ahad dan Mu'awwidzatain (Al-Falaq & An-Nas), kemudian mengusapkan kedua tangannya ke wajah dan seluruh tubuh yang dapat dijangkau."</p>
-                            <p class="text-sm text-thibbun-accent mt-1">(HR. Bukhari & Muslim)</p>
+                        <h3 class="font-bold text-xl text-primary border-b-2 border-primary-light pb-2">B. Keterkaitan Nilai Islam</h3>
+                        <p>Seorang peruqyah (Ra'qi) pada hakikatnya adalah seorang penolong yang berdakwah dengan Al-Qur'an. Maka, ia harus menghiasi dirinya dengan sifat sabar, hikmah, dan kasih sayang (rahmah) kepada pasien. Ia harus sadar sepenuhnya bahwa ia hanyalah perantara, dan tidak boleh ada sedikit pun rasa 'ujub (bangga diri) di hatinya. Kesabaran dalam menghadapi reaksi pasien dan kebijaksanaan dalam memberikan nasihat adalah cerminan dari akhlak Islam yang mulia, meneladani cara Rasulullah berdakwah dengan kelembutan.</p>
+                        <div class="bg-primary-light border-l-4 border-primary text-primary-dark p-4 rounded-r-lg mt-4">
+                            <p class="font-semibold">Dalil:</p>
+                            <p class="italic">Allah Ta'ala berfirman:</p>
+                            <p class="text-4xl text-right font-serif my-2">فَبِمَا رَحْمَةٍ مِّنَ اللّٰهِ لِنْتَ لَهُمْ ۚ وَلَوْ كُنْتَ فَظًّا غَلِيْظَ الْقَلْبِ لَانْفَضُّوْا مِنْ حَوْلِكَ</p>
+                            <p>"Maka berkat rahmat Allah engkau (Muhammad) berlaku lemah lembut terhadap mereka. Sekiranya engkau bersikap keras dan berhati kasar, tentulah mereka menjauhkan diri dari sekitarmu."</p>
+                            <p class="text-sm">(QS. Ali 'Imran: 159)</p>
+                        </div>
+                        <h3 class="font-bold text-xl text-primary border-b-2 border-primary-light pb-2">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                        <div class="space-y-4">
+                            <p><b class="text-primary-dark">Pendahuluan (10 Menit):</b> Guru bertanya, "Jika saat kita bacakan Al-Qur'an, teman kita tiba-tiba menangis atau berteriak, apa yang harus kita lakukan? Panik dan lari, atau ada cara menanganinya?". Ini membuka diskusi tentang pentingnya ketenangan dan ilmu dalam meruqyah.</p>
+                            <p><b class="text-primary-dark">Materi Inti (50 Menit):</b></p>
+                            <div class="pl-4">
+                                <p><b>1. Teknik Lanjutan:</b></p>
+                                <ul class="list-disc list-inside pl-4 mt-2">
+                                    <li><b>Usapan (Al-Mash):</b> Mengusap bagian tubuh yang sakit sambil membaca doa/ayat, mentransfer 'energi' positif dari bacaan Al-Qur'an.</li>
+                                    <li><b>Tepukan Ringan (Adh-Dharb):</b> Menepuk bagian tubuh yang menjadi pusat gangguan (misal: pundak, punggung) dengan niat menyakiti jin, bukan pasien. Dilakukan dengan lembut dan terkendali.</li>
+                                </ul>
+                                <p class="mt-4"><b>2. Menangani Reaksi Pasien (Protokol Ketenangan):</b></p>
+                                 <ul class="list-decimal list-inside space-y-2 pl-4 mt-2">
+                                     <li><b>Pusing/Mual:</b> Lanjutkan bacaan, fokuskan pada Ayat Kursi. Sarankan pasien untuk muntah jika tidak tertahankan.</li>
+                                     <li><b>Menangis/Tertawa:</b> Biarkan saja, ini adalah bentuk pelepasan emosi. Tetap fokus pada bacaan.</li>
+                                     <li><b>Badan Bergetar/Panas:</b> Lanjutkan bacaan. Letakkan tangan di bagian yang bergetar (jika non-mahram, gunakan alas/sarung tangan).</li>
+                                     <li><b>Berbicara/Mengancam:</b> Jangan diajak dialog panjang. Cukup perintahkan untuk keluar dengan tegas dan lanjutkan bacaan ayat-ayat 'adzab.</li>
+                                 </ul>
+                                <p class="mt-4"><b>3. Adab Seorang Peruqyah (Ra'qi):</b></p>
+                                  <ul class="list-disc list-inside pl-4 mt-2 text-sm">
+                                      <li><b>Lurus Aqidah & Ibadah:</b> Ini modal utama.</li>
+                                      <li><b>Menjaga Rahasia Pasien:</b> Amanah dan tidak menceritakan aib pasien.</li>
+                                      <li><b>Tidak Mudah Vonis:</b> Tidak langsung menuduh seseorang terkena sihir fulan atau 'ain si fulan.</li>
+                                      <li><b>Sabar dan Tenang:</b> Tidak panik menghadapi reaksi.</li>
+                                      <li><b>Tidak Ujub:</b> Selalu menisbatkan kesembuhan kepada Allah.</li>
+                                  </ul>
+                                <div class="teacher-note bg-yellow-50 p-4 mt-6 rounded-lg">
+                                    <p class="font-bold text-yellow-800 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" /></svg>Poin Diskusi Guru</p>
+                                    <p class="mt-2 text-yellow-700">Lakukan role-playing. Satu santri menjadi pasien yang menunjukkan reaksi ringan (misal: pura-pura pusing), santri lain mencoba menanganinya dengan tenang sambil terus membaca Al-Fatihah. Evaluasi ketenangan dan cara berkomunikasi sang "peruqyah". Tekankan bahwa tujuan utama bukan mengeluarkan jin, tapi membacakan Al-Qur'an sebagai obat.</p>
+                                </div>
+                            </div>
+                            <p><b class="text-primary-dark">Aktivitas (20 Menit):</b> Santri secara berkelompok diminta membuat "Program Ruqyah Mandiri 7 Hari" untuk sebuah kasus (misal: "susah tidur dan sering mimpi buruk"). Program harus berisi: amalan harian (dzikir pagi-petang), amalan sebelum tidur, dan ayat spesifik yang harus sering didengarkan via murottal.</p>
+                            <p><b class="text-primary-dark">Penutup (10 Menit):</b> Guru menguatkan kembali bahwa kekuatan terbesar seorang peruqyah adalah keikhlasan dan kedekatannya dengan Allah, bukan pada teknik atau hafalannya.</p>
                         </div>
                     </div>
-                    
-                    <div class="mb-6">
-                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-thibbun-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
-                         <div class="space-y-6">
-                            <div>
-                               <h4 class="font-semibold text-lg text-gray-200">1. Tata Cara Ruqyah Mandiri (30 Menit)</h4>
-                               <p>Ruqyah mandiri adalah senjata utama seorang muslim. Caranya mudah dan bisa dilakukan kapan saja, terutama saat merasakan gejala atau sebagai amalan harian. Berikut langkah-langkahnya:</p>
-                               <ol class="list-decimal list-inside mt-2 pl-4 space-y-2">
-                                   <li><strong>Niat & Tawakal:</strong> Ikhlaskan niat untuk berobat dan memohon perlindungan hanya kepada Allah.</li>
-                                   <li><strong>Bersuci:</strong> Dianjurkan dalam keadaan berwudhu.</li>
-                                   <li><strong>Tadabbur:</strong> Baca ayat-ayat ruqyah (Al-Fatihah, Ayat Kursi, Al-Ikhlas, Al-Falaq, An-Nas, dan ayat lainnya) dengan khusyuk dan tartil.</li>
-                                   <li><strong>Teknik Nafats (Tiupan):</strong> Setelah selesai membaca satu surat atau beberapa ayat, kumpulkan kedua telapak tangan lalu tiupkan dengan sedikit ludah. Nabi ﷺ melakukannya sebelum tidur.</li>
-                                   <li><strong>Mengusap:</strong> Usapkan kedua telapak tangan yang telah ditiup tadi ke seluruh tubuh yang bisa dijangkau, dimulai dari kepala, wajah, dan bagian depan tubuh. Ulangi proses ini sebanyak 3 kali.</li>
-                                   <li><strong>Pada Bagian yang Sakit:</strong> Jika ada bagian tubuh tertentu yang sakit, letakkan tangan kanan di atasnya, baca doa (contoh: "<i class="arabic">بِاسْمِ اللهِ</i>" 3x, lalu "<i class="arabic">أَعُوذُ بِاللهِ وَقُدْرَتِهِ مِنْ شَرِّ مَا أَجِدُ وَأُحَاذِرُ</i>" 7x), lalu tiup.</li>
-                               </ol>
+                    <div class="mt-8 grid md:grid-cols-2 gap-8">
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 class="text-xl font-bold text-primary-dark mb-4">Simulasi 1: Protokol Reaksi</h3>
+                            <p class="mb-4 text-sm">Saat Anda meruqyah teman, ia tiba-tiba menangis dengan kencang. Apa tindakan pertama yang paling bijak?</p>
+                            <div id="sim3-container" class="space-y-2">
+                                <button data-correct="false" class="sim3-option w-full text-left p-3 border rounded-lg hover:bg-gray-50">Langsung berhenti meruqyah karena kasihan.</button>
+                                <button data-correct="false" class="sim3-option w-full text-left p-3 border rounded-lg hover:bg-gray-50">Ikut menangis bersamanya.</button>
+                                <button data-correct="true" class="sim3-option w-full text-left p-3 border rounded-lg hover:bg-gray-50">Tetap tenang, lanjutkan bacaan, dan biarkan ia melepaskan emosinya.</button>
                             </div>
-                            
-                            <div>
-                               <h4 class="font-semibold text-lg text-gray-200">2. Mengenal 'Ain, Sihir, dan Gangguan Jin (40 Menit)</h4>
-                               <p>'Ain (<i class="arabic">العَيْنُ</i>) adalah penyakit yang disebabkan oleh pandangan mata yang hasad (iri/dengki) atau takjub (kagum) tanpa mendoakan keberkahan. Dalilnya, Nabi ﷺ bersabda, "<i class="arabic">العَيْنُ حَقٌّ</i>" ('Ain itu benar-benar ada). Sihir (<i class="arabic">السِّحْرُ</i>) adalah perbuatan kufur yang dilakukan dengan bantuan setan untuk mencelakai orang lain.</p>
-                               <div class="grid md:grid-cols-2 gap-4 mt-4">
-                                   <div class="p-4 bg-gray-900 rounded-lg">
-                                       <h5 class="font-semibold text-thibbun-accent">Gejala Umum 'Ain & Hasad:</h5>
-                                       <ul class="list-disc list-inside text-sm mt-2">
-                                           <li>Sakit kepala yang berpindah-pindah.</li>
-                                           <li>Wajah pucat atau kusam.</li>
-                                           <li>Sering menguap dan keluar air mata tanpa sebab.</li>
-                                           <li>Badan terasa berat, pegal, dan malas.</li>
-                                           <li>Sesuatu yang dikagumi (anak, bisnis, dll) tiba-tiba rusak atau sakit tanpa sebab medis yang jelas.</li>
-                                       </ul>
-                                   </div>
-                                   <div class="p-4 bg-gray-900 rounded-lg">
-                                       <h5 class="font-semibold text-thibbun-accent">Gejala Umum Sihir & Gangguan Jin:</h5>
-                                       <ul class="list-disc list-inside text-sm mt-2">
-                                           <li>Mimpi buruk yang berulang (melihat hewan menakutkan, jatuh dari ketinggian).</li>
-                                           <li>Sulit tidur atau gelisah saat tidur.</li>
-                                           <li>Merasa ada yang mengawasi atau membisiki.</li>
-                                           <li>Sakit di salah satu anggota badan yang tidak terdeteksi medis.</li>
-                                           <li>Benci atau malas luar biasa untuk beribadah (shalat, baca Al-Qur'an).</li>
-                                           <li>Emosi tidak stabil, mudah marah tanpa sebab.</li>
-                                       </ul>
-                                   </div>
-                               </div>
-                               <div class="teacher-note">
-                                   <p class="font-bold">Poin Diskusi Guru:</p>
-                                   <p>Tekankan bahwa gejala ini bersifat umum dan tidak boleh dijadikan alat untuk menuduh orang lain. Diagnosa pasti hanya bisa dilakukan oleh peruqyah yang berpengalaman. Fokus utama bagi santri adalah pencegahan (preventif) dengan dzikir dan amalan harian.</p>
-                               </div>
-                            </div>
-
-                            <div>
-                               <h4 class="font-semibold text-lg text-gray-200">3. Benteng Dzikir Pagi & Petang (20 Menit)</h4>
-                               <p>Perlindungan terbaik adalah pencegahan. Rasulullah ﷺ telah mengajarkan kita dzikir pagi dan petang sebagai benteng dari segala keburukan, termasuk 'ain, sihir, dan gangguan jin. Merutinkannya jauh lebih baik daripada mengobati. Beberapa dzikir penting antara lain: Ayat Kursi, Tiga Qul (3x), Sayyidul Istighfar, dan doa-doa perlindungan lainnya.</p>
-                            </div>
-                         </div>
-                    </div>
-                </div>
-
-                <div class="p-6 simulation-card rounded-lg shadow-lg">
-                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div>
-                            <h4 class="font-semibold text-thibbun-accent mb-2">Simulasi 1: Diagnosa Awal</h4>
-                            <p class="text-sm mb-4">Pilih gejala-gejala yang Anda rasakan (simulasi), lalu lihat kemungkinan diagnosanya. (Hanya untuk tujuan edukasi).</p>
-                            <div class="bg-gray-800 p-4 rounded-md">
-                               <div id="sim3-symptoms" class="space-y-2">
-                                    <label class="block"><input type="checkbox" class="mr-2" data-type="ain">Sering menguap & mata berair</label>
-                                    <label class="block"><input type="checkbox" class="mr-2" data-type="sihir">Mimpi buruk berulang</label>
-                                    <label class="block"><input type="checkbox" class="mr-2" data-type="ain">Badan terasa berat & malas</label>
-                                    <label class="block"><input type="checkbox" class="mr-2" data-type="sihir">Merasa ada yang mengawasi</label>
-                                    <label class="block"><input type="checkbox" class="mr-2" data-type="sihir">Benci mendengar Al-Qur'an</label>
-                                    <label class="block"><input type="checkbox" class="mr-2" data-type="ain">Sakit kepala tanpa sebab medis</label>
-                               </div>
-                               <button id="sim3-diagnose" class="w-full mt-4 py-2 bg-thibbun-accent text-thibbun-darker rounded font-semibold">Diagnosa</button>
-                               <div id="sim3-result" class="mt-3 p-3 bg-gray-900 rounded-lg hidden">
-                                   <h5 class="font-bold">Kemungkinan Diagnosa:</h5>
-                                   <p id="sim3-result-text" class="text-sm"></p>
-                               </div>
-                            </div>
+                            <div id="sim3-result" class="p-4 rounded-lg mt-4 text-center font-semibold" style="display: none;"></div>
                         </div>
-                        
-                        <div>
-                             <h4 class="font-semibold text-thibbun-accent mb-2">Simulasi 2: Pustaka Dzikir Pagi & Petang</h4>
-                            <p class="text-sm mb-4">Klik tombol untuk menampilkan bacaan dzikir perlindungan yang penting.</p>
-                             <div class="bg-gray-800 p-4 rounded-md space-y-2">
-                                <button class="sim4-btn w-full text-left p-2 bg-gray-700 hover:bg-gray-600 rounded" data-dzikir="kursi">Ayat Kursi</button>
-                                <button class="sim4-btn w-full text-left p-2 bg-gray-700 hover:bg-gray-600 rounded" data-dzikir="muawwidzat">Al-Mu'awwidzat (3x)</button>
-                                <button class="sim4-btn w-full text-left p-2 bg-gray-700 hover:bg-gray-600 rounded" data-dzikir="bismillah">Doa Perlindungan dari Bahaya</button>
-                             </div>
-                             <div id="sim4-display" class="mt-3 p-4 bg-gray-900 rounded-lg min-h-[150px]">
-                                <p id="sim4-text-arabic" class="arabic"></p>
-                                <p id="sim4-text-translation" class="text-xs text-thibbun-secondary mt-2"></p>
-                             </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 class="text-xl font-bold text-primary-dark mb-4">Simulasi 2: Checklist Adab Peruqyah</h3>
+                            <p class="mb-4 text-sm">Anda baru saja berhasil membantu teman yang sakit. Centang sikap yang harus Anda miliki setelahnya.</p>
+                            <div id="sim4-container" class="space-y-2">
+                                <label class="block p-2 border rounded hover:bg-gray-50"><input type="checkbox" data-correct="false" class="mr-2 sim4-check">Merasa bangga dan menceritakan kehebatan diri.</label>
+                                <label class="block p-2 border rounded hover:bg-gray-50"><input type="checkbox" data-correct="true" class="mr-2 sim4-check">Menjaga rahasia kondisi teman tersebut.</label>
+                                <label class="block p-2 border rounded hover:bg-gray-50"><input type="checkbox" data-correct="true" class="mr-2 sim4-check">Mengingatkan teman untuk bersyukur kepada Allah.</label>
+                            </div>
+                             <button id="sim4-button" class="mt-2 w-full bg-primary text-white font-bold py-2 px-4 rounded hover:bg-primary-dark">Cek Sikap</button>
+                            <div id="sim4-result" class="p-4 rounded-lg mt-2 text-center font-semibold" style="display: none;"></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg md:col-span-2">
+                            <h3 class="text-xl font-bold text-primary-dark mb-4">Latihan Formatif Pertemuan 2</h3>
+                            <div id="quiz-2-container" class="space-y-6"></div>
                         </div>
                     </div>
-                </div>
-
-                <div class="p-6 quiz-card rounded-lg shadow-lg">
-                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 2</h3>
-                    <div id="quiz2" class="space-y-6"></div>
                 </div>
             </div>
             
-            <!-- =================================================================== -->
-            <!-- ==================== KONTEN PERTEMUAN 3 =========================== -->
-            <!-- =================================================================== -->
-            <div id="pertemuan3" class="tab-pane hidden space-y-8">
-                <div class="p-6 bg-thibbun-darker rounded-lg shadow-lg">
-                    <h2 class="text-2xl font-bold text-thibbun-accent mb-1">Pertemuan 3: Pengenalan & Teori Dasar Bekam (Al-Hijamah)</h2>
-                    <p class="mb-6 text-thibbun-secondary">Mengenal salah satu metode pengobatan fisik terbaik yang dianjurkan oleh Nabi ﷺ.</p>
-                    
-                    <div class="mb-6">
-                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-thibbun-accent pl-3">A. Tujuan Pembelajaran</h3>
-                        <ul class="list-disc list-inside space-y-2 pl-2">
-                           <li>Santri mampu mendefinisikan Bekam (<i class="arabic">الحِجَامَة</i>) dan sejarahnya secara singkat.</li>
-                           <li>Santri mampu menyebutkan dalil utama tentang anjuran berbekam.</li>
-                           <li>Santri mampu membedakan antara Bekam Kering dan Bekam Basah.</li>
-                           <li>Santri mampu mengidentifikasi minimal 3 titik bekam sunnah utama pada tubuh.</li>
-                           <li>Santri mampu menjelaskan beberapa kondisi yang tidak dianjurkan untuk berbekam (kontraindikasi).</li>
+            <!-- Konten Pertemuan 3 -->
+            <div id="tab-content-3" class="tab-content">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-primary-dark mb-1">Pertemuan 3: Anatomi Bekam & Titik-Titik Terapis Lanjutan</h2>
+                    <p class="text-lg text-gray-600 mb-6">Memetakan Jalur Penyembuhan di Tubuh</p>
+                    <div class="space-y-6">
+                        <h3 class="font-bold text-xl text-primary border-b-2 border-primary-light pb-2">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-4">
+                            <li>Memahami konsep titik bekam sunnah dan titik bekam organis (berdasarkan keluhan).</li>
+                            <li>Mengidentifikasi peta titik bekam utama di area punggung dan fungsinya secara umum.</li>
+                            <li>Mengetahui titik-titik bekam untuk keluhan umum seperti sakit kepala, darah tinggi, dan sakit punggung.</li>
+                            <li>Memahami logika dasar penentuan titik bekam berdasarkan lokasi keluhan.</li>
                         </ul>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-thibbun-accent pl-3">B. Keterkaitan Nilai Islam</h3>
-                        <p class="mb-4">Bekam adalah bagian dari ikhtiar menjaga amanah jasad yang Allah berikan. Dengan melakukan bekam, kita tidak hanya mengikuti sunnah Nabi ﷺ dalam hal pengobatan, tetapi juga secara aktif memelihara kesehatan. Anjuran bekam yang disampaikan oleh para malaikat kepada Nabi ﷺ pada malam Isra' Mi'raj menunjukkan betapa mulia dan pentingnya metode ini. Ini mengajarkan kita bahwa syariat Islam itu sempurna, memperhatikan kesehatan ruhani (dengan ruqyah dan dzikir) sekaligus kesehatan jasmani.</p>
-                        <div class="p-4 bg-gray-900 rounded-lg text-center">
-                            <p class="arabic-text">«إِنَّ أَمْثَلَ مَا تَدَاوَيْتُمْ بِهِ الحِجَامَةُ»</p>
-                            <p class="mt-2 text-thibbun-light">"Sesungguhnya metode pengobatan yang paling ideal bagi kalian adalah hijamah (bekam)."</p>
-                            <p class="text-sm text-thibbun-accent mt-1">(HR. Bukhari & Muslim)</p>
+                        <h3 class="font-bold text-xl text-primary border-b-2 border-primary-light pb-2">B. Keterkaitan Nilai Islam</h3>
+                        <p>Mempelajari anatomi tubuh dan jalur-jalur syaraf serta peredaran darah untuk pengobatan adalah bagian dari tadabbur (merenungi) ciptaan Allah. Allah menciptakan tubuh manusia dengan sistem yang sangat teratur dan sempurna. Dengan mengetahui di mana "pusat" keluhan berada, seorang terapis bekam sejatinya sedang berikhtiar dengan ilmu untuk mengembalikan keseimbangan sistem tubuh yang telah Allah ciptakan. Ini adalah bentuk pengagungan terhadap-Nya melalui ilmu pengetahuan dan praktik yang bermanfaat.</p>
+                        <div class="bg-primary-light border-l-4 border-primary text-primary-dark p-4 rounded-r-lg mt-4">
+                            <p class="font-semibold">Dalil:</p>
+                             <p class="italic">Allah Ta'ala berfirman:</p>
+                            <p class="text-4xl text-right font-serif my-2">سَنُرِيْهِمْ اٰيٰتِنَا فِى الْاٰفَاقِ وَفِيْٓ اَنْفُsihimْ حَتّٰى يَتَبَيَّنَ لَهُمْ اَنَّهُ الْحَقُّۗ</p>
+                            <p>"Kami akan memperlihatkan kepada mereka tanda-tanda (kebesaran) Kami di segenap penjuru dan pada diri mereka sendiri, sehingga jelaslah bagi mereka bahwa Al-Qur'an itu adalah benar."</p>
+                            <p class="text-sm">(QS. Fussilat: 53)</p>
                         </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-thibbun-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
-                         <div class="space-y-6">
-                            <div>
-                               <h4 class="font-semibold text-lg text-gray-200">1. Apa itu Bekam? (20 Menit)</h4>
-                               <p>Bekam atau Al-Hijamah adalah metode terapi kuno dengan cara mengeluarkan darah statis (toksin) dari dalam tubuh melalui permukaan kulit. Prinsip kerjanya adalah membuat tekanan negatif (vakum) pada area kulit tertentu. Terdapat dua jenis utama:</p>
-                               <ul class="list-disc list-inside mt-2 pl-4">
-                                   <li><strong>Bekam Kering (Baad-kas):</strong> Hanya proses pemvakuman tanpa melukai kulit. Bertujuan untuk melegakan otot yang kaku.</li>
-                                   <li><strong>Bekam Basah (Syarthah):</strong> Proses pemvakuman, diikuti dengan sayatan/tusukan sangat ringan pada permukaan kulit, lalu divakum kembali untuk mengeluarkan darah kotor. Inilah yang umum dimaksud dalam hadits-hadits.</li>
-                               </ul>
-                               <img src="https://i.ibb.co/L95S73s/bekam-cups.png" alt="Peralatan Bekam Modern" class="mx-auto my-4 h-32">
-                               <p class="text-xs text-center text-gray-500">Sumber: Ilustrasi peralatan bekam modern yang higienis.</p>
-                            </div>
-                            
-                            <div>
-                               <h4 class="font-semibold text-lg text-gray-200">2. Titik-Titik Bekam Sunnah (35 Menit)</h4>
-                               <p>Meskipun bekam bisa dilakukan di banyak titik sesuai keluhan, ada beberapa titik utama yang dicontohkan atau disebutkan dalam hadits:</p>
-                               <ul class="list-disc list-inside mt-2 pl-4 space-y-2">
-                                   <li><strong>Al-Kahil (<i class="arabic">الكاهل</i>):</strong> Titik di antara kedua pundak, sedikit ke bawah leher. Ini adalah titik utama dan paling sering dipraktikkan Nabi ﷺ. Sangat baik untuk kesehatan tubuh secara umum.</li>
-                                   <li><strong>Al-Akhda'ain (<i class="arabic">الأَخْدَعَانِ</i>):</strong> Dua urat di sisi kanan dan kiri leher. Bermanfaat untuk sakit kepala, sakit gigi, dan masalah di area kepala.</li>
-                                   <li><strong>Ala Warik (<i class="arabic">على الورك</i>):</strong> Titik di pinggang. Bermanfaat untuk masalah pegal dan nyeri pinggang.</li>
-                                   <li><strong>Yafuukh (<i class="arabic">اليافوخ</i>):</strong> Titik di puncak kepala. Dilakukan dalam kondisi darurat seperti terkena sihir atau keracunan.</li>
-                               </ul>
-                               <div class="teacher-note">
-                                   <p class="font-bold">Poin Diskusi Guru:</p>
-                                   <p>Gunakan gambar atau torso peraga untuk menunjukkan lokasi titik-titik ini dengan jelas. Jelaskan bahwa pemilihan titik harus disesuaikan dengan kondisi pasien dan tidak boleh sembarangan. Tekankan bahwa santri saat ini belajar teori, bukan untuk praktik langsung ke orang lain tanpa pengawasan ahli.</p>
-                               </div>
-                            </div>
 
-                            <div>
-                               <h4 class="font-semibold text-lg text-gray-200">3. Kondisi yang Perlu Diperhatikan (Kontraindikasi) (20 Menit)</h4>
-                               <p>Bekam sangat bermanfaat, namun tidak semua orang boleh dibekam. Beberapa kondisi yang perlu diwaspadai (kontraindikasi) antara lain:</p>
-                               <ul class="list-disc list-inside mt-2 pl-4 space-y-1 text-sm">
-                                   <li>Orang yang sangat tua dan lemah fisiknya.</li>
-                                   <li>Anak-anak yang masih sangat kecil.</li>
-                                   <li>Wanita hamil (terutama trimester pertama) dan sedang haid.</li>
-                                   <li>Penderita tekanan darah sangat rendah.</li>
-                                   <li>Orang yang baru saja makan kenyang atau dalam keadaan sangat lapar.</li>
-                                   <li>Orang yang memiliki kelainan darah seperti hemofilia atau sedang mengonsumsi obat pengencer darah.</li>
-                               </ul>
-                            </div>
-                             
-                            <div>
-                               <h4 class="font-semibold text-lg text-gray-200">4. Rangkuman (15 Menit)</h4>
-                               <p>Ulas kembali definisi bekam, jenisnya, titik sunnah, dan kontraindikasinya. Persiapkan santri untuk mempelajari prosedur praktis di pertemuan selanjutnya.</p>
-                            </div>
-                         </div>
-                    </div>
-                </div>
-                
-                <div class="p-6 simulation-card rounded-lg shadow-lg">
-                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div>
-                            <h4 class="font-semibold text-thibbun-accent mb-2">Simulasi 1: Anatomi Titik Bekam Sunnah</h4>
-                            <p class="text-sm mb-4">Klik pada nama titik untuk melihat lokasinya di tubuh dan manfaat utamanya.</p>
-                            <div class="flex gap-4">
-                                <div class="w-1/3 space-y-2">
-                                    <button class="sim5-btn w-full p-2 bg-gray-700 hover:bg-gray-600 rounded text-sm" data-point="kahil">Al-Kahil</button>
-                                    <button class="sim5-btn w-full p-2 bg-gray-700 hover:bg-gray-600 rounded text-sm" data-point="akhdain">Al-Akhda'ain</button>
-                                    <button class="sim5-btn w-full p-2 bg-gray-700 hover:bg-gray-600 rounded text-sm" data-point="warik">Ala Warik</button>
-                                </div>
-                                <div class="w-2/3 bg-gray-800 p-2 rounded relative">
-                                    <svg viewBox="0 0 150 300" class="w-full h-auto">
-                                        <image href="https://i.ibb.co/3k5fS4P/body-outline.png" width="150" height="300"/>
-                                        <circle id="point-kahil" cx="75" cy="80" r="5" fill="#f56565" class="hidden"/>
-                                        <circle id="point-akhdain" cx="65" cy="60" r="5" fill="#f56565" class="hidden"/>
-                                        <circle id="point-akhdain2" cx="85" cy="60" r="5" fill="#f56565" class="hidden"/>
-                                        <circle id="point-warik" cx="75" cy="150" r="5" fill="#f56565" class="hidden"/>
+                        <h3 class="font-bold text-xl text-primary border-b-2 border-primary-light pb-2">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                        <div class="space-y-4">
+                            <p><b class="text-primary-dark">Pendahuluan (10 Menit):</b> Guru bertanya, "Jika sakit kepala, bagian mana yang biasanya kita pijat? Jika sakit perut, bagian mana yang kita pegang?". Ini mengarahkan pada konsep bahwa ada titik-titik tertentu di tubuh yang berhubungan dengan organ atau keluhan spesifik.</p>
+                            
+                            <p><b class="text-primary-dark">Materi Inti (50 Menit):</b></p>
+                            <div class="pl-4">
+                                <p><b>1. Titik Sunnah vs Titik Organis:</b></p>
+                                <ul class="list-disc list-inside pl-4 mt-2">
+                                    <li><b>Titik Sunnah:</b> Titik yang ada riwayatnya pernah dibekam oleh Nabi (Al-Kahil, Al-Akhda'ain, dll). Tujuannya utama untuk mendapat pahala ittiba' dan keberkahan.</li>
+                                    <li><b>Titik Organis/Lokal:</b> Titik yang ditentukan berdasarkan ilmu anatomi dan pengalaman terapis, letaknya dekat dengan organ atau area yang dikeluhkan. Tujuannya untuk memaksimalkan efek terapi.</li>
+                                </ul>
+                                <p class="mt-4"><b>2. Peta Titik Bekam di Punggung (Area Utama):</b> Punggung adalah area utama bekam karena merupakan tempat berkumpulnya banyak syaraf dan pembuluh darah yang terhubung ke organ-organ vital.</p>
+                                <!-- SVG Peta Bekam -->
+                                <div class="w-full text-center my-4 p-4 bg-primary-light rounded-lg">
+                                    <svg viewBox="0 0 200 300" class="w-full max-w-xs mx-auto">
+                                        <image href="https://placehold.co/200x300/f0fdfa/134e4a?text=Peta%20Punggung" width="200" height="300" />
+                                        <!-- Titik Sunnah -->
+                                        <circle cx="100" cy="45" r="5" class="point-map-dot" data-info="Al-Kahil: Titik utama, untuk 72 macam penyakit, termasuk darah tinggi dan masalah di kepala." />
+                                        <circle cx="80" cy="35" r="5" class="point-map-dot" data-info="Al-Akhda'ain (Kanan): Titik di urat leher, untuk sakit kepala, sakit gigi, dan masalah di wajah." />
+                                        <circle cx="120" cy="35" r="5" class="point-map-dot" data-info="Al-Akhda'ain (Kiri): Titik di urat leher, untuk sakit kepala, sakit gigi, dan masalah di wajah." />
+                                        <!-- Titik Organis -->
+                                        <circle cx="85" cy="80" r="5" class="point-map-dot" data-info="Area Paru-paru & Jantung: Untuk keluhan sesak nafas, batuk, dan masalah jantung." />
+                                        <circle cx="115" cy="80" r="5" class="point-map-dot" data-info="Area Paru-paru & Jantung: Untuk keluhan sesak nafas, batuk, dan masalah jantung." />
+                                        <circle cx="85" cy="120" r="5" class="point-map-dot" data-info="Area Liver & Lambung: Untuk masalah pencernaan, liver, dan meningkatkan nafsu makan." />
+                                        <circle cx="115" cy="120" r="5" class="point-map-dot" data-info="Area Liver & Lambung: Untuk masalah pencernaan, liver, dan meningkatkan nafsu makan." />
+                                        <circle cx="90" cy="160" r="5" class="point-map-dot" data-info="Area Ginjal: Untuk membantu fungsi ginjal, mengatasi sakit pinggang." />
+                                        <circle cx="110" cy="160" r="5" class="point-map-dot" data-info="Area Ginjal: Untuk membantu fungsi ginjal, mengatasi sakit pinggang." />
                                     </svg>
+                                    <p id="point-info" class="text-sm text-primary-dark mt-2 font-semibold h-10">Arahkan kursor atau klik pada titik untuk melihat info.</p>
+                                </div>
+                                <p class="mt-4"><b>3. Titik untuk Keluhan Umum:</b></p>
+                                  <ul class="list-disc list-inside pl-4 mt-2 text-sm">
+                                      <li><b>Hipertensi (Darah Tinggi):</b> Fokus utama di titik Al-Kahil dan area pundak.</li>
+                                      <li><b>Sakit Punggung Bawah (Low Back Pain):</b> Fokus di area pinggang, sejajar dengan tulang panggul.</li>
+                                      <li><b>Kolesterol:</b> Titik di area belikat kiri dan kanan.</li>
+                                  </ul>
+                                <div class="teacher-note bg-yellow-50 p-4 mt-6 rounded-lg">
+                                    <p class="font-bold text-yellow-800 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" /></svg>Poin Diskusi Guru</p>
+                                    <p class="mt-2 text-yellow-700">Jelaskan bahwa bekam bukan "one-stop solution". Untuk hasil maksimal, bekam harus diiringi dengan perbaikan pola hidup (makanan, istirahat, olahraga) sesuai anjuran Nabi. Tekankan bahwa menggabungkan titik sunnah dengan titik organis adalah pendekatan terbaik, untuk mendapatkan pahala sunnah sekaligus efektivitas terapi.</p>
                                 </div>
                             </div>
-                            <div id="sim5-info" class="mt-2 p-3 bg-gray-900 rounded text-sm min-h-[50px]">Pilih titik di sebelah kiri.</div>
+                            <p><b class="text-primary-dark">Aktivitas (20 Menit):</b> Santri berpasangan. Satu santri menunjuk sebuah titik di punggung temannya (misal: area belikat), dan santri yang ditunjuk harus menebak organ apa yang berdekatan dan kira-kira untuk keluhan apa titik tersebut.</p>
+                            <p><b class="text-primary-dark">Penutup (10 Menit):</b> Guru mereview kembali titik-titik utama dan mengingatkan bahwa penguasaan titik bekam membutuhkan praktik dan pengalaman, serta harus didasari ilmu yang benar, bukan sekadar ikut-ikutan.</p>
                         </div>
-                        
-                        <div>
-                            <h4 class="font-semibold text-thibbun-accent mb-2">Simulasi 2: Ceklis Pra-Bekam</h4>
-                            <p class="text-sm mb-4">Pastikan kondisi berikut terpenuhi sebelum melakukan bekam. Centang jika "Ya".</p>
-                             <div class="bg-gray-800 p-4 rounded-md">
-                               <div id="sim6-checklist" class="space-y-2">
-                                    <label class="block"><input type="checkbox" class="mr-2 sim6-check" data-safe="true">Pasien dalam kondisi fit?</label>
-                                    <label class="block"><input type="checkbox" class="mr-2 sim6-check" data-safe="false">Pasien sedang haid?</label>
-                                    <label class="block"><input type="checkbox" class="mr-2 sim6-check" data-safe="true">Tekanan darah pasien normal?</label>
-                                    <label class="block"><input type="checkbox" class="mr-2 sim6-check" data-safe="false">Pasien baru saja makan kenyang?</label>
-                                    <label class="block"><input type="checkbox" class="mr-2 sim6-check" data-safe="true">Peralatan sudah disterilisasi?</label>
-                               </div>
-                               <button id="sim6-evaluate" class="w-full mt-4 py-2 bg-thibbun-accent text-thibbun-darker rounded font-semibold">Evaluasi Kelayakan</button>
-                               <p id="sim6-result" class="text-center mt-3 font-bold h-5"></p>
-                             </div>
+                    </div>
+                     <div class="mt-8 grid md:grid-cols-2 gap-8">
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 class="text-xl font-bold text-primary-dark mb-4">Simulasi 1: Peta Buta Bekam</h3>
+                            <p class="mb-4 text-sm">Seorang pasien mengeluh sering sesak nafas dan batuk. Di area mana titik bekam yang paling tepat untuknya?</p>
+                            <div id="sim5-container" class="space-y-2">
+                                <button data-correct="false" class="sim5-option w-full text-left p-3 border rounded-lg hover:bg-gray-50">Area Pinggang (Ginjal)</button>
+                                <button data-correct="true" class="sim5-option w-full text-left p-3 border rounded-lg hover:bg-gray-50">Area Belikat (Paru-paru & Jantung)</button>
+                                <button data-correct="false" class="sim5-option w-full text-left p-3 border rounded-lg hover:bg-gray-50">Area Leher (Al-Akhda'ain)</button>
+                            </div>
+                            <div id="sim5-result" class="p-4 rounded-lg mt-4 text-center font-semibold" style="display: none;"></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 class="text-xl font-bold text-primary-dark mb-4">Simulasi 2: Sunnah vs Organis</h3>
+                            <p class="mb-4 text-sm">Tentukan apakah titik bekam berikut termasuk Titik Sunnah atau Titik Organis.</p>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center"><span>Titik Al-Kahil</span><select class="sim6-select p-1 border rounded" data-answer="sunnah"><option value="">Pilih...</option><option value="sunnah">Sunnah</option><option value="organis">Organis</option></select></div>
+                                <div class="flex justify-between items-center"><span>Titik di betis untuk asam urat</span><select class="sim6-select p-1 border rounded" data-answer="organis"><option value="">Pilih...</option><option value="sunnah">Sunnah</option><option value="organis">Organis</option></select></div>
+                                <div class="flex justify-between items-center"><span>Titik di puncak kepala</span><select class="sim6-select p-1 border rounded" data-answer="sunnah"><option value="">Pilih...</option><option value="sunnah">Sunnah</option><option value="organis">Organis</option></select></div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg md:col-span-2">
+                            <h3 class="text-xl font-bold text-primary-dark mb-4">Latihan Formatif Pertemuan 3</h3>
+                            <div id="quiz-3-container" class="space-y-6"></div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="p-6 quiz-card rounded-lg shadow-lg">
-                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 3</h3>
-                    <div id="quiz3" class="space-y-6"></div>
-                </div>
             </div>
 
-            <!-- =================================================================== -->
-            <!-- ==================== KONTEN PERTEMUAN 4 =========================== -->
-            <!-- =================================================================== -->
-            <div id="pertemuan4" class="tab-pane hidden space-y-8">
-                <div class="p-6 bg-thibbun-darker rounded-lg shadow-lg">
-                    <h2 class="text-2xl font-bold text-thibbun-accent mb-1">Pertemuan 4: Prosedur Bekam & Terapi Holistik</h2>
-                    <p class="mb-6 text-thibbun-secondary">Mempelajari alur kerja bekam basah dan sinergi pengobatan Nabawi.</p>
-                    
-                    <div class="mb-6">
-                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-thibbun-accent pl-3">A. Tujuan Pembelajaran</h3>
-                        <ul class="list-disc list-inside space-y-2 pl-2">
-                           <li>Santri mampu mengurutkan Standard Operating Procedure (SOP) Bekam Basah.</li>
-                           <li>Santri memahami pentingnya sterilitas dalam setiap langkah bekam.</li>
-                           <li>Santri mampu menyebutkan anjuran-anjuran pasca-bekam.</li>
-                           <li>Santri mampu menjelaskan konsep pengobatan holistik (menyeluruh) dalam Thibbun Nabawi.</li>
-                           <li>Santri mampu memberikan contoh sinergi antara ruqyah, bekam, dan herbal sunnah.</li>
+            <!-- Konten Pertemuan 4 -->
+            <div id="tab-content-4" class="tab-content">
+                 <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-primary-dark mb-1">Pertemuan 4: SOP Bekam Profesional & Herbal Pendukung</h2>
+                    <p class="text-lg text-gray-600 mb-6">Langkah Demi Langkah Menuju Praktik Terbaik</p>
+                    <div class="space-y-6">
+                        <h3 class="font-bold text-xl text-primary border-b-2 border-primary-light pb-2">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-4">
+                            <li>Memahami dan mampu menjelaskan Standard Operating Procedure (SOP) bekam yang aman.</li>
+                            <li>Mengetahui cara melakukan anamnesis (wawancara) singkat pada calon pasien.</li>
+                            <li>Memahami pentingnya informed consent (persetujuan tindakan) sebelum bekam.</li>
+                            <li>Mengenal herbal-herbal utama Thibbun Nabawi (Madu, Habbatussauda, Zaitun) sebagai pendukung setelah bekam.</li>
                         </ul>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-thibbun-accent pl-3">B. Keterkaitan Nilai Islam</h3>
-                        <p class="mb-4">Profesionalisme atau <i class="arabic">Itqan</i> adalah nilai yang sangat ditekankan dalam Islam. Dalam praktik bekam, itqan diwujudkan melalui kepatuhan pada prosedur yang benar, menjaga kebersihan, dan mengutamakan keselamatan pasien. Ini sejalan dengan prinsip syariat yang lebih besar, yaitu Hifdzun Nafs (menjaga jiwa). Dengan melakukan bekam secara profesional, kita tidak hanya menjalankan sunnah, tetapi juga menjaga amanah kehidupan dan kesehatan yang Allah titipkan, serta menunjukkan keindahan dan kesempurnaan ajaran Islam dalam segala aspek.</p>
-                        <div class="p-4 bg-gray-900 rounded-lg text-center">
-                            <p class="arabic-text">«إِنَّ اللهَ يُحِبُّ إِذَا عَمِلَ أَحَدُكُمْ عَمَلاً أَنْ يُتْقِنَهُ»</p>
-                            <p class="mt-2 text-thibbun-light">"Sesungguhnya Allah mencintai jika seseorang di antara kalian melakukan suatu amalan, ia melakukannya dengan itqan (profesional dan sempurna)."</p>
-                            <p class="text-sm text-thibbun-accent mt-1">(HR. Al-Baihaqi, dinilai hasan oleh Al-Albani)</p>
+                        <h3 class="font-bold text-xl text-primary border-b-2 border-primary-light pb-2">B. Keterkaitan Nilai Islam</h3>
+                        <p>Profesionalisme atau <i>itqan</i> dalam bekerja adalah bagian dari perintah agama. Rasulullah bersabda, "Sesungguhnya Allah mencintai seorang hamba yang apabila bekerja, dia melakukannya secara profesional (itqan)". Menerapkan SOP yang jelas, menjaga sterilitas, dan meminta persetujuan pasien adalah bentuk dari <i>itqan</i> dan memegang <i>amanah</i> kesehatan. Ini menunjukkan bahwa pengobatan sunnah tidak boleh dilakukan secara asal-asalan, melainkan harus dengan standar tertinggi untuk menjaga keselamatan dan mencapai hasil terbaik.</p>
+                        <div class="bg-primary-light border-l-4 border-primary text-primary-dark p-4 rounded-r-lg mt-4">
+                            <p class="font-semibold">Kutipan:</p>
+                            <p class="text-4xl text-right font-serif my-2">إِنَّ اللهَ يُحِبُّ إِذَا عَمِلَ أَحَدُكُمْ عَمَلاً أَنْ يُتْقِنَهُ</p>
+                            <p>"Sesungguhnya Allah mencintai jika salah seorang dari kalian melakukan suatu amalan, dia melakukannya dengan itqan (profesional dan rapi)."</p>
+                            <p class="text-sm">(HR. Al-Baihaqi, dinilai hasan oleh Al-Albani)</p>
                         </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-thibbun-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
-                         <div class="space-y-6">
-                            <div>
-                               <h4 class="font-semibold text-lg text-gray-200">1. Prosedur Bekam Basah (SOP) (40 Menit)</h4>
-                               <p>Melakukan bekam basah memerlukan ketelitian dan kepatuhan pada prosedur standar untuk menjamin keamanan dan keefektifan. Berikut adalah alur kerjanya:</p>
-                               <ol class="list-decimal list-inside mt-2 pl-4 space-y-2">
-                                   <li><strong>Persiapan:</strong> Siapkan semua alat steril (kop, pisau/jarum bedah, sarung tangan, antiseptik, kassa, dll). Pastikan pasien dalam kondisi rileks.</li>
-                                   <li><strong>Identifikasi & Sterilisasi Titik:</strong> Tentukan titik yang akan dibekam, lalu bersihkan area tersebut dengan antiseptik (misal: alkohol swab).</li>
-                                   <li><strong>Kop Kering Pertama:</strong> Lakukan penghisapan pada titik tersebut selama 3-5 menit hingga kulit tampak kemerahan. Tujuannya untuk mengumpulkan darah statis.</li>
-                                   <li><strong>Penyayatan/Tusukan (Syarthah):</strong> Lepas kop, lalu buat sayatan atau tusukan yang sangat tipis dan ringan dengan pisau bedah atau jarum steril. Kedalamannya hanya di lapisan epidermis kulit, tujuannya membuka pori. <strong>Ini harus dilakukan dengan sangat hati-hati.</strong></li>
-                                   <li><strong>Kop Basah Kedua:</strong> Segera pasang kembali kop dan lakukan penghisapan untuk mengeluarkan darah kotor. Biarkan 3-5 menit atau hingga darah berhenti keluar.</li>
-                                   <li><strong>Pembersihan:</strong> Lepas kop, bersihkan darah dengan kassa steril. Buang semua limbah (darah, jarum) pada tempat sampah medis.</li>
-                                   <li><strong>Finishing:</strong> Oleskan minyak zaitun atau minyak habbatussauda pada area yang dibekam untuk mencegah infeksi dan membantu penyembuhan.</li>
-                               </ol>
-                            </div>
-                            
-                            <div>
-                               <h4 class="font-semibold text-lg text-gray-200">2. Perawatan Pasca-Bekam (15 Menit)</h4>
-                               <p>Setelah dibekam, pasien dianjurkan untuk:</p>
-                               <ul class="list-disc list-inside mt-2 pl-4">
-                                   <li>Beristirahat dan tidak melakukan aktivitas berat selama 24 jam.</li>
-                                   <li>Tidak mandi setidaknya 3-5 jam setelah bekam.</li>
-                                   <li>Menghindari makanan dan minuman dingin.</li>
-                                   <li>Dianjurkan mengonsumsi yang hangat seperti madu dan jahe.</li>
-                                   <li>Menjaga area bekam tetap kering dan bersih.</li>
-                               </ul>
-                            </div>
-                            
-                            <div>
-                               <h4 class="font-semibold text-lg text-gray-200">3. Konsep Holistik Thibbun Nabawi (25 Menit)</h4>
-                               <p>Pengobatan cara Nabi bersifat holistik, artinya memandang manusia sebagai satu kesatuan utuh antara ruh, jiwa, dan jasad. Penyakit seringkali bukan hanya masalah fisik, tapi juga bisa berakar dari masalah spiritual atau psikis. Oleh karena itu, terapi terbaik adalah yang menyinergikan berbagai pendekatan:</p>
-                               <ul class="list-disc list-inside mt-2 pl-4 space-y-1">
-                                   <li><strong>Terapi Spiritual (Ruqyah):</strong> Membersihkan gangguan non-medis dan menguatkan hubungan dengan Allah.</li>
-                                   <li><strong>Terapi Fisik (Bekam):</strong> Mengeluarkan toksin dari tubuh dan melancarkan peredaran darah.</li>
-                                   <li><strong>Terapi Nutrisi (Herbal Sunnah):</strong> Menguatkan imunitas dan menutrisi tubuh dari dalam dengan Madu, Habbatussauda, Kurma, dll.</li>
-                               </ul>
-                               <p class="mt-2">Contoh sinergi: Seseorang yang sering sakit kepala dan was-was, bisa diterapi dengan ruqyah untuk menenangkan jiwanya, bekam di titik Al-Kahil dan Al-Akhda'ain untuk meredakan pusing fisiknya, dan rutin mengonsumsi madu untuk menjaga staminanya.</p>
-                               <div class="teacher-note">
-                                   <p class="font-bold">Poin Diskusi Guru:</p>
-                                   <p>Ajak santri berdiskusi tentang studi kasus sederhana. Misal: "Jika ada teman yang sering lesu, sulit fokus belajar, dan terkadang merasa sedih tanpa sebab, terapi holistik apa yang bisa kita sarankan?" Bimbing mereka untuk mengusulkan kombinasi ruqyah mandiri, bekam, dan perbaikan pola makan sunnah.</p>
-                               </div>
-                            </div>
-                             
-                            <div>
-                               <h4 class="font-semibold text-lg text-gray-200">4. Rangkuman & Persiapan Ujian (10 Menit)</h4>
-                               <p>Ulas kembali SOP Bekam dan konsep holistik. Ingatkan santri untuk mereview semua materi dari pertemuan 1-4 untuk menghadapi Tes Sumatif.</p>
-                            </div>
-                         </div>
-                    </div>
-                </div>
-
-                <div class="p-6 simulation-card rounded-lg shadow-lg">
-                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div>
-                            <h4 class="font-semibold text-thibbun-accent mb-2">Simulasi 1: Penyusun Prosedur Bekam</h4>
-                            <p class="text-sm mb-4">Urutkan langkah-langkah bekam basah berikut dengan benar (drag & drop).</p>
-                            <div class="flex gap-4">
-                                <div id="sim7-source" class="w-1/2 space-y-2 p-2 bg-gray-800 rounded">
-                                    <div class="draggable p-2 bg-gray-600 rounded text-sm" draggable="true" data-order="3">Penyayatan (Syarthah)</div>
-                                    <div class="draggable p-2 bg-gray-600 rounded text-sm" draggable="true" data-order="5">Pembersihan & Finishing</div>
-                                    <div class="draggable p-2 bg-gray-600 rounded text-sm" draggable="true" data-order="1">Sterilisasi Titik</div>
-                                    <div class="draggable p-2 bg-gray-600 rounded text-sm" draggable="true" data-order="4">Kop Basah Kedua</div>
-                                    <div class="draggable p-2 bg-gray-600 rounded text-sm" draggable="true" data-order="2">Kop Kering Pertama</div>
-                                </div>
-                                <div id="sim7-target" class="w-1/2 space-y-2 p-2 bg-gray-900 rounded min-h-[200px] border border-dashed border-gray-600">
+                        <h3 class="font-bold text-xl text-primary border-b-2 border-primary-light pb-2">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                        <div class="space-y-4">
+                            <p><b class="text-primary-dark">Pendahuluan (10 Menit):</b> Guru menampilkan dua gambar: satu gambar praktik bekam yang terlihat kumuh dan tidak rapi, satu lagi gambar klinik bekam yang bersih dan profesional. Guru bertanya, "Kalian lebih percaya untuk berobat di tempat yang mana? Mengapa?". Ini mengawali pembahasan tentang pentingnya SOP.</p>
+                            <p><b class="text-primary-dark">Materi Inti (50 Menit):</b></p>
+                            <div class="pl-4">
+                                <p><b>1. SOP Bekam Profesional (Langkah demi Langkah):</b></p>
+                                <ol class="list-decimal list-inside space-y-1 pl-4 mt-2 text-sm">
+                                    <li><b>Anamnesis:</b> Wawancara singkat: Apa keluhannya? Ada riwayat penyakit berat? Sudah makan?</li>
+                                    <li><b>Informed Consent:</b> Jelaskan prosedur dan manfaatnya, lalu minta persetujuan pasien.</li>
+                                    <li><b>Persiapan Alat:</b> Siapkan semua alat steril (kop, pisau, sarung tangan, antiseptik) di atas nampan.</li>
+                                    <li><b>Sterilisasi Area:</b> Usap area yang akan dibekam dengan kapas beralkohol/antiseptik.</li>
+                                    <li><b>Bekam Kering:</b> Lakukan hisapan pertama selama 1-3 menit.</li>
+                                    <li><b>Sayatan:</b> Angkat kop, lakukan sayatan ringan dan tipis (tidak dalam) dengan pisau steril.</li>
+                                    <li><b>Bekam Basah:</b> Pasang kembali kop dan hisap untuk mengeluarkan darah kotor. Tunggu 3-5 menit.</li>
+                                    <li><b>Pembersihan:</b> Angkat kop, bersihkan darah dengan tisu steril. Buang tisu ke kantong limbah medis.</li>
+                                    <li><b>Finalisasi:</b> Setelah semua titik selesai, oleskan minyak zaitun ke area bekas bekam.</li>
+                                    <li><b>Edukasi Pasca-Bekam:</b> Beri nasihat untuk istirahat, minum madu, dan hindari mandi selama 3 jam.</li>
+                                </ol>
+                                <p class="mt-4"><b>2. Herbal Pendukung Thibbun Nabawi:</b></p>
+                                 <div class="grid md:grid-cols-3 gap-4 mt-2">
+                                     <div class="bg-primary-light p-3 rounded-lg"><h4 class="font-bold text-primary-dark">Madu</h4><p class="text-xs mt-1">Obat segala penyakit, sumber energi instan, dan antibiotik alami. Sangat baik diminum setelah berbekam.</p></div>
+                                     <div class="bg-primary-light p-3 rounded-lg"><h4 class="font-bold text-primary-dark">Habbatussauda</h4><p class="text-xs mt-1">Obat segala penyakit kecuali kematian. Meningkatkan imunitas dan mempercepat pemulihan.</p></div>
+                                     <div class="bg-primary-light p-3 rounded-lg"><h4 class="font-bold text-primary-dark">Minyak Zaitun</h4><p class="text-xs mt-1">Pohon yang diberkahi. Baik untuk diminum dan dioleskan. Membantu melembabkan kulit pasca-bekam.</p></div>
+                                 </div>
+                                 <img src="https://placehold.co/600x200/f0fdfa/134e4a?text=Madu,+Habbatussauda,+Zaitun" alt="Herbal Thibbun Nabawi" class="w-full max-w-md mx-auto my-4 rounded-lg shadow">
+                                <div class="teacher-note bg-yellow-50 p-4 mt-6 rounded-lg">
+                                    <p class="font-bold text-yellow-800 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" /></svg>Poin Diskusi Guru</p>
+                                    <p class="mt-2 text-yellow-700">Diskusikan tentang limbah medis bekam (jarum, tisu berdarah). Bagaimana cara menanganinya? Jelaskan bahwa limbah ini tidak boleh dibuang sembarangan. Harus dimasukkan ke dalam wadah khusus (safety box) dan dimusnahkan dengan cara yang benar (misalnya dibakar atau dikubur dalam) untuk mencegah penularan penyakit. Ini adalah bagian dari tanggung jawab seorang terapis.</p>
                                 </div>
                             </div>
-                            <p id="sim7-feedback" class="text-center mt-3 font-bold h-5"></p>
-                        </div>
-                        
-                        <div>
-                             <h4 class="font-semibold text-thibbun-accent mb-2">Simulasi 2: Konsultasi Holistik</h4>
-                            <p class="text-sm mb-4">Pilih kombinasi terapi yang paling tepat untuk studi kasus di bawah ini.</p>
-                             <div class="bg-gray-800 p-4 rounded-md">
-                               <p class="font-semibold">Kasus: Santri sering nyeri pinggang setelah berolahraga, dan terkadang sulit tidur karena mimpi buruk.</p>
-                               <div id="sim8-options" class="mt-3 space-y-2">
-                                    <label class="block p-2 bg-gray-700 rounded"><input type="checkbox" class="mr-2" data-therapy="ruqyah"> Ruqyah mandiri sebelum tidur</label>
-                                    <label class="block p-2 bg-gray-700 rounded"><input type="checkbox" class="mr-2" data-therapy="bekam"> Bekam di titik 'Ala Warik' (pinggang)</label>
-                                    <label class="block p-2 bg-gray-700 rounded"><input type="checkbox" class="mr-2" data-therapy="herbal"> Minum madu untuk stamina</label>
-                                    <label class="block p-2 bg-gray-700 rounded"><input type="checkbox" class="mr-2" data-therapy="salah"> Hanya minum obat pereda nyeri</label>
-                               </div>
-                               <button id="sim8-evaluate" class="w-full mt-4 py-2 bg-thibbun-accent text-thibbun-darker rounded font-semibold">Beri Rekomendasi</button>
-                               <p id="sim8-result" class="text-center mt-3 font-bold h-5"></p>
-                             </div>
+                            <p><b class="text-primary-dark">Aktivitas (20 Menit):</b> Santri diberikan studi kasus: "Seorang pasien datang dengan keluhan pundak kaku, punya riwayat darah rendah." Santri diminta menuliskan poin-poin anamnesis yang akan ditanyakan dan membuat kalimat untuk meminta <i>informed consent</i>.</p>
+                            <p><b class="text-primary-dark">Penutup (10 Menit):</b> Guru menutup seluruh rangkaian modul dengan mengingatkan bahwa ilmu Thibbun Nabawi ini adalah amanah. Jika diamalkan dengan benar sesuai syariat dan standar profesional, maka akan menjadi ladang pahala dan sumber keberkahan.</p>
                         </div>
                     </div>
-                </div>
-                
-                <div class="p-6 quiz-card rounded-lg shadow-lg">
-                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 4</h3>
-                    <div id="quiz4" class="space-y-6"></div>
+                    <div class="mt-8 grid md:grid-cols-2 gap-8">
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 class="text-xl font-bold text-primary-dark mb-4">Simulasi 1: Urutkan SOP</h3>
+                            <p class="mb-4 text-sm">Anda akan membekam pasien. Apa langkah KEDUA yang harus Anda lakukan setelah melakukan anamnesis (wawancara)?</p>
+                            <div id="sim7-container" class="space-y-2">
+                                <button data-correct="false" class="sim7-option w-full text-left p-3 border rounded-lg hover:bg-gray-50">Langsung melakukan bekam basah.</button>
+                                <button data-correct="false" class="sim7-option w-full text-left p-3 border rounded-lg hover:bg-gray-50">Menyiapkan alat-alat bekam.</button>
+                                <button data-correct="true" class="sim7-option w-full text-left p-3 border rounded-lg hover:bg-gray-50">Menjelaskan prosedur dan meminta persetujuan (Informed Consent).</button>
+                            </div>
+                            <div id="sim7-result" class="p-4 rounded-lg mt-4 text-center font-semibold" style="display: none;"></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 class="text-xl font-bold text-primary-dark mb-4">Simulasi 2: Resep Herbal Sunnah</h3>
+                            <p class="mb-4 text-sm">Untuk membantu pemulihan dan mengembalikan energi pasien setelah dibekam, herbal apa yang paling dianjurkan untuk langsung diminum?</p>
+                             <div class="mt-4">
+                                <input type="text" id="sim8-input" class="w-full p-2 border rounded" placeholder="Ketik jawabanmu...">
+                                <button id="sim8-button" class="mt-2 w-full bg-primary text-white font-bold py-2 px-4 rounded hover:bg-primary-dark">Cek</button>
+                                <div id="sim8-result" class="p-4 rounded-lg mt-2 text-center font-semibold" style="display: none;"></div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg md:col-span-2">
+                            <h3 class="text-xl font-bold text-primary-dark mb-4">Latihan Formatif Pertemuan 4</h3>
+                            <div id="quiz-4-container" class="space-y-6"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- =================================================================== -->
-            <!-- ======================= KONTEN TES SUMATIF ======================== -->
-            <!-- =================================================================== -->
-            <div id="tesSumatif" class="tab-pane hidden space-y-6">
-                <div class="p-6 bg-red-900/30 border border-red-500 rounded-lg shadow-lg">
-                    <h2 class="text-2xl font-bold text-red-300 mb-2">Tes Sumatif: THI-204</h2>
-                    <p class="mb-6 text-red-200">Ujian akhir untuk mengukur pemahaman keseluruhan modul. Bismillah, semoga dimudahkan!</p>
-                    
-                    <div id="sumatif-questions-container"></div>
-                    
-                    <div id="sumatif-result-container" class="hidden text-center p-6 bg-thibbun-darker rounded-lg">
-                        <h3 class="text-2xl font-bold text-white">Hasil Tes Sumatif</h3>
-                        <p id="sumatif-score" class="text-4xl font-bold text-thibbun-accent my-4"></p>
-                        <p id="sumatif-feedback" class="text-lg mb-6"></p>
-                        <button id="sumatif-retry-btn" class="py-2 px-6 bg-thibbun-accent text-thibbun-darker font-semibold rounded-lg hover:bg-thibbun-accent-hover transition-colors">Ulangi Tes</button>
+            <!-- Konten Tes Sumatif -->
+            <div id="tab-content-5" class="tab-content">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-primary-dark mb-1">Tes Sumatif: Evaluasi Akhir</h2>
+                    <p class="text-lg text-gray-600 mb-6">Uji pemahaman Anda terhadap keseluruhan materi Thibbun Nabawi Lanjutan.</p>
+                    <div id="summative-quiz-container" class="space-y-6"></div>
+                    <div id="summative-result-container" class="text-center mt-8 p-6 bg-primary-light rounded-lg" style="display: none;">
+                        <h3 class="text-2xl font-bold text-primary-dark">Hasil Tes Selesai</h3>
+                        <p class="text-4xl font-bold text-primary my-4" id="summative-score"></p>
+                        <p class="text-gray-600" id="summative-feedback"></p>
+                        <button id="summative-retry-button" class="mt-6 bg-secondary hover:bg-yellow-500 text-primary-dark font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105">Ulangi Tes</button>
                     </div>
-
-                    <button id="sumatif-submit-btn" class="w-full mt-6 py-3 bg-thibbun-accent text-thibbun-darker font-bold rounded-lg text-lg hover:bg-thibbun-accent-hover transition-colors">Selesaikan Tes</button>
+                    <button id="summative-submit-button" class="w-full mt-8 bg-accent hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg">Selesaikan Tes</button>
                 </div>
             </div>
         </main>
+
     </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    
-    const quizData = {
-        quiz1: [
-            { q: "Inti dari Ruqyah Syar'iyyah adalah...", options: ["Kekuatan magis dari bacaan", "Meminta pertolongan jin baik", "Permohonan kesembuhan kepada Allah", "Ritual pemanggilan arwah"], a: 2, exp: "Benar. Ruqyah adalah bentuk doa dan permohonan kepada Allah, Sang Penyembuh Sejati." },
-            { q: "Manakah yang BUKAN termasuk syarat diterimanya ruqyah?", options: ["Menggunakan kalamullah atau doa ma'tsur", "Menggunakan bahasa yang dipahami", "Harus dilakukan oleh seorang Ustadz terkenal", "Meyakini kesembuhan datang dari Allah"], a: 2, exp: "Benar. Keahlian peruqyah adalah keutamaan, tapi bukan syarat. Siapapun yang lurus akidahnya bisa meruqyah." },
-            { q: "Surat Al-Qur'an yang disebut juga sebagai 'Ar-Ruqyah' adalah...", options: ["Al-Baqarah", "Al-Ikhlas", "Al-Fatihah", "Yasin"], a: 2, exp: "Benar. Berdasarkan hadits, Al-Fatihah adalah surat yang bisa digunakan untuk meruqyah." },
-            { q: "Tiga pilar atau rukun ruqyah adalah...", options: ["Peruqyah, Pasien, dan Bacaan", "Jimat, Dupa, dan Mantera", "Ustadz, Santri, dan Masjid", "Air, Minyak, dan Garam"], a: 0, exp: "Benar. Ketiga pilar ini (Ar-Raaqi, Al-Marqiy, Ar-Ruqyah) adalah komponen utama dalam prosesi ruqyah." },
-            { q: "Menggunakan kalung atau gelang dengan keyakinan benda itu bisa menolak bala termasuk...", options: ["Ruqyah Syar'iyyah", "Ikhtiar yang dianjurkan", "Ruqyah Syirkiyyah", "Tradisi yang tidak berbahaya"], a: 2, exp: "Benar. Menggantungkan harapan pada selain Allah adalah bentuk kesyirikan." },
-            { q: "Surat-surat perlindungan yang dikenal sebagai Al-Mu'awwidzat adalah...", options: ["Al-Fatihah, Al-Baqarah, Ali Imran", "Al-Ikhlas, Al-Falaq, An-Nas", "Yasin, Ar-Rahman, Al-Waqi'ah", "Ayat Kursi dan 2 ayat sesudahnya"], a: 1, exp: "Benar. Tiga surat ini adalah benteng perlindungan utama." },
-            { q: "Fondasi utama yang harus dimiliki oleh peruqyah dan pasien adalah...", options: ["Ilmu kanuragan", "Pengalaman bertahun-tahun", "Tawakal penuh kepada Allah", "Keturunan orang pintar"], a: 2, exp: "Benar. Tanpa tawakal, ruqyah hanya akan menjadi ritual kosong." },
-            { q: "Membaca mantera dengan bahasa yang tidak dipahami maknanya adalah...", options: ["Boleh, selama niatnya baik", "Dianjurkan untuk kesembuhan cepat", "Dilarang karena bisa mengandung kesyirikan", "Tergantung keyakinan masing-masing"], a: 2, exp: "Benar. Salah satu syarat ruqyah adalah bacaannya harus dipahami dan bebas dari syirik." },
-            { q: "Ayat yang paling agung dalam Al-Qur'an dan menjadi benteng utama dari setan adalah...", options: ["Akhir surat Al-Baqarah", "Ayat Kursi", "Awal surat Al-Kahfi", "Surat Al-Mulk"], a: 1, exp: "Benar. Keutamaan Ayat Kursi sangat besar dalam menjaga diri dari gangguan." },
-            { q: "Hukum asal ruqyah (jampi-jampi) adalah...", options: ["Selalu haram", "Selalu boleh", "Boleh selama tidak mengandung syirik", "Wajib dilakukan saat sakit"], a: 2, exp: "Benar. Kaidah utamanya adalah 'Pada dasarnya ruqyah itu boleh, selama tidak mengandung kesyirikan'." }
-        ],
-        quiz2: [
-            { q: "Teknik meniupkan udara dengan sedikit ludah ke telapak tangan setelah membaca ayat ruqyah disebut...", options: ["Tadabbur", "Nafats", "Talaqqi", "Tazkiyah"], a: 1, exp: "Benar. Nafats adalah teknik yang dicontohkan oleh Nabi ﷺ." },
-            { q: "Penyakit yang disebabkan oleh pandangan mata kagum atau hasad disebut...", options: ["Sihir", "Waswas", "'Ain", "Ghibthah"], a: 2, exp: "Benar. 'Ain adalah nyata dan bisa berasal dari orang yang kagum maupun dengki." },
-            { q: "Berikut ini yang merupakan gejala khas dari 'Ain adalah...", options: ["Mimpi melihat ular", "Malas shalat", "Sering menguap dan mata berair", "Merasa ada yang membisiki"], a: 2, exp: "Benar. Menguap berlebihan tanpa rasa kantuk adalah salah satu indikasi kuat adanya 'Ain." },
-            { q: "Benteng perlindungan terbaik dari segala gangguan non-medis adalah...", options: ["Minum obat penenang", "Memasang gambar kaligrafi di rumah", "Merutinkan dzikir pagi dan petang", "Menyimpan mushaf di bawah bantal"], a: 2, exp: "Benar. Pencegahan dengan dzikir jauh lebih utama daripada pengobatan." },
-            { q: "Jika ada bagian tubuh yang sakit, tindakan pertama sesuai sunnah adalah...", options: ["Langsung ke dokter", "Meletakkan tangan kanan di atasnya sambil berdoa", "Membiarkannya saja", "Meminta orang lain memijatnya"], a: 1, exp: "Benar. Ini adalah praktik ruqyah mandiri yang diajarkan untuk rasa sakit fisik." },
-            { q: "Mimpi buruk berulang kali melihat hewan menakutkan lebih cenderung merupakan gejala...", options: ["Kelelahan fisik", "'Ain", "Gangguan sihir atau jin", "Tekanan pikiran"], a: 2, exp: "Benar. Gangguan dalam mimpi adalah salah satu cara setan mengganggu manusia." },
-            { q: "Dalil bahwa Nabi ﷺ melakukan ruqyah mandiri adalah hadits tentang...", options: ["Perang Badar", "Peristiwa Isra' Mi'raj", "Amalan sebelum tidur", "Membangun Ka'bah"], a: 2, exp: "Benar. Hadits riwayat Bukhari & Muslim menjelaskan amalan beliau membaca Al-Mu'awwidzat sebelum tidur." },
-            { q: "Tujuan utama dari ruqyah mandiri adalah...", options: ["Agar menjadi sakti", "Menjadi mandiri dan menyempurnakan tawakal", "Tidak perlu lagi ke dokter", "Bisa mengobati orang lain"], a: 1, exp: "Benar. Ini melatih kita untuk bergantung langsung kepada Allah." },
-            { q: "Sikap yang benar saat merasakan gejala-gejala gangguan adalah...", options: ["Langsung menuduh seseorang", "Panik dan takut berlebihan", "Introspeksi diri, perbanyak dzikir dan ruqyah mandiri", "Menceritakannya ke semua orang"], a: 2, exp: "Benar. Solusi pertama adalah kembali kepada Allah dan memperkuat perlindungan diri." },
-            { q: "Nabi ﷺ bersabda 'Al-'Ainu haqq', artinya...", options: ["Mata itu indah", "'Ain itu benar-benar ada", "Mata adalah hak", "Lihatlah dengan benar"], a: 1, exp: "Benar. Hadits ini menegaskan bahwa pengaruh dari pandangan mata itu adalah sebuah kenyataan." }
-        ],
-        quiz3: [
-            { q: "Metode pengobatan dengan mengeluarkan darah statis dari permukaan kulit disebut...", options: ["Ruqyah", "Akupunktur", "Fashdu", "Hijamah (Bekam)"], a: 3, exp: "Benar. Hijamah adalah istilah bahasa Arab untuk bekam." },
-            { q: "Dalil terkuat anjuran berbekam adalah peristiwa...", options: ["Fathu Makkah", "Isra' Mi'raj", "Haji Wada'", "Perjanjian Hudaibiyah"], a: 1, exp: "Benar. Para malaikat berpesan kepada Nabi ﷺ untuk memerintahkan umatnya berbekam." },
-            { q: "Titik bekam utama yang berada di antara kedua pundak disebut...", options: ["Al-Akhda'ain", "Yafuukh", "Al-Kahil", "Ala Warik"], a: 2, exp: "Benar. Al-Kahil adalah titik sunnah yang paling utama." },
-            { q: "Bekam yang hanya melakukan pemvakuman tanpa mengeluarkan darah disebut...", options: ["Bekam Basah", "Bekam Api", "Bekam Kering", "Bekam Sunnah"], a: 2, exp: "Benar. Bekam kering tujuannya untuk relaksasi otot dan penarikan angin." },
-            { q: "Manakah kondisi berikut yang TIDAK BOLEH dibekam (kontraindikasi)?", options: ["Orang yang pusing", "Wanita hamil trimester pertama", "Orang yang pegal-pegal", "Atlet setelah bertanding"], a: 1, exp: "Benar. Membekam wanita hamil pada periode awal sangat berisiko." },
-            { q: "Titik bekam di sisi kanan dan kiri leher yang bermanfaat untuk sakit kepala adalah...", options: ["Al-Kahil", "Yafuukh", "Al-Akhda'ain", "Dzohrul Qodam"], a: 2, exp: "Benar. Al-Akhda'ain langsung berhubungan dengan aliran darah ke area kepala." },
-            { q: "Menurut hadits, bekam adalah salah satu metode pengobatan yang paling...", options: ["Mahal", "Sakit", "Ideal/Baik", "Langka"], a: 2, exp: "Benar. Nabi ﷺ menyebutnya sebagai 'amtsal' atau 'khair', yang berarti paling ideal atau terbaik." },
-            { q: "Tujuan utama dari bekam basah adalah...", options: ["Mengeluarkan semua darah dari tubuh", "Mengeluarkan darah statis (toksin)", "Membuat tubuh menjadi kebal", "Mengganti sel darah baru"], a: 1, exp: "Benar. Darah yang dikeluarkan adalah darah kotor yang mengendap di bawah kulit." },
-            { q: "Sebelum melakukan bekam, kondisi pasien sebaiknya...", options: ["Sangat kenyang", "Sangat lapar", "Berpuasa 24 jam", "Tidak terlalu kenyang dan tidak terlalu lapar"], a: 3, exp: "Benar. Kondisi perut yang sedang adalah yang paling ideal untuk berbekam." },
-            { q: "Titik di puncak kepala yang biasa digunakan untuk kasus sihir atau keracunan adalah...", options: ["Al-Kahil", "Yafuukh", "Al-Akhda'ain", "Ala Warik"], a: 1, exp: "Benar. Titik Yafuukh (Ummu Mughits) adalah titik sentral di kepala." }
-        ],
-        quiz4: [
-            { q: "Langkah yang dilakukan SEGERA setelah kop kering pertama dilepas dalam prosedur bekam basah adalah...", options: ["Membersihkan darah", "Mengoleskan minyak zaitun", "Penyayatan/tusukan ringan (syarthah)", "Memasang perban"], a: 2, exp: "Benar. Penyayatan dilakukan pada kulit yang sudah memerah untuk membuka jalan keluar darah statis." },
-            { q: "Profesionalisme dan kesempurnaan dalam bekerja sesuai tuntunan Islam disebut...", options: ["Ihsan", "Itqan", "Ikhlas", "Istiqamah"], a: 1, exp: "Benar. Itqan adalah melakukan sesuatu dengan cara terbaik, teliti, dan profesional." },
-            { q: "Berikut ini adalah anjuran SETELAH berbekam, KECUALI...", options: ["Beristirahat cukup", "Langsung melakukan olahraga berat", "Menghindari makanan dingin", "Minum madu hangat"], a: 1, exp: "Benar. Aktivitas berat harus dihindari selama 24 jam agar tubuh pulih sempurna." },
-            { q: "Konsep pengobatan Thibbun Nabawi yang memandang manusia sebagai kesatuan ruh, jiwa, dan jasad disebut...", options: ["Spesialistik", "Tradisional", "Holistik", "Alternatif"], a: 2, exp: "Benar. Holistik artinya menyeluruh, tidak hanya mengobati gejala fisik." },
-            { q: "Seorang yang merasa was-was dan juga badannya sering pegal. Sinergi terapi yang tepat adalah...", options: ["Hanya minum herbal", "Hanya dibekam", "Ruqyah, Bekam, dan Herbal", "Hanya diruqyah"], a: 2, exp: "Benar. Was-was ditangani dengan ruqyah, pegal dengan bekam, dan stamina dijaga dengan herbal. Ini adalah contoh terapi holistik." },
-            { q: "Tujuan mengoleskan minyak zaitun atau habbatussauda setelah bekam adalah...", options: ["Sebagai pelicin saat dikop", "Agar bekasnya cepat hilang", "Sebagai antiseptik alami dan membantu penyembuhan", "Hanya sebagai tradisi"], a: 2, exp: "Benar. Keduanya memiliki sifat anti-bakteri dan mempercepat regenerasi kulit." },
-            { q: "Prinsip terpenting yang harus dijaga selama proses bekam adalah...", options: ["Kecepatan", "Jumlah darah yang keluar", "Sterilitas/Kebersihan", "Harga yang murah"], a: 2, exp: "Benar. Menjaga sterilitas adalah kunci untuk mencegah infeksi dan merupakan bagian dari itqan." },
-            { q: "Urutan yang benar dalam SOP bekam basah adalah...", options: ["Sayatan -> Kop Kering -> Kop Basah", "Kop Kering -> Sayatan -> Kop Basah", "Kop Basah -> Sayatan -> Kop Kering", "Sayatan -> Kop Basah -> Kop Kering"], a: 1, exp: "Benar. Darah dikumpulkan dulu dengan kop kering, baru disayat ringan, lalu dikeluarkan dengan kop basah." },
-            { q: "Menggabungkan ruqyah untuk gangguan jin dan bekam pada titik sunnah adalah contoh dari...", options: ["Tindakan berlebihan", "Praktik bid'ah", "Sinergi terapi Thibbun Nabawi", "Mencampuradukkan pengobatan"], a: 2, exp: "Benar. Ini adalah bentuk pengobatan holistik yang saling melengkapi." },
-            { q: "Menjaga jiwa (Hifdzun Nafs) dalam praktik bekam diwujudkan dengan cara...", options: ["Memakai alat secukupnya", "Mengutamakan keselamatan pasien dan prosedur yang aman", "Memastikan pasien membayar lunas", "Melakukan bekam sesering mungkin"], a: 1, exp: "Benar. Profesionalisme dan kehati-hatian dalam bekam adalah bagian dari menjaga jiwa." }
-        ]
-    };
-
-    const sumatifData = [
-        ...quizData.quiz1.slice(0, 5), ...quizData.quiz2.slice(0, 5),
-        ...quizData.quiz3.slice(0, 5), ...quizData.quiz4.slice(0, 5)
-    ].sort(() => Math.random() - 0.5);
-
-    const tabs = document.querySelectorAll('.tab-btn');
-    const panes = document.querySelectorAll('.tab-pane');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            panes.forEach(p => p.classList.add('hidden'));
-            tab.classList.add('active');
-            document.getElementById(tab.dataset.tab).classList.remove('hidden');
-        });
-    });
-
-    function createQuiz(quizId, data) {
-        const container = document.getElementById(quizId);
-        if (!container) return;
-        container.innerHTML = '';
-        data.forEach((item, index) => {
-            const questionBlock = document.createElement('div');
-            questionBlock.innerHTML = `
-                <p class="mb-3">${index + 1}. ${item.q}</p>
-                <div class="space-y-2 options-container">
-                    ${item.options.map((option, i) => `
-                        <label class="block p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
-                            <input type="radio" name="${quizId}-q${index}" value="${i}" class="mr-3">
-                            <span>${option}</span>
-                        </label>
-                    `).join('')}
-                </div>
-                <div class="p-3 mt-3 rounded-lg text-sm hidden feedback-box"></div>
-            `;
-            container.appendChild(questionBlock);
-
-            const optionsContainer = questionBlock.querySelector('.options-container');
-            const feedbackBox = questionBlock.querySelector('.feedback-box');
-            optionsContainer.addEventListener('change', (e) => {
-                const selectedValue = parseInt(e.target.value);
-                const isCorrect = selectedValue === item.a;
-                
-                optionsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
-                    radio.disabled = true;
-                    const parentLabel = radio.parentElement;
-                    if (parseInt(radio.value) === item.a) {
-                        parentLabel.classList.add('bg-correct', 'text-black', 'font-bold');
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Data Bank Soal
+            const quizBank = {
+                1: [
+                    { q: "Penyakit akibat pandangan mata yang hasad atau takjub disebut...", o: ["Sihir", "Santet", "'Ain", "Kesurupan"], a: 2, exp: "'Ain adalah pengaruh buruk yang timbul dari pandangan mata, baik karena dengki maupun kagum yang berlebihan tanpa mendoakan keberkahan." },
+                    { q: "Berikut ini yang BUKAN ciri-ciri umum gangguan non-medis adalah...", o: ["Sakitnya berpindah-pindah", "Hasil lab medis menunjukkan hasil normal", "Gejala memburuk saat mendengar murottal", "Demam tinggi dengan infeksi bakteri yang jelas"], a: 3, exp: "Jika ada penyebab medis yang jelas dan terukur seperti infeksi bakteri, maka itu adalah penyakit medis murni." },
+                    { q: "Ayat-ayat di surat Yunus, Al-A'raf, dan Thaha secara spesifik sangat efektif untuk menangani...", o: ["Gangguan 'Ain", "Gangguan Sihir", "Sakit kepala", "Was-was biasa"], a: 1, exp: "Ketiga kelompok ayat tersebut mengandung kisah Nabi Musa 'alaihissalam melawan para penyihir Fir'aun dan bagaimana sihir mereka menjadi batil." },
+                    { q: "'Ain itu haq' artinya 'ain itu...", o: ["Sebuah kebohongan", "Hanya mitos", "Benar-benar ada dan nyata", "Tidak perlu dikhawatirkan"], a: 2, exp: "Hadits ini menegaskan bahwa 'ain adalah sesuatu yang nyata dan dampaknya bisa terjadi atas izin Allah." },
+                    { q: "Prinsip utama dalam mendiagnosa gangguan non-medis adalah...", o: ["Langsung menuduh terkena jin", "Berobat medis dulu, jika tidak ada hasil baru pertimbangkan ruqyah", "Percaya pada semua paranormal", "Menganggap semua penyakit adalah gangguan jin"], a: 1, exp: "Ini adalah manhaj yang pertengahan, tidak meremehkan dan tidak berlebihan. Mendahulukan sebab-sebab yang zhahir (medis) adalah bagian dari syariat." },
+                    { q: "Seorang pedagang yang sukses tiba-tiba usahanya bangkrut tanpa sebab yang logis. Ini bisa menjadi indikasi...", o: ["Manajemen yang buruk", "Kurang modal", "Gangguan 'Ain atau sihir", "Hanya nasib buruk"], a: 2, exp: "Kehancuran mendadak pada sesuatu yang tadinya baik (usaha, rumah tangga, kesehatan) adalah salah satu gejala umum dari 'ain atau sihir." },
+                    { q: "Surat yang dianjurkan dibaca di rumah agar setan lari adalah...", o: ["Yasin", "Ar-Rahman", "Al-Baqarah", "Al-Waqiah"], a: 2, exp: "Rasulullah bersabda bahwa setan lari dari rumah yang dibacakan di dalamnya surat Al-Baqarah." },
+                    { q: "Saat melihat sesuatu yang menakjubkan pada diri seorang muslim, hendaknya kita mengucapkan...", o: ["'Wah, hebat sekali!'", "'Masya Allah, Laa Quwwata Illa Billah' atau 'Barakallahu fiik'", "'Luar biasa!'", "'Aku juga mau'"], a: 1, exp: "Mendoakan keberkahan adalah penangkal 'ain dari pihak yang memandang." },
+                    { q: "Perbedaan utama antara was-was biasa dengan was-was karena gangguan jin adalah...", o: ["Was-was jin terasa lebih nyata dan sulit dikendalikan", "Was-was biasa hanya sesekali", "Was-was jin membuat benci pada ibadah", "Semua jawaban benar"], a: 3, exp: "Was-was dari setan biasanya lebih intens, berulang, dan seringkali mengarahkan pada kebencian terhadap hal-hal baik dan ketaatan." },
+                    { q: "Jika seseorang terkena 'ain dan diketahui siapa yang memandangnya, maka terapinya adalah...", o: ["Memarahinya", "Meminta orang tersebut mandi lalu air bekas mandinya disiramkan ke penderita", "Menjauhinya selamanya", "Tidak melakukan apa-apa"], a: 1, exp: "Ini adalah cara penyembuhan yang diajarkan langsung oleh Rasulullah dalam hadits tentang Sahl bin Hunaif." }
+                ],
+                2: [
+                    { q: "Jika pasien bereaksi dengan berbicara atau mengancam saat diruqyah, tindakan terbaik peruqyah adalah...", o: ["Mengajaknya berdebat panjang", "Memarahinya dengan kasar", "Tetap tenang, tidak meladeni dialog, dan melanjutkan bacaan Al-Qur'an", "Menghentikan ruqyah karena takut"], a: 2, exp: "Meladeni dialog dengan jin seringkali hanya tipu daya dan membuang waktu. Fokus pada bacaan Al-Qur'an lebih efektif." },
+                    { q: "Teknik menepuk bagian tubuh yang sakit dengan niat menyakiti jin disebut...", o: ["Al-Mash", "An-Nafth", "Adh-Dharb", "Al-Lamsu"], a: 2, exp: "Adh-Dharb (tepukan ringan) bertujuan untuk memberi 'tekanan' pada jin yang berada di area tersebut, namun harus dilakukan dengan hikmah." },
+                    { q: "Berikut ini yang termasuk adab terpenting seorang peruqyah adalah...", o: ["Memasang tarif yang mahal", "Menjaga rahasia pasien", "Menceritakan keberhasilannya di media sosial", "Menjamin kesembuhan 100%"], a: 1, exp: "Amanah dalam menjaga aib dan rahasia pasien adalah cerminan dari akhlak seorang muslim yang baik." },
+                    { q: "Reaksi pasien seperti mual dan ingin muntah saat diruqyah menandakan...", o: ["Gagalnya ruqyah", "Peruqyah tidak kompeten", "Adanya respon positif, kemungkinan 'materi' sihir/gangguan akan keluar", "Pasien salah makan"], a: 2, exp: "Muntah seringkali menjadi cara Allah mengeluarkan 'ain atau sihir yang masuk melalui makanan/minuman." },
+                    { q: "Tujuan utama seorang Ra'qi (peruqyah) dalam prosesi ruqyah adalah...", o: ["Mengeluarkan jin dari tubuh pasien", "Membacakan Al-Qur'an sebagai obat dan dakwah", "Menunjukkan kehebatan diri", "Berduel dengan jin"], a: 1, exp: "Niat utama haruslah menyampaikan Kalamullah sebagai penyembuh dan hidayah, bukan semata-mata 'bertarung'." },
+                    { q: "Sikap hati yang harus dihindari oleh seorang peruqyah setelah berhasil menangani pasien adalah...", o: ["Syukur", "'Ujub (bangga diri)", "Tawadhu'", "Sabar"], a: 1, exp: "'Ujub dapat menghapus pahala dan membuat seseorang lupa bahwa pertolongan datangnya dari Allah semata." },
+                    { q: "Saat meruqyah lawan jenis yang bukan mahram, hal yang harus diperhatikan adalah...", o: ["Tidak boleh menyentuh langsung tanpa alas/sarung tangan", "Harus ditemani oleh mahram si pasien", "Menjaga pandangan", "Semua jawaban benar"], a: 3, exp: "Menjaga adab-adab syar'i seperti ini adalah wajib untuk menghindari fitnah." },
+                    { q: "Program ruqyah mandiri untuk pasien biasanya berisi, kecuali...", o: ["Amalan dzikir pagi dan petang", "Mendengarkan murottal setiap hari", "Shalat 5 waktu dan amalan sunnah", "Memajang jimat penangkal di kamar"], a: 3, exp: "Jimat adalah kesyirikan dan bertentangan dengan konsep ruqyah syar'iyyah." },
+                    { q: "Kunci utama kekuatan seorang peruqyah terletak pada...", o: ["Banyaknya hafalan ayat", "Kerasnya suara saat membaca", "Ketakwaannya dan kedekatannya kepada Allah", "Jumlah pasien yang pernah ditangani"], a: 2, exp: "Keikhlasan dan ketakwaan adalah modal terbesar yang membuat bacaan Al-Qur'an menjadi lebih berpengaruh atas izin Allah." },
+                    { q: "Jika reaksi pasien sangat berat hingga membahayakan, tindakan yang bijak adalah...", o: ["Terus memaksa hingga selesai", "Panik dan meninggalkan pasien", "Menghentikan sejenak, menenangkan pasien, dan jika perlu merujuk ke peruqyah yang lebih ahli", "Memukul pasien dengan keras"], a: 2, exp: "Mengetahui batas kemampuan diri dan tidak memaksakan kehendak adalah bagian dari hikmah dalam berdakwah dan berobat." }
+                ],
+                3: [
+                    { q: "Titik bekam yang ditentukan berdasarkan lokasi keluhan atau organ yang sakit disebut...", o: ["Titik Sunnah", "Titik Meridian", "Titik Refleksi", "Titik Organis/Lokal"], a: 3, exp: "Titik organis ditentukan berdasarkan ilmu anatomi dan pengalaman terapis untuk menargetkan organ tertentu." },
+                    { q: "Punggung menjadi area utama bekam karena...", o: ["Kulitnya paling tebal", "Merupakan pusat syaraf dan jalur ke organ vital", "Paling mudah dijangkau", "Tidak ada tulangnya"], a: 1, exp: "Banyak syaraf dari tulang belakang yang terhubung ke seluruh organ, sehingga bekam di punggung berefek sistemik." },
+                    { q: "Untuk keluhan darah tinggi (hipertensi), titik bekam sunnah yang paling utama adalah...", o: ["Puncak Kepala", "Al-Kahil (area tengkuk)", "Punggung Kaki", "Dada"], a: 1, exp: "Al-Kahil adalah titik pertemuan syaraf dan pembuluh darah ke area kepala, sangat efektif untuk menurunkan tensi." },
+                    { q: "Mempelajari anatomi tubuh untuk pengobatan adalah bagian dari...", o: ["Tadabbur alam", "Tadabbur ayat kauniyah (ciptaan Allah)", "Takhayul", "Bid'ah"], a: 1, exp: "Mempelajari kesempurnaan ciptaan Allah pada diri manusia dapat menambah keimanan, sebagaimana disebutkan dalam QS. Fussilat: 53." },
+                    { q: "Perbedaan utama antara titik sunnah dan titik organis adalah pada...", o: ["Tujuan dan landasan penentuannya", "Jumlah darah yang keluar", "Rasa sakitnya", "Alat yang digunakan"], a: 0, exp: "Titik sunnah landasannya riwayat (dalil) dengan tujuan utama ittiba', sedangkan titik organis landasannya ijtihad (ilmu) dengan tujuan utama terapi." },
+                    { q: "Titik bekam di area belikat umumnya digunakan untuk keluhan yang berkaitan dengan...", o: ["Pencernaan", "Sakit pinggang", "Paru-paru dan jantung", "Kesuburan"], a: 2, exp: "Area belikat secara anatomis berdekatan dengan organ paru-paru dan jantung." },
+                    { q: "Pendekatan terbaik dalam praktik bekam adalah...", o: ["Hanya menggunakan titik sunnah", "Hanya menggunakan titik organis", "Menggabungkan titik sunnah dan titik organis yang relevan", "Memilih titik secara acak"], a: 2, exp: "Dengan menggabungkan keduanya, terapis bisa mendapatkan pahala mengikuti sunnah sekaligus memaksimalkan efektivitas terapi." },
+                    { q: "Seorang pasien datang dengan keluhan sakit punggung bawah. Area bekam yang paling sesuai adalah...", o: ["Area leher", "Area pundak", "Area pinggang", "Area betis"], a: 2, exp: "Membekam di titik lokal (dekat dengan sumber nyeri) adalah prinsip dasar dalam terapi bekam untuk keluhan muskuloskeletal." },
+                    { q: "Pengetahuan tentang peta titik bekam membantu terapis untuk...", o: ["Menentukan diagnosa secara tepat", "Memilih lokasi bekam yang paling efektif dan aman", "Menjamin kesembuhan", "Menghindari bekam sama sekali"], a: 1, exp: "Ilmu ini menghindarkan terapis dari praktik asal-asalan dan meningkatkan kemungkinan keberhasilan terapi." },
+                    { q: "Titik Al-Akhda'ain adalah dua titik yang terletak di...", o: ["Punggung kaki", "Kiri dan kanan leher", "Di antara belikat", "Di pinggang"], a: 1, exp: "Al-Akhda'ain adalah dua urat di samping leher, bermanfaat untuk keluhan di area kepala." }
+                ],
+                4: [
+                    { q: "Wawancara singkat dengan pasien sebelum bekam untuk mengetahui keluhan dan riwayat penyakit disebut...", o: ["Informed Consent", "Anamnesis", "Diagnosa", "Terapi"], a: 1, exp: "Anamnesis adalah langkah pertama dan paling penting untuk memastikan keamanan dan ketepatan terapi." },
+                    { q: "Tindakan menjelaskan prosedur bekam kepada pasien dan meminta persetujuannya disebut...", o: ["SOP", "Anamnesis", "Informed Consent", "Edukasi"], a: 2, exp: "Informed consent adalah hak pasien dan kewajiban terapis untuk menghargai otonomi pasien." },
+                    { q: "Prinsip 'Itqan' dalam bekerja yang dicintai Allah artinya...", o: ["Bekerja keras", "Bekerja cerdas", "Bekerja dengan profesional, rapi, dan tuntas", "Bekerja ikhlas"], a: 2, exp: "Itqan mencakup semua aspek kualitas kerja, dari persiapan, pelaksanaan, hingga penyelesaian." },
+                    { q: "Herbal sunnah yang dikenal sebagai 'obat segala penyakit kecuali kematian' adalah...", o: ["Madu", "Minyak Zaitun", "Kurma Ajwa", "Habbatussauda"], a: 3, exp: "Keutamaan Habbatussauda (jintan hitam) disebutkan secara jelas dalam hadits shahih." },
+                    { q: "Langkah yang harus dilakukan SEGERA setelah mengangkat kop bekam basah adalah...", o: ["Langsung memasang kop baru", "Membersihkan darah dengan tisu steril", "Memijat area tersebut", "Mengoleskan minyak"], a: 1, exp: "Kebersihan adalah prioritas. Darah harus segera dibersihkan untuk mencegah kontaminasi." },
+                    { q: "Limbah medis bekam seperti jarum dan tisu berdarah harus...", o: ["Dibuang di tempat sampah biasa", "Dicuci dan dipakai lagi", "Dibuang ke dalam wadah khusus (safety box) dan dimusnahkan", "Diberikan kepada pasien"], a: 2, exp: "Penanganan limbah medis yang benar adalah bagian dari tanggung jawab terapis untuk mencegah penyebaran penyakit." },
+                    { q: "Herbal yang sangat baik dioleskan ke kulit setelah bekam untuk melembabkan adalah...", o: ["Madu", "Habbatussauda", "Minyak Zaitun", "Cuka Apel"], a: 2, exp: "Minyak Zaitun berasal dari 'pohon yang diberkahi' dan memiliki sifat melembabkan serta anti-inflamasi." },
+                    { q: "Manakah langkah yang BUKAN termasuk dalam SOP Bekam?", o: ["Sterilisasi area kulit", "Melakukan sayatan yang sangat dalam agar darah banyak keluar", "Memberikan edukasi pasca-bekam", "Meminta persetujuan pasien"], a: 1, exp: "Sayatan bekam haruslah sangat tipis dan ringan (hanya menggores lapisan epidermis kulit), bukan dalam." },
+                    { q: "Tujuan utama anamnesis adalah...", o: ["Menentukan tarif bekam", "Memastikan pasien tidak memiliki kontraindikasi yang membahayakan", "Membuat pasien terkesan", "Memperlama waktu terapi"], a: 1, exp: "Keselamatan pasien adalah prioritas tertinggi. Anamnesis membantu menyaring pasien yang tidak boleh dibekam." },
+                    { q: "Memberi nasihat kepada pasien untuk istirahat dan minum madu setelah dibekam adalah bagian dari tahap...", o: ["Anamnesis", "Informed Consent", "Eksekusi Bekam", "Edukasi Pasca-Bekam"], a: 3, exp: "Tugas terapis tidak berhenti setelah selesai membekam, tetapi juga memberikan panduan agar hasil terapi maksimal." }
+                ]
+            };
+            
+            // Variabel Global
+            const tabs = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            function activateTab(tabNumber) {
+                tabs.forEach(tab => {
+                    tab.classList.toggle('bg-white', tab.dataset.tab == tabNumber);
+                    tab.classList.toggle('text-primary', tab.dataset.tab == tabNumber);
+                    tab.classList.toggle('text-white', tab.dataset.tab != tabNumber);
+                    if (tab.dataset.tab != 5) {
+                        tab.classList.remove('bg-secondary', 'text-primary-dark');
                     }
                 });
+                tabContents.forEach(content => {
+                    content.classList.toggle('active', content.id === `tab-content-${tabNumber}`);
+                });
+            }
 
-                if (!isCorrect) {
-                    e.target.parentElement.classList.add('bg-incorrect', 'text-black', 'font-bold');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => activateTab(tab.dataset.tab));
+            });
+
+            function renderQuiz(containerId, quizData) {
+                const container = document.getElementById(containerId);
+                if (!container || !quizData) return;
+                container.innerHTML = quizData.map((item, index) => `
+                    <div>
+                        <p class="font-semibold">${index + 1}. ${item.q}</p>
+                        <div class="mt-2 space-y-2 quiz-options" data-answer="${item.a}">
+                            ${item.o.map((option, i) => `
+                                <div class="quiz-option p-3 border rounded-lg cursor-pointer hover:bg-gray-100" data-index="${i}">
+                                    <span class="font-mono mr-2">${String.fromCharCode(65 + i)}.</span> ${option}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="quiz-explanation mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800" style="display: none;"><b>Penjelasan:</b> ${item.exp}</div>
+                    </div>
+                `).join('');
+
+                container.querySelectorAll('.quiz-option').forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        const optionsContainer = e.currentTarget.parentElement;
+                        if (optionsContainer.querySelector('.selected')) return;
+                        const correctAnswer = optionsContainer.dataset.answer;
+                        const selectedAnswer = e.currentTarget.dataset.index;
+                        e.currentTarget.classList.add('selected');
+                        if (selectedAnswer == correctAnswer) {
+                            e.currentTarget.classList.add('correct');
+                        } else {
+                            e.currentTarget.classList.add('incorrect');
+                            optionsContainer.children[correctAnswer].classList.add('correct');
+                        }
+                        optionsContainer.nextElementSibling.style.display = 'block';
+                    });
+                });
+            }
+            
+            function renderSummativeTest() {
+                const allQuestions = [].concat(...Object.values(quizBank));
+                const shuffled = allQuestions.sort(() => 0.5 - Math.random());
+                const selectedQuestions = shuffled.slice(0, 20);
+                const container = document.getElementById('summative-quiz-container');
+                container.innerHTML = selectedQuestions.map((item, index) => `
+                    <div class="summative-question" data-answer="${item.a}">
+                        <p class="font-semibold">${index + 1}. ${item.q}</p>
+                        <div class="mt-2 space-y-2">
+                            ${item.o.map((option, i) => `
+                                <label class="block p-3 border rounded-lg cursor-pointer hover:bg-gray-100">
+                                    <input type="radio" name="summative-q${index}" value="${i}" class="mr-2">
+                                    ${option}
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // --- Inisialisasi ---
+            activateTab(1);
+            Object.keys(quizBank).forEach(key => renderQuiz(`quiz-${key}-container`, quizBank[key]));
+            renderSummativeTest();
+
+            // --- Event Listeners Simulasi ---
+            // P1S1
+             document.querySelectorAll('#sim1-container .sim1-option').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const resultDiv = document.getElementById('sim1-result');
+                    resultDiv.style.display = 'block';
+                    if (e.target.dataset.correct === 'true') {
+                        resultDiv.className = 'p-4 rounded-lg mt-4 text-center font-semibold bg-accent text-white';
+                        resultDiv.textContent = 'Tepat! Gejala mendadak setelah dipuji adalah ciri kuat gangguan \'Ain.';
+                    } else {
+                        resultDiv.className = 'p-4 rounded-lg mt-4 text-center font-semibold bg-red-100 text-red-700';
+                        resultDiv.textContent = 'Kurang tepat. Gejala ini sangat spesifik dan tidak biasa untuk sakit biasa.';
+                    }
+                    e.target.parentElement.style.pointerEvents = 'none';
+                });
+            });
+
+            // P1S2: Drag and Drop
+            const dragItems = document.querySelectorAll('.drag-item');
+            const dropZones = document.querySelectorAll('.drop-zone');
+            let draggedItem = null;
+            dragItems.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    draggedItem = e.target;
+                    setTimeout(() => e.target.style.display = 'none', 0);
+                });
+                item.addEventListener('dragend', () => {
+                     setTimeout(() => {
+                        if(draggedItem) draggedItem.style.display = 'block';
+                        draggedItem = null;
+                    }, 0);
+                });
+            });
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', e => e.preventDefault());
+                zone.addEventListener('dragenter', e => { e.preventDefault(); e.target.style.backgroundColor = '#f0fdfa'; });
+                zone.addEventListener('dragleave', e => e.target.style.backgroundColor = 'transparent');
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.target.style.backgroundColor = 'transparent';
+                    if (e.target.classList.contains('drop-zone') && draggedItem) {
+                        if (draggedItem.dataset.target === e.target.id.split('-')[1]) {
+                             e.target.appendChild(draggedItem);
+                        }
+                    }
+                });
+            });
+
+            // P2S1
+            document.querySelectorAll('#sim3-container .sim3-option').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const resultDiv = document.getElementById('sim3-result');
+                    resultDiv.style.display = 'block';
+                    if (e.target.dataset.correct === 'true') {
+                        resultDiv.className = 'p-4 rounded-lg mt-4 text-center font-semibold bg-accent text-white';
+                        resultDiv.textContent = 'Tepat! Ketenangan adalah kunci utama.';
+                    } else {
+                        resultDiv.className = 'p-4 rounded-lg mt-4 text-center font-semibold bg-red-100 text-red-700';
+                        resultDiv.textContent = 'Kurang bijak. Tindakan tersebut bisa jadi keliru.';
+                    }
+                    e.target.parentElement.style.pointerEvents = 'none';
+                });
+            });
+
+            // P2S2
+            document.getElementById('sim4-button').addEventListener('click', () => {
+                const checkboxes = document.querySelectorAll('.sim4-check');
+                let correctCount = 0;
+                let totalCorrect = 2;
+                let allCheckedCorrect = true;
+                checkboxes.forEach(cb => {
+                    if (cb.checked) {
+                        if(cb.dataset.correct === 'true') correctCount++;
+                        else allCheckedCorrect = false;
+                    }
+                });
+                const resultDiv = document.getElementById('sim4-result');
+                resultDiv.style.display = 'block';
+                if(correctCount === totalCorrect && allCheckedCorrect){
+                    resultDiv.className = 'p-4 rounded-lg mt-2 text-center font-semibold bg-accent text-white';
+                    resultDiv.textContent = 'Benar! Anda memahami adab yang mulia.';
+                } else {
+                    resultDiv.className = 'p-4 rounded-lg mt-2 text-center font-semibold bg-red-100 text-red-700';
+                    resultDiv.textContent = 'Belum Tepat. Coba periksa kembali adab seorang peruqyah.';
                 }
+            });
+
+            // P3S1
+            const dots = document.querySelectorAll('.point-map-dot');
+            const infoBox = document.getElementById('point-info');
+            dots.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    infoBox.textContent = dot.dataset.info;
+                });
+            });
+
+            // P3S2
+            document.querySelectorAll('.sim6-select').forEach(select => {
+                select.addEventListener('change', () => {
+                    if (select.value === select.dataset.answer) {
+                        select.classList.add('border-green-500', 'bg-green-50');
+                        select.classList.remove('border-red-500', 'bg-red-50');
+                    } else {
+                        select.classList.add('border-red-500', 'bg-red-50');
+                        select.classList.remove('border-green-500', 'bg-green-50');
+                    }
+                });
+            });
+
+            // P4S1
+            document.querySelectorAll('#sim7-container .sim7-option').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const resultDiv = document.getElementById('sim7-result');
+                    resultDiv.style.display = 'block';
+                    if (e.target.dataset.correct === 'true') {
+                        resultDiv.className = 'p-4 rounded-lg mt-4 text-center font-semibold bg-accent text-white';
+                        resultDiv.textContent = 'Benar! Informed consent adalah hak pasien & kewajiban terapis.';
+                    } else {
+                        resultDiv.className = 'p-4 rounded-lg mt-4 text-center font-semibold bg-red-100 text-red-700';
+                        resultDiv.textContent = 'Kurang tepat. Ada langkah penting yang terlewat.';
+                    }
+                    e.target.parentElement.style.pointerEvents = 'none';
+                });
+            });
+            
+            // P4S2
+             document.getElementById('sim8-button').addEventListener('click', () => {
+                const input = document.getElementById('sim8-input').value.toLowerCase();
+                const resultDiv = document.getElementById('sim8-result');
+                resultDiv.style.display = 'block';
+                if (input.includes('madu')) {
+                    resultDiv.className = 'p-4 rounded-lg mt-2 text-center font-semibold bg-accent text-white';
+                    resultDiv.textContent = 'Jawaban Anda Tepat! Madu adalah sumber energi terbaik pasca bekam.';
+                } else {
+                    resultDiv.className = 'p-4 rounded-lg mt-2 text-center font-semibold bg-red-100 text-red-700';
+                    resultDiv.textContent = 'Kurang Tepat. Jawaban yang paling dianjurkan adalah Madu.';
+                }
+            });
+            
+            // --- Logika Tes Sumatif ---
+            const submitButton = document.getElementById('summative-submit-button');
+            const retryButton = document.getElementById('summative-retry-button');
+            submitButton.addEventListener('click', () => {
+                let score = 0;
+                const questions = document.querySelectorAll('.summative-question');
+                if (questions.length === 0) return;
+                questions.forEach(q => {
+                    const correctAnswer = q.dataset.answer;
+                    const selectedAnswer = q.querySelector('input:checked');
+                    if(selectedAnswer && selectedAnswer.value == correctAnswer) score++;
+                });
                 
-                feedbackBox.innerHTML = item.exp;
-                feedbackBox.classList.remove('hidden');
-                feedbackBox.classList.add(isCorrect ? 'bg-green-900/50' : 'bg-red-900/50');
+                document.getElementById('summative-quiz-container').style.display = 'none';
+                submitButton.style.display = 'none';
+                
+                const resultContainer = document.getElementById('summative-result-container');
+                const scoreDisplay = document.getElementById('summative-score');
+                const feedbackDisplay = document.getElementById('summative-feedback');
+                
+                scoreDisplay.textContent = `${score} / ${questions.length} Jawaban Benar`;
+                const percentage = score / questions.length;
+                let feedbackText = 'Jangan putus asa. Coba pelajari kembali modulnya dan ulangi tes.';
+                if(percentage >= 0.9) feedbackText = 'Mumtaz! Pemahaman antum sangat baik.';
+                else if (percentage >= 0.7) feedbackText = 'Jayyid Jiddan. Tingkatkan lagi sedikit!';
+                else if (percentage >= 0.5) feedbackText = 'Jayyid. Perlu mengulang beberapa materi.';
+                feedbackDisplay.textContent = feedbackText;
+                
+                resultContainer.style.display = 'block';
+            });
+            
+            retryButton.addEventListener('click', () => {
+                document.getElementById('summative-result-container').style.display = 'none';
+                document.getElementById('summative-quiz-container').style.display = 'block';
+                submitButton.style.display = 'block';
+                renderSummativeTest();
             });
         });
-    }
-
-    createQuiz('quiz1', quizData.quiz1);
-    createQuiz('quiz2', quizData.quiz2);
-    createQuiz('quiz3', quizData.quiz3);
-    createQuiz('quiz4', quizData.quiz4);
-
-    function createSumatifTest() {
-        const container = document.getElementById('sumatif-questions-container');
-        container.innerHTML = '';
-        sumatifData.forEach((item, index) => {
-            const questionBlock = document.createElement('div');
-            questionBlock.className = 'mb-6 p-4 bg-gray-800 rounded-lg';
-            questionBlock.innerHTML = `
-                <p class="mb-3">${index + 1}. ${item.q}</p>
-                <div class="space-y-2">
-                    ${item.options.map((option, i) => `
-                        <label class="block p-3 bg-gray-900 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
-                            <input type="radio" name="sumatif-q${index}" value="${i}" data-correct="${item.a}" class="mr-3">
-                            <span>${option}</span>
-                        </label>
-                    `).join('')}
-                </div>
-            `;
-            container.appendChild(questionBlock);
-        });
-    }
-
-    createSumatifTest();
-
-    document.getElementById('sumatif-submit-btn').addEventListener('click', () => {
-        let score = 0;
-        const total = sumatifData.length;
-        const answers = document.querySelectorAll('#sumatif-questions-container input[type="radio"]:checked');
-        answers.forEach(radio => {
-            if (parseInt(radio.value) === parseInt(radio.dataset.correct)) {
-                score++;
-            }
-        });
-        
-        const percentage = (score / total) * 100;
-        let feedbackText = '';
-        if (percentage >= 85) feedbackText = "Mumtaz! Pemahaman Anda sangat baik. Barakallahu fiik.";
-        else if (percentage >= 70) feedbackText = "Jayyid Jiddan. Hasil yang bagus, terus tingkatkan!";
-        else if (percentage >= 50) feedbackText = "Jayyid. Cukup baik, muraja'ah lagi materi yang kurang dipahami.";
-        else feedbackText = "Perlu belajar lebih giat lagi. Jangan putus asa, ulangi tes setelah muraja'ah.";
-
-        document.getElementById('sumatif-score').textContent = `${score} / ${total}`;
-        document.getElementById('sumatif-feedback').textContent = feedbackText;
-        
-        document.getElementById('sumatif-questions-container').classList.add('hidden');
-        document.getElementById('sumatif-submit-btn').classList.add('hidden');
-        document.getElementById('sumatif-result-container').classList.remove('hidden');
-    });
-
-    document.getElementById('sumatif-retry-btn').addEventListener('click', () => {
-        document.getElementById('sumatif-result-container').classList.add('hidden');
-        document.getElementById('sumatif-questions-container').classList.remove('hidden');
-        document.getElementById('sumatif-submit-btn').classList.remove('hidden');
-        createSumatifTest();
-    });
-
-    // Simulasi 1: Filter Ruqyah
-    const draggables = document.querySelectorAll('#sim1-source .draggable');
-    const dropZones = document.querySelectorAll('#pertemuan1 .drop-zone');
-    draggables.forEach(draggable => {
-        draggable.addEventListener('dragstart', () => draggable.classList.add('opacity-50'));
-        draggable.addEventListener('dragend', () => draggable.classList.remove('opacity-50'));
-    });
-    dropZones.forEach(zone => {
-        zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-        zone.addEventListener('drop', e => {
-            e.preventDefault();
-            zone.classList.remove('drag-over');
-            const dragged = document.querySelector('.opacity-50');
-            const feedbackEl = document.getElementById('sim1-feedback');
-            if (dragged.dataset.type === zone.dataset.target) {
-                zone.appendChild(dragged);
-                dragged.draggable = false;
-                dragged.classList.remove('bg-thibbun-accent', 'text-thibbun-darker');
-                dragged.classList.add(zone.dataset.target === 'syariyyah' ? 'bg-correct' : 'bg-incorrect', 'text-black');
-                feedbackEl.textContent = "Tepat!";
-                feedbackEl.className = "text-sm mt-3 h-4 text-correct";
-            } else {
-                feedbackEl.textContent = "Kurang Tepat.";
-                feedbackEl.className = "text-sm mt-3 h-4 text-incorrect";
-            }
-            setTimeout(() => feedbackEl.textContent = '', 2000);
-        });
-    });
-
-    // Simulasi 2: Pembangun Benteng Diri
-    document.querySelectorAll('.sim2-option').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (btn.dataset.correct === 'true') {
-                btn.classList.add('bg-correct', 'text-black');
-                btn.disabled = true;
-                const li = document.createElement('li');
-                li.textContent = btn.textContent;
-                document.getElementById('sim2-shield').appendChild(li);
-            } else {
-                btn.classList.add('bg-incorrect', 'text-black');
-            }
-        });
-    });
-
-    // Simulasi 3: Diagnosa Awal
-    document.getElementById('sim3-diagnose').addEventListener('click', () => {
-        const checks = document.querySelectorAll('#sim3-symptoms input:checked');
-        let ainCount = 0;
-        let sihirCount = 0;
-        checks.forEach(c => {
-            if(c.dataset.type === 'ain') ainCount++;
-            if(c.dataset.type === 'sihir') sihirCount++;
-        });
-        let resultText = "Gejala yang Anda pilih menunjukkan kemungkinan adanya: ";
-        if (ainCount > sihirCount) resultText += "gangguan 'Ain. Perbanyak ruqyah mandiri dan dzikir perlindungan.";
-        else if (sihirCount > ainCount) resultText += "gangguan sihir/jin. Segera perkuat benteng diri dengan dzikir dan shalat.";
-        else if (ainCount > 0 && ainCount === sihirCount) resultText += "kombinasi gangguan 'Ain dan waswas jin. Tingkatkan semua amalan Anda.";
-        else resultText = "Tidak ada gejala spesifik yang dipilih. Alhamdulillah, semoga selalu sehat.";
-        
-        document.getElementById('sim3-result-text').textContent = resultText;
-        document.getElementById('sim3-result').classList.remove('hidden');
-    });
-
-    // Simulasi 4: Pustaka Dzikir
-    const dzikirData = {
-        kursi: {
-            arabic: 'ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ٱلْحَىُّ ٱلْقَيُّومُ ۚ لَا تَأْخُذُهُۥ سِنَةٌ وَلَا نَوْمٌ ۚ ...',
-            translation: 'Allah, tidak ada Tuhan (yang berhak disembah) melainkan Dia Yang Hidup kekal lagi terus menerus mengurus (makhluk-Nya); tidak mengantuk dan tidak tidur...'
-        },
-        muawwidzat: {
-            arabic: 'بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. قُلْ هُوَ اللهُ أَحَدٌ... (Baca Al-Ikhlas, Al-Falaq, An-Nas)',
-            translation: 'Dengan menyebut nama Allah Yang Maha Pengasih lagi Maha Penyayang. Katakanlah: "Dialah Allah, Yang Maha Esa"...'
-        },
-        bismillah: {
-            arabic: 'بِسْمِ اللهِ الَّذِي لاَ يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي اْلأَرْضِ وَلاَ فِي السَّمَاءِ وَهُوَ السَّمِيْعُ الْعَلِيْمُ (3x)',
-            translation: 'Dengan nama Allah yang bila disebut, segala sesuatu di bumi dan langit tidak akan berbahaya, Dia-lah Yang Maha Mendengar lagi Maha Mengetahui.'
-        }
-    };
-    document.querySelectorAll('.sim4-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const dzikir = dzikirData[btn.dataset.dzikir];
-            document.getElementById('sim4-text-arabic').textContent = dzikir.arabic;
-            document.getElementById('sim4-text-translation').textContent = dzikir.translation;
-        });
-    });
-
-    // Simulasi 5: Anatomi Titik Bekam
-    const pointInfo = {
-        kahil: { text: "Al-Kahil: Titik utama di antara pundak. Baik untuk 72 jenis penyakit, termasuk stroke dan hipertensi." },
-        akhdain: { text: "Al-Akhda'ain: Dua urat di sisi leher. Bermanfaat untuk sakit kepala, migrain, dan kesehatan mata." },
-        warik: { text: "Ala Warik: Titik di pinggang. Sangat baik untuk mengatasi nyeri pinggang dan masalah ginjal." }
-    };
-    document.querySelectorAll('.sim5-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.w-2/3 svg circle').forEach(c => c.classList.add('hidden'));
-            const point = btn.dataset.point;
-            if (point === 'akhdain') {
-                document.getElementById('point-akhdain').classList.remove('hidden');
-                document.getElementById('point-akhdain2').classList.remove('hidden');
-            } else {
-                document.getElementById(`point-${point}`).classList.remove('hidden');
-            }
-            document.getElementById('sim5-info').textContent = pointInfo[point].text;
-        });
-    });
-
-    // Simulasi 6: Ceklis Pra-Bekam
-    document.getElementById('sim6-evaluate').addEventListener('click', () => {
-        let isSafe = true;
-        document.querySelectorAll('.sim6-check').forEach(chk => {
-            if ((chk.dataset.safe === 'false' && chk.checked) || (chk.dataset.safe === 'true' && !chk.checked)) {
-                isSafe = false;
-            }
-        });
-        const resultEl = document.getElementById('sim6-result');
-        if(isSafe) {
-            resultEl.textContent = "Aman untuk dibekam";
-            resultEl.className = "text-center mt-3 font-bold h-5 text-correct";
-        } else {
-            resultEl.textContent = "Tunda dulu, tidak aman!";
-            resultEl.className = "text-center mt-3 font-bold h-5 text-incorrect";
-        }
-    });
-
-    // Simulasi 7: Penyusun Prosedur Bekam
-    const sim7Source = document.getElementById('sim7-source');
-    const sim7Target = document.getElementById('sim7-target');
-    let draggedItem = null;
-    sim7Source.addEventListener('dragstart', e => { if(e.target.classList.contains('draggable')) draggedItem = e.target; });
-    sim7Target.addEventListener('dragover', e => e.preventDefault());
-    sim7Target.addEventListener('drop', e => {
-        e.preventDefault();
-        if(draggedItem) {
-            sim7Target.appendChild(draggedItem);
-            draggedItem = null;
-            checkSim7Order();
-        }
-    });
-    function checkSim7Order() {
-        const items = Array.from(sim7Target.children);
-        const feedbackEl = document.getElementById('sim7-feedback');
-        if (items.length < 5) return;
-        
-        let isCorrect = true;
-        for(let i = 0; i < items.length; i++) {
-            if(parseInt(items[i].dataset.order) !== i + 1) {
-                isCorrect = false;
-                break;
-            }
-        }
-        if(isCorrect) {
-            feedbackEl.textContent = "Urutan Benar!";
-            feedbackEl.className = "text-center mt-3 font-bold h-5 text-correct";
-            items.forEach(item => item.classList.add('bg-correct', 'text-black'));
-        } else {
-            feedbackEl.textContent = "Urutan Salah!";
-            feedbackEl.className = "text-center mt-3 font-bold h-5 text-incorrect";
-        }
-    }
-
-    // Simulasi 8: Konsultasi Holistik
-    document.getElementById('sim8-evaluate').addEventListener('click', () => {
-        const isRuqyahChecked = document.querySelector('input[data-therapy="ruqyah"]').checked;
-        const isBekamChecked = document.querySelector('input[data-therapy="bekam"]').checked;
-        const isHerbalChecked = document.querySelector('input[data-therapy="herbal"]').checked;
-        const isSalahChecked = document.querySelector('input[data-therapy="salah"]').checked;
-        const resultEl = document.getElementById('sim8-result');
-
-        if(isRuqyahChecked && isBekamChecked && isHerbalChecked && !isSalahChecked) {
-             resultEl.textContent = "Rekomendasi Tepat!";
-             resultEl.className = "text-center mt-3 font-bold h-5 text-correct";
-        } else {
-             resultEl.textContent = "Rekomendasi Kurang Tepat.";
-             resultEl.className = "text-center mt-3 font-bold h-5 text-incorrect";
-        }
-    });
-});
-</script>
+    </script>
 </body>
 </html>
+
