@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modul TAU-204: Sihir, Jimat, & Tathayyur</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'tauhid-dark': '#240750', // Deep Indigo
+                    'tauhid-darker': '#0a0a23', // Very Dark Blue/Almost Black
+                    'tauhid-light': '#fdf4f5', // Soft Cream
+                    'tauhid-accent': '#57A6A1', // Teal Accent
+                    'tauhid-accent-hover': '#4C9691',
+                    'tauhid-secondary': '#b4b4b4', // Light Gray for text
+                    'correct': '#57A6A1',
+                    'incorrect': '#E57373',
+                },
+                fontFamily: {
+                    'sans': ['Inter', 'sans-serif'],
+                    'arabic': ['"Scheherazade New"', 'serif']
+                }
+            }
+        }
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a23;
+            color: #fdf4f5;
+        }
+        .arabic, .arabic-text {
+            font-family: 'Scheherazade New', serif;
+            font-size: 1.5rem;
+            line-height: 2.5rem;
+            direction: rtl;
+        }
+        .tab-btn.active {
+            background-color: #57A6A1;
+            color: #0a0a23;
+            font-weight: 600;
+        }
+        .teacher-note {
+            background-color: rgba(87, 166, 161, 0.1);
+            border-left: 4px solid #57A6A1;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .simulation-card, .quiz-card {
+            background-color: #240750;
+            border: 1px solid #331f7a;
+        }
+        .draggable {
+            cursor: move;
+            user-select: none;
+        }
+        .drop-zone {
+            transition: background-color 0.3s ease;
+        }
+        .drop-zone.drag-over {
+            background-color: #331f7a;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <header class="text-center mb-8 border-b-2 border-tauhid-accent pb-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-white">Modul Studi Kitab At-Tauhid</h1>
+            <p class="text-xl text-tauhid-accent font-semibold mt-1">TAU-204: Bab Sihir, Jimat, & Tathayyur</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center mb-8 gap-2">
+            <button class="tab-btn active w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-tauhid-accent-hover" data-tab="pertemuan1">Pertemuan 1</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-tauhid-accent-hover" data-tab="pertemuan2">Pertemuan 2</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-tauhid-accent-hover" data-tab="pertemuan3">Pertemuan 3</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-tauhid-accent-hover" data-tab="pertemuan4">Pertemuan 4</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out bg-red-700 hover:bg-red-600" data-tab="tesSumatif">Tes Sumatif</button>
+        </nav>
+
+        <main id="tab-content">
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 1 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan1" class="tab-pane active space-y-8">
+                <div class="p-6 bg-tauhid-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-tauhid-accent mb-1">Pertemuan 1: Bahaya Sihir</h2>
+                    <p class="mb-6 text-tauhid-secondary">Memahami hakikat sihir, hukumnya, dan status pelakunya dalam Islam.</p>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-tauhid-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                            <li>Santri mampu mendefinisikan sihir secara syar'i.</li>
+                            <li>Santri mampu menjelaskan bahwa sihir adalah bentuk kekafiran dan syirik akbar.</li>
+                            <li>Santri mampu menyebutkan dalil dari Al-Qur'an tentang haramnya sihir.</li>
+                            <li>Santri mampu menjelaskan hukuman bagi seorang penyihir (sahabat) dalam negara Islam.</li>
+                            <li>Santri mampu mengidentifikasi ciri-ciri seorang penyihir.</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-tauhid-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Tauhid adalah mengesakan Allah dalam Rububiyyah, Uluhiyyah, serta Asma' wa Sifat-Nya. Sihir secara langsung menghancurkan pondasi tauhid ini. Seorang penyihir berkolaborasi dengan setan, meyakini ada kekuatan selain Allah yang bisa memberi manfaat atau mudharat, dan mempersembahkan ibadah kepada selain Allah. Mempelajari bahaya sihir akan menguatkan keyakinan (<i class="arabic">اليقين</i>) kita bahwa satu-satunya pengatur alam semesta dan satu-satunya yang berhak disembah hanyalah Allah. Ini adalah benteng utama untuk melindungi kemurnian aqidah dari segala bentuk kesyirikan.</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic text-2xl text-white">وَمَا كَفَرَ سُلَيْمَانُ وَلَٰكِنَّ الشَّيَاطِينَ كَفَرُوا يُعَلِّمُونَ النَّاسَ السِّحْرَ</p>
+                            <p class="mt-2 text-tauhid-light">"...dan bukanlah Sulaiman itu kafir, tetapi setan-setan itulah yang kafir; mereka mengajarkan sihir kepada manusia."</p>
+                            <p class="text-sm text-tauhid-accent mt-1">(QS. Al-Baqarah: 102)</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-tauhid-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">1. Definisi, Hukum, dan Hukuman Sihir (35 Menit)</h4>
+                                <p><strong>Definisi:</strong> Sihir adalah perjanjian antara seorang penyihir dengan setan, dengan syarat si penyihir harus melakukan perbuatan syirik atau kufur, sebagai imbalan agar setan membantunya dan menuruti keinginannya.</p>
+                                <p class="mt-2"><strong>Hukum:</strong> Mempelajari dan mempraktikkan sihir hukumnya adalah <strong class="text-tauhid-accent">kafir (keluar dari Islam)</strong>. Sihir termasuk salah satu dari tujuh dosa besar yang membinasakan.</p>
+                                <p class="mt-2"><strong>Hukuman:</strong> Hukuman bagi penyihir dalam pemerintahan Islam, menurut pendapat yang shahih dari para sahabat seperti Umar bin Khattab, adalah <strong class="text-tauhid-accent">hukuman mati (dipenggal)</strong>, tanpa diminta bertaubat terlebih dahulu, untuk melindungi masyarakat dari kejahatannya.</p>
+                                
+                                <p class="text-xs text-center text-gray-500">Ilustrasi: Sihir seringkali melibatkan mantra, jimat, dan ritual tersembunyi.</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">2. Ciri-Ciri Penyihir (Dukun) (40 Menit)</h4>
+                                <p>Penting untuk mengetahui ciri-ciri penyihir (yang sering berkedok sebagai "orang pintar") agar tidak terjerumus:</p>
+                                <ul class="list-disc list-inside pl-4 space-y-2 mt-2">
+                                    <li>Menanyakan nama pasien dan nama ibu kandungnya.</li>
+                                    <li>Meminta hewan dengan ciri-ciri tertentu untuk disembelih tanpa menyebut nama Allah.</li>
+                                    <li>Menulis rajah, jimat, atau ayat Al-Qur'an secara terbalik atau dilumuri darah najis.</li>
+                                    <li>Membaca mantra dan jampi-jampi yang tidak dipahami maknanya.</li>
+                                    <li>Memberikan benda-benda aneh untuk ditanam di rumah atau diikat di tubuh.</li>
+                                    <li>Mengaku mengetahui hal-hal ghaib (misal: "kamu terkena sihir kiriman si fulan").</li>
+                                </ul>
+                                <div class="teacher-note">
+                                    <p class="font-bold">Poin Diskusi Guru:</p>
+                                    <p>Tanyakan, "Mengapa penyihir selalu meminta nama IBU, bukan nama AYAH?" Arahkan diskusi pada fakta bahwa nasab ayah bisa diragukan, sedangkan nasab ibu itu pasti. Ini adalah metode yang diajarkan setan kepada para anteknya untuk mengidentifikasi target.</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">3. Rangkuman & Penutup (15 Menit)</h4>
+                                <p>Ulas kembali definisi sihir sebagai kekafiran, hukumannya yang berat, dan ciri-ciri pelakunya. Tekankan bahwa satu-satunya perlindungan dari sihir adalah dengan tauhid yang murni dan dzikir yang syar'i.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-tauhid-accent pl-3">D. Penilaian Modul</h3>
+                        <p class="mb-4">Penilaian selama pembelajaran modul ini mencakup tiga aspek utama untuk memastikan pemahaman yang holistik:</p>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="p-4 bg-gray-900 rounded"><h4 class="font-semibold text-tauhid-accent">1. Sikap / Adab (20%)</h4><p class="text-sm">Meliputi keseriusan dalam mempelajari aqidah, rasa takut terhadap syirik, dan semangat untuk menjaga kemurnian tauhid.</p></div>
+                            <div class="p-4 bg-gray-900 rounded"><h4 class="font-semibold text-tauhid-accent">2. Pengetahuan (50%)</h4><p class="text-sm">Diukur dari hasil Latihan Formatif di setiap pertemuan dan hasil Tes Sumatif di akhir modul. Ini menunjukkan penguasaan dalil dan rincian hukum.</p></div>
+                            <div class="p-4 bg-gray-900 rounded"><h4 class="font-semibold text-tauhid-accent">3. Keterampilan (30%)</h4><p class="text-sm">Dinilai dari partisipasi aktif dalam simulasi, kemampuan menganalisis studi kasus, dan kemampuan membedakan antara ruqyah syar'iyyah dan praktik perdukunan.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-semibold text-tauhid-accent mb-2">Simulasi 1: Identifikasi Ciri Penyihir</h4>
+                            <p class="text-sm mb-4">Seorang "terapis" melakukan praktik berikut. Klik pada praktik yang menjadi ciri-ciri seorang penyihir.</p>
+                            <div id="sim1-container" class="space-y-2">
+                                <div class="sim1-ciri p-2 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600" data-benar="true">Meminta nama Anda & nama ibu</div>
+                                <div class="sim1-ciri p-2 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600" data-benar="false">Membacakan ayat Al-Qur'an dengan jelas</div>
+                                <div class="sim1-ciri p-2 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600" data-benar="true">Memberi kertas rajah untuk dibakar</div>
+                                <div class="sim1-ciri p-2 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600" data-benar="false">Menyuruh Anda untuk rajin shalat</div>
+                                <div class="sim1-ciri p-2 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600" data-benar="true">Menyembelih ayam hitam di tempat angker</div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                             <h4 class="font-semibold text-tauhid-accent mb-2">Simulasi 2: Puzzle Dalil</h4>
+                            <p class="text-sm mb-4">Susun potongan ayat dari QS. Al-Baqarah: 102 berikut menjadi kalimat yang benar.</p>
+                             <div class="bg-gray-800 p-4 rounded-md">
+                                 <div id="sim2-target" class="space-y-2 p-2 bg-gray-900 rounded min-h-[100px] border border-dashed border-gray-600 arabic text-center"></div>
+                                 <div id="sim2-source" class="flex flex-wrap gap-2 mt-2">
+                                    <div class="draggable p-1 bg-gray-600 rounded text-sm arabic" draggable="true" data-order="2">وَلَٰكِنَّ الشَّيَاطِينَ</div>
+                                    <div class="draggable p-1 bg-gray-600 rounded text-sm arabic" draggable="true" data-order="4">يُعَلِّمُونَ النَّاسَ السِّحْرَ</div>
+                                    <div class="draggable p-1 bg-gray-600 rounded text-sm arabic" draggable="true" data-order="1">وَمَا كَفَرَ سُلَيْمَانُ</div>
+                                    <div class="draggable p-1 bg-gray-600 rounded text-sm arabic" draggable="true" data-order="3">كَفَرُوا</div>
+                                 </div>
+                                 <button id="sim2-check" class="w-full mt-2 py-1 bg-tauhid-secondary text-tauhid-darker rounded">Cek Urutan</button>
+                                 <p id="sim2-feedback" class="text-center mt-2 font-bold h-5"></p>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 1</h3>
+                    <div id="quiz1" class="space-y-6"></div>
+                </div>
+            </div>
+
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 2 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan2" class="tab-pane hidden space-y-8">
+                <div class="p-6 bg-tauhid-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-tauhid-accent mb-1">Pertemuan 2: Dukun, Peramal, dan Nusyrah</h2>
+                    <p class="mb-6 text-tauhid-secondary">Membedah hukum mendatangi dukun dan peramal serta metode penyembuhan sihir (nusyrah).</p>
+                     
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-tauhid-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                           <li>Santri mampu membedakan antara Kahin (dukun) dan 'Arraf (peramal).</li>
+                           <li>Santri mampu menjelaskan ancaman bagi orang yang mendatangi dukun/peramal.</li>
+                           <li>Santri memahami bahwa membenarkan ucapan dukun/peramal adalah kekafiran.</li>
+                           <li>Santri mampu mendefinisikan Nusyrah.</li>
+                           <li>Santri mampu membedakan antara Nusyrah Syar'iyyah dan Nusyrah Syirkiyyah.</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-tauhid-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Salah satu pilar keimanan adalah beriman kepada yang ghaib. Pengetahuan tentang masa depan adalah kekhususan Allah Ta'ala. Mendatangi dukun atau peramal adalah bentuk kelancangan terhadap hak prerogatif Allah ini dan merusak iman kepada yang ghaib. Islam mengajarkan, jika menghadapi masalah, solusinya adalah dengan berdoa, berikhtiar yang syar'i, dan bertawakal, bukan dengan bertanya kepada para pendusta yang bekerja sama dengan jin. Ini mengokohkan prinsip bahwa hanya Allah-lah tempat bergantung dan memohon pertolongan.</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic-text">قُلْ لَا يَعْلَمُ مَنْ فِي السَّمَاوَاتِ وَالْأَرْضِ الْغَيْبَ إِلَّا اللَّهُ</p>
+                            <p class="mt-2 text-tauhid-light">"Katakanlah: 'Tidak ada seorang pun di langit dan di bumi yang mengetahui perkara yang ghaib, kecuali Allah'."</p>
+                            <p class="text-sm text-tauhid-accent mt-1">(QS. An-Naml: 65)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-tauhid-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                         <div class="space-y-6">
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">1. Hukum Mendatangi Dukun & Peramal (40 Menit)</h4>
+                               <p><strong>Kahin (Dukun):</strong> Orang yang mengaku mengetahui masa depan dengan bantuan setan pencuri berita langit. <strong>'Arraf (Peramal):</strong> Orang yang mengaku mengetahui barang yang hilang atau hal-hal tersembunyi.</p>
+                               <p class="mt-2 font-semibold text-tauhid-accent">Ancaman bagi yang mendatanginya:</p>
+                               <ul class="list-disc list-inside pl-4 mt-1">
+                                    <li><strong>Hanya bertanya (tidak percaya):</strong> Shalatnya tidak diterima selama 40 hari. (HR. Muslim)</li>
+                                    <li><strong>Bertanya dan membenarkan/percaya:</strong> Telah kafir terhadap apa yang diturunkan kepada Muhammad ﷺ. (HR. Abu Dawud)</li>
+                               </ul>
+                            </div>
+                            
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">2. Nusyrah: Metode Penyembuhan Sihir (35 Menit)</h4>
+                               <p><strong>Nusyrah</strong> adalah upaya menghilangkan atau menyembuhkan sihir dari orang yang terkena sihir.</p>
+                               <p class="mt-2 font-semibold">Jenis-jenis Nusyrah:</p>
+                               <ul class="list-disc list-inside pl-4 mt-1">
+                                   <li><strong class="text-correct">Nusyrah Syar'iyyah (Dibolehkan):</strong> Menggunakan ruqyah dengan ayat-ayat Al-Qur'an, doa-doa yang ma'tsur, dan obat-obatan yang halal (seperti daun bidara).</li>
+                                   <li><strong class="text-incorrect">Nusyrah Syirkiyyah (Haram/Syirik):</strong> Menghilangkan sihir dengan bantuan sihir lain, yaitu dengan mendatangi dukun atau penyihir, menyembelih untuk jin, atau menggunakan jimat-jimat. Ini adalah perbuatan setan.</li>
+                               </ul>
+                               <div class="teacher-note">
+                                   <p class="font-bold">Poin Diskusi Guru:</p>
+                                   <p>Berikan studi kasus: "Seseorang sakit parah, sudah ke dokter tidak sembuh. Lalu ada yang menyarankan untuk pergi ke 'orang pintar' untuk disembuhkan. Apa yang seharusnya ia lakukan?" Arahkan jawaban pada solusi syar'i: terus berdoa, intropeksi diri (muhasabah), dan mencari peruqyah yang syar'i, bukan pergi ke dukun.</p>
+                               </div>
+                            </div>
+
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">3. Rangkuman (15 Menit)</h4>
+                               <p>Ulas kembali ancaman berat bagi yang mendatangi dukun dan beda antara nusyrah yang dibolehkan dengan yang diharamkan. Tekankan bahwa kesembuhan hanya datang dari Allah.</p>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-semibold text-tauhid-accent mb-2">Simulasi 1: Konsekuensi Perbuatan</h4>
+                            <p class="text-sm mb-4">Seseorang kehilangan dompet. Ia lalu melakukan tindakan di bawah ini. Apa konsekuensi syar'i-nya?</p>
+                             <div class="bg-gray-800 p-4 rounded-md">
+                                <div id="sim3-scenario" class="mb-3 text-sm italic"></div>
+                                <div id="sim3-options" class="space-y-2">
+                                    <button class="sim3-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded">Tidak ada konsekuensi</button>
+                                    <button class="sim3-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded">Shalat tidak diterima 40 hari</button>
+                                    <button class="sim3-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded">Telah berbuat kafir</button>
+                                </div>
+                                <button id="sim3-next" class="w-full mt-2 py-1 bg-tauhid-secondary text-tauhid-darker rounded">Skenario Berikutnya</button>
+                                <p id="sim3-feedback" class="text-center mt-2 font-bold h-5"></p>
+                             </div>
+                        </div>
+                        
+                        <div>
+                             <h4 class="font-semibold text-tauhid-accent mb-2">Simulasi 2: Klasifikasi Metode Nusyrah</h4>
+                            <p class="text-sm mb-4">Seret setiap metode penyembuhan sihir ke dalam kategori yang tepat.</p>
+                             <div id="sim4-source" class="flex flex-wrap gap-2 mb-3 p-2 bg-gray-900 rounded justify-center">
+                               <div class="draggable p-1 bg-gray-600 rounded text-xs" draggable="true" data-type="syari">Ruqyah dengan Al-Fatihah</div>
+                               <div class="draggable p-1 bg-gray-600 rounded text-xs" draggable="true" data-type="syirki">Meminta bantuan jin</div>
+                               <div class="draggable p-1 bg-gray-600 rounded text-xs" draggable="true" data-type="syari">Minum air rendaman 7 lembar daun bidara</div>
+                               <div class="draggable p-1 bg-gray-600 rounded text-xs" draggable="true" data-type="syirki">Sembelih ayam untuk penunggu tempat</div>
+                            </div>
+                             <div class="grid grid-cols-2 gap-4">
+                                <div class="drop-zone p-2 border-2 border-dashed border-correct rounded-lg min-h-[80px]" data-target="syari"><p class="text-center font-bold text-correct text-sm">Nusyrah Syar'iyyah</p></div>
+                                <div class="drop-zone p-2 border-2 border-dashed border-incorrect rounded-lg min-h-[80px]" data-target="syirki"><p class="text-center font-bold text-incorrect text-sm">Nusyrah Syirkiyyah</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 2</h3>
+                    <div id="quiz2" class="space-y-6"></div>
+                </div>
+            </div>
+            
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 3 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan3" class="tab-pane hidden space-y-8">
+                <div class="p-6 bg-tauhid-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-tauhid-accent mb-1">Pertemuan 3: Jimat dan Tamimah</h2>
+                    <p class="mb-6 text-tauhid-secondary">Membongkar kesyirikan di balik penggunaan jimat, tamimah, dan sejenisnya.</p>
+                     
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-tauhid-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                           <li>Santri mampu mendefinisikan Tamimah (jimat).</li>
+                           <li>Santri mampu menjelaskan mengapa memakai jimat termasuk kesyirikan.</li>
+                           <li>Santri mampu melafalkan dalil hadits yang melarang penggunaan jimat.</li>
+                           <li>Santri mampu menjelaskan hukum jimat yang berasal dari ayat Al-Qur'an.</li>
+                           <li>Santri termotivasi untuk hanya bergantung dan bertawakal kepada Allah.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-tauhid-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Tawakal (<i class="arabic">التوكل</i>) adalah menyandarkan hati sepenuhnya kepada Allah dalam meraih manfaat dan menolak mudharat. Jimat adalah antitesis dari tawakal. Orang yang memakai jimat hatinya bergantung kepada benda tersebut, bukan kepada Allah. Ia meyakini bahwa seutas benang atau sepotong besi memiliki kekuatan super. Ini adalah bentuk Syirik Ashghar (syirik kecil) jika ia meyakininya sebagai sebab, dan bisa menjadi Syirik Akbar (syirik besar) jika ia meyakini benda itu sendiri yang memberi pengaruh. Mempelajari bab ini akan memurnikan tawakal kita hanya kepada Allah semata.</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic-text">مَنْ تَعَلَّقَ تَمِيمَةً فَقَدْ أَشْرَكَ</p>
+                            <p class="mt-2 text-tauhid-light">"Barangsiapa yang menggantungkan tamimah (jimat), maka ia telah berbuat syirik."</p>
+                            <p class="text-sm text-tauhid-accent mt-1">(HR. Ahmad, shahih)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-tauhid-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                         <div class="space-y-6">
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">1. Definisi dan Hukum Jimat (35 Menit)</h4>
+                               <p><strong>Tamimah (Jimat):</strong> Sesuatu yang digantungkan (biasanya pada anak-anak atau kendaraan) untuk menolak atau mengangkat bala/penyakit 'ain. Contoh: manik-manik, tulang, benang, gelang khusus, dll.</p>
+                               <p class="mt-2"><strong>Hukum:</strong> Menggantungkan jimat adalah perbuatan <strong class="text-tauhid-accent">syirik</strong>, karena menggantungkan hati kepada selain Allah.</p>
+                               <p class="mt-2">Nabi ﷺ pernah mendoakan keburukan bagi orang yang memakai jimat: "Semoga Allah tidak menyempurnakan urusanmu." Ini menunjukkan betapa besar murka beliau terhadap perbuatan ini.</p>
+                            </div>
+                            
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">2. Jimat dari Al-Qur'an (40 Menit)</h4>
+                               <p>Bagaimana jika jimatnya berisi tulisan ayat Al-Qur'an? Para ulama Salaf berbeda pendapat, namun pendapat yang <strong class="text-tauhid-accent">paling kuat dan lebih selamat adalah tetap melarangnya</strong>, karena beberapa alasan:</p>
+                               <ul class="list-decimal list-inside mt-2 pl-4 space-y-2">
+                                   <li>Keumuman dalil larangan jimat, tidak ada yang mengecualikan.</li>
+                                   <li>Untuk menutup pintu (Saddudz Dzari'ah) agar orang awam tidak merembet ke jimat-jimat syirik.</li>
+                                   <li>Berpotensi merendahkan Al-Qur'an, karena bisa terbawa ke tempat-tempat najis seperti WC.</li>
+                                   <li>Al-Qur'an diturunkan untuk dibaca dan diamalkan, bukan untuk digantungkan.</li>
+                               </ul>
+                               <div class="teacher-note">
+                                   <p class="font-bold">Poin Diskusi Guru:</p>
+                                   <p>Tanyakan, "Kita sering melihat tulisan ayat kursi digantung di dinding rumah atau mobil. Apakah ini termasuk jimat?" Bimbing diskusi: Jika tujuannya untuk hiasan dan pengingat (dzikr), maka boleh. Tapi jika digantung dengan keyakinan bahwa tulisan itu bisa menolak bala atau menjaga rumah, maka itu jatuh ke dalam kesyirikan.</p>
+                               </div>
+                            </div>
+
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">3. Rangkuman (15 Menit)</h4>
+                               <p>Ulas kembali keharaman segala jenis jimat dan pentingnya memurnikan tawakal hanya kepada Allah. Tekankan bahwa perlindungan sejati hanya datang dari Allah, bukan dari benda mati.</p>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+                
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-semibold text-tauhid-accent mb-2">Simulasi 1: Galeri Benda Bertuah</h4>
+                            <p class="text-sm mb-4">Analisis setiap benda. Apakah termasuk jimat yang syirik jika diyakini bisa menolak bala?</p>
+                            <div id="sim5-container" class="grid grid-cols-2 gap-3">
+                               <div class="sim5-item p-3 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600">Gelang benang tridatu</div>
+                               <div class="sim5-item p-3 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600">Batu akik/cincin</div>
+                               <div class="sim5-item p-3 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600">Kertas rajah dilipat</div>
+                               <div class="sim5-item p-3 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600">Gantungan kunci biasa</div>
+                               <div class="sim5-item p-3 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600">Kalung liontin berisi ayat kursi</div>
+                               <div class="sim5-item p-3 text-center rounded cursor-pointer bg-gray-700 hover:bg-gray-600">Patung kecil di dashboard mobil</div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-tauhid-accent mb-2">Simulasi 2: Uji Tawakal</h4>
+                            <p class="text-sm mb-4">Agar anak tidak sakit-sakitan, kepada siapa atau apa seharusnya hati Anda bergantung?</p>
+                             <div class="bg-gray-800 p-4 rounded-md">
+                               <div id="sim6-options" class="space-y-2">
+                                  <button class="sim6-option w-full p-3 bg-gray-700 hover:bg-gray-600 rounded">Kepada gelang penangkal 'ain</button>
+                                  <button class="sim6-option w-full p-3 bg-gray-700 hover:bg-gray-600 rounded">Kepada Allah, sambil membacakan doa perlindungan</button>
+                                  <button class="sim6-option w-full p-3 bg-gray-700 hover:bg-gray-600 rounded">Kepada dokter anak</button>
+                               </div>
+                               <p id="sim6-feedback" class="text-center mt-3 font-bold h-5"></p>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 3</h3>
+                    <div id="quiz3" class="space-y-6"></div>
+                </div>
+            </div>
+
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 4 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan4" class="tab-pane hidden space-y-8">
+                <div class="p-6 bg-tauhid-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-tauhid-accent mb-1">Pertemuan 4: Tathayyur (Merasa Sial)</h2>
+                    <p class="mb-6 text-tauhid-secondary">Mengikis keyakinan syirik tentang pertanda sial dari burung, angka, atau kejadian.</p>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-tauhid-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                           <li>Santri mampu mendefinisikan Tathayyur atau Thiyarah.</li>
+                           <li>Santri mampu menjelaskan mengapa tathayyur adalah perbuatan syirik.</li>
+                           <li>Santri mampu memberikan contoh-contoh tathayyur di zaman modern.</li>
+                           <li>Santri mampu menghafal doa kaffarah (penebus) bagi yang terjangkit tathayyur.</li>
+                           <li>Santri memahami bahwa tathayyur bertentangan dengan iman kepada takdir.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-tauhid-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Iman kepada takdir (Qadar) adalah salah satu rukun iman. Keyakinan ini menenangkan hati, karena seorang mukmin tahu bahwa segala kebaikan dan keburukan yang menimpanya sudah tercatat dan terjadi atas izin Allah. Tathayyur merusak rukun iman ini. Pelakunya merasa pesimis dan takut pada sesuatu yang tidak bisa memberinya mudharat, seperti suara burung atau angka sial. Ia membatalkan niat baiknya karena pertanda yang ia buat-buat sendiri. Islam datang untuk membebaskan manusia dari belenggu khurafat semacam ini dan menanamkan optimisme serta tawakal yang murni kepada Allah semata.</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic-text">الطِّيَرَةُ شِرْكٌ، الطِّيَرَةُ شِرْكٌ</p>
+                            <p class="mt-2 text-tauhid-light">"Thiyarah itu syirik, thiyarah itu syirik."</p>
+                            <p class="text-sm text-tauhid-accent mt-1">(HR. Abu Dawud, shahih)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-tauhid-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                         <div class="space-y-6">
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">1. Definisi dan Hukum Tathayyur (35 Menit)</h4>
+                               <p><strong>Tathayyur atau Thiyarah:</strong> Berasal dari kata 'Thair' (burung). Dahulu orang Arab Jahiliyyah jika ingin bepergian, mereka melepas burung. Jika terbang ke kanan (saniih), mereka optimis dan melanjutkan perjalanan. Jika terbang ke kiri (bariih), mereka merasa akan sial dan membatalkan perjalanan.</p>
+                               <p class="mt-2">Secara istilah, Tathayyur adalah <strong class="text-tauhid-accent">merasa bernasib sial atau meramal nasib buruk karena sesuatu yang dilihat, didengar, atau diketahui.</strong></p>
+                               <p class="mt-2"><strong>Hukum:</strong> Syirik, karena dua hal: 1) Bergantung pada selain Allah. 2) Mengaku mengetahui hal ghaib.</p>
+                               <p class="mt-2"><strong>Contoh Modern:</strong> Angka 13, zodiak/ramalan bintang, suara burung gagak, kucing hitam menyeberang jalan, dll.</p>
+                            </div>
+                            
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">2. Obat dan Kaffarah Tathayyur (40 Menit)</h4>
+                               <p>Penyakit was-was tathayyur ini bisa menimpa siapa saja. Obatnya adalah dengan menguatkan tawakal dan melawannya. Jangan biarkan perasaan sial itu membuatmu membatalkan hajatmu.</p>
+                               <p class="mt-2">Jika perasaan itu muncul, maka ucapkanlah doa kaffarah-nya:</p>
+                               <p class="arabic text-xl text-center bg-gray-900 p-3 rounded my-2">اللَّهُمَّ لاَ خَيْرَ إِلاَّ خَيْرُكَ، وَلاَ طَيْرَ إِلاَّ طَيْرُكَ، وَلاَ إِلَهَ غَيْرُكَ</p>
+                               <p class="text-center text-sm italic">"Ya Allah, tidak ada kebaikan kecuali kebaikan dari-Mu, tidak ada pertanda sial kecuali yang datang dari takdir-Mu, dan tidak ada sesembahan yang berhak disembah selain Engkau."</p>
+                               <div class="teacher-note">
+                                   <p class="font-bold">Poin Diskusi Guru:</p>
+                                   <p>Tanyakan perbedaan antara Tathayyur dan Fa'l (optimisme). Jelaskan bahwa Nabi ﷺ menyukai Fa'l, yaitu ketika mendengar kata-kata yang baik (misal: "Wahai pesakit, semoga engkau 'Salim' (selamat)"), lalu beliau menjadi optimis. Ini terpuji karena berbaik sangka kepada Allah, berbeda dengan tathayyur yang merupakan buruk sangka.</p>
+                               </div>
+                            </div>
+                             
+                            <div>
+                               <h4 class="font-semibold text-lg text-gray-200">3. Rangkuman & Persiapan Ujian (15 Menit)</h4>
+                               <p>Ulas kembali definisi, contoh, dan hukum tathayyur. Pastikan santri hafal doa kaffarahnya. Siapkan mereka untuk Tes Sumatif.</p>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-semibold text-tauhid-accent mb-2">Simulasi 1: Filter Pertanda Sial</h4>
+                            <p class="text-sm mb-4">Anda akan bepergian untuk menuntut ilmu. Tiba-tiba terjadi hal berikut. Mana yang termasuk Tathayyur jika membuat Anda membatalkan niat?</p>
+                             <div class="bg-gray-800 p-4 rounded-md space-y-3" id="sim7-container">
+                                <label class="block p-2 bg-gray-700 rounded cursor-pointer hover:bg-gray-600"><input type="checkbox" data-sial="true" class="mr-2"> Tiba-tiba ada kucing hitam lewat.</label>
+                                <label class="block p-2 bg-gray-700 rounded cursor-pointer hover:bg-gray-600"><input type="checkbox" data-sial="false" class="mr-2"> Hujan deras dan ada peringatan banjir.</label>
+                                <label class="block p-2 bg-gray-700 rounded cursor-pointer hover:bg-gray-600"><input type="checkbox" data-sial="true" class="mr-2"> Di tanggal keberangkatan ada angka 13.</label>
+                                <label class="block p-2 bg-gray-700 rounded cursor-pointer hover:bg-gray-600"><input type="checkbox" data-sial="true" class="mr-2"> Terdengar suara burung gagak.</label>
+                                <label class="block p-2 bg-gray-700 rounded cursor-pointer hover:bg-gray-600"><input type="checkbox" data-sial="false" class="mr-2"> Ibu tiba-tiba sakit dan butuh perawatan.</label>
+                             </div>
+                        </div>
+                        
+                        <div>
+                             <h4 class="font-semibold text-tauhid-accent mb-2">Simulasi 2: Penyusun Doa Kaffarah</h4>
+                            <p class="text-sm mb-4">Susun potongan doa kaffarah tathayyur ini menjadi urutan yang benar.</p>
+                             <div class="bg-gray-800 p-4 rounded-md">
+                                 <div id="sim8-target" class="space-y-2 p-2 bg-gray-900 rounded min-h-[100px] border border-dashed border-gray-600 arabic text-center"></div>
+                                 <div id="sim8-source" class="flex flex-wrap gap-2 mt-2">
+                                    <div class="draggable p-1 bg-gray-600 rounded text-sm arabic" draggable="true" data-order="2">وَلاَ طَيْرَ إِلاَّ طَيْرُكَ</div>
+                                    <div class="draggable p-1 bg-gray-600 rounded text-sm arabic" draggable="true" data-order="3">وَلاَ إِلَهَ غَيْرُكَ</div>
+                                    <div class="draggable p-1 bg-gray-600 rounded text-sm arabic" draggable="true" data-order="1">اللَّهُمَّ لاَ خَيْرَ إِلاَّ خَيْرُكَ</div>
+                                 </div>
+                                 <button id="sim8-check" class="w-full mt-2 py-1 bg-tauhid-secondary text-tauhid-darker rounded">Cek Urutan</button>
+                                 <p id="sim8-feedback" class="text-center mt-2 font-bold h-5"></p>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 4</h3>
+                    <div id="quiz4" class="space-y-6"></div>
+                </div>
+            </div>
+            
+            <!-- =================================================================== -->
+            <!-- ======================= KONTEN TES SUMATIF ======================== -->
+            <!-- =================================================================== -->
+            <div id="tesSumatif" class="tab-pane hidden space-y-6">
+                <div class="p-6 bg-red-900/30 border border-red-500 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-red-300 mb-2">Tes Sumatif: TAU-204</h2>
+                    <p class="mb-6 text-red-200">Ujian akhir untuk mengukur pemahaman Anda tentang bab-bab kesyirikan dari Kitab At-Tauhid. Bismillah!</p>
+                    
+                    <div id="sumatif-questions-container"></div>
+                    
+                    <div id="sumatif-result-container" class="hidden text-center p-6 bg-tauhid-darker rounded-lg">
+                        <h3 class="text-2xl font-bold text-white">Hasil Tes Sumatif</h3>
+                        <p id="sumatif-score" class="text-4xl font-bold text-tauhid-accent my-4"></p>
+                        <p id="sumatif-feedback" class="text-lg mb-6"></p>
+                        <button id="sumatif-retry-btn" class="py-2 px-6 bg-tauhid-accent text-white font-semibold rounded-lg hover:bg-tauhid-accent-hover transition-colors">Ulangi Tes</button>
+                    </div>
+
+                    <button id="sumatif-submit-btn" class="w-full mt-6 py-3 bg-tauhid-accent text-white font-bold rounded-lg text-lg hover:bg-tauhid-accent-hover transition-colors">Selesaikan Tes</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+// THIS SCRIPT BLOCK IS MANDATORY AND MUST BE COMPLETE
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ================== DATA BANK ==================
+    const quizData = {
+        quiz1: [
+            { q: "Hukum mempelajari dan mempraktikkan sihir menurut syariat Islam adalah...", options: ["Makruh", "Haram", "Kafir", "Mubah"], a: 2, exp: "Benar. Berdasarkan QS. Al-Baqarah: 102, sihir adalah perbuatan kufur yang mengeluarkan pelakunya dari Islam." },
+            { q: "Sihir tidak akan bisa terjadi kecuali dengan adanya perjanjian antara penyihir dan...", options: ["Malaikat", "Raja", "Setan", "Orang lain"], a: 2, exp: "Benar. Inti dari sihir adalah meminta bantuan kepada setan dengan imbalan melakukan kesyirikan." },
+            { q: "Hukuman bagi penyihir dalam negara Islam menurut pendapat sahabat yang kuat adalah...", options: ["D penjara seumur hidup", "Denda", "Hukuman mati", "Diusir"], a: 2, exp: "Benar. Sebagaimana yang diriwayatkan dari Umar bin Khattab dan para sahabat lainnya." },
+            { q: "Manakah dari berikut ini yang merupakan ciri paling umum dari seorang dukun/penyihir?", options: ["Menanyakan nama pasien dan nama AYAHnya", "Menanyakan nama pasien dan nama IBUnys", "Menyarankan untuk berobat ke dokter", "Membaca Al-Qur'an dengan fasih"], a: 1, exp: "Benar. Meminta nama ibu adalah salah satu ciri khas mereka yang diajarkan oleh setan." },
+            { q: "Sihir termasuk salah satu dari tujuh dosa besar yang...", options: ["Diampuni dengan mudah", "Membinasakan", "Hanya mengurangi pahala", "Membuat kaya"], a: 1, exp: "Benar. Dikenal sebagai 'As-Sab'ul Mubiqaat' (Tujuh Dosa yang Membinasakan)." },
+            { q: "Dalil utama yang menjelaskan tentang sihir terdapat dalam surat...", options: ["An-Nas", "Al-Falaq", "Al-Baqarah", "Yasin"], a: 2, exp: "Benar. Kisah Harut dan Marut dijelaskan secara rinci dalam surat Al-Baqarah ayat 102." },
+            { q: "Tujuan utama setan mengajarkan sihir kepada manusia adalah...", options: ["Agar manusia menjadi sakti", "Agar manusia bisa terbang", "Agar manusia jatuh ke dalam kekafiran dan syirik", "Agar manusia mendapat pekerjaan"], a: 2, exp: "Benar. Ini adalah tujuan utama Iblis dan bala tentaranya." },
+            { q: "Apa yang dimaksud dengan sihir 'Tafriq'?", options: ["Sihir yang membuat orang jadi cinta (pelet)", "Sihir yang memisahkan antara suami dan istri", "Sihir yang membuat orang sakit", "Sihir yang bisa menggandakan uang"], a: 1, exp: "Benar. Sebagaimana disebutkan dalam QS. Al-Baqarah: 102, '...mereka belajar darinya apa yang bisa memisahkan antara seseorang dengan istrinya'." },
+            { q: "Jika seorang 'terapis' memberikan kertas berisi tulisan Arab yang tidak beraturan (rajah) untuk disimpan, maka ia adalah...", options: ["Seorang ustadz", "Seorang dokter", "Seorang penyihir/dukun", "Seorang motivator"], a: 2, exp: "Benar. Rajah dan jimat adalah ciri khas praktik perdukunan." },
+            { q: "Perlindungan terbaik dari sihir adalah...", options: ["Memakai jimat", "Mendatangi dukun 'putih'", "Membentengi diri dengan tauhid dan dzikir pagi-petang", "Memelihara hewan buas"], a: 2, exp: "Benar. Tauhid yang murni adalah benteng yang paling kokoh." }
+        ],
+        quiz2: [
+            { q: "Ancaman bagi orang yang mendatangi peramal ('Arraf) dan HANYA bertanya (tanpa mempercayainya) adalah...", options: ["Dosa biasa", "Shalatnya tidak diterima selama 40 hari", "Langsung menjadi kafir", "Tidak ada ancaman"], a: 1, exp: "Benar. Sesuai hadits riwayat Muslim, dosanya sangat besar meskipun hanya bertanya." },
+            { q: "Hukum mendatangi dukun/peramal lalu MEMPERCAYAI ucapannya adalah...", options: ["Makruh", "Dosa besar", "Kufur terhadap Al-Qur'an", "Diperbolehkan dalam keadaan darurat"], a: 2, exp: "Benar. Sesuai hadits riwayat Abu Dawud, 'maka ia telah kafir terhadap apa yang diturunkan kepada Muhammad ﷺ'." },
+            { q: "Orang yang mengaku mengetahui hal-hal ghaib di masa depan disebut...", options: ["'Arraf", "Kahin", "Tabib", "Alim"], a: 1, exp: "Benar. Kahin (dukun) adalah istilah untuk mereka yang mengaku mengetahui masa depan." },
+            { q: "Menghilangkan sihir dengan cara dibacakan ayat Al-Qur'an dan doa-doa syar'i disebut...", options: ["Nusyrah Syirkiyyah", "Sihir tandingan", "Nusyrah Syar'iyyah", "Jimat"], a: 2, exp: "Benar. Ini adalah metode yang dibolehkan dan disyariatkan." },
+            { q: "Menghilangkan sihir dengan cara meminta bantuan dukun lain adalah contoh dari...", options: ["Nusyrah Syar'iyyah", "Nusyrah Syirkiyyah", "Pengobatan modern", "Ikhtiar yang baik"], a: 1, exp: "Benar. Ini adalah 'perbuatan setan' dan hukumnya haram/syirik." },
+            { q: "Mengapa kita dilarang keras mendatangi dukun/peramal?", options: ["Karena biayanya mahal", "Karena pengakuannya mengetahui hal ghaib merusak tauhid", "Karena mereka biasanya tinggal di tempat jauh", "Karena mereka tidak berpendidikan"], a: 1, exp: "Benar. Pengetahuan ghaib adalah kekhususan Allah semata." },
+            { q: "Bagaimana cara jin/setan membantu dukun untuk meramal?", options: ["Membaca buku", "Mencuri dengar berita dari langit", "Menganalisis data statistik", "Melihat dari bola kristal"], a: 1, exp: "Benar. Mereka mencuri berita lalu membisikkannya kepada dukun dengan dicampur seratus kedustaan." },
+            { q: "Imam Al-Hasan Al-Bashri berkata, 'Tidak ada yang bisa melepaskan sihir kecuali...'", options: ["Dokter", "Orang pintar", "Penyihir", "Polisi"], a: 2, exp: "Benar. Maksud beliau adalah sihir tidak bisa dilepaskan dengan sihir (nusyrah syirkiyyah), ini menunjukkan keharamannya." },
+            { q: "Salah satu bahan yang disunnahkan untuk digunakan dalam Nusyrah Syar'iyyah adalah...", options: ["Kemenyan", "Tujuh lembar daun bidara", "Darah hewan", "Tulang belulang"], a: 1, exp: "Benar. Sebagaimana yang diriwayatkan dari Wahb bin Munabbih, 7 lembar daun bidara ditumbuk lalu dibacakan ayat kursi dan dicampur air." },
+            { q: "Jika barang kita hilang, tindakan yang sesuai syariat adalah...", options: ["Pergi ke peramal", "Berdoa kepada Allah, lalu berusaha mencari", "Menuduh orang lain", "Mengikhlaskannya tanpa usaha"], a: 1, exp: "Benar. Menggabungkan doa, tawakal, dan ikhtiar yang dibolehkan." }
+        ],
+        quiz3: [
+            { q: "Sesuatu yang digantungkan untuk menolak bala atau penyakit disebut...", options: ["Hiasan", "Tamimah (jimat)", "Obat", "Kalung"], a: 1, exp: "Benar. Ini adalah definisi dari Tamimah." },
+            { q: "Hukum menggantungkan jimat yang terbuat dari benang atau tulang adalah...", options: ["Syirik", "Sunnah", "Makruh", "Mubah"], a: 0, exp: "Benar. Berdasarkan hadits 'Barangsiapa menggantungkan tamimah, ia telah berbuat syirik'." },
+            { q: "Mengapa memakai jimat disebut perbuatan syirik?", options: ["Karena tidak modis", "Karena membuat hati bergantung kepada selain Allah", "Karena harganya mahal", "Karena terbuat dari bahan aneh"], a: 1, exp: "Benar. Perbuatan ini merusak tawakal, yaitu penyandaran hati hanya kepada Allah." },
+            { q: "Bagaimana hukum memakai jimat yang berisi tulisan ayat Al-Qur'an?", options: ["Sangat dianjurkan", "Pendapat yang paling selamat adalah tetap dilarang", "Wajib hukumnya", "Tidak ada beda pendapat"], a: 1, exp: "Benar. Untuk menutup pintu kesyirikan (saddudz dzari'ah) dan karena tidak ada contohnya dari Nabi ﷺ." },
+            { q: "Alasan dilarangnya jimat dari Al-Qur'an adalah sebagai berikut, KECUALI...", options: ["Untuk menutup pintu syirik", "Keumuman dalil larangan jimat", "Berpotensi merendahkan Al-Qur'an (terbawa ke WC)", "Karena tulisan Arab itu sakral"], a: 3, exp: "Benar. Alasan utamanya adalah 3 poin yang lain, bukan karena kesakralan tulisan itu sendiri." },
+            { q: "Doa Nabi ﷺ kepada orang yang memakai gelang dari kuningan (yang diyakini sebagai jimat) adalah...", options: ["'Semoga Allah memberkahimu'", "'Semoga Allah tidak menyempurnakan urusanmu'", "'Semoga cepat sembuh'", "'Gelang yang bagus'"], a: 1, exp: "Benar. Ini menunjukkan kemurkaan beliau terhadap perbuatan tersebut." },
+            { q: "Memakai jimat, jika meyakini benda itu SENDIRI yang memberi manfaat/mudharat, maka jatuh ke dalam...", options: ["Syirik Akbar", "Syirik Ashghar", "Bid'ah", "Dosa biasa"], a: 0, exp: "Benar. Karena meyakini ada pencipta/pengatur lain selain Allah." },
+            { q: "Al-Qur'an diturunkan oleh Allah untuk...", options: ["Digantung sebagai jimat", "Dibaca, ditadabburi, dan diamalkan", "Dijadikan hiasan semata", "Ditulis di kertas lalu dibakar"], a: 1, exp: "Benar. Fungsi utama Al-Qur'an adalah sebagai petunjuk hidup." },
+            { q: "Tindakan yang benar ketika melihat teman memakai jimat adalah...", options: ["Membiarkannya saja", "Mengejeknya", "Menasihatinya dengan lembut dan menjelaskan dalilnya", "Melaporkannya ke polisi"], a: 2, exp: "Benar. Amar ma'ruf nahi munkar harus dilakukan dengan hikmah." },
+            { q: "Lawan dari tawakal adalah...", options: ["Syukur", "Sabar", "Syirik dalam bentuk jimat dan sejenisnya", "Ikhlas"], a: 2, exp: "Benar. Jimat merusak kemurnian tawakal kepada Allah." }
+        ],
+        quiz4: [
+            { q: "Merasa akan bernasib sial karena melihat atau mendengar sesuatu disebut...", options: ["Fa'l (optimis)", "Tathayyur (pesimis/sial)", "Firasat", "Intuisi"], a: 1, exp: "Benar. Ini adalah definisi dari Tathayyur atau Thiyarah." },
+            { q: "Hukum Tathayyur adalah...", options: ["Mubah", "Makruh", "Syirik", "Sunnah"], a: 2, exp: "Benar. Nabi ﷺ bersabda 'At-thiyaratu syirkun' sebanyak dua atau tiga kali untuk penegasan." },
+            { q: "Manakah dari berikut ini yang merupakan contoh Tathayyur modern?", options: ["Melihat ramalan zodiak untuk menentukan nasib", "Melihat prakiraan cuaca dari BMKG", "Melihat jadwal keberangkatan kereta", "Membaca berita"], a: 0, exp: "Benar. Zodiak adalah bentuk 'arrafah (peramalan) dan tathayyur." },
+            { q: "Tathayyur menafikan dan merusak rukun iman kepada...", options: ["Malaikat", "Kitab-kitab", "Qadha dan Qadar (Takdir)", "Hari Kiamat"], a: 2, exp: "Benar. Karena pelakunya meyakini ada sesuatu selain takdir Allah yang bisa mempengaruhi nasib." },
+            { q: "Jika terlintas perasaan tathayyur di hati, obatnya adalah dengan...", options: ["Mengikuti perasaan itu dan membatalkan niat", "Bertawakal kepada Allah dan melanjutkan niat", "Bertanya kepada orang pintar", "Tidur"], a: 1, exp: "Benar. Obatnya adalah dengan melawannya dan bersandar kepada Allah." },
+            { q: "Lawan dari Tathayyur yang disukai oleh Nabi ﷺ adalah...", options: ["Tahayyul", "Fa'l (optimisme dari kata-kata yang baik)", "Tasydid (memberat-beratkan)", "Ghibah"], a: 1, exp: "Benar. Fa'l adalah bentuk husnudzan (berbaik sangka) kepada Allah." },
+            { q: "Doa kaffarah (penebus) bagi orang yang terjangkit tathayyur berisi penegasan bahwa tidak ada kebaikan dan takdir kecuali dari...", options: ["Usaha manusia", "Alam semesta", "Allah semata", "Nasihat orang tua"], a: 2, exp: "Benar. '...laa khaira illa khairuka, walaa thaira illa thairuka...'" },
+            { q: "Menganggap angka 13 sebagai angka sial adalah contoh...", options: ["Kearifan lokal", "Perhitungan matematis", "Tathayyur", "Fakta ilmiah"], a: 2, exp: "Benar. Ini adalah khurafat yang termasuk dalam kategori tathayyur." },
+            { q: "Orang Arab Jahiliyyah sering melakukan tathayyur dengan...", options: ["Melempar koin", "Melihat garis tangan", "Melepaskan burung", "Melihat rasi bintang"], a: 2, exp: "Benar. Inilah asal mula kata 'Thiyarah' dari kata 'Thair' (burung)." },
+            { q: "Tindakan membatalkan rencana bepergian hanya karena mendengar suara burung gagak menunjukkan lemahnya...", options: ["Akal", "Fisik", "Tawakal kepada Allah", "Penglihatan"], a: 2, exp: "Benar. Hatinya bergantung pada suara burung, bukan pada Allah." }
+        ]
+    };
+
+    const sumatifData = [
+        ...quizData.quiz1.slice(0, 5), ...quizData.quiz2.slice(0, 5),
+        ...quizData.quiz3.slice(0, 5), ...quizData.quiz4.slice(0, 5)
+    ].sort(() => Math.random() - 0.5);
+
+    // ================== CORE FUNCTIONS ==================
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panes = document.querySelectorAll('.tab-pane');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            panes.forEach(p => p.classList.add('hidden'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.remove('hidden');
+        });
+    });
+
+    function createQuiz(quizId, data) {
+        const container = document.getElementById(quizId);
+        if (!container) return;
+        container.innerHTML = '';
+        data.forEach((item, index) => {
+            const questionBlock = document.createElement('div');
+            questionBlock.innerHTML = `
+                <p class="mb-3">${index + 1}. ${item.q}</p>
+                <div class="space-y-2 options-container">
+                    ${item.options.map((option, i) => `
+                        <label class="block p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                            <input type="radio" name="${quizId}-q${index}" value="${i}" class="mr-3">
+                            <span>${option}</span>
+                        </label>
+                    `).join('')}
+                </div>
+                <div class="p-3 mt-3 rounded-lg text-sm hidden feedback-box"></div>
+            `;
+            container.appendChild(questionBlock);
+
+            const optionsContainer = questionBlock.querySelector('.options-container');
+            const feedbackBox = questionBlock.querySelector('.feedback-box');
+            optionsContainer.addEventListener('change', (e) => {
+                const selectedValue = parseInt(e.target.value);
+                const isCorrect = selectedValue === item.a;
+                
+                optionsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
+                    radio.disabled = true;
+                    const parentLabel = radio.parentElement;
+                    if (parseInt(radio.value) === item.a) {
+                        parentLabel.classList.add('bg-correct', 'text-black', 'font-bold');
+                    }
+                });
+
+                if (!isCorrect) {
+                    e.target.parentElement.classList.add('bg-incorrect', 'text-black', 'font-bold');
+                }
+                
+                feedbackBox.innerHTML = item.exp;
+                feedbackBox.classList.remove('hidden');
+                feedbackBox.classList.add(isCorrect ? 'bg-green-500/20' : 'bg-red-500/20');
+            });
+        });
+    }
+
+    function createSumatifTest() {
+        const container = document.getElementById('sumatif-questions-container');
+        if (!container) return;
+        container.innerHTML = '';
+        sumatifData.forEach((item, index) => {
+            const questionBlock = document.createElement('div');
+            questionBlock.className = 'mb-6 p-4 bg-tauhid-dark rounded-lg';
+            questionBlock.innerHTML = `
+                <p class="mb-3">${index + 1}. ${item.q}</p>
+                <div class="space-y-2">
+                    ${item.options.map((option, i) => `
+                        <label class="block p-3 bg-gray-900 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                            <input type="radio" name="sumatif-q${index}" value="${i}" data-correct="${item.a}" class="mr-3">
+                            <span>${option}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(questionBlock);
+        });
+    }
+    
+    // ================== SIMULATION LOGIC ==================
+    // Sim 1: Identifikasi Ciri
+    document.querySelectorAll('.sim1-ciri').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const isBenar = btn.dataset.benar === 'true';
+            btn.classList.remove('bg-gray-700');
+            btn.classList.add(isBenar ? 'bg-incorrect' : 'bg-correct', 'text-black');
+            btn.style.pointerEvents = 'none';
+        });
+    });
+
+    // Sim 2: Puzzle Dalil
+    function initSequenceChecker(sourceId, targetId, checkBtnId, feedbackId) {
+        const target = document.getElementById(targetId);
+        const source = document.getElementById(sourceId);
+        const checkBtn = document.getElementById(checkBtnId);
+        const feedback = document.getElementById(feedbackId);
+
+        let draggedItem = null;
+        const setupDrag = (container) => {
+            container.addEventListener('dragstart', e => { if (e.target.classList.contains('draggable')) draggedItem = e.target; });
+            container.addEventListener('dragover', e => e.preventDefault());
+            container.addEventListener('drop', e => { if (draggedItem) container.appendChild(draggedItem); });
+        };
+        setupDrag(target);
+        setupDrag(source);
+        document.body.addEventListener('dragend', () => { draggedItem = null; });
+        
+        checkBtn.addEventListener('click', () => {
+            const items = Array.from(target.children);
+            let isCorrect = true;
+            if (items.length < 4) { isCorrect = false; } 
+            else {
+                for(let i=0; i<items.length; i++) {
+                    if (parseInt(items[i].dataset.order) !== i + 1) {
+                        isCorrect = false;
+                        break;
+                    }
+                }
+            }
+            if (isCorrect) {
+                feedback.textContent = "Urutan Benar! Barakallah fiik.";
+                feedback.className = "text-center mt-2 font-bold h-5 text-correct";
+            } else {
+                feedback.textContent = "Urutan belum tepat. Coba lagi.";
+                feedback.className = "text-center mt-2 font-bold h-5 text-incorrect";
+            }
+        });
+    }
+    initSequenceChecker('sim2-source', 'sim2-target', 'sim2-check', 'sim2-feedback');
+    
+    // Sim 3: Konsekuensi Perbuatan
+    const sim3scenarios = [
+        { s: "Ia pergi ke 'orang pintar' HANYA untuk bertanya di mana dompetnya, tanpa mempercayai jawabannya.", a: "Shalat tidak diterima 40 hari" },
+        { s: "Ia pergi ke 'orang pintar' dan PERCAYA bahwa orang itu tahu di mana dompetnya berada.", a: "Telah berbuat kafir" },
+        { s: "Ia berdoa kepada Allah agar diberi petunjuk, lalu berusaha mencari di tempat terakhir ia ingat.", a: "Tidak ada konsekuensi" }
+    ];
+    let sim3Index = 0;
+    const sim3ScenarioEl = document.getElementById('sim3-scenario');
+    const sim3FeedbackEl = document.getElementById('sim3-feedback');
+    const sim3Options = document.querySelectorAll('.sim3-option');
+    function loadSim3() {
+        sim3ScenarioEl.textContent = `Skenario: ${sim3scenarios[sim3Index].s}`;
+        sim3FeedbackEl.textContent = '';
+        sim3Options.forEach(btn => { btn.disabled = false; btn.className = 'sim3-option w-full p-2 bg-gray-700 hover:bg-gray-600 rounded'; });
+    }
+    sim3Options.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const correctAnswer = sim3scenarios[sim3Index].a;
+            sim3Options.forEach(b => b.disabled = true);
+            if (btn.textContent === correctAnswer) {
+                btn.classList.add('bg-correct', 'text-black');
+                sim3FeedbackEl.textContent = "Jawaban Tepat!";
+                sim3FeedbackEl.className = "text-center mt-2 font-bold h-5 text-correct";
+            } else {
+                btn.classList.add('bg-incorrect', 'text-black');
+                sim3FeedbackEl.textContent = "Kurang Tepat.";
+                sim3FeedbackEl.className = "text-center mt-2 font-bold h-5 text-incorrect";
+            }
+        });
+    });
+    document.getElementById('sim3-next').addEventListener('click', () => { sim3Index = (sim3Index + 1) % sim3scenarios.length; loadSim3(); });
+
+    // General Drag & Drop Initializer for Classification
+    function initDragDropClassifier(sourceId, targetClass) {
+        const source = document.getElementById(sourceId);
+        if (!source) return;
+        const draggables = source.querySelectorAll('.draggable');
+        const dropZones = document.querySelectorAll(`.${targetClass}`);
+        let draggedItem = null;
+
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', () => { draggedItem = draggable; setTimeout(() => draggable.style.display = 'none', 0); });
+            draggable.addEventListener('dragend', () => { setTimeout(() => { draggedItem.style.display = 'block'; draggedItem = null; }, 0); });
+        });
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', e => e.preventDefault());
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                if (draggedItem && draggedItem.dataset.type === zone.dataset.target) {
+                    zone.appendChild(draggedItem);
+                    draggedItem.classList.remove('bg-gray-600');
+                    const isCorrect = zone.dataset.target === 'syari' || zone.dataset.target === 'bukan-jimat'; // Example logic, adapt as needed
+                    draggedItem.classList.add(zone.dataset.target === 'syari' ? 'bg-correct' : 'bg-incorrect', 'text-black');
+                }
+            });
+        });
+    }
+    initDragDropClassifier('sim4-source', 'drop-zone');
+
+    // Sim 5: Galeri Benda
+    document.querySelectorAll('.sim5-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.style.pointerEvents = 'none';
+            if(btn.textContent.includes('biasa')) {
+                btn.classList.add('bg-correct', 'text-black');
+                btn.textContent += " (Hiasan)";
+            } else {
+                btn.classList.add('bg-incorrect', 'text-black');
+                btn.textContent += " (Jimat)";
+            }
+        });
+    });
+
+    // Sim 6: Uji Tawakal
+    document.querySelectorAll('#sim6-options button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const feedback = document.getElementById('sim6-feedback');
+            document.querySelectorAll('#sim6-options button').forEach(b => b.disabled = true);
+            if (btn.textContent.includes("Kepada Allah")) {
+                btn.classList.add('bg-correct', 'text-black');
+                feedback.textContent = "Benar! Inilah tawakal yang murni.";
+                feedback.className = "text-center mt-3 font-bold h-5 text-correct";
+            } else if (btn.textContent.includes("dokter")) {
+                 btn.classList.add('bg-yellow-500', 'text-black');
+                 feedback.textContent = "Ini ikhtiar, tapi hati tetap bergantung pada Allah.";
+                 feedback.className = "text-center mt-3 font-bold h-5 text-yellow-400";
+            } else {
+                btn.classList.add('bg-incorrect', 'text-black');
+                feedback.textContent = "Salah! Ini adalah perbuatan syirik.";
+                feedback.className = "text-center mt-3 font-bold h-5 text-incorrect";
+            }
+        });
+    });
+
+    // Sim 7: Filter Pertanda Sial
+    document.getElementById('sim7-container')?.addEventListener('change', e => {
+        if (e.target.type === 'checkbox') {
+            const label = e.target.parentElement;
+            const isSial = e.target.dataset.sial === 'true';
+            if (e.target.checked) {
+                // Yang Tathayyur diberi warna salah (incorrect), yang bukan diberi warna benar (correct)
+                label.classList.add(isSial ? 'bg-incorrect' : 'bg-correct', 'text-black');
+            } else {
+                label.classList.remove('bg-correct', 'bg-incorrect', 'text-black');
+            }
+        }
+    });
+
+    // Sim 8: Penyusun Doa
+    initSequenceChecker('sim8-source', 'sim8-target', 'sim8-check', 'sim8-feedback');
+
+
+    // ================== INITIALIZATION ==================
+    createQuiz('quiz1', quizData.quiz1);
+    createQuiz('quiz2', quizData.quiz2);
+    createQuiz('quiz3', quizData.quiz3);
+    createQuiz('quiz4', quizData.quiz4);
+    createSumatifTest();
+    loadSim3();
+    
+    const sumatifSubmitBtn = document.getElementById('sumatif-submit-btn');
+    const sumatifRetryBtn = document.getElementById('sumatif-retry-btn');
+    
+    if (sumatifSubmitBtn) {
+        sumatifSubmitBtn.addEventListener('click', () => {
+            let score = 0;
+            const total = sumatifData.length;
+            const answers = document.querySelectorAll('#sumatif-questions-container input[type="radio"]:checked');
+            answers.forEach(radio => {
+                if (parseInt(radio.value) === parseInt(radio.dataset.correct)) { score++; }
+            });
+            const percentage = (score / total) * 100;
+            let feedbackText = '';
+            if (percentage >= 85) feedbackText = "Mumtaz! Pemahaman Anda tentang tauhid sangat baik. Barakallahu fiik.";
+            else if (percentage >= 70) feedbackText = "Jayyid Jiddan. Hasil yang bagus, pertahankan dan tingkatkan!";
+            else if (percentage >= 50) feedbackText = "Jayyid. Cukup baik, muraja'ah lagi bab-bab yang masih ragu.";
+            else feedbackText = "Perlu belajar lebih giat lagi. Ini bab aqidah yang paling penting, jangan putus asa!";
+            document.getElementById('sumatif-score').textContent = `${score} / ${total}`;
+            document.getElementById('sumatif-feedback').textContent = feedbackText;
+            document.getElementById('sumatif-questions-container').classList.add('hidden');
+            sumatifSubmitBtn.classList.add('hidden');
+            document.getElementById('sumatif-result-container').classList.remove('hidden');
+        });
+    }
+
+    if (sumatifRetryBtn) {
+        sumatifRetryBtn.addEventListener('click', () => {
+            document.getElementById('sumatif-result-container').classList.add('hidden');
+            document.getElementById('sumatif-questions-container').classList.remove('hidden');
+            sumatifSubmitBtn.classList.remove('hidden');
+            createSumatifTest();
+        });
+    }
+});
+</script>
+</body>
+</html>
