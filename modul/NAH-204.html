@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modul NAH-204: Pembagian Isim (Jenis & Bilangan)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'pesantren-dark': '#1a202c',
+                    'pesantren-darker': '#171923',
+                    'pesantren-light': '#a0aec0',
+                    'pesantren-accent': '#38b2ac',
+                    'pesantren-accent-hover': '#319795',
+                    'correct': '#48bb78',
+                    'incorrect': '#f56565',
+                },
+                fontFamily: {
+                    'sans': ['Inter', 'sans-serif'],
+                    'arabic': ['"Scheherazade New"', 'serif']
+                }
+            }
+        }
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .arabic, .arabic-text {
+            font-family: 'Scheherazade New', serif;
+            font-size: 1.5rem;
+            line-height: 2.5rem;
+            direction: rtl;
+        }
+        .tab-btn.active {
+            background-color: #38b2ac;
+            color: #1a202c;
+            font-weight: 600;
+        }
+        .teacher-note {
+            background-color: rgba(56, 178, 172, 0.1);
+            border-left: 4px solid #38b2ac;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .simulation-card, .quiz-card {
+            background-color: #2d3748;
+            border: 1px solid #4a5568;
+        }
+        .draggable {
+            cursor: move;
+            user-select: none;
+        }
+        .drop-zone {
+            transition: background-color 0.3s ease;
+        }
+        .drop-zone.drag-over {
+            background-color: #4a5568;
+        }
+    </style>
+</head>
+<body class="bg-pesantren-dark text-pesantren-light">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Header Modul -->
+        <header class="text-center mb-8 border-b-2 border-pesantren-accent pb-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-white">Modul Pembelajaran Ilmu Nahwu</h1>
+            <p class="text-xl text-pesantren-accent font-semibold mt-1">NAH-204: Pembagian Isim Berdasarkan Jenis & Bilangan</p>
+        </header>
+
+        <!-- Navigasi Tab -->
+        <nav class="flex flex-wrap justify-center mb-8 gap-2">
+            <button class="tab-btn active w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-pesantren-accent-hover" data-tab="pertemuan1">Pertemuan 1</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-pesantren-accent-hover" data-tab="pertemuan2">Pertemuan 2</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-pesantren-accent-hover" data-tab="pertemuan3">Pertemuan 3</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out hover:bg-pesantren-accent-hover" data-tab="pertemuan4">Pertemuan 4</button>
+            <button class="tab-btn w-full sm:w-auto text-white py-2 px-4 rounded-md transition duration-300 ease-in-out bg-red-700 hover:bg-red-600" data-tab="tesSumatif">Tes Sumatif</button>
+        </nav>
+
+        <!-- Konten Modul -->
+        <main id="tab-content">
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 1 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan1" class="tab-pane active space-y-8">
+                <div class="p-6 bg-pesantren-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-pesantren-accent mb-1">Pertemuan 1: Pengenalan Isim Mudzakar & Muannats</h2>
+                    <p class="mb-6 text-gray-400">Dasar-dasar pengelompokan kata benda dalam Bahasa Arab berdasarkan jenis kelamin (gender).</p>
+
+                    <!-- A. Tujuan Pembelajaran -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-pesantren-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                            <li>Santri mampu mendefinisikan <i class="arabic">اِسْمٌ</i> (Isim) sebagai salah satu dari tiga jenis kata dalam Bahasa Arab.</li>
+                            <li>Santri mampu menjelaskan konsep pembagian Isim berdasarkan jenis: <i class="arabic">مُذَكَّرٌ</i> (Mudzakar) dan <i class="arabic">مُؤَنَّثٌ</i> (Muannats).</li>
+                            <li>Santri mampu membedakan antara Mudzakar Haqiqi dan Mudzakar Majazi beserta contohnya.</li>
+                            <li>Santri mampu mengidentifikasi Muannats yang ditandai dengan <i class="arabic">التَّاءُ الْمَرْبُوْطَةُ</i> (Ta' Marbuthah).</li>
+                            <li>Santri mampu menyebutkan minimal 5 contoh untuk Isim Mudzakar dan 5 contoh untuk Isim Muannats.</li>
+                        </ul>
+                    </div>
+
+                    <!-- B. Keterkaitan Nilai Islam -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-pesantren-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Mempelajari pembagian Isim menjadi Mudzakar dan Muannats mengingatkan kita pada salah satu tanda kebesaran Allah Ta'ala, yaitu penciptaan segala sesuatu secara berpasang-pasangan. Keteraturan dalam bahasa ini mencerminkan keteraturan dalam ciptaan-Nya. Hal ini mendorong kita untuk senantiasa bertafakur atas kekuasaan Allah dalam setiap detail ilmu yang kita pelajari, termasuk dalam tata bahasa Arab yang menjadi kunci untuk memahami Al-Qur'an dan As-Sunnah.</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic text-2xl text-white">وَ مِنْ كُلِّ شَيْءٍ خَلَقْنَا زَوْجَيْنِ لَعَلَّكُمْ تَذَكَّرُوْنَ</p>
+                            <p class="mt-2 text-gray-300">"Dan segala sesuatu Kami ciptakan berpasang-pasangan agar kamu mengingat (kebesaran Allah)."</p>
+                            <p class="text-sm text-pesantren-accent mt-1">(QS. Adz-Dzariyat: 49)</p>
+                        </div>
+                    </div>
+
+                    <!-- C. Skenario Pembelajaran -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-pesantren-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">1. Muqaddimah & Definisi Isim (15 Menit)</h4>
+                                <p>Setiap kata dalam Bahasa Arab, yang kita sebut <i class="arabic">الْكَلِمَةُ</i>, terbagi menjadi tiga: <i class="arabic">اِسْمٌ</i> (kata benda/nama), <i class="arabic">فِعْلٌ</i> (kata kerja), dan <i class="arabic">حَرْفٌ</i> (huruf/kata tugas). Fokus kita hari ini adalah <i class="arabic">اِسْمٌ</i>. Secara sederhana, Isim adalah setiap kata yang menunjukkan manusia, hewan, tumbuhan, benda mati, tempat, waktu, atau makna abstrak yang tidak terikat dengan waktu. Contoh: <i class="arabic">مُحَمَّدٌ</i> (nama orang), <i class="arabic">أَسَدٌ</i> (hewan), <i class="arabic">كِتَابٌ</i> (benda mati).</p>
+                                <div class="teacher-note">
+                                    <p class="font-bold">Poin Diskusi Guru:</p>
+                                    <p>Ajak santri untuk menyebutkan 10 Isim yang mereka lihat di dalam kelas. Tulis di papan tulis. Ini akan menjadi bank kata untuk contoh-contoh selanjutnya. Tanyakan, "Mengapa kata 'kursi' adalah Isim? Mengapa kata 'duduk' bukan Isim?" untuk menguji pemahaman awal.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">2. Konsep Mudzakar & Muannats (25 Menit)</h4>
+                                <p>Sebagaimana Allah menciptakan makhluk hidup berpasangan, dalam Bahasa Arab, kata benda (Isim) juga memiliki "jenis kelamin" gramatikal. Ini disebut <i class="arabic">مُذَكَّرٌ</i> (maskulin) dan <i class="arabic">مُؤَنَّثٌ</i> (feminin). Aturan dasarnya sederhana: <strong>semua Isim dianggap Mudzakar sampai ada bukti atau tanda bahwa ia adalah Muannats.</strong></p>
+                                <p class="mt-3"><strong class="text-pesantren-accent">Isim Mudzakar (<i class="arabic">اَلْمُذَكَّرُ</i>):</strong> Adalah Isim yang menunjukkan jenis laki-laki, baik secara hakiki maupun majazi (kiasan).</p>
+                                <ul class="list-inside list-disc mt-2 pl-4 space-y-1">
+                                    <li><strong>Mudzakar Haqiqi (<i class="arabic">حَقِيْقِيٌّ</i>):</strong> Benar-benar menunjukkan laki-laki dari manusia atau hewan. Contoh: <i class="arabic">أَبٌ</i> (ayah), <i class="arabic">وَلَدٌ</i> (anak laki-laki), <i class="arabic">دِيْكٌ</i> (ayam jantan).</li>
+                                    <li><strong>Mudzakar Majazi (<i class="arabic">مَجَازِيٌّ</i>):</strong> Benda yang tidak bernyawa tetapi diperlakukan sebagai mudzakar oleh orang Arab. Contoh: <i class="arabic">بَابٌ</i> (pintu), <i class="arabic">قَلَمٌ</i> (pena), <i class="arabic">نَهْرٌ</i> (sungai).</li>
+                                </ul>
+                                <div class="flex justify-center my-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                                    </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-gray-400 mx-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+                                    </svg>
+                                    <p class="self-center">Analogi: Mudzakar Haqiqi (kiri, <i class="arabic">رَجُلٌ</i>) memiliki pasangan hidup, sedangkan Mudzakar Majazi (kanan, <i class="arabic">كِتَابٌ</i>) tidak.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">3. Isim Muannats & Tandanya yang Paling Utama (30 Menit)</h4>
+                                <p><strong class="text-pesantren-accent">Isim Muannats (<i class="arabic">اَلْمُؤَنَّثُ</i>):</strong> Adalah Isim yang menunjukkan jenis perempuan. Ia memiliki tanda-tanda khusus. Tanda yang paling umum dan paling sering kita jumpai adalah <strong>Ta' Marbuthah (<i class="arabic">ـة / ة</i>)</strong>.</p>
+                                <p class="mt-3">Jika Anda melihat sebuah Isim diakhiri dengan huruf ini, maka hampir bisa dipastikan ia adalah Muannats. Huruf ini seperti "label" penanda feminin.</p>
+                                <p class="mt-2">Contoh:</p>
+                                <ul class="list-inside list-disc mt-2 pl-4 space-y-1 text-lg">
+                                    <li><i class="arabic">سَيَّارَةٌ</i> (mobil) - berasal dari kata <i class="arabic">سَيْرٌ</i> (perjalanan)</li>
+                                    <li><i class="arabic">مَدْرَسَةٌ</i> (sekolah) - berasal dari kata <i class="arabic">دَرْسٌ</i> (pelajaran)</li>
+                                    <li><i class="arabic">فَاطِمَةُ</i> (Fatimah) - nama perempuan</li>
+                                    <li><i class="arabic">مُسْلِمَةٌ</i> (muslimah) - dari kata <i class="arabic">مُسْلِمٌ</i> (muslim)</li>
+                                </ul>
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Ta_marbuta.svg/240px-Ta_marbuta.svg.png" alt="Ta Marbuthah" class="mx-auto my-4 bg-white rounded p-2">
+                                <p class="text-xs text-center text-gray-500">Sumber: Wikimedia Commons</p>
+                                <div class="teacher-note">
+                                    <p class="font-bold">Poin Diskusi Guru:</p>
+                                    <p>Tekankan bahwa Ta' Marbuthah adalah tanda "eksplisit". Tunjukkan bagaimana menambahkan <i class="arabic">ة</i> bisa mengubah mudzakar menjadi muannats: <i class="arabic">مُدَرِّسٌ</i> (guru laki-laki) menjadi <i class="arabic">مُدَرِّسَةٌ</i> (guru perempuan). Minta santri memberikan 3 contoh lain.</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">4. Latihan & Rangkuman (20 Menit)</h4>
+                                <p>Mari kita rangkum apa yang telah dipelajari. Isim terbagi menjadi Mudzakar dan Muannats. Mudzakar adalah defaultnya. Muannats memiliki tanda, dan yang paling umum adalah Ta' Marbuthah. Sekarang, kita akan berlatih melalui simulasi dan latihan formatif.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                     <!-- D. Penilaian Modul -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-pesantren-accent pl-3">D. Penilaian Modul</h3>
+                        <p class="mb-4">Penilaian selama pembelajaran modul ini mencakup tiga aspek utama untuk memastikan pemahaman yang holistik:</p>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="p-4 bg-gray-900 rounded">
+                                <h4 class="font-semibold text-pesantren-accent">1. Sikap / Adab (20%)</h4>
+                                <p class="text-sm">Meliputi adab dalam bertanya, keseriusan dalam mengikuti pelajaran, dan semangat dalam berdiskusi. Menghormati ilmu dan guru adalah kunci keberkahan.</p>
+                            </div>
+                             <div class="p-4 bg-gray-900 rounded">
+                                <h4 class="font-semibold text-pesantren-accent">2. Pengetahuan (50%)</h4>
+                                <p class="text-sm">Diukur dari hasil Latihan Formatif di setiap pertemuan dan hasil Tes Sumatif di akhir modul. Ini menunjukkan penguasaan materi secara kognitif.</p>
+                            </div>
+                             <div class="p-4 bg-gray-900 rounded">
+                                <h4 class="font-semibold text-pesantren-accent">3. Keterampilan (30%)</h4>
+                                <p class="text-sm">Dinilai dari partisipasi aktif dalam simulasi interaktif dan kemampuan menerapkan kaidah dalam contoh-contoh baru, baik lisan maupun tulisan.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Card Simulasi -->
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Simulasi 1: Klasifikasi Mudzakar/Muannats -->
+                        <div>
+                            <h4 class="font-semibold text-pesantren-accent mb-2">Simulasi 1: Klasifikasi Kata</h4>
+                            <p class="text-sm mb-4">Seret (drag) setiap kata ke dalam kotak yang sesuai.</p>
+                            <div id="sim1-source" class="flex flex-wrap gap-3 mb-4 p-3 bg-gray-800 rounded-md min-h-[50px]">
+                                <div class="draggable arabic bg-pesantren-accent text-pesantren-darker p-2 rounded shadow-md" draggable="true" data-type="mudzakar">قَمَرٌ</div>
+                                <div class="draggable arabic bg-pesantren-accent text-pesantren-darker p-2 rounded shadow-md" draggable="true" data-type="muannats">سَاعَةٌ</div>
+                                <div class="draggable arabic bg-pesantren-accent text-pesantren-darker p-2 rounded shadow-md" draggable="true" data-type="mudzakar">مَسْجِدٌ</div>
+                                <div class="draggable arabic bg-pesantren-accent text-pesantren-darker p-2 rounded shadow-md" draggable="true" data-type="muannats">حَقِيْبَةٌ</div>
+                                <div class="draggable arabic bg-pesantren-accent text-pesantren-darker p-2 rounded shadow-md" draggable="true" data-type="mudzakar">أَحْمَدُ</div>
+                                <div class="draggable arabic bg-pesantren-accent text-pesantren-darker p-2 rounded shadow-md" draggable="true" data-type="muannats">خَدِيْجَةُ</div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="drop-zone p-4 border-2 border-dashed border-gray-500 rounded-lg min-h-[100px]" data-target="mudzakar">
+                                    <p class="text-center font-bold arabic">مُذَكَّرٌ</p>
+                                </div>
+                                <div class="drop-zone p-4 border-2 border-dashed border-gray-500 rounded-lg min-h-[100px]" data-target="muannats">
+                                    <p class="text-center font-bold arabic">مُؤَنَّثٌ</p>
+                                </div>
+                            </div>
+                            <p id="sim1-feedback" class="text-sm mt-3 h-4"></p>
+                        </div>
+                        
+                        <!-- Simulasi 2: Identifikasi Ta' Marbuthah -->
+                        <div>
+                             <h4 class="font-semibold text-pesantren-accent mb-2">Simulasi 2: Pemburu Ta' Marbuthah</h4>
+                            <p class="text-sm mb-4">Klik pada setiap kata yang merupakan Isim Muannats (memiliki Ta' Marbuthah).</p>
+                            <div id="sim2-container" class="flex flex-wrap gap-3 p-3 bg-gray-800 rounded-md">
+                                <div class="sim2-word arabic p-2 rounded cursor-pointer bg-gray-600 hover:bg-gray-500" data-muannats="true">نَافِذَةٌ</div>
+                                <div class="sim2-word arabic p-2 rounded cursor-pointer bg-gray-600 hover:bg-gray-500" data-muannats="false">بَيْتٌ</div>
+                                <div class="sim2-word arabic p-2 rounded cursor-pointer bg-gray-600 hover:bg-gray-500" data-muannats="true">مَكْتَبَةٌ</div>
+                                <div class="sim2-word arabic p-2 rounded cursor-pointer bg-gray-600 hover:bg-gray-500" data-muannats="true">مِمْسَحَةٌ</div>
+                                <div class="sim2-word arabic p-2 rounded cursor-pointer bg-gray-600 hover:bg-gray-500" data-muannats="false">فَصْلٌ</div>
+                                <div class="sim2-word arabic p-2 rounded cursor-pointer bg-gray-600 hover:bg-gray-500" data-muannats="false">أُسْتَاذٌ</div>
+                                <div class="sim2-word arabic p-2 rounded cursor-pointer bg-gray-600 hover:bg-gray-500" data-muannats="true">طَالِبَةٌ</div>
+                            </div>
+                             <p id="sim2-feedback" class="text-sm mt-3">Skor: <span id="sim2-score">0</span> / 4</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Latihan Formatif -->
+                <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 1</h3>
+                    <div id="quiz1" class="space-y-6">
+                        <!-- Soal akan di-generate oleh JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 2 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan2" class="tab-pane hidden space-y-8">
+                 <div class="p-6 bg-pesantren-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-pesantren-accent mb-1">Pertemuan 2: Tanda-Tanda Muannats & Jenisnya</h2>
+                    <p class="mb-6 text-gray-400">Mendalami lebih jauh tanda-tanda Isim Muannats selain Ta' Marbuthah dan jenis-jenisnya.</p>
+
+                    <!-- A. Tujuan Pembelajaran -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-pesantren-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                            <li>Santri mampu mengidentifikasi tiga tanda Isim Muannats: Ta' Marbuthah, Alif Ta'nits Maqsurah, dan Alif Ta'nits Mamdudah.</li>
+                            <li>Santri mampu memberikan contoh untuk setiap tanda Muannats.</li>
+                            <li>Santri mampu membedakan antara Muannats Lafdhi dan Muannats Ma'nawi.</li>
+                            <li>Santri mampu menjelaskan mengapa kata seperti <i class="arabic">حَمْزَةُ</i> dianggap Muannats Lafdhi.</li>
+                            <li>Santri mampu mengklasifikasikan Isim Muannats ke dalam jenis yang tepat (Haqiqi, Majazi, Lafdhi, Ma'nawi).</li>
+                        </ul>
+                    </div>
+
+                     <!-- B. Keterkaitan Nilai Islam -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-pesantren-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Mempelajari detail tanda-tanda Muannats mengajarkan kita tentang ketelitian dan presisi dalam ilmu. Allah menurunkan Al-Qur'an dengan bahasa yang sangat teliti dan sempurna, di mana setiap huruf dan tandanya memiliki makna. Semakin kita teliti dalam mempelajari bahasa Arab, semakin besar pula peluang kita untuk memahami kedalaman makna Kalamullah. Ketelitian ini adalah adab seorang penuntut ilmu dalam menjaga warisan para ulama.</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic text-2xl text-white">إِنَّا كُلَّ شَيْءٍ خَلَقْنَاهُ بِقَدَرٍ</p>
+                            <p class="mt-2 text-gray-300">"Sesungguhnya Kami menciptakan segala sesuatu menurut ukuran (yang sempurna)."</p>
+                            <p class="text-sm text-pesantren-accent mt-1">(QS. Al-Qamar: 49)</p>
+                        </div>
+                    </div>
+                    
+                    <!-- C. Skenario Pembelajaran -->
+                     <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-pesantren-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">1. Muraja'ah & Tanda Muannats Pertama (15 Menit)</h4>
+                                <p>Kita ulas kembali pelajaran pekan lalu. Apa beda Mudzakar Haqiqi dan Majazi? Apa tanda Muannats yang paling umum? (<i class="arabic">التَّاءُ الْمَرْبُوْطَةُ</i>). Tanda ini adalah tanda yang terlihat secara lafazh (diucapkan dan ditulis).</p>
+                                <p class="mt-2">Contoh: <i class="arabic">طَبِيْبَةٌ</i> (dokter wanita), <i class="arabic">سَبُّوْرَةٌ</i> (papan tulis).</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">2. Tanda Muannats Kedua & Ketiga (30 Menit)</h4>
+                                <p>Selain Ta' Marbuthah, ada dua tanda lain yang juga bersifat lafdzi (terlihat). Keduanya berupa huruf Alif.</p>
+                                <p class="mt-3"><strong class="text-pesantren-accent">Tanda Kedua: Alif Ta'nits Maqsurah (<i class="arabic">أَلِفُ التَّأْنِيْثِ الْمَقْصُوْرَةُ</i>)</strong></p>
+                                <p>Bentuknya seperti huruf 'ya' tanpa titik (<i class="arabic">ـى</i>) di akhir kata. Ia selalu didahului harakat fathah.</p>
+                                <ul class="list-inside list-disc mt-2 pl-4 space-y-1">
+                                    <li><i class="arabic">كُبْرَى</i> (yang besar - untuk perempuan)</li>
+                                    <li><i class="arabic">حُبْلَى</i> (wanita hamil)</li>
+                                    <li><i class="arabic">ذِكْرَى</i> (peringatan)</li>
+                                </ul>
+
+                                <p class="mt-4"><strong class="text-pesantren-accent">Tanda Ketiga: Alif Ta'nits Mamdudah (<i class="arabic">أَلِفُ التَّأْنِيْثِ الْمَمْدُوْدَةُ</i>)</strong></p>
+                                <p>Bentuknya adalah hamzah (<i class="arabic">ء</i>) di akhir kata yang didahului oleh alif zaidah (<i class="arabic">اء</i>).</p>
+                                <ul class="list-inside list-disc mt-2 pl-4 space-y-1">
+                                    <li><i class="arabic">صَحْرَاءُ</i> (gurun pasir)</li>
+                                    <li><i class="arabic">حَسْنَاءُ</i> (wanita cantik)</li>
+                                    <li><i class="arabic">حَمْرَاءُ</i> (yang berwarna merah - untuk muannats)</li>
+                                </ul>
+                                <div class="teacher-note">
+                                    <p class="font-bold">Poin Diskusi Guru:</p>
+                                    <p>Tunjukkan perbedaan antara Alif Maqsurah (<i class="arabic">ـى</i>) dan Ya (<i class="arabic">ـي</i>). Jelaskan bahwa tidak semua kata berakhiran (<i class="arabic">اء</i>) adalah muannats, hamzahnya harus merupakan tambahan, bukan bagian dari akar kata (seperti pada kata <i class="arabic">مَاءٌ</i>).</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">3. Muannats Tanpa Tanda (Ma'nawi) & Muannats Lafdzi (30 Menit)</h4>
+                                <p>Ada kasus-kasus unik di mana lafazh dan makna tidak sejalan. Ini melahirkan dua jenis muannats lagi:</p>
+                                <p class="mt-3"><strong class="text-pesantren-accent">Muannats Ma'nawi (<i class="arabic">اَلْمُؤَنَّثُ الْمَعْنَوِيُّ</i>):</strong></p>
+                                <p>Secara makna ia adalah perempuan, tapi <strong>tidak memiliki</strong> satupun dari tiga tanda lafdzi di atas. Isim jenis ini biasanya adalah nama-nama perempuan atau kata-kata khusus yang dianggap muannats oleh orang Arab (<i class="arabic">سَمَاعِيٌّ</i>).</p>
+                                <ul class="list-inside list-disc mt-2 pl-4 space-y-1">
+                                    <li><i class="arabic">زَيْنَبُ</i> (Zainab), <i class="arabic">مَرْيَمُ</i> (Maryam) - Nama perempuan.</li>
+                                    <li><i class="arabic">شَمْسٌ</i> (matahari), <i class="arabic">أَرْضٌ</i> (bumi), <i class="arabic">نَفْسٌ</i> (jiwa) - Dianggap muannats secara sama'i.</li>
+                                </ul>
+                                <img src="https://i.ibb.co/L5w29fK/sun-earth.png" alt="Matahari dan Bumi" class="mx-auto my-4 h-24">
+                                <p class="text-xs text-center text-gray-500">Analogi: <i class="arabic">شَمْسٌ</i> (matahari) dan <i class="arabic">أَرْضٌ</i> (bumi) adalah contoh muannats ma'nawi yang terkenal. Keduanya tidak punya tanda, tapi dihukumi muannats.</p>
+
+                                <p class="mt-4"><strong class="text-pesantren-accent">Muannats Lafdhi (<i class="arabic">اَلْمُؤَنَّثُ اللَّفْظِيُّ</i>):</strong></p>
+                                <p>Ini adalah kebalikannya. Secara lafazh ia <strong>memiliki</strong> tanda muannats (biasanya Ta' Marbuthah), tetapi maknanya merujuk pada laki-laki.</p>
+                                <ul class="list-inside list-disc mt-2 pl-4 space-y-1">
+                                    <li><i class="arabic">حَمْزَةُ</i> (Hamzah)</li>
+                                    <li><i class="arabic">طَلْحَةُ</i> (Talhah)</li>
+                                    <li><i class="arabic">مُعَاوِيَةُ</i> (Mu'awiyah)</li>
+                                </ul>
+                                <div class="teacher-note">
+                                    <p class="font-bold">Poin Diskusi Guru:</p>
+                                    <p>Tegaskan bahwa hukum kata mengikuti lafazhnya. Walaupun <i class="arabic">حَمْزَةُ</i> adalah nama seorang sahabat yang gagah perkasa, secara kaidah nahwu, kata ini adalah muannats (lafdzi). Ini akan berpengaruh pada kaidah tata bahasa selanjutnya, seperti penggunaan kata sifat.</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">4. Rangkuman & Latihan (15 Menit)</h4>
+                                <p>Ringkas semua tanda muannats (<i class="arabic">ة, ـى, ءا</i>) dan jenis-jenisnya (Haqiqi, Majazi, Lafdhi, Ma'nawi). Ajak santri untuk mengklasifikasikan beberapa kata yang diberikan guru.</p>
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+                 
+                <!-- Card Simulasi Pertemuan 2-->
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Simulasi 1: Pilih Tanda Muannats -->
+                        <div>
+                            <h4 class="font-semibold text-pesantren-accent mb-2">Simulasi 1: Detektif Tanda Muannats</h4>
+                            <p class="text-sm mb-4">Untuk kata di bawah, pilih tanda Muannats yang tepat.</p>
+                            <div class="bg-gray-800 p-4 rounded-md text-center">
+                                <p id="sim3-word" class="arabic text-3xl mb-4"></p>
+                                <div id="sim3-options" class="flex justify-center gap-3">
+                                    <!-- Options generated by JS -->
+                                </div>
+                                <p id="sim3-feedback" class="text-sm mt-3 h-4"></p>
+                                <button id="sim3-next" class="mt-2 py-1 px-3 bg-pesantren-accent text-pesantren-darker rounded">Kata Berikutnya</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Simulasi 2: Klasifikasi Jenis Muannats Lanjutan -->
+                        <div>
+                             <h4 class="font-semibold text-pesantren-accent mb-2">Simulasi 2: Klasifikasi Lanjutan</h4>
+                            <p class="text-sm mb-4">Tentukan jenis Muannats dari kata berikut.</p>
+                            <div class="bg-gray-800 p-4 rounded-md">
+                                <p id="sim4-word" class="arabic text-3xl mb-4 text-center"></p>
+                                <div id="sim4-options" class="grid grid-cols-2 gap-2">
+                                     <!-- Options generated by JS -->
+                                </div>
+                                <p id="sim4-feedback" class="text-sm mt-3 h-4 text-center"></p>
+                                <button id="sim4-next" class="mt-2 w-full py-1 px-3 bg-pesantren-accent text-pesantren-darker rounded">Kata Berikutnya</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Card Latihan Formatif Pertemuan 2-->
+                 <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 2</h3>
+                    <div id="quiz2" class="space-y-6">
+                        <!-- Soal akan di-generate oleh JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 3 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan3" class="tab-pane hidden space-y-8">
+                 <div class="p-6 bg-pesantren-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-pesantren-accent mb-1">Pertemuan 3: Pembagian Isim Berdasarkan Bilangan (Bagian 1)</h2>
+                    <p class="mb-6 text-gray-400">Mengenal Isim Mufrad, Mutsanna, dan Jamak yang beraturan (Salim).</p>
+
+                    <!-- A. Tujuan Pembelajaran -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-pesantren-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                            <li>Santri mampu mendefinisikan Isim <i class="arabic">مُفْرَدٌ</i> (Mufrad), <i class="arabic">مُثَنًّى</i> (Mutsanna), dan <i class="arabic">جَمْعٌ</i> (Jamak).</li>
+                            <li>Santri mampu membentuk Isim Mutsanna dari Isim Mufrad dengan menambahkan akhiran yang benar.</li>
+                            <li>Santri mampu menjelaskan definisi Jamak Mudzakar Salim dan cara membentuknya.</li>
+                            <li>Santri mampu menjelaskan definisi Jamak Muannats Salim dan cara membentuknya.</li>
+                            <li>Santri mampu mengubah Isim Mufrad menjadi Mutsanna dan Jamak Salim dalam latihan.</li>
+                        </ul>
+                    </div>
+
+                     <!-- B. Keterkaitan Nilai Islam -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-pesantren-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Perubahan bentuk kata dari tunggal menjadi ganda dan jamak dalam bahasa Arab menunjukkan kekayaan dan efisiensi bahasa Al-Qur'an. Hal ini juga mengingatkan kita pada nikmat Allah yang tak terhingga. Seringkali Allah menyebutkan nikmat-Nya dalam bentuk tunggal, namun di ayat lain dalam bentuk jamak untuk menunjukkan kelimpahan dan keberagamannya. Memahami konsep bilangan ini membantu kita merenungkan betapa luasnya karunia Allah yang diberikan kepada hamba-hamba-Nya.</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic text-2xl text-white">وَإِنْ تَعُدُّوا نِعْمَةَ اللَّهِ لَا تُحْصُوهَا</p>
+                            <p class="mt-2 text-gray-300">"Dan jika kamu menghitung nikmat Allah, niscaya kamu tidak akan mampu menghitungnya."</p>
+                            <p class="text-sm text-pesantren-accent mt-1">(QS. Ibrahim: 34)</p>
+                        </div>
+                    </div>
+                    
+                    <!-- C. Skenario Pembelajaran -->
+                     <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-pesantren-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">1. Mufrad: Bentuk Dasar (10 Menit)</h4>
+                                <p><strong class="text-pesantren-accent">Isim Mufrad (<i class="arabic">اَلْمُفْرَدُ</i>)</strong> adalah Isim yang menunjukkan bilangan tunggal atau satu. Semua kata yang telah kita pelajari sejauh ini pada dasarnya adalah bentuk Mufrad.</p>
+                                <p class="mt-2">Contoh: <i class="arabic">مُسْلِمٌ</i> (seorang muslim), <i class="arabic">مَدْرَسَةٌ</i> (sebuah sekolah), <i class="arabic">كِتَابٌ</i> (sebuah buku).</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">2. Mutsanna: Bilangan Ganda (25 Menit)</h4>
+                                <p><strong class="text-pesantren-accent">Isim Mutsanna (<i class="arabic">اَلْمُثَنَّى</i>)</strong> adalah Isim yang menunjukkan bilangan dua. Cara membentuknya sangat mudah dan teratur:</p>
+                                <p class="mt-3"><strong>Dari Isim Mufrad, tambahkan akhiran <i class="arabic">انِ</i> (aani) dalam keadaan rafa'.</strong></p>
+                                <div class="p-4 bg-gray-900 rounded-lg">
+                                    <p class="arabic text-center text-xl"><span class="text-gray-400">كِتَابٌ (Mufrad)</span>  <span class="text-pesantren-accent">+ انِ</span>  &larr;  كِتَابَانِ (Mutsanna)</p>
+                                    <p class="arabic text-center text-xl mt-2"><span class="text-gray-400">مُسْلِمٌ (Mufrad)</span>  <span class="text-pesantren-accent">+ انِ</span>  &larr;  مُسْلِمَانِ (Mutsanna)</p>
+                                </div>
+                                <p class="mt-3">Jika Mufrad-nya diakhiri Ta' Marbuthah (<i class="arabic">ة</i>), ubah dulu menjadi Ta' Maftuhah (<i class="arabic">ت</i>) baru ditambahkan <i class="arabic">انِ</i>.</p>
+                                 <div class="p-4 bg-gray-900 rounded-lg">
+                                    <p class="arabic text-center text-xl"><span class="text-gray-400">مَدْرَسَةٌ &larr; مَدْرَسَتـ</span>  <span class="text-pesantren-accent">+ انِ</span>  &larr;  مَدْرَسَتَانِ (Mutsanna)</p>
+                                </div>
+                                <div class="teacher-note">
+                                    <p class="font-bold">Poin Diskusi Guru:</p>
+                                    <p>Sebutkan juga bentuk nasab/jar dari mutsanna yaitu dengan akhiran <i class="arabic">ـَيْنِ</i> (aini), contoh: <i class="arabic">كِتَابَيْنِ</i>. Jelaskan bahwa ini terkait dengan posisi kata dalam kalimat (i'rab) yang akan dipelajari nanti, namun penting untuk dikenali sejak dini.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">3. Jamak: Bilangan Banyak (>2) (35 Menit)</h4>
+                                <p><strong>Isim Jamak (<i class="arabic">اَلْجَمْعُ</i>)</strong> adalah Isim yang menunjukkan bilangan lebih dari dua. Ada tiga jenis jamak, dua di antaranya akan kita pelajari hari ini. Keduanya disebut 'Salim' (<i class="arabic">سَالِمٌ</i>) yang artinya "selamat" karena bentuk mufradnya tidak berubah/rusak.</p>
+                                
+                                <p class="mt-4"><strong class="text-pesantren-accent">a. Jamak Mudzakar Salim (<i class="arabic">جَمْعُ الْمُذَكَّرِ السَّالِمُ</i>)</strong></p>
+                                <p>Ini adalah bentuk jamak untuk Isim Mudzakar yang berakal (biasanya manusia). Cara membentuknya:</p>
+                                <p class="mt-2"><strong>Dari Isim Mufrad, tambahkan akhiran <i class="arabic">وْنَ</i> (uuna) dalam keadaan rafa'.</strong></p>
+                                <div class="p-4 bg-gray-900 rounded-lg">
+                                    <p class="arabic text-center text-xl"><span class="text-gray-400">مُسْلِمٌ (Mufrad)</span>  <span class="text-pesantren-accent">+ وْنَ</span>  &larr;  مُسْلِمُوْنَ (Jamak)</p>
+                                    <p class="arabic text-center text-xl mt-2"><span class="text-gray-400">مُؤْمِنٌ (Mufrad)</span>  <span class="text-pesantren-accent">+ وْنَ</span>  &larr;  مُؤْمِنُوْنَ (Jamak)</p>
+                                </div>
+                                <p class="mt-2 text-sm text-gray-400">(Bentuk nasab/jarnya berakhiran <i class="arabic">ـِيْنَ</i>, contoh: <i class="arabic">مُسْلِمِيْنَ</i>).</p>
+
+                                <p class="mt-6"><strong class="text-pesantren-accent">b. Jamak Muannats Salim (<i class="arabic">جَمْعُ الْمُؤَنَّثِ السَّالِمُ</i>)</strong></p>
+                                <p>Ini adalah bentuk jamak untuk Isim Muannats.</p>
+                                <p class="mt-2"><strong>Dari Isim Mufrad, hapus Ta' Marbuthah (jika ada), lalu tambahkan akhiran <i class="arabic">اتٌ</i> (aatun).</strong></p>
+                                <div class="p-4 bg-gray-900 rounded-lg">
+                                    <p class="arabic text-center text-xl"><span class="text-gray-400">مُسْلِمَةٌ &larr; مُسْلِمـ</span>  <span class="text-pesantren-accent">+ اتٌ</span>  &larr;  مُسْلِمَاتٌ (Jamak)</p>
+                                    <p class="arabic text-center text-xl mt-2"><span class="text-gray-400">سَيَّارَةٌ &larr; سَيَّار</span>  <span class="text-pesantren-accent">+ اتٌ</span>  &larr;  سَيَّارَاتٌ (Jamak)</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">4. Rangkuman & Latihan (20 Menit)</h4>
+                                <p>Rangkum ketiga bentuk bilangan: Mufrad (1), Mutsanna (2, +<i class="arabic">انِ</i>), Jamak Salim (>2, +<i class="arabic">وْنَ</i> atau +<i class="arabic">اتٌ</i>). Lanjutkan dengan simulasi dan latihan.</p>
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+                 
+                 <!-- Card Simulasi Pertemuan 3 -->
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Simulasi 1: Konverter Bilangan -->
+                        <div>
+                            <h4 class="font-semibold text-pesantren-accent mb-2">Simulasi 1: Mesin Konversi Bilangan</h4>
+                            <p class="text-sm mb-4">Masukkan Isim Mufrad, dan mesin akan mengubahnya menjadi Mutsanna dan Jamak Salim.</p>
+                            <div class="bg-gray-800 p-4 rounded-md">
+                                <label for="sim5-input" class="arabic">أَدْخِلِ الِاسْمَ الْمُفْرَدَ هُنَا:</label>
+                                <input type="text" id="sim5-input" class="arabic w-full bg-gray-700 p-2 rounded mt-2 text-right text-white" placeholder="مُهَنْدِسٌ">
+                                <button id="sim5-convert" class="w-full mt-3 py-2 bg-pesantren-accent text-pesantren-darker rounded font-semibold">Ubah!</button>
+                                <div id="sim5-result" class="mt-4 space-y-2">
+                                    <p>Mutsanna: <span id="sim5-mutsanna" class="arabic font-semibold text-lg"></span></p>
+                                    <p>Jamak: <span id="sim5-jamak" class="arabic font-semibold text-lg"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Simulasi 2: Lengkapi Kalimat -->
+                        <div>
+                             <h4 class="font-semibold text-pesantren-accent mb-2">Simulasi 2: Sempurnakan Kalimat</h4>
+                             <p class="text-sm mb-4">Pilih bentuk Isim yang tepat untuk melengkapi kalimat.</p>
+                             <div class="bg-gray-800 p-4 rounded-md space-y-5">
+                                 <div>
+                                    <p class="arabic text-xl">ذَهَبَ ... إِلَى الْمَسْجِدِ.</p>
+                                    <p class="text-sm text-gray-400 mb-2">(Dua orang insinyur itu pergi ke masjid)</p>
+                                    <div class="flex flex-col gap-2 sim6-options" data-correct="الْمُهَنْدِسَانِ">
+                                        <button class="sim6-option arabic p-2 rounded bg-gray-700 hover:bg-gray-600">الْمُهَنْدِسُ</button>
+                                        <button class="sim6-option arabic p-2 rounded bg-gray-700 hover:bg-gray-600">الْمُهَنْدِسَانِ</button>
+                                        <button class="sim6-option arabic p-2 rounded bg-gray-700 hover:bg-gray-600">الْمُهَنْدِسُوْنَ</button>
+                                    </div>
+                                    <p class="sim6-feedback text-sm mt-1 h-4"></p>
+                                 </div>
+                                 <div>
+                                    <p class="arabic text-xl">... مُجْتَهِدَاتٌ.</p>
+                                    <p class="text-sm text-gray-400 mb-2">(Para siswi itu rajin)</p>
+                                    <div class="flex flex-col gap-2 sim6-options" data-correct="الطَّالِبَاتُ">
+                                        <button class="sim6-option arabic p-2 rounded bg-gray-700 hover:bg-gray-600">الطَّالِبَةُ</button>
+                                        <button class="sim6-option arabic p-2 rounded bg-gray-700 hover:bg-gray-600">الطَّالِبَتَانِ</button>
+                                        <button class="sim6-option arabic p-2 rounded bg-gray-700 hover:bg-gray-600">الطَّالِبَاتُ</button>
+                                    </div>
+                                    <p class="sim6-feedback text-sm mt-1 h-4"></p>
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Card Latihan Formatif Pertemuan 3 -->
+                 <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 3</h3>
+                    <div id="quiz3" class="space-y-6">
+                        <!-- Soal akan di-generate oleh JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================== -->
+            <!-- ==================== KONTEN PERTEMUAN 4 =========================== -->
+            <!-- =================================================================== -->
+            <div id="pertemuan4" class="tab-pane hidden space-y-8">
+                <div class="p-6 bg-pesantren-darker rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-pesantren-accent mb-1">Pertemuan 4: Jamak Taksir & Rangkuman Menyeluruh</h2>
+                    <p class="mb-6 text-gray-400">Membahas jamak yang tidak beraturan (Taksir) dan mengulang kembali semua konsep.</p>
+
+                    <!-- A. Tujuan Pembelajaran -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-pesantren-accent pl-3">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc list-inside space-y-2 pl-2">
+                            <li>Santri mampu mendefinisikan <i class="arabic">جَمْعُ التَّكْسِيْرِ</i> (Jamak Taksir) dan perbedaannya dengan Jamak Salim.</li>
+                            <li>Santri mampu menyebutkan minimal 3 wazan (pola) Jamak Taksir yang umum beserta contohnya.</li>
+                            <li>Santri memahami bahwa Jamak Taksir bersifat <i class="arabic">سَمَاعِيٌّ</i> (sama'i) atau dihafal.</li>
+                            <li>Santri mampu menganalisis sebuah Isim berdasarkan jenis (Mudzakar/Muannats) dan bilangannya (Mufrad/Mutsanna/Jamak).</li>
+                            <li>Santri siap menghadapi Tes Sumatif dengan percaya diri.</li>
+                        </ul>
+                    </div>
+
+                     <!-- B. Keterkaitan Nilai Islam -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-pesantren-accent pl-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="mb-4">Adanya Jamak Taksir yang tidak beraturan menunjukkan kekayaan dan keindahan artistik bahasa Arab. Ini mengajarkan kita bahwa tidak semua hal dalam ilmu dapat dirumuskan secara kaku; ada ruang untuk hafalan, kebiasaan, dan "rasa bahasa" yang terasah seiring waktu. Sebagaimana Al-Qur'an diturunkan dalam bahasa Arab yang fasih dan indah, mempelajarinya dengan sabar dan tekun, termasuk menghafal bentuk-bentuk Jamak Taksir, adalah bagian dari upaya kita untuk mendekatkan diri pada Kalamullah dan menghargai keagungan bahasa pilihan-Nya.</p>
+                        <div class="p-4 bg-gray-900 rounded-lg text-center">
+                            <p class="arabic text-2xl text-white">إِنَّا أَنْزَلْنَاهُ قُرْآنًا عَرَبِيًّا لَعَلَّكُمْ تَعْقِلُونَ</p>
+                            <p class="mt-2 text-gray-300">"Sesungguhnya Kami menurunkannya berupa Al-Qur'an dengan berbahasa Arab, agar kamu memahaminya."</p>
+                            <p class="text-sm text-pesantren-accent mt-1">(QS. Yusuf: 2)</p>
+                        </div>
+                    </div>
+                    
+                    <!-- C. Skenario Pembelajaran -->
+                     <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-white mb-3 border-l-4 border-pesantren-accent pl-3">C. Skenario Pembelajaran (Durasi: 90 Menit)</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">1. Muraja'ah Jamak Salim (15 Menit)</h4>
+                                <p>Ulas kembali Jamak Mudzakar Salim (akhiran <i class="arabic">ـوْنَ / ـيْنَ</i>) dan Jamak Muannats Salim (akhiran <i class="arabic">ـاتٌ</i>). Mengapa disebut 'Salim'? Karena bentuk mufradnya selamat dari perubahan.</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">2. Jamak Taksir: Jamak yang "Pecah" (35 Menit)</h4>
+                                <p><strong class="text-pesantren-accent">Jamak Taksir (<i class="arabic">جَمْعُ التَّكْسِيْرِ</i>)</strong> secara harfiah berarti "jamak yang pecah". Disebut demikian karena bentuk mufradnya berubah atau "pecah" ketika diubah ke bentuk jamak. Tidak ada aturan penambahan akhiran yang pasti seperti pada Jamak Salim.</p>
+                                <p class="mt-2">Jamak Taksir ini bersifat <i class="arabic">سَمَاعِيٌّ</i>, artinya kita mengetahuinya karena mendengar dari orang Arab atau melihatnya di kamus. Namun, ada beberapa pola (<i class="arabic">وَزْنٌ</i>) yang sering muncul:</p>
+                                
+                                <div class="grid md:grid-cols-2 gap-4 mt-4">
+                                    <div class="p-3 bg-gray-900 rounded">
+                                        <p class="text-center arabic text-lg"><strong>Pola:</strong> فُعُلٌ</p>
+                                        <p class="arabic text-center">كِتَابٌ &larr; كُتُبٌ</p>
+                                        <p class="arabic text-center">رَسُوْلٌ &larr; رُسُلٌ</p>
+                                    </div>
+                                    <div class="p-3 bg-gray-900 rounded">
+                                        <p class="text-center arabic text-lg"><strong>Pola:</strong> أَفْعَالٌ</p>
+                                        <p class="arabic text-center">قَلَمٌ &larr; أَقْلَامٌ</p>
+                                        <p class="arabic text-center">بَابٌ &larr; أَبْوَابٌ</p>
+                                    </div>
+                                    <div class="p-3 bg-gray-900 rounded">
+                                        <p class="text-center arabic text-lg"><strong>Pola:</strong> فُعَلَاءُ</p>
+                                        <p class="arabic text-center">عَالِمٌ &larr; عُلَمَاءُ</p>
+                                        <p class="arabic text-center">شَهِيدٌ &larr; شُهَدَاءُ</p>
+                                    </div>
+                                    <div class="p-3 bg-gray-900 rounded">
+                                        <p class="text-center arabic text-lg"><strong>Pola:</strong> فِعَالٌ</p>
+                                        <p class="arabic text-center">جَبَلٌ &larr; جِبَالٌ</p>
+                                        <p class="arabic text-center">رَجُلٌ &larr; رِجَالٌ</p>
+                                    </div>
+                                </div>
+                                <div class="teacher-note">
+                                    <p class="font-bold">Poin Diskusi Guru:</p>
+                                    <p>Tekankan bahwa kunci menguasai Jamak Taksir adalah dengan banyak membaca dan menghafal. Berikan santri daftar 10 Jamak Taksir yang paling sering muncul dalam Al-Qur'an untuk dihafalkan.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">3. Rangkuman Menyeluruh & Peta Konsep (25 Menit)</h4>
+                                <p>Saatnya menyatukan semua potongan puzzle. Buatlah peta konsep besar di papan tulis yang membagi Isim dari dua sisi:</p>
+                                <ul class="list-disc list-inside mt-2 space-y-1">
+                                    <li><strong>Berdasarkan Jenis:</strong>
+                                        <ul class="list-disc list-inside ml-6">
+                                            <li>Mudzakar (Haqiqi, Majazi)</li>
+                                            <li>Muannats (Haqiqi, Majazi, Lafdhi, Ma'nawi) dengan 3 tandanya.</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>Berdasarkan Bilangan:</strong>
+                                        <ul class="list-disc list-inside ml-6">
+                                            <li>Mufrad (1)</li>
+                                            <li>Mutsanna (2)</li>
+                                            <li>Jamak (>2) (Mudzakar Salim, Muannats Salim, Taksir)</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                                <p class="mt-2">Setiap Isim pasti memiliki satu sifat dari kategori jenis DAN satu sifat dari kategori bilangan. Contoh: kata <i class="arabic">مُسْلِمُوْنَ</i> adalah Isim Mudzakar dan Jamak (Mudzakar Salim).</p>
+                                
+                                <div class="flex justify-center my-4">
+                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-40 h-40" viewBox="0 0 100 100">
+                                        <path d="M50,10 L90,50 L50,90 L10,50 Z" stroke="#38b2ac" fill="none" stroke-width="2"/>
+                                        <line x1="50" y1="10" x2="50" y2="90" stroke="#a0aec0" stroke-width="1.5" />
+                                        <line x1="10" y1="50" x2="90" y2="50" stroke="#a0aec0" stroke-width="1.5" />
+                                        <text x="50" y="30" font-size="8" text-anchor="middle" fill="#fff">Jenis</text>
+                                        <text x="50" y="75" font-size="8" text-anchor="middle" fill="#fff">Bilangan</text>
+                                        <text x="28" y="55" font-size="8" text-anchor="middle" fill="#fff">Mudzakar</text>
+                                        <text x="72" y="55" font-size="8" text-anchor="middle" fill="#fff">Muannats</text>
+                                        <text x="50" y="48" font-size="8" text-anchor="middle" fill="#fff">Mufrad</text>
+                                        <text x="50" y="62" font-size="8" text-anchor="middle" fill="#fff">Mutsanna</text>
+                                        <text x="50" y="8" font-size="12" text-anchor="middle" fill="#38b2ac">اِسْمٌ</text>
+                                      </svg>
+                                </div>
+                                <p class="text-center text-sm">Ilustrasi: Setiap Isim dianalisis dari dua sumbu: Jenis dan Bilangan.</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-200">4. Persiapan Tes Sumatif (15 Menit)</h4>
+                                <p>Jelaskan format Tes Sumatif yang akan menggabungkan soal dari keempat pertemuan. Berikan kesempatan kepada santri untuk bertanya mengenai materi yang masih belum dipahami.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                 <!-- Card Simulasi Pertemuan 4 -->
+                <div class="p-6 simulation-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Simulasi Interaktif</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Simulasi 1: Tebak Jamak Taksir -->
+                        <div>
+                            <h4 class="font-semibold text-pesantren-accent mb-2">Simulasi 1: Master Jamak Taksir</h4>
+                            <p class="text-sm mb-4">Pilih bentuk Jamak Taksir yang benar dari Isim Mufrad berikut.</p>
+                            <div class="bg-gray-800 p-4 rounded-md">
+                                <p id="sim7-word" class="arabic text-3xl mb-4 text-center"></p>
+                                <div id="sim7-options" class="grid grid-cols-2 gap-2">
+                                     <!-- Options generated by JS -->
+                                </div>
+                                <p id="sim7-feedback" class="text-sm mt-3 h-4 text-center"></p>
+                                <button id="sim7-next" class="mt-2 w-full py-1 px-3 bg-pesantren-accent text-pesantren-darker rounded">Kata Berikutnya</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Simulasi 2: Analisis Isim Komprehensif -->
+                        <div>
+                             <h4 class="font-semibold text-pesantren-accent mb-2">Simulasi 2: Analis Nahwu</h4>
+                             <p class="text-sm mb-4">Analisis Isim berikut berdasarkan Jenis dan Bilangannya.</p>
+                             <div class="bg-gray-800 p-4 rounded-md">
+                                <p id="sim8-word" class="arabic text-3xl mb-4 text-center"></p>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm">Jenis:</label>
+                                        <select id="sim8-jenis" class="w-full bg-gray-700 p-2 rounded text-white">
+                                            <option value="">Pilih Jenis...</option>
+                                            <option value="mudzakar">Mudzakar</option>
+                                            <option value="muannats">Muannats</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm">Bilangan:</label>
+                                        <select id="sim8-bilangan" class="w-full bg-gray-700 p-2 rounded text-white">
+                                             <option value="">Pilih Bilangan...</option>
+                                             <option value="mufrad">Mufrad</option>
+                                             <option value="mutsanna">Mutsanna</option>
+                                             <option value="jamak">Jamak</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button id="sim8-check" class="w-full mt-3 py-2 bg-pesantren-accent text-pesantren-darker rounded font-semibold">Periksa Jawaban</button>
+                                <p id="sim8-feedback" class="text-sm mt-3 h-4 text-center"></p>
+                                <button id="sim8-next" class="mt-2 w-full py-1 px-3 bg-gray-600 text-white rounded">Isim Berikutnya</button>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Card Latihan Formatif Pertemuan 4 -->
+                 <div class="p-6 quiz-card rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Latihan Formatif Pertemuan 4</h3>
+                    <div id="quiz4" class="space-y-6">
+                        <!-- Soal akan di-generate oleh JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================== -->
+            <!-- ======================= KONTEN TES SUMATIF ======================== -->
+            <!-- =================================================================== -->
+            <div id="tesSumatif" class="tab-pane hidden space-y-6">
+                <div class="p-6 bg-red-900/30 border border-red-500 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-red-300 mb-2">Tes Sumatif: NAH-204</h2>
+                    <p class="mb-6 text-red-200">Ujian akhir untuk mengukur pemahaman keseluruhan modul. Bismillah, semoga dimudahkan!</p>
+                    
+                    <div id="sumatif-questions-container">
+                        <!-- Kontainer untuk soal-soal tes sumatif -->
+                    </div>
+
+                    <div id="sumatif-result-container" class="hidden text-center p-6 bg-pesantren-darker rounded-lg">
+                        <h3 class="text-2xl font-bold text-white">Hasil Tes Sumatif</h3>
+                        <p id="sumatif-score" class="text-4xl font-bold text-pesantren-accent my-4"></p>
+                        <p id="sumatif-feedback" class="text-lg mb-6"></p>
+                        <button id="sumatif-retry-btn" class="py-2 px-6 bg-pesantren-accent text-pesantren-darker font-semibold rounded-lg hover:bg-pesantren-accent-hover transition-colors">
+                            Ulangi Tes
+                        </button>
+                    </div>
+
+                    <button id="sumatif-submit-btn" class="w-full mt-6 py-3 bg-pesantren-accent text-pesantren-darker font-bold rounded-lg text-lg hover:bg-pesantren-accent-hover transition-colors">
+                        Selesaikan Tes
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ===================================================================
+    // ======================= DATA BANK SOAL ============================
+    // ===================================================================
+    const quizData = {
+        quiz1: [
+            { q: "Kata <span class='arabic-text'>بَيْتٌ</span> (rumah) termasuk jenis Isim...", options: ["Mudzakar Majazi", "Muannats Haqiqi", "Mudzakar Haqiqi", "Muannats Majazi"], a: 0, exp: "Benar. <span class='arabic-text'>بَيْتٌ</span> adalah benda mati yang dihukumi mudzakar (Majazi)." },
+            { q: "Tanda muannats yang paling umum pada sebuah Isim adalah...", options: ["Fathah", "Kasrah", "Ta' Marbuthah", "Alif Lam"], a: 2, exp: "Benar. Ta' Marbuthah (<span class='arabic-text'>ة</span>) adalah ciri khas utama Isim Muannats." },
+            { q: "Manakah dari kata berikut yang merupakan Muannats?", options: ["<span class='arabic-text'>كُرْسِيٌّ</span>", "<span class='arabic-text'>مَكْتَبٌ</span>", "<span class='arabic-text'>سَيَّارَةٌ</span>", "<span class='arabic-text'>بَحْرٌ</span>"], a: 2, exp: "Benar. <span class='arabic-text'>سَيَّارَةٌ</span> diakhiri dengan Ta' Marbuthah, menjadikannya muannats." },
+            { q: "Kata <span class='arabic-text'>مُحَمَّدٌ</span> adalah contoh dari...", options: ["Mudzakar Majazi", "Mudzakar Haqiqi", "Muannats Lafdhi", "Muannats Haqiqi"], a: 1, exp: "Benar. <span class='arabic-text'>مُحَمَّدٌ</span> adalah nama untuk laki-laki, sehingga termasuk Mudzakar Haqiqi." },
+            { q: "Isim yang menunjukkan jenis laki-laki dari manusia atau hewan disebut...", options: ["Mudzakar Haqiqi", "Muannats Haqiqi", "Mudzakar Majazi", "Muannats Majazi"], a: 0, exp: "Benar. Haqiqi berarti 'sebenarnya', merujuk pada makhluk hidup." },
+            { q: "Kata <span class='arabic-text'>مِرْوَحَةٌ</span> (kipas angin) adalah Isim...", options: ["Mudzakar", "Muannats", "Bisa keduanya", "Bukan Isim"], a: 1, exp: "Benar. Adanya Ta' Marbuthah menjadikannya muannats." },
+            { q: "Lawan dari <span class='arabic-text'>مُذَكَّرٌ</span> adalah...", options: ["<span class='arabic-text'>مُفْرَدٌ</span>", "<span class='arabic-text'>جَمْعٌ</span>", "<span class='arabic-text'>فِعْلٌ</span>", "<span class='arabic-text'>مُؤَنَّثٌ</span>"], a: 3, exp: "Benar. <span class='arabic-text'>مُؤَنَّثٌ</span> adalah lawan dari <span class='arabic-text'>مُذَكَّرٌ</span> dalam pembagian Isim berdasarkan jenis." },
+            { q: "Semua Isim pada dasarnya dihukumi sebagai... kecuali ada dalil atau tanda yang menunjukkan sebaliknya.", options: ["Muannats", "Jamak", "Mudzakar", "Mutsanna"], a: 2, exp: "Benar. Ini adalah kaidah dasar dalam nahwu, hukum asal Isim adalah mudzakar." },
+            { q: "Manakah yang BUKAN merupakan Isim Mudzakar?", options: ["<span class='arabic-text'>نَجْمٌ</span>", "<span class='arabic-text'>غُرْفَةٌ</span>", "<span class='arabic-text'>نَهْرٌ</span>", "<span class='arabic-text'>جَبَلٌ</span>"], a: 1, exp: "Benar. <span class='arabic-text'>غُرْفَةٌ</span> (kamar) memiliki Ta' Marbuthah sehingga ia adalah muannats." },
+            { q: "Mengubah <span class='arabic-text'>مُدَرِّسٌ</span> menjadi bentuk muannats-nya adalah...", options: ["<span class='arabic-text'>مُدَرِّسَةٌ</span>", "<span class='arabic-text'>مُدَرِّسَتَانِ</span>", "<span class='arabic-text'>مُدَرِّسُوْنَ</span>", "<span class='arabic-text'>مُدَرِّسَاتٌ</span>"], a: 0, exp: "Benar. Dengan menambahkan Ta' Marbuthah, kata tersebut menjadi muannats." }
+        ],
+        quiz2: [
+            { q: "Selain Ta' Marbuthah, tanda muannats lainnya adalah...", options: ["Alif Maqsurah & Alif Mamdudah", "Dhommah & Fathah", "Alif Lam & Tanwin", "Ya' & Wawu"], a: 0, exp: "Benar. Alif Maqsurah (<span class='arabic-text'>ـى</span>) dan Alif Mamdudah (<span class='arabic-text'>اء</span>) adalah tanda muannats lainnya." },
+            { q: "Kata <span class='arabic-text'>صَحْرَاءُ</span> (gurun) adalah muannats dengan tanda...", options: ["Ta' Marbuthah", "Alif Maqsurah", "Alif Mamdudah", "Tanpa tanda (Ma'nawi)"], a: 2, exp: "Benar. Akhiran <span class='arabic-text'>اء</span> adalah tanda Alif Ta'nits Mamdudah." },
+            { q: "Kata <span class='arabic-text'>زَيْنَبُ</span> dihukumi muannats. Jenis muannats apakah ini?", options: ["Muannats Lafdhi", "Muannats Ma'nawi", "Muannats Majazi", "Muannats Haqiqi"], a: 1, exp: "Benar. <span class='arabic-text'>زَيْنَبُ</span> adalah muannats secara makna (nama perempuan) tapi tidak punya tanda lafdzi." },
+            { q: "Manakah dari berikut ini yang merupakan contoh Muannats Lafdhi?", options: ["<span class='arabic-text'>عَائِشَةُ</span>", "<span class='arabic-text'>فَاطِمَةُ</span>", "<span class='arabic-text'>حَمْزَةُ</span>", "<span class='arabic-text'>شَمْسٌ</span>"], a: 2, exp: "Benar. <span class='arabic-text'>حَمْزَةُ</span> memiliki tanda muannats (<span class='arabic-text'>ة</span>) tapi maknanya untuk laki-laki." },
+            { q: "Kata <span class='arabic-text'>شَمْسٌ</span> (matahari) adalah muannats sama'i. Tipe muannats apakah ini?", options: ["Lafdhi", "Ma'nawi", "Haqiqi", "Mudzakar Majazi"], a: 1, exp: "Benar. Orang Arab menganggapnya muannats tanpa adanya tanda, maka ia termasuk Ma'nawi." },
+            { q: "Tanda Alif Ta'nits Maqsurah terdapat pada kata...", options: ["<span class='arabic-text'>سَمَاءُ</span>", "<span class='arabic-text'>كُبْرَى</span>", "<span class='arabic-text'>مَدِيْنَةٌ</span>", "<span class='arabic-text'>عَلِيٌّ</span>"], a: 1, exp: "Benar. Kata <span class='arabic-text'>كُبْرَى</span> diakhiri dengan Alif Maqsurah (<span class='arabic-text'>ـى</span>)." },
+            { q: "Muannats yang lafazhnya memiliki tanda muannats tetapi maknanya mudzakar disebut...", options: ["Muannats Haqiqi", "Muannats Ma'nawi", "Muannats Majazi", "Muannats Lafdhi"], a: 3, exp: "Benar. Itulah definisi dari Muannats Lafdhi, seperti pada nama <span class='arabic-text'>طَلْحَةُ</span>." },
+            { q: "Kata <span class='arabic-text'>أَرْضٌ</span> (bumi) adalah...", options: ["Mudzakar", "Muannats Ma'nawi", "Muannats Lafdhi", "Bukan Isim"], a: 1, exp: "Benar. Seperti <span class='arabic-text'>شَمْسٌ</span>, kata <span class='arabic-text'>أَرْضٌ</span> juga dianggap muannats secara sama'i (ma'nawi)." },
+            { q: "Manakah yang BUKAN tanda lafdzi (terlihat) dari Isim Muannats?", options: ["<span class='arabic-text'>ـة</span>", "<span class='arabic-text'>ـى</span>", "Tidak memiliki tanda", "<span class='arabic-text'>ـاء</span>"], a: 2, exp: "Benar. 'Tidak memiliki tanda' adalah ciri dari muannats ma'nawi, bukan tanda lafdzi." },
+            { q: "Kata <span class='arabic-text'>حُبْلَى</span> (wanita hamil) adalah muannats...", options: ["Haqiqi & memiliki tanda Alif Maqsurah", "Majazi & memiliki tanda Ta' Marbuthah", "Ma'nawi & tanpa tanda", "Lafdhi & memiliki tanda Alif Mamdudah"], a: 0, exp: "Benar. <span class='arabic-text'>حُبْلَى</span> merujuk pada wanita (Haqiqi) dan tandanya adalah Alif Maqsurah." }
+        ],
+        quiz3: [
+            { q: "Isim yang menunjukkan bilangan tunggal disebut...", options: ["Mufrad", "Mutsanna", "Jamak", "Isim Isyarah"], a: 0, exp: "Benar. <span class='arabic-text'>مُفْرَدٌ</span> artinya tunggal." },
+            { q: "Bagaimana cara membentuk Mutsanna dari kata <span class='arabic-text'>مُسْلِمٌ</span>?", options: ["Menambah <span class='arabic-text'>وْنَ</span>", "Menambah <span class='arabic-text'>اتٌ</span>", "Menambah <span class='arabic-text'>انِ</span>", "Dibiarkan saja"], a: 2, exp: "Benar. Bentuk Mutsanna (rafa') dibentuk dengan menambahkan <span class='arabic-text'>انِ</span> menjadi <span class='arabic-text'>مُسْلِمَانِ</span>." },
+            { q: "Bentuk Mutsanna dari <span class='arabic-text'>سَيَّارَةٌ</span> adalah...", options: ["<span class='arabic-text'>سَيَّارَاتٌ</span>", "<span class='arabic-text'>سَيَّارَتَانِ</span>", "<span class='arabic-text'>سَيَّارُوْنَ</span>", "<span class='arabic-text'>سَيَّارَةٌ</span>"], a: 1, exp: "Benar. Ta' Marbuthah diubah menjadi Ta' Maftuhah lalu ditambah <span class='arabic-text'>انِ</span>." },
+            { q: "Jamak Mudzakar Salim adalah jamak khusus untuk Isim...", options: ["Muannats berakal", "Mudzakar tidak berakal", "Muannats apapun", "Mudzakar berakal"], a: 3, exp: "Benar. Jamak ini umumnya untuk mudzakar yang berakal seperti manusia." },
+            { q: "Bentuk Jamak Mudzakar Salim dari <span class='arabic-text'>مُهَنْدِسٌ</span> adalah...", options: ["<span class='arabic-text'>مُهَنْدِسَانِ</span>", "<span class='arabic-text'>مُهَنْدِسَاتٌ</span>", "<span class='arabic-text'>مُهَنْدِسُوْنَ</span>", "<span class='arabic-text'>مَهَانِدِسُ</span>"], a: 2, exp: "Benar. Dengan menambahkan <span class='arabic-text'>وْنَ</span>." },
+            { q: "Kata <span class='arabic-text'>مُؤْمِنُوْنَ</span> adalah Isim yang menunjukkan bilangan...", options: ["Satu", "Dua", "Lebih dari dua", "Tidak tentu"], a: 2, exp: "Benar. Akhiran <span class='arabic-text'>وْنَ</span> adalah tanda Jamak Mudzakar Salim." },
+            { q: "Bentuk Jamak Muannats Salim dari <span class='arabic-text'>طَالِبَةٌ</span> adalah...", options: ["<span class='arabic-text'>طَالِبَاتٌ</span>", "<span class='arabic-text'>طَالِبَتَانِ</span>", "<span class='arabic-text'>طَالِبُوْنَ</span>", "<span class='arabic-text'>طُلَّابٌ</span>"], a: 0, exp: "Benar. Ta' Marbuthah dibuang, lalu ditambah <span class='arabic-text'>اتٌ</span>." },
+            { q: "Mengapa Jamak Mudzakar Salim dan Muannats Salim disebut 'Salim'?", options: ["Karena sulit diucapkan", "Karena hanya untuk orang shalih", "Karena bentuk mufradnya selamat dari perubahan", "Karena berasal dari kata salam"], a: 2, exp: "Benar. 'Salim' artinya selamat, karena struktur kata mufradnya tetap utuh." },
+            { q: "Kata <span class='arabic-text'>مُعَلِّمَانِ</span> adalah bentuk... dari <span class='arabic-text'>مُعَلِّمٌ</span>.", options: ["Mufrad", "Mutsanna", "Jamak Mudzakar Salim", "Jamak Taksir"], a: 1, exp: "Benar. Akhiran <span class='arabic-text'>انِ</span> adalah tanda Mutsanna." },
+            { q: "Jamak dari <span class='arabic-text'>مُسْلِمَةٌ</span> adalah...", options: ["<span class='arabic-text'>مُسْلِمُوْنَ</span>", "<span class='arabic-text'>مُسْلِمَتَانِ</span>", "<span class='arabic-text'>مُسْلِمَاتٌ</span>", "<span class='arabic-text'>مَسَالِمُ</span>"], a: 2, exp: "Benar. Ini adalah contoh pembentukan Jamak Muannats Salim." }
+        ],
+        quiz4: [
+            { q: "Jamak yang bentuk mufradnya berubah atau 'pecah' disebut...", options: ["Jamak Mudzakar Salim", "Jamak Muannats Salim", "Jamak Taksir", "Jamak Ghafir"], a: 2, exp: "Benar. 'Taksir' berarti memecahkan, karena struktur mufradnya berubah." },
+            { q: "Bentuk jamak dari <span class='arabic-text'>كِتَابٌ</span> adalah...", options: ["<span class='arabic-text'>كِتَابَانِ</span>", "<span class='arabic-text'>كِتَابُوْنَ</span>", "<span class='arabic-text'>كُتُبٌ</span>", "<span class='arabic-text'>كِتَابَاتٌ</span>"], a: 2, exp: "Benar. Ini adalah contoh Jamak Taksir dengan wazan <span class='arabic-text'>فُعُلٌ</span>." },
+            { q: "Bagaimana cara mengetahui bentuk Jamak Taksir sebuah kata?", options: ["Dengan menambahkan <span class='arabic-text'>وْنَ</span>", "Dengan menghafal atau melihat kamus (sama'i)", "Dengan menambahkan <span class='arabic-text'>اتٌ</span>", "Semua kata punya pola yang sama"], a: 1, exp: "Benar. Jamak Taksir tidak punya aturan baku, jadi harus dihafal." },
+            { q: "Manakah dari berikut ini yang merupakan Jamak Taksir?", options: ["<span class='arabic-text'>مُهَنْدِسُوْنَ</span>", "<span class='arabic-text'>مَدْرَسَاتٌ</span>", "<span class='arabic-text'>قَلَمَانِ</span>", "<span class='arabic-text'>عُلَمَاءُ</span>"], a: 3, exp: "Benar. <span class='arabic-text'>عُلَمَاءُ</span> adalah jamak taksir dari <span class='arabic-text'>عَالِمٌ</span>." },
+            { q: "Kata <span class='arabic-text'>أَقْلَامٌ</span> adalah bentuk jamak dari...", options: ["<span class='arabic-text'>قَلَمٌ</span>", "<span class='arabic-text'>قَلَمَانِ</span>", "<span class='arabic-text'>قَلِيْلٌ</span>", "<span class='arabic-text'>قِلَامَةٌ</span>"], a: 0, exp: "Benar. <span class='arabic-text'>أَقْلَامٌ</span> mengikuti wazan <span class='arabic-text'>أَفْعَالٌ</span>." },
+            { q: "Sebuah Isim pasti memiliki dua sifat, yaitu...", options: ["Panjang & Pendek", "Jenis & Bilangan", "Berasal dari Fi'il & Huruf", "Berawalan Alif Lam & Tanwin"], a: 1, exp: "Benar. Setiap Isim bisa dianalisis dari sisi jenisnya (gender) dan bilangannya (number)." },
+            { q: "Analisis yang tepat untuk kata <span class='arabic-text'>طَالِبَتَانِ</span> adalah...", options: ["Mudzakar, Mutsanna", "Muannats, Jamak", "Muannats, Mutsanna", "Mudzakar, Mufrad"], a: 2, exp: "Benar. Kata ini merujuk pada dua siswi, sehingga ia adalah Muannats dan Mutsanna." },
+            { q: "Jamak dari <span class='arabic-text'>رَجُلٌ</span> adalah <span class='arabic-text'>رِجَالٌ</span>. Jenis jamak ini adalah...", options: ["Mudzakar Salim", "Muannats Salim", "Taksir", "Mutsanna"], a: 2, exp: "Benar. Bentuk mufradnya berubah, maka ia adalah Jamak Taksir." },
+            { q: "Kata <span class='arabic-text'>مَسَاجِدُ</span> adalah jamak taksir dari...", options: ["<span class='arabic-text'>سَاجِدٌ</span>", "<span class='arabic-text'>مَسْجِدٌ</span>", "<span class='arabic-text'>سَجْدَةٌ</span>", "<span class='arabic-text'>مُسَجَّدٌ</span>"], a: 1, exp: "Benar. <span class='arabic-text'>مَسَاجِدُ</span> adalah jamak dari <span class='arabic-text'>مَسْجِدٌ</span>." },
+            { q: "Analisis lengkap untuk kata <span class='arabic-text'>الْمُسْلِمُوْنَ</span> adalah...", options: ["Mudzakar, Jamak Salim", "Mudzakar, Mutsanna", "Muannats, Jamak Salim", "Mudzakar, Jamak Taksir"], a: 0, exp: "Benar. Ia adalah mudzakar yang menunjukkan jumlah banyak dan bentuknya beraturan (Salim)." }
+        ]
+    };
+
+    const sumatifData = [
+        ...quizData.quiz1.slice(0, 5),
+        ...quizData.quiz2.slice(0, 5),
+        ...quizData.quiz3.slice(0, 5),
+        ...quizData.quiz4.slice(0, 5)
+    ].sort(() => Math.random() - 0.5); // Acak soal sumatif
+
+
+    // ===================================================================
+    // ======================== FUNGSI UTAMA =============================
+    // ===================================================================
+
+    // Inisialisasi Tab
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panes = document.querySelectorAll('.tab-pane');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            panes.forEach(p => {
+                p.classList.add('hidden');
+                p.classList.remove('active');
+            });
+
+            tab.classList.add('active');
+            const targetPane = document.getElementById(tab.dataset.tab);
+            targetPane.classList.remove('hidden');
+            targetPane.classList.add('active');
+        });
+    });
+
+    // Fungsi untuk membuat quiz
+    function createQuiz(quizId, data) {
+        const container = document.getElementById(quizId);
+        if (!container) return;
+
+        data.forEach((item, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-block';
+            
+            const questionText = document.createElement('p');
+            questionText.className = 'mb-3';
+            questionText.innerHTML = `${index + 1}. ${item.q}`;
+            questionDiv.appendChild(questionText);
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'space-y-2 options-container';
+            
+            item.options.forEach((option, i) => {
+                const label = document.createElement('label');
+                label.className = 'block p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors';
+                
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = `${quizId}-q${index}`;
+                radio.value = i;
+                radio.className = 'mr-3';
+                label.appendChild(radio);
+
+                const optionText = document.createElement('span');
+                optionText.innerHTML = option;
+                label.appendChild(optionText);
+
+                optionsDiv.appendChild(label);
+            });
+            questionDiv.appendChild(optionsDiv);
+
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = 'p-3 mt-3 rounded-lg text-sm hidden feedback-box';
+            questionDiv.appendChild(feedbackDiv);
+            
+            container.appendChild(questionDiv);
+
+            // Event listener untuk radio buttons
+            optionsDiv.addEventListener('change', (e) => {
+                const selectedValue = parseInt(e.target.value);
+                const isCorrect = selectedValue === item.a;
+
+                // Disable all options for this question
+                optionsDiv.querySelectorAll('input[type="radio"]').forEach(radio => {
+                    radio.disabled = true;
+                    const parentLabel = radio.parentElement;
+                    if (parseInt(radio.value) === item.a) {
+                         parentLabel.classList.add('bg-correct', 'text-black', 'font-bold');
+                    }
+                });
+
+                if (!isCorrect) {
+                     e.target.parentElement.classList.remove('bg-correct');
+                     e.target.parentElement.classList.add('bg-incorrect', 'text-black', 'font-bold');
+                }
+                
+                feedbackDiv.innerHTML = item.exp;
+                feedbackDiv.classList.remove('hidden');
+                feedbackDiv.classList.add(isCorrect ? 'bg-green-900/50' : 'bg-red-900/50');
+            });
+        });
+    }
+
+    // Generate semua kuis formatif
+    createQuiz('quiz1', quizData.quiz1);
+    createQuiz('quiz2', quizData.quiz2);
+    createQuiz('quiz3', quizData.quiz3);
+    createQuiz('quiz4', quizData.quiz4);
+
+    // Inisialisasi Tes Sumatif
+    function createSumatifTest() {
+        const container = document.getElementById('sumatif-questions-container');
+        container.innerHTML = ''; // Clear previous test
+        
+        sumatifData.forEach((item, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'mb-6 p-4 bg-gray-800 rounded-lg';
+            
+            const questionText = document.createElement('p');
+            questionText.className = 'mb-3';
+            questionText.innerHTML = `${index + 1}. ${item.q}`;
+            questionDiv.appendChild(questionText);
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'space-y-2';
+            
+            item.options.forEach((option, i) => {
+                const label = document.createElement('label');
+                label.className = 'block p-3 bg-gray-900 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors';
+                
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = `sumatif-q${index}`;
+                radio.value = i;
+                radio.dataset.correct = item.a;
+                radio.className = 'mr-3';
+                label.appendChild(radio);
+
+                const optionText = document.createElement('span');
+                optionText.innerHTML = option;
+                label.appendChild(optionText);
+
+                optionsDiv.appendChild(label);
+            });
+            questionDiv.appendChild(optionsDiv);
+            container.appendChild(questionDiv);
+        });
+    }
+
+    createSumatifTest();
+
+    // Logika tombol submit tes sumatif
+    const submitBtn = document.getElementById('sumatif-submit-btn');
+    const questionsContainer = document.getElementById('sumatif-questions-container');
+    const resultContainer = document.getElementById('sumatif-result-container');
+    const scoreEl = document.getElementById('sumatif-score');
+    const feedbackEl = document.getElementById('sumatif-feedback');
+
+    submitBtn.addEventListener('click', () => {
+        let score = 0;
+        const totalQuestions = sumatifData.length;
+        const selectedAnswers = questionsContainer.querySelectorAll('input[type="radio"]:checked');
+
+        selectedAnswers.forEach(radio => {
+            if (parseInt(radio.value) === parseInt(radio.dataset.correct)) {
+                score++;
+            }
+        });
+
+        scoreEl.textContent = `${score} / ${totalQuestions}`;
+        
+        const percentage = (score / totalQuestions) * 100;
+        if (percentage >= 85) {
+            feedbackEl.textContent = "Mumtaz! Pemahaman Anda sangat baik. Barakallahu fiik.";
+        } else if (percentage >= 70) {
+            feedbackEl.textContent = "Jayyid Jiddan. Hasil yang bagus, terus tingkatkan!";
+        } else if (percentage >= 50) {
+            feedbackEl.textContent = "Jayyid. Cukup baik, muraja'ah lagi materi yang kurang dipahami.";
+        } else {
+            feedbackEl.textContent = "Perlu belajar lebih giat lagi. Jangan putus asa, ulangi tes setelah muraja'ah.";
+        }
+        
+        questionsContainer.classList.add('hidden');
+        submitBtn.classList.add('hidden');
+        resultContainer.classList.remove('hidden');
+    });
+
+    // Logika tombol ulangi tes
+    const retryBtn = document.getElementById('sumatif-retry-btn');
+    retryBtn.addEventListener('click', () => {
+        resultContainer.classList.add('hidden');
+        questionsContainer.classList.remove('hidden');
+        submitBtn.classList.remove('hidden');
+        createSumatifTest(); // Re-create to reset everything
+    });
+
+
+    // ===================================================================
+    // ================== LOGIKA SIMULASI INTERAKTIF =====================
+    // ===================================================================
+    
+    // Simulasi 1: Drag & Drop
+    const draggables = document.querySelectorAll('.draggable');
+    const dropZones = document.querySelectorAll('.drop-zone');
+    const sim1Feedback = document.getElementById('sim1-feedback');
+
+    draggables.forEach(draggable => {
+        draggable.addEventListener('dragstart', () => {
+            draggable.classList.add('opacity-50');
+        });
+        draggable.addEventListener('dragend', () => {
+            draggable.classList.remove('opacity-50');
+        });
+    });
+
+    dropZones.forEach(zone => {
+        zone.addEventListener('dragover', e => {
+            e.preventDefault();
+            zone.classList.add('drag-over');
+        });
+        zone.addEventListener('dragleave', () => {
+            zone.classList.remove('drag-over');
+        });
+        zone.addEventListener('drop', e => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            const draggedEl = document.querySelector('.opacity-50');
+            if (draggedEl.dataset.type === zone.dataset.target) {
+                zone.appendChild(draggedEl);
+                draggedEl.classList.remove('bg-pesantren-accent', 'text-pesantren-darker');
+                draggedEl.classList.add('bg-correct', 'text-black');
+                draggedEl.setAttribute('draggable', 'false');
+                sim1Feedback.textContent = "Benar!";
+                sim1Feedback.className = 'text-sm mt-3 h-4 text-correct';
+            } else {
+                sim1Feedback.textContent = "Kurang tepat, coba lagi.";
+                 sim1Feedback.className = 'text-sm mt-3 h-4 text-incorrect';
+            }
+            setTimeout(() => sim1Feedback.textContent = '', 2000);
+        });
+    });
+
+    // Simulasi 2: Identifikasi Ta' Marbuthah
+    const sim2Words = document.querySelectorAll('.sim2-word');
+    const sim2ScoreEl = document.getElementById('sim2-score');
+    let sim2CorrectCount = 0;
+    const totalMuannats = Array.from(sim2Words).filter(w => w.dataset.muannats === 'true').length;
+
+    sim2Words.forEach(word => {
+        word.addEventListener('click', () => {
+            if (word.classList.contains('clicked')) return;
+            word.classList.add('clicked');
+            if (word.dataset.muannats === 'true') {
+                word.classList.remove('bg-gray-600');
+                word.classList.add('bg-correct', 'text-black');
+                sim2CorrectCount++;
+            } else {
+                word.classList.remove('bg-gray-600');
+                word.classList.add('bg-incorrect', 'text-black');
+            }
+            sim2ScoreEl.textContent = sim2CorrectCount;
+        });
+    });
+
+    // Simulasi 3: Pilih Tanda Muannats
+    const sim3Data = [
+        { word: 'سَلْمَى', sign: 'ـى', options: ['ـة', 'ـى', 'اء', 'لا شيء'] },
+        { word: 'بَيْضَاءُ', sign: 'اء', options: ['ـة', 'ـى', 'اء', 'لا شيء'] },
+        { word: 'مَدْرَسَةٌ', sign: 'ـة', options: ['ـة', 'ـى', 'اء', 'لا شيء'] },
+        { word: 'مَرْيَمُ', sign: 'لا شيء', options: ['ـة', 'ـى', 'اء', 'لا شيء'] },
+    ];
+    let currentSim3Index = 0;
+    const sim3WordEl = document.getElementById('sim3-word');
+    const sim3OptionsEl = document.getElementById('sim3-options');
+    const sim3FeedbackEl = document.getElementById('sim3-feedback');
+    const sim3NextBtn = document.getElementById('sim3-next');
+
+    function loadSim3() {
+        const item = sim3Data[currentSim3Index];
+        sim3WordEl.textContent = item.word;
+        sim3OptionsEl.innerHTML = '';
+        sim3FeedbackEl.textContent = '';
+        item.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'arabic p-2 rounded bg-gray-700 hover:bg-gray-600';
+            btn.textContent = opt;
+            btn.onclick = () => checkSim3Answer(opt, item.sign);
+            sim3OptionsEl.appendChild(btn);
+        });
+    }
+
+    function checkSim3Answer(selected, correct) {
+        if (selected === correct) {
+            sim3FeedbackEl.textContent = 'Jawaban Benar!';
+            sim3FeedbackEl.className = 'text-sm mt-3 h-4 text-correct';
+        } else {
+            sim3FeedbackEl.textContent = `Salah. Jawaban yang benar adalah ${correct}`;
+            sim3FeedbackEl.className = 'text-sm mt-3 h-4 text-incorrect';
+        }
+        // Disable buttons
+        Array.from(sim3OptionsEl.children).forEach(btn => btn.disabled = true);
+    }
+    
+    sim3NextBtn.addEventListener('click', () => {
+        currentSim3Index = (currentSim3Index + 1) % sim3Data.length;
+        loadSim3();
+    });
+    
+    // Simulasi 4: Klasifikasi Jenis Muannats
+    const sim4Data = [
+        { word: 'أُمٌّ', type: 'Haqiqi', options: ['Haqiqi', 'Majazi', 'Lafdhi', 'Ma\'nawi'] },
+        { word: 'دَارٌ', type: 'Majazi', options: ['Haqiqi', 'Majazi', 'Lafdhi', 'Ma\'nawi'] },
+        { word: 'أُسَامَةُ', type: 'Lafdhi', options: ['Haqiqi', 'Majazi', 'Lafdhi', 'Ma\'nawi'] },
+        { word: 'هِندٌ', type: 'Ma\'nawi', options: ['Haqiqi', 'Majazi', 'Lafdhi', 'Ma\'nawi'] },
+    ];
+    let currentSim4Index = 0;
+    const sim4WordEl = document.getElementById('sim4-word');
+    const sim4OptionsEl = document.getElementById('sim4-options');
+    const sim4FeedbackEl = document.getElementById('sim4-feedback');
+    const sim4NextBtn = document.getElementById('sim4-next');
+
+    function loadSim4() {
+        const item = sim4Data[currentSim4Index];
+        sim4WordEl.textContent = item.word;
+        sim4OptionsEl.innerHTML = '';
+        sim4FeedbackEl.textContent = '';
+        item.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'p-2 rounded bg-gray-700 hover:bg-gray-600';
+            btn.textContent = opt;
+            btn.onclick = () => checkSim4Answer(btn, opt, item.type);
+            sim4OptionsEl.appendChild(btn);
+        });
+    }
+
+    function checkSim4Answer(btn, selected, correct) {
+        if (selected === correct) {
+            btn.className = 'p-2 rounded bg-correct text-black';
+            sim4FeedbackEl.textContent = 'Benar!';
+            sim4FeedbackEl.className = 'text-sm mt-3 h-4 text-center text-correct';
+        } else {
+            btn.className = 'p-2 rounded bg-incorrect text-black';
+            sim4FeedbackEl.textContent = `Salah. Jawaban: ${correct}`;
+            sim4FeedbackEl.className = 'text-sm mt-3 h-4 text-center text-incorrect';
+        }
+        Array.from(sim4OptionsEl.children).forEach(b => b.disabled = true);
+    }
+    sim4NextBtn.addEventListener('click', () => {
+        currentSim4Index = (currentSim4Index + 1) % sim4Data.length;
+        loadSim4();
+    });
+
+    // Simulasi 5: Konverter Bilangan
+    const sim5Input = document.getElementById('sim5-input');
+    const sim5ConvertBtn = document.getElementById('sim5-convert');
+    const sim5MutsannaEl = document.getElementById('sim5-mutsanna');
+    const sim5JamakEl = document.getElementById('sim5-jamak');
+
+    sim5ConvertBtn.addEventListener('click', () => {
+        const input = sim5Input.value.trim();
+        if (!input) return;
+
+        if (input.endsWith('ة')) {
+            const base = input.slice(0, -1);
+            sim5MutsannaEl.textContent = base + 'تَانِ';
+            sim5JamakEl.textContent = base + 'َاتٌ';
+        } else {
+            sim5MutsannaEl.textContent = input + 'َانِ';
+            sim5JamakEl.textContent = input + 'ُوْنَ';
+        }
+    });
+
+    // Simulasi 6: Lengkapi Kalimat
+    document.querySelectorAll('.sim6-options').forEach(optionGroup => {
+        const correct = optionGroup.dataset.correct;
+        const feedback = optionGroup.nextElementSibling;
+        optionGroup.querySelectorAll('.sim6-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                optionGroup.querySelectorAll('.sim6-option').forEach(b => b.disabled = true);
+                if (btn.textContent.trim() === correct) {
+                    btn.classList.remove('bg-gray-700');
+                    btn.classList.add('bg-correct', 'text-black');
+                    feedback.textContent = 'Jawaban Benar!';
+                    feedback.className = 'sim6-feedback text-sm mt-1 h-4 text-correct';
+                } else {
+                    btn.classList.remove('bg-gray-700');
+                    btn.classList.add('bg-incorrect', 'text-black');
+                    feedback.textContent = `Salah. Jawaban yang benar adalah ${correct}`;
+                    feedback.className = 'sim6-feedback text-sm mt-1 h-4 text-incorrect';
+                }
+            });
+        });
+    });
+    
+    // Simulasi 7: Tebak Jamak Taksir
+    const sim7Data = [
+        { mufrad: 'بَيْتٌ', jamak: 'بُيُوْتٌ', options: ['بَيْتُوْنَ', 'بُيُوْتٌ', 'بَيْتَاتٌ', 'بَيْتَانِ'] },
+        { mufrad: 'طَالِبٌ', jamak: 'طُلَّابٌ', options: ['طَالِبُوْنَ', 'طَلَبَةٌ', 'طُلَّابٌ', 'طَالِبَاتٌ'] },
+        { mufrad: 'نَهْرٌ', jamak: 'أَنْهَارٌ', options: ['أَنْهُرٌ', 'نُهُوْرٌ', 'أَنْهَارٌ', 'نَهْرُوْنَ'] },
+        { mufrad: 'وَلَدٌ', jamak: 'أَوْلَادٌ', options: ['أَوْلَادٌ', 'وَلَدُوْنَ', 'وِلْدَانٌ', 'وَلَدَاتٌ'] },
+    ];
+    let currentSim7Index = 0;
+    const sim7WordEl = document.getElementById('sim7-word');
+    const sim7OptionsEl = document.getElementById('sim7-options');
+    const sim7FeedbackEl = document.getElementById('sim7-feedback');
+    const sim7NextBtn = document.getElementById('sim7-next');
+    
+    function loadSim7() {
+        const item = sim7Data[currentSim7Index];
+        sim7WordEl.textContent = item.mufrad;
+        sim7OptionsEl.innerHTML = '';
+        sim7FeedbackEl.textContent = '';
+        item.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'arabic p-2 rounded bg-gray-700 hover:bg-gray-600';
+            btn.textContent = opt;
+            btn.onclick = () => checkSim7Answer(btn, opt, item.jamak);
+            sim7OptionsEl.appendChild(btn);
+        });
+    }
+
+    function checkSim7Answer(btn, selected, correct) {
+        if (selected === correct) {
+            btn.className = 'arabic p-2 rounded bg-correct text-black';
+            sim7FeedbackEl.textContent = 'Benar!';
+            sim7FeedbackEl.className = 'text-sm mt-3 h-4 text-center text-correct';
+        } else {
+            btn.className = 'arabic p-2 rounded bg-incorrect text-black';
+            sim7FeedbackEl.textContent = `Salah. Jawaban: ${correct}`;
+            sim7FeedbackEl.className = 'text-sm mt-3 h-4 text-center text-incorrect';
+        }
+        Array.from(sim7OptionsEl.children).forEach(b => b.disabled = true);
+    }
+    sim7NextBtn.addEventListener('click', () => {
+        currentSim7Index = (currentSim7Index + 1) % sim7Data.length;
+        loadSim7();
+    });
+    
+    // Simulasi 8: Analisis Komprehensif
+    const sim8Data = [
+        { word: 'الْمُهَنْدِسَاتُ', jenis: 'muannats', bilangan: 'jamak' },
+        { word: 'الْقَلَمَانِ', jenis: 'mudzakar', bilangan: 'mutsanna' },
+        { word: 'رِجَالٌ', jenis: 'mudzakar', bilangan: 'jamak' },
+        { word: 'مَكْتَبَةٌ', jenis: 'muannats', bilangan: 'mufrad' },
+    ];
+    let currentSim8Index = 0;
+    const sim8WordEl = document.getElementById('sim8-word');
+    const sim8JenisSelect = document.getElementById('sim8-jenis');
+    const sim8BilanganSelect = document.getElementById('sim8-bilangan');
+    const sim8CheckBtn = document.getElementById('sim8-check');
+    const sim8NextBtn = document.getElementById('sim8-next');
+    const sim8FeedbackEl = document.getElementById('sim8-feedback');
+
+    function loadSim8() {
+        const item = sim8Data[currentSim8Index];
+        sim8WordEl.textContent = item.word;
+        sim8JenisSelect.value = '';
+        sim8BilanganSelect.value = '';
+        sim8JenisSelect.disabled = false;
+        sim8BilanganSelect.disabled = false;
+        sim8CheckBtn.disabled = false;
+        sim8FeedbackEl.textContent = '';
+    }
+    
+    sim8CheckBtn.addEventListener('click', () => {
+        const item = sim8Data[currentSim8Index];
+        const selectedJenis = sim8JenisSelect.value;
+        const selectedBilangan = sim8BilanganSelect.value;
+
+        if (selectedJenis === item.jenis && selectedBilangan === item.bilangan) {
+            sim8FeedbackEl.textContent = 'Analisis Tepat! Mumtaz!';
+            sim8FeedbackEl.className = 'text-sm mt-3 h-4 text-center text-correct';
+        } else {
+            sim8FeedbackEl.textContent = `Kurang Tepat. Coba periksa lagi.`;
+            sim8FeedbackEl.className = 'text-sm mt-3 h-4 text-center text-incorrect';
+        }
+        sim8JenisSelect.disabled = true;
+        sim8BilanganSelect.disabled = true;
+        sim8CheckBtn.disabled = true;
+    });
+
+    sim8NextBtn.addEventListener('click', () => {
+        currentSim8Index = (currentSim8Index + 1) % sim8Data.length;
+        loadSim8();
+    });
+
+    // Inisialisasi simulasi saat load
+    loadSim3();
+    loadSim4();
+    loadSim7();
+    loadSim8();
+});
+</script>
+</body>
+</html>
