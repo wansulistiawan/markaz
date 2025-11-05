@@ -4713,45 +4713,7 @@ function setupKeuanganEventListeners() {
         const tahun = document.getElementById('laporanTahun').value;
         fetchAndRenderKeuanganReport(tahun, bulan);
     });
-
-    // // // document.getElementById('kunciGajiBtn')?.addEventListener('click', () => {
-        const bulan = document.getElementById('tutupBukuBulan').value;
-        const tahun = document.getElementById('tutupBukuTahun').value;
-        const periode = `${tahun}-${bulan}`;
-
-        if (!confirm(`Anda akan "Menutup Buku" dan menyimpan data gaji permanen untuk bulan ${periode}.\n\nDATA YANG SUDAH DISIMPAN TIDAK BISA DIUBAH.\n\nPastikan semua absensi, bonus, dan potongan sudah final.\n\nLanjutkan?`)) {
-            return;
-        }
-
-        const btn = document.getElementById('kunciGajiBtn');
-        btn.disabled = true;
-        btn.textContent = 'MEMPROSES SEMUA KARYAWAN...';
-        showLoading(); // Tampilkan loading overlay
-
-        fetch(CONFIG.SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ 
-                action: 'kunciGajiBulanan', 
-                periode: periode
-            }),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        })
-        .then(res => res.json())
-        .then(result => {
-            if (result.status === 'success') {
-                showMessage(result.message, 'success');
-            } else {
-                throw new Error(result.message);
-            }
-        })
-        .catch(error => showMessage(`Gagal: ${error.message}`, 'error'))
-        .finally(() => {
-            btn.disabled = false;
-            btn.textContent = 'Kunci & Simpan Gaji Bulan Ini';
-            hideLoading(); // Sembunyikan loading overlay
-        });
-    });
-    // // // document.getElementById('addKeuanganRowBtn')?.addEventListener('click', addKeuanganInputRow);
+    document.getElementById('addKeuanganRowBtn')?.addEventListener('click', addKeuanganInputRow);
     document.getElementById('saveKeuanganBtn')?.addEventListener('click', handleSaveKeuangan);
 
 	document.getElementById('setTanggalDefaultBtn')?.addEventListener('click', handleSetDefaultDate);
@@ -6108,16 +6070,6 @@ if (lihatNilaiNav) {
             }
         }
         // --- AKHIR DARI KODE YANG DIPINDAHKAN ---
-    }
-	
-	if (financeUsers.includes(username)) {
-        const tutupBukuContainer = document.getElementById('tutup-buku-gaji-container');
-        if(tutupBukuContainer) tutupBukuContainer.classList.remove('hidden');
-
-        const bulanSelect = document.getElementById('tutupBukuBulan');
-        const tahunSelect = document.getElementById('tutupBukuTahun');
-        // Panggil fungsi yang sudah ada untuk mengisi dropdown-nya
-        populateMonthYearDropdowns(bulanSelect, tahunSelect); 
     }
     
     if (window.location.hash === '#login') { window.location.hash = '#beranda'; }
