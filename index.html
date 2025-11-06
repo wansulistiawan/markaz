@@ -274,6 +274,7 @@
 	nav .nav-container {
         overflow-x: auto; /* Memungkinkan scroll horizontal */
 		overflow-y: visible;
+		flex-wrap: nowrap;
 		padding-bottom: 8px;
         -webkit-overflow-scrolling: touch; /* Scroll lebih mulus di iOS */
         scrollbar-width: none; /* Sembunyikan scrollbar untuk Firefox */
@@ -1297,6 +1298,32 @@
         Unduh Slip Gaji (PDF)
     </button>
 	</div>
+	
+	<div id="total-gaji-karyawan-container" class="mt-8 mb-12 p-6 bg-blue-50 border-l-4 border-blue-400 rounded-lg shadow-md">
+    <h3 class="text-xl font-semibold text-blue-800 mb-4">Laporan Total Gaji Karyawan</h3>
+    <p class="text-blue-700 mb-6 text-sm">
+        Pilih bulan untuk melihat rekapitulasi total gaji bersih (dari HistoryGaji) untuk semua karyawan.
+    </p>
+    <div class="flex flex-wrap items-end gap-4">
+        <div class="form-group flex-grow" style="min-width: 150px;">
+            <label for="totalGajiBulan" class="font-semibold">Bulan</label>
+            <select id="totalGajiBulan" class="filter-select w-full mt-1"></select>
+        </div>
+        <div class="form-group" style="width: 120px;">
+            <label for="totalGajiTahun" class="font-semibold">Tahun</label>
+            <select id="totalGajiTahun" class="filter-select w-full mt-1"></select>
+        </div>
+        <div class="form-group">
+            <button id="tampilkanTotalGajiBtn" class="bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 w-full md:w-auto font-bold">
+                Tampilkan Laporan
+            </button>
+        </div>
+    </div>
+
+    <div id="total-gaji-report-container" class="mt-6">
+        </div>
+</div>
+	
 </div>
 	
     <div id="marquee-container" class="hidden">
@@ -5062,6 +5089,52 @@ function renderKeuanganChartAndTotals(yearlyData, year) {
     keuanganChartInstance = new Chart(ctx, chartConfig);
 }
 
+
+
+function renderTotalGajiTable(reportData, grandTotal) {
+    const container = document.getElementById('total-gaji-report-container');
+    const formatRp = num => (num || 0).toLocaleString('id-ID');
+
+    if (!reportData || reportData.length === 0) {
+        container.innerHTML = '<p class="p-4 text-center text-gray-500">Tidak ada data gaji yang ditemukan di HistoryGaji untuk periode ini.</p>';
+        return;
+    }
+
+    let rowsHTML = reportData
+        .sort((a, b) => a.Nama.localeCompare(b.Nama)) // Urutkan berdasarkan nama
+        .map((item, index) => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2 border text-center">${index + 1}</td>
+            <td class="px-4 py-2 border">${item.Nama}</td>
+            <td class="px-4 py-2 border text-right">Rp ${formatRp(item.GajiBersih)}</td>
+        </tr>
+    `).join('');
+
+    const tableHTML = `
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm mt-2 border-collapse">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-2 border text-center w-16">No</th>
+                        <th class="px-4 py-2 border text-left">Nama Karyawan</th>
+                        <th class="px-4 py-2 border text-right">Total Gaji (Bersih)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHTML}
+                </tbody>
+                <tfoot class="bg-gray-200 font-bold">
+                    <tr>
+                        <td colspan="2" class="px-4 py-3 border text-right">TOTAL KESELURUHAN</td>
+                        <td class="px-4 py-3 border text-right">Rp ${formatRp(grandTotal)}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+    container.innerHTML = tableHTML;
+}
+
 // === TAMBAHKAN SEMUA FUNGSI BARU DI BAWAH INI ===
 
 // Baca tanggal terakhir dari localStorage, atau gunakan tanggal hari ini jika tidak ada
@@ -5837,7 +5910,7 @@ function showPage(hash) {
             const session = getActiveSession();
             if (session && session.loggedIn) {
                 const userJabatan = session.userData.jabatan || '';
-                const isAdmin = (session.username === 'aria' || session.username === 'wawan' || session.username === 'admin');
+                const isAdmin = (session.username === 'aria' || session.username === 'wawan' || session.username === 'admin' || session.username === 'yeni');
                 const employeeSelector = document.getElementById('employeeSelectorContainer');
                 
                 populateMonthYearDropdowns(document.getElementById('monthSelectNew'), document.getElementById('yearSelect'));
@@ -5854,6 +5927,45 @@ function showPage(hash) {
                     showBtn.addEventListener('click', fetchAndRenderSlipGaji);
                     showBtn.dataset.listenerAttached = 'true';
                 }
+				
+				// === AWAL KODE BARU UNTUK TOMBOL TOTAL GAJI ===
+document.getElementById('tampilkanTotalGajiBtn')?.addEventListener('click', () => {
+    const bulan = document.getElementById('totalGajiBulan').value;
+    const tahun = document.getElementById('totalGajiTahun').value;
+    const periode = `${tahun}-${bulan}`;
+    const reportContainer = document.getElementById('total-gaji-report-container');
+    const btn = document.getElementById('tampilkanTotalGajiBtn');
+
+    reportContainer.innerHTML = '<p class="p-4 text-center text-gray-500">Memuat laporan total gaji...</p>';
+    btn.disabled = true;
+    btn.textContent = 'Memuat...';
+
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ 
+            action: 'getPayrollReport', 
+            periode: periode
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status === 'success') {
+            renderTotalGajiTable(result.report, result.grandTotal);
+        } else {
+            throw new Error(result.message);
+        }
+    })
+    .catch(error => {
+        reportContainer.innerHTML = `<p class="p-4 text-center text-red-500">Gagal memuat: ${error.message}</p>`;
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = 'Tampilkan Laporan';
+    });
+});
+// === AKHIR KODE BARU ===
+				
             }
         } else if (targetHash === '#laporan-keuangan') {
             const session = getActiveSession();
@@ -6151,13 +6263,19 @@ if (lihatNilaiNav) {
         document.getElementById('laporanKeuanganNav').classList.toggle('hidden', !financeUsers.includes(username));
 		
 		if (financeUsers.includes(username)) {
-        const tutupBukuContainer = document.getElementById('tutup-buku-gaji-container');
-        if(tutupBukuContainer) tutupBukuContainer.classList.remove('hidden');
+    const tutupBukuContainer = document.getElementById('tutup-buku-gaji-container');
+    if(tutupBukuContainer) tutupBukuContainer.classList.remove('hidden');
 
-        const bulanSelect = document.getElementById('tutupBukuBulan');
-        const tahunSelect = document.getElementById('tutupBukuTahun');
-        // Panggil fungsi yang sudah ada untuk mengisi dropdown-nya
-        populateMonthYearDropdowns(bulanSelect, tahunSelect); 
+    // Mengisi dropdown "Tutup Buku"
+    populateMonthYearDropdowns(
+        document.getElementById('tutupBukuBulan'), 
+        document.getElementById('tutupBukuTahun')
+    ); 
+
+    populateMonthYearDropdowns(
+        document.getElementById('totalGajiBulan'), 
+        document.getElementById('totalGajiTahun')
+    );
     }
 		
         document.getElementById('laporanNav').classList.toggle('hidden', !isKepalaOrWaka);
