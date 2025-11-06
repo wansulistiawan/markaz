@@ -1515,8 +1515,6 @@
                      <div id="tabs-container-genap" class="mb-4 bg-slate-200 p-1 rounded-lg flex space-x-1">
                         <button id="tab-bulan5" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan V</button>
                         <button id="tab-bulan6" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan VI</button>
-                        <button id="tab-bulan7" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan VII</button>
-                        <button id="tab-bulan8" class="tab-btn flex-1 p-2 rounded-md font-semibold">Bulan VIII</button>
                     </div>
                 </div>
 
@@ -4880,16 +4878,81 @@ function fetchAndRenderKeuanganReport(tahun, bulan) {
         const l = result.laporan;
         const formatRp = num => `Rp ${num.toLocaleString('id-ID')}`;
 
-        const headerIndexes = { date: 0, group: 2, desc: 3, amount: 4 };
-        const tableMasuk = createTable('Rincian Dana Masuk', l.danaMasuk, headerIndexes);
-        const tableKeluar = createTable('Rincian Dana Keluar', l.danaKeluar, headerIndexes);
+        // 1. Gabungkan dana masuk dan keluar jadi satu array
+const combinedData = [
+        ...l.danaMasuk.map(row => ({ 
+            date: new Date(row[0]), 
+            kelompok: row[2], // 
+            desc: row[3], 
+            amount: parseFloat(row[4]) || 0, 
+            type: 'masuk' 
+        })),
+        ...l.danaKeluar.map(row => ({ 
+            date: new Date(row[0]), 
+            kelompok: row[2], // 
+            desc: row[3], 
+            amount: parseFloat(row[4]) || 0, 
+            type: 'keluar' 
+        }))
+    ];
 
-        const reportHTML = `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>${tableMasuk}</div>
-                <div>${tableKeluar}</div>
-            </div>
-            <div class="mt-8 p-4 bg-gray-50 rounded-lg border">
+// 2. Urutkan array gabungan berdasarkan tanggal (dari yang paling lama ke baru)
+combinedData.sort((a, b) => a.date - b.date);
+
+// 3. Buat baris-baris (rows) HTML untuk tabel baru
+let rowsHTML = combinedData.map(item => {
+    const dateStr = item.date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const amount = item.amount.toLocaleString('id-ID');
+    let amountHTML;
+
+    if (item.type === 'masuk') {
+        // Terapkan font hijau jika 'masuk'
+        amountHTML = `<td class="px-4 py-2 border text-right font-semibold text-green-600">+ Rp ${amount}</td>`;
+    } else {
+        // Terapkan font merah jika 'keluar'
+        amountHTML = `<td class="px-4 py-2 border text-right font-semibold text-red-600">- Rp ${amount}</td>`;
+    }
+
+    return `
+        <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2 border whitespace-nowrap">${dateStr}</td>
+                <td class="px-4 py-2 border">${item.kelompok}</td> 
+				<td class="px-4 py-2 border">${item.desc}</td>
+                ${amountHTML}
+        </tr>
+    `;
+}).join('');
+
+if (combinedData.length === 0) {
+    rowsHTML = '<tr><td colspan="3" class="p-4 text-center border">Tidak ada data transaksi.</td></tr>';
+}
+
+// 4. Buat HTML tabel tunggal
+const singleTableHTML = `
+    <h4 class="font-bold text-xl text-gray-700 mb-4">Rincian Transaksi Bulanan</h4>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm mt-2 mb-4 border-collapse">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-4 py-2 border text-left">Tanggal</th>
+                        <th class="px-4 py-2 border text-left">Kelompok</th> 
+						<th class="px-4 py-2 border text-left">Keterangan</th>
+                        <th class="px-4 py-2 border text-right">Jumlah</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rowsHTML}
+            </tbody>
+        </table>
+    </div>
+`;
+
+// 5. Buat reportHTML baru dengan tabel tunggal
+const reportHTML = `
+    <div>
+        ${singleTableHTML}
+    </div>
+    <div class="mt-8 p-4 bg-gray-50 rounded-lg border">
                 <h4 class="font-bold text-xl mb-4 text-center">Ringkasan Keuangan</h4>
                 <div class="space-y-3">
                     <div class="flex justify-between text-gray-700"><span>Saldo Kas Bulan Lalu</span> <span>${formatRp(l.saldoBulanLalu)}</span></div>
@@ -5805,7 +5868,7 @@ function showPage(hash) {
                 const tanggalInput = document.getElementById('tanggalKeuangan');
                 formContainer.classList.remove('hidden');
                 tanggalInput.value = lastKeuanganDate;
-                if (session.username === 'mia') {
+                if (session.username === 'mia' || session.username === 'wawan' || session.username === 'admin') {
                     tableContainer.classList.remove('hidden');
                     if (document.getElementById('keuangan-input-tbody').children.length === 0) {
                         addKeuanganInputRow();
