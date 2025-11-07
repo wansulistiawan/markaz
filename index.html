@@ -5042,13 +5042,48 @@ function renderKeuanganChartAndTotals(yearlyData, year) {
     });
 
     // Tampilkan total per kelompok
-    let totalsHTML = '<h4 class="font-bold mb-2">Total per Kelompok Tahun ' + year + '</h4><div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">';
-    totalsHTML += '<div><span class="font-semibold block">Dana Masuk</span>';
-    for(const key in incomeGroups) totalsHTML += `<div class="flex justify-between"><span>${key}</span><span>${incomeGroups[key].toLocaleString('id-ID')}</span></div>`;
-    totalsHTML += '</div><div><span class="font-semibold block">Dana Keluar</span>';
-    for(const key in expenseGroups) totalsHTML += `<div class="flex justify-between"><span>${key}</span><span>${expenseGroups[key].toLocaleString('id-ID')}</span></div>`;
-    totalsHTML += '</div></div>';
-    groupTotalsContainer.innerHTML = totalsHTML;
+let totalsHTML = '<h4 class="font-bold mb-2">Total per Kelompok Tahun ' + year + '</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">';
+
+// Blok Dana Masuk
+let incomeHTML = '<div class="space-y-1">';
+let totalMasuk = 0; // Inisialisasi total masuk
+for(const key in incomeGroups) {
+    totalMasuk += incomeGroups[key]; // Tambahkan ke total
+    // Tambahkan border putus-putus (border-b border-dashed) dan padding (py-1)
+    incomeHTML += `<div class="grid grid-cols-2 gap-x-2 border-b border-dashed border-gray-300 py-1">
+                     <span>${key}</span>
+                     <span class="text-right font-medium">${incomeGroups[key].toLocaleString('id-ID')}</span>
+                   </div>`;
+}
+// Tambahkan baris total di akhir
+incomeHTML += `<div class="grid grid-cols-2 gap-x-2 border-t-2 border-gray-400 pt-2 mt-2">
+                 <span class="font-bold">Total Dana Masuk</span>
+                 <span class="text-right font-bold">${totalMasuk.toLocaleString('id-ID')}</span>
+               </div>`;
+incomeHTML += '</div>';
+totalsHTML += `<div><span class="font-semibold block border-b pb-1 mb-2">Dana Masuk</span>${incomeHTML}</div>`;
+
+// Blok Dana Keluar
+let expenseHTML = '<div class="space-y-1">';
+let totalKeluar = 0; // Inisialisasi total keluar
+for(const key in expenseGroups) {
+    totalKeluar += expenseGroups[key]; // Tambahkan ke total
+    // Tambahkan border putus-putus (border-b border-dashed) dan padding (py-1)
+    expenseHTML += `<div class="grid grid-cols-2 gap-x-2 border-b border-dashed border-gray-300 py-1">
+                      <span>${key}</span>
+                      <span class="text-right font-medium">${expenseGroups[key].toLocaleString('id-ID')}</span>
+                    </div>`;
+}
+// Tambahkan baris total di akhir
+expenseHTML += `<div class="grid grid-cols-2 gap-x-2 border-t-2 border-gray-400 pt-2 mt-2">
+                  <span class="font-bold">Total Dana Keluar</span>
+                  <span class="text-right font-bold">${totalKeluar.toLocaleString('id-ID')}</span>
+                </div>`;
+expenseHTML += '</div>';
+totalsHTML += `<div><span class="font-semibold block border-b pb-1 mb-2">Dana Keluar</span>${expenseHTML}</div>`;
+
+totalsHTML += '</div>'; // Penutup grid utama
+groupTotalsContainer.innerHTML = totalsHTML;
 
     // Atur data untuk grafik
     let chartConfig;
@@ -6989,8 +7024,31 @@ function fetchAndRenderSlipGaji() {
                                 <span>Rp ${formatRp(gajiBersih)}</span>
                            </div>
                         </div>
+						
                         ${kehadiranHTML ? `<div class="text-xs text-gray-500 mt-6 border-t pt-2"><b>Rincian Kehadiran:</b><ul>${kehadiranHTML}</ul></div>` : ''}
                         ${catatanKeterlambatanHTML} 
+						${s.piutang && s.piutang.persentase > 0 ? `
+                        <div class="mt-6 pt-4 border-t-2 border-dashed border-red-300">
+                            <h4 class="font-bold text-lg text-red-700 mb-2">Informasi Piutang Yayasan</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span>Gaji Bersih (Utuh)</span> 
+                                    <span>${formatRp(gajiBersih)}</span>
+                                </div>
+                                <div class="flex justify-between text-red-600">
+                                    <span>Pinjaman ${s.piutang.persentase}% (Bulan ${s.piutang.jumlahBulan})</span> 
+                                    <span>- ${formatRp(s.piutang.jumlahBulanIni)}</span>
+                                </div>
+                                <div class="flex justify-between font-bold text-base border-t pt-2 mt-2">
+                                    <span>GAJI DITERIMA (TUNAI)</span> 
+                                    <span>${formatRp(gajiBersih - s.piutang.jumlahBulanIni)}</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-xs text-gray-500">
+                                Total akumulasi piutang Anda (termasuk bulan ini) adalah <b>${formatRp(s.piutang.totalAkumulasi)}</b> selama <b>${s.piutang.jumlahBulan} bulan</b>.
+                            </div>
+                        </div>
+                    ` : ''}
                     </div>
                 </div>`;
             slipContainer.innerHTML = slipHTML;
