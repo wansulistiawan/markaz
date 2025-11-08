@@ -1107,6 +1107,28 @@
     }
 }
 
+.legend-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap-x-16px; /* Jarak horizontal */
+    gap-y-8px;  /* Jarak vertikal */
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Jarak antara kotak dan teks */
+}
+.legend-color-box {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.1); /* Garis tipis */
+    flex-shrink: 0; /* Mencegah kotak mengecil */
+}
+.legend-text {
+    font-size: 13px;
+    color: #374151; /* text-gray-700 */
+}
 
     </style>
 </head>
@@ -1227,21 +1249,27 @@
 <!-- === AWAL HALAMAN LAPORAN TAHFIDZ === -->
 <!-- ======================================================= -->
 <div id="laporan" class="page-section hidden container section">
-    <h2 class="text-3xl font-bold text-gray-800">Laporan Nilai Tahfidz Santri</h2>
-    <p class="mb-6 text-gray-600">Pilih tanggal untuk melihat semua laporan nilai tahfidz yang masuk.</p>
+    <h2 class="text-3xl font-bold text-gray-800">Laporan Harian Santri</h2>
+    <p class="mb-6 text-gray-600">Pilih tanggal untuk melihat semua laporan yang masuk.</p>
     
     <div class="form-group bg-white p-4 rounded-lg shadow-sm" style="max-width: 350px;">
         <label for="laporanTanggal" class="text-base font-semibold">Pilih Tanggal Laporan</label>
         <input type="date" id="laporanTanggal" class="mt-2">
     </div>
 
-    <div id="laporanContainer" class="mt-8 overflow-x-auto bg-white rounded-lg shadow">
-        <p class="p-8 text-center text-gray-500">Silakan pilih tanggal untuk melihat laporan.</p>
-    </div>
-</div>	
-	<div id="tahfidz-chart-container" class="mt-12 pt-8 border-t hidden">
-    <h3 class="text-2xl font-bold text-gray-800 mb-4">Grafik Progres Tahfidz per Santri</h3>
+    <div id="pelanggaranReportContainer" class="mt-8">
+        </div>
     
+    <div id="tahfidzReportContainer" class="mt-8">
+        </div>
+    
+    <div id="kegiatanReportContainer" class="mt-8">
+        </div>
+</div>
+	
+	<div id="tahfidz-chart-container" class="mt-12 pt-8 border-t hidden px-4">
+    <h3 class="text-2xl font-bold text-gray-800 mb-4">Grafik Progres Tahfidz per Santri</h3>
+
     <div class="bg-gray-100 p-4 rounded-lg shadow-sm flex flex-wrap items-end gap-4 mb-4">
         <div class="flex-grow">
             <label for="chart-santri-select" class="block text-sm font-semibold">Pilih Santri</label>
@@ -1258,10 +1286,71 @@
         <button id="show-chart-btn" class="bg-blue-600 text-white py-2 px-4 rounded-md">Tampilkan Grafik</button>
     </div>
 
-    <div class="bg-white p-4 rounded-lg shadow">
-        <canvas id="tahfidzChart"></canvas>
+    <div class="mb-4 border-b border-gray-200">
+        <nav class="flex space-x-4" aria-label="Tabs">
+            <a href="#" id="tab-ziyadah" class="tab-grafik-tahfidz bg-gray-100 text-gray-700 px-3 py-2 font-medium text-sm rounded-t-lg">
+                Grafik Setoran (Ziyadah)
+            </a>
+            <a href="#" id="tab-murajaah" class="tab-grafik-tahfidz bg-gray-100 text-gray-700 px-3 py-2 font-medium text-sm rounded-t-lg">
+                Grafik Hafalan (Muraja'ah per Juz)
+            </a>
+        </nav>
     </div>
-</div>
+    <div id="ziyadah-chart-content" class="chart-content bg-white p-4 rounded-lg shadow">
+        <canvas id="tahfidzChart" style="height: 400px;"></canvas>
+    </div>
+    <div id="murajaah-chart-content" class="chart-content bg-white p-4 rounded-lg shadow hidden" style="height: 400px;">
+        <canvas id="murajaahChart" style="height: 400px;"></canvas>
+    
+    </div> <div id="murajaah-legend-container" class="mt-6 p-4 bg-gray-50 rounded-lg border">
+        <h4 class="text-base font-bold mb-3 text-gray-800">Keterangan Grafik:</h4>
+        
+        <div class="mb-4">
+            <p class="text-sm font-semibold mb-2">Warna Batang (berdasarkan Poin Rata-rata):</p>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(59, 130, 246);"></span>
+                    <span class="legend-text">Sangat Baik (9.0+)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(22, 163, 74);"></span>
+                    <span class="legend-text">Baik (7.1 - 8.9)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(234, 179, 8);"></span>
+                    <span class="legend-text">Cukup (5.1 - 7.0)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(220, 38, 38);"></span>
+                    <span class="legend-text">Kurang (&lt; 5.1)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(156, 163, 175);"></span>
+                    <span class="legend-text">Poin 0</span>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <p class="text-sm font-semibold mb-2">Tingkat Pudar (berdasarkan Waktu Muraja'ah Terakhir):</p>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(22, 163, 74); opacity: 1.0;"></span>
+                    <span class="legend-text">Baru Saja</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(22, 163, 74); opacity: 0.6;"></span>
+                    <span class="legend-text">Beberapa Bulan Lalu</span>
+                </div>
+                <div class="legend-item">
+                <span class="legend-color-box" style="background-color: rgb(22, 163, 74); opacity: 0.1; border: 1px solid #ddd;"></span>
+                    <span class="legend-text">> 1 Tahun (Hilang)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+	</div>
 
 
 <!-- === AKHIR HALAMAN LAPORAN TAHFIDZ === -->
@@ -1803,7 +1892,6 @@
     <h2 class="text-3xl font-bold text-teal-800">Laporan Harian Musyrif</h2>
     <p class="mb-8 text-gray-600">Silakan isi formulir di bawah untuk mencatat aktivitas santri binaan.</p>
 
-    <!-- FORM KEGIATAN HARIAN -->
     <div class="bg-yellow-50 p-6 rounded-xl shadow-md mb-8 form-glow-kegiatan">
         <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">1. Laporan Kegiatan Harian Santri</h3>
         <form id="formKegiatanMusyrif" class="custom-form bg-yellow-50 p-0 shadow-none max-w-full">
@@ -1820,12 +1908,12 @@
             <div id="keteranganKegiatanMusyrifContainer" class="form-group hidden">
                 <label for="keteranganKegiatanMusyrif">Masukkan yang tidak dikerjakan</label>
                 <textarea id="keteranganKegiatanMusyrif" rows="3"></textarea>
+                <div id="kegiatanMusyrifSuggestions" class="mt-2 flex flex-wrap gap-2"></div>
             </div>
             <button type="submit" class="submit-btn">Simpan Laporan Kegiatan</button>
         </form>
     </div>
 
-    <!-- FORM NILAI TAHFIDZ -->
     <div class="bg-blue-50 p-6 rounded-xl shadow-md mb-8 form-glow-tahfidz">
         <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">2. Laporan Nilai Tahfidz</h3>
         <form id="formTahfidzMusyrif" class="custom-form bg-blue-50 p-0 shadow-none max-w-full">
@@ -1833,55 +1921,46 @@
                  <div class="form-group"><select id="santriTahfidzMusyrif" required></select></div>
                  <div class="form-group"><input type="date" id="tanggalTahfidzMusyrif" style="background-color: #e9ecef;"></div>
              </div>
-             <!-- GANTI BLOK LAMA DENGAN YANG BARU INI -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 border p-4 rounded-md">
-    <h4 class="md:col-span-2 font-semibold text-lg">Ziyadah (Pagi)</h4>
-    <div class="form-group"><label>Surah</label><select id="ziyadahPSurahMusyrif"></select></div>
-    <div class="form-group grid grid-cols-3 gap-2">
-        <div><label>Ayat Awal</label><input type="number" id="ziyadahPAyatAwalMusyrif"></div>
-        <div><label>Ayat Akhir</label><input type="number" id="ziyadahPAyatAkhirMusyrif"></div>
-		<div><label>Poin</label><input type="number" id="ziyadahPoinMusyrif" required></div>
-    </div>
-    
-
-    <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Ziyadah (Sore)</h4>
-    <div class="form-group"><label>Surah</label><select id="ziyadahSSurahMusyrif"></select></div>
-    <div class="form-group grid grid-cols-3 gap-2">
-        <div><label>Ayat Awal</label><input type="number" id="ziyadahSAyatAwalMusyrif"></div>
-        <div><label>Ayat Akhir</label><input type="number" id="ziyadahSAyatAkhirMusyrif"></div>
-		<div><label>Poin</label><input type="number" id="ziyadahSPoinMusyrif" required></div>
-    </div>
-    
-
-    <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Muraja'ah</h4>
-    
-    <div class="form-group md:col-span-2">
-        <label class="font-semibold">Mode Input Muraja'ah:</label>
-        <div id="murajaah-mode-selector-musyrif" class="flex gap-4 mt-2">
-            <label class="flex items-center"><input type="radio" name="murajaahModeMusyrif" value="surah" checked class="mr-2"> Berdasarkan Surah</label>
-            <label class="flex items-center"><input type="radio" name="murajaahModeMusyrif" value="juz" class="mr-2"> Berdasarkan Juz</label>
-			<div class="form-group"><label>Poin</label><input type="number" id="murajaahPoinMusyrif" required></div>
-        </div>
-    </div>
-
-    <div id="murajaah-juz-inputs-musyrif" class="md:col-span-2 hidden">
-        <label class="font-semibold mb-2 block">Pilih Juz yang dimuraja'ah (opsional, untuk mengisi otomatis):</label>
-        <div id="juz-checkbox-container-musyrif" class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-x-4 gap-y-2 p-4 border rounded-md bg-gray-50">
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 border p-4 rounded-md">
+                <h4 class="md:col-span-2 font-semibold text-lg">Ziyadah (Pagi)</h4>
+                <div class="form-group"><label>Surah</label><select id="ziyadahPSurahMusyrif"></select></div>
+                <div class="form-group grid grid-cols-3 gap-2">
+                    <div><label>Ayat Awal</label><input type="number" id="ziyadahPAyatAwalMusyrif"></div>
+                    <div><label>Ayat Akhir</label><input type="number" id="ziyadahPAyatAkhirMusyrif"></div>
+                    <div><label>Poin</label><input type="number" id="ziyadahPoinMusyrif" required></div>
+                </div>
+                <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Ziyadah (Sore)</h4>
+                <div class="form-group"><label>Surah</label><select id="ziyadahSSurahMusyrif"></select></div>
+                <div class="form-group grid grid-cols-3 gap-2">
+                    <div><label>Ayat Awal</label><input type="number" id="ziyadahSAyatAwalMusyrif"></div>
+                    <div><label>Ayat Akhir</label><input type="number" id="ziyadahSAyatAkhirMusyrif"></div>
+                    <div><label>Poin</label><input type="number" id="ziyadahSPoinMusyrif" required></div>
+                </div>
+                <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Muraja'ah</h4>
+                <div class="form-group md:col-span-2">
+                    <label class="font-semibold">Mode Input Muraja'ah:</label>
+                    <div id="murajaah-mode-selector-musyrif" class="flex gap-4 mt-2">
+                        <label class="flex items-center"><input type="radio" name="murajaahModeMusyrif" value="surah" checked class="mr-2"> Berdasarkan Surah</label>
+                        <label class="flex items-center"><input type="radio" name="murajaahModeMusyrif" value="juz" class="mr-2"> Berdasarkan Juz</label>
+                        <div class="form-group"><label>Poin</label><input type="number" id="murajaahPoinMusyrif" required></div>
+                    </div>
+                </div>
+                <div id="murajaah-juz-inputs-musyrif" class="md:col-span-2 hidden">
+                    <label class="font-semibold mb-2 block">Pilih Juz yang dimuraja'ah (opsional, untuk mengisi otomatis):</label>
+                    <div id="juz-checkbox-container-musyrif" class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-x-4 gap-y-2 p-4 border rounded-md bg-gray-50">
+                    </div>
+                </div>
+                <div id="murajaah-surah-inputs-musyrifah" class="contents">
+                    <div class="form-group"><label>Surah Awal</label><select id="murajaahSurahAwalMusyrif"></select></div>
+                    <div class="form-group"><label>Ayat Awal</label><input type="number" id="murajaahAyatAwalMusyrif"></div>
+                    <div class="form-group"><label>Surah Akhir</label><select id="murajaahSurahAkhirMusyrif"></select></div>
+                    <div class="form-group"><label>Ayat Akhir</label><input type="number" id="murajaahAyatAkhirMusyrif"></div>
+                </div>
             </div>
-    </div>
-
-    <div id="murajaah-surah-inputs-musyrif" class="contents">
-        <div class="form-group"><label>Surah Awal</label><select id="murajaahSurahAwalMusyrif"></select></div>
-        <div class="form-group"><label>Ayat Awal</label><input type="number" id="murajaahAyatAwalMusyrif"></div>
-        <div class="form-group"><label>Surah Akhir</label><select id="murajaahSurahAkhirMusyrif"></select></div>
-        <div class="form-group"><label>Ayat Akhir</label><input type="number" id="murajaahAyatAkhirMusyrif"></div>
-    </div>
-</div>
             <button type="submit" class="submit-btn">Simpan Nilai Tahfidz</button>
         </form>
     </div>
 
-    <!-- FORM PELANGGARAN -->
     <div class="bg-red-50 p-6 rounded-xl shadow-md mb-8 form-glow-pelanggaran">
         <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">3. Laporan Pelanggaran Santri</h3>
         <form id="formPelanggaranMusyrif" class="custom-form bg-red-50 p-0 shadow-none max-w-full">
@@ -1889,14 +1968,21 @@
                  <div class="form-group"><select id="santriPelanggaranMusyrif" required></select></div>
                  <div class="form-group"><input type="date" id="tanggalPelanggaranMusyrif" style="background-color: #e9ecef;"></div>
              </div>
-             <div class="form-group"><label for="isiPelanggaranMusyrif">Masukkan Pelanggaran</label><textarea id="isiPelanggaranMusyrif" rows="3" required></textarea></div>
-             <div class="form-group"><label for="solusiPelanggaranMusyrif">Masukkan Solusi</label><textarea id="solusiPelanggaranMusyrif" rows="3" required></textarea></div>
+             <div class="form-group">
+                <label for="isiPelanggaranMusyrif">Masukkan Pelanggaran</label>
+                <textarea id="isiPelanggaranMusyrif" rows="3" required></textarea>
+                <div id="pelanggaranMusyrifSuggestions" class="mt-2 flex flex-wrap gap-2"></div>
+             </div>
+             <div class="form-group">
+                <label for="solusiPelanggaranMusyrif">Masukkan Solusi</label>
+                <textarea id="solusiPelanggaranMusyrif" rows="3" required></textarea>
+                <div id="solusiMusyrifSuggestions" class="mt-2 flex flex-wrap gap-2"></div>
+             </div>
             <button type="submit" class="submit-btn">Simpan Laporan Pelanggaran</button>
         </form>
     </div>
 
-    <!-- AREA TAMPILAN LAPORAN HARI INI -->
-     <div id="dailyReportContainerMusyrif" class="mt-12 pt-8 border-t-2 border-gray-200">
+    <div id="dailyReportContainerMusyrif" class="mt-12 pt-8 border-t-2 border-gray-200">
          <h2 class="text-2xl font-semibold text-gray-700 mb-4">Laporan Masuk Hari Ini</h2>
          <div id="reportTableMusyrif" class="overflow-x-auto bg-white rounded-lg shadow">
              <p class="p-6 text-center text-gray-500">Belum ada laporan yang masuk hari ini.</p>
@@ -1913,7 +1999,6 @@
     <h2 class="text-3xl font-bold text-purple-800">Laporan Harian Musyrifah</h2>
     <p class="mb-8 text-gray-600">Silakan isi formulir di bawah untuk mencatat aktivitas santri binaan.</p>
 
-    <!-- FORM KEGIATAN HARIAN -->
     <div class="bg-yellow-50 p-6 rounded-xl shadow-md mb-8 form-glow-kegiatan" >
         <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">1. Laporan Kegiatan Harian Santri</h3>
         <form id="formKegiatanMusyrifah" class="custom-form bg-yellow-50 p-0 shadow-none max-w-full">
@@ -1931,12 +2016,12 @@
             <div id="keteranganKegiatanMusyrifahContainer" class="form-group hidden">
                 <label for="keteranganKegiatanMusyrifah">Masukkan yang tidak dikerjakan</label>
                 <textarea id="keteranganKegiatanMusyrifah" rows="3"></textarea>
+                <div id="kegiatanMusyrifahSuggestions" class="mt-2 flex flex-wrap gap-2"></div>
             </div>
             <button type="submit" class="submit-btn">Simpan Laporan Kegiatan</button>
         </form>
     </div>
 
-    <!-- FORM NILAI TAHFIDZ -->
     <div class="bg-blue-50 p-6 rounded-xl shadow-md mb-8 form-glow-tahfidz">
         <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">2. Laporan Nilai Tahfidz</h3>
         <form id="formTahfidzMusyrifah" class="custom-form bg-blue-50 p-0 shadow-none max-w-full">
@@ -1944,56 +2029,46 @@
                  <div class="form-group"><select id="santriTahfidzMusyrifah" required></select></div>
                  <div class="form-group"><input type="date" id="tanggalTahfidzMusyrifah" style="background-color: #e9ecef;"></div>
              </div>
-             <!-- GANTI BLOK LAMA DENGAN YANG BARU INI (UNTUK MUSYRIFAH) -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 border p-4 rounded-md">
-    <h4 class="md:col-span-2 font-semibold text-lg">Ziyadah (Pagi)</h4>
-    <div class="form-group"><label>Surah</label><select id="ziyadahPSurahMusyrifah"></select></div>
-    <div class="form-group grid grid-cols-3 gap-2">
-        <div><label>Ayat Awal</label><input type="number" id="ziyadahPAyatAwalMusyrifah"></div>
-        <div><label>Ayat Akhir</label><input type="number" id="ziyadahPAyatAkhirMusyrifah"></div>
-		<div><label>Poin</label><input type="number" id="ziyadahPoinMusyrifah" required></div>
-    </div>
-
-    <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Ziyadah (Sore)</h4>
-    <div class="form-group"><label>Surah</label><select id="ziyadahSSurahMusyrifah"></select></div>
-    <div class="form-group grid grid-cols-3 gap-2">
-        <div><label>Ayat Awal</label><input type="number" id="ziyadahSAyatAwalMusyrifah"></div>
-        <div><label>Ayat Akhir</label><input type="number" id="ziyadahSAyatAkhirMusyrifah"></div>
-		<div><label>Poin</label><input type="number" id="ziyadahSPoinMusyrifah" required></div>
-    </div>
-    
-
-    <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Muraja'ah</h4>
-
-    <div class="form-group md:col-span-2">
-        <label class="font-semibold">Mode Input Muraja'ah:</label>
-        <div id="murajaah-mode-selector-musyrifah" class="flex gap-4 mt-2">
-            <label class="flex items-center"><input type="radio" name="murajaahModeMusyrifah" value="surah" checked class="mr-2"> Berdasarkan Surah</label>
-            <label class="flex items-center"><input type="radio" name="murajaahModeMusyrifah" value="juz" class="mr-2"> Berdasarkan Juz</label>
-			<div class="form-group"><label>Poin</label><input type="number" id="murajaahPoinMusyrifah" required></div>
-        </div>
-    </div>
-
-    <div id="murajaah-juz-inputs-musyrifah" class="md:col-span-2 hidden">
-        <label class="font-semibold mb-2 block">Pilih Juz yang dimuraja'ah (opsional, untuk mengisi otomatis):</label>
-        <div id="juz-checkbox-container-musyrifah" class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-x-4 gap-y-2 p-4 border rounded-md bg-gray-50">
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 border p-4 rounded-md">
+                <h4 class="md:col-span-2 font-semibold text-lg">Ziyadah (Pagi)</h4>
+                <div class="form-group"><label>Surah</label><select id="ziyadahPSurahMusyrifah"></select></div>
+                <div class="form-group grid grid-cols-3 gap-2">
+                    <div><label>Ayat Awal</label><input type="number" id="ziyadahPAyatAwalMusyrifah"></div>
+                    <div><label>Ayat Akhir</label><input type="number" id="ziyadahPAyatAkhirMusyrifah"></div>
+                    <div><label>Poin</label><input type="number" id="ziyadahPoinMusyrifah" required></div>
+                </div>
+                <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Ziyadah (Sore)</h4>
+                <div class="form-group"><label>Surah</label><select id="ziyadahSSurahMusyrifah"></select></div>
+                <div class="form-group grid grid-cols-3 gap-2">
+                    <div><label>Ayat Awal</label><input type="number" id="ziyadahSAyatAwalMusyrifah"></div>
+                    <div><label>Ayat Akhir</label><input type="number" id="ziyadahSAyatAkhirMusyrifah"></div>
+                    <div><label>Poin</label><input type="number" id="ziyadahSPoinMusyrifah" required></div>
+                </div>
+                <h4 class="md:col-span-2 font-semibold text-lg border-t pt-4">Muraja'ah</h4>
+                <div class="form-group md:col-span-2">
+                    <label class="font-semibold">Mode Input Muraja'ah:</label>
+                    <div id="murajaah-mode-selector-musyrifah" class="flex gap-4 mt-2">
+                        <label class="flex items-center"><input type="radio" name="murajaahModeMusyrifah" value="surah" checked class="mr-2"> Berdasarkan Surah</label>
+                        <label class="flex items-center"><input type="radio" name="murajaahModeMusyrifah" value="juz" class="mr-2"> Berdasarkan Juz</label>
+                        <div class="form-group"><label>Poin</label><input type="number" id="murajaahPoinMusyrifah" required></div>
+                    </div>
+                </div>
+                <div id="murajaah-juz-inputs-musyrifah" class="md:col-span-2 hidden">
+                    <label class="font-semibold mb-2 block">Pilih Juz yang dimuraja'ah (opsional, untuk mengisi otomatis):</label>
+                    <div id="juz-checkbox-container-musyrifah" class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-x-4 gap-y-2 p-4 border rounded-md bg-gray-50">
+                    </div>
+                </div>
+                <div id="murajaah-surah-inputs-musyrifah" class="contents">
+                    <div class="form-group"><label>Surah Awal</label><select id="murajaahSurahAwalMusyrifah"></select></div>
+                    <div class="form-group"><label>Ayat Awal</label><input type="number" id="murajaahAyatAwalMusyrifah"></div>
+                    <div class="form-group"><label>Surah Akhir</label><select id="murajaahSurahAkhirMusyrifah"></select></div>
+                    <div class="form-group"><label>Ayat Akhir</label><input type="number" id="murajaahAyatAkhirMusyrifah"></div>
+                </div>
             </div>
-    </div>
-
-    <div id="murajaah-surah-inputs-musyrifah" class="contents">
-        <div class="form-group"><label>Surah Awal</label><select id="murajaahSurahAwalMusyrifah"></select></div>
-        <div class="form-group"><label>Ayat Awal</label><input type="number" id="murajaahAyatAwalMusyrifah"></div>
-        <div class="form-group"><label>Surah Akhir</label><select id="murajaahSurahAkhirMusyrifah"></select></div>
-        <div class="form-group"><label>Ayat Akhir</label><input type="number" id="murajaahAyatAkhirMusyrifah"></div>
-    </div>
-
-    
-</div>
             <button type="submit" class="submit-btn">Simpan Nilai Tahfidz</button>
         </form>
     </div>
 
-    <!-- FORM PELANGGARAN -->
     <div class="bg-red-50 p-6 rounded-xl shadow-md mb-8 form-glow-pelanggaran">
         <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">3. Laporan Pelanggaran Santri</h3>
         <form id="formPelanggaranMusyrifah" class="custom-form bg-red-50 p-0 shadow-none max-w-full">
@@ -2001,20 +2076,32 @@
                  <div class="form-group"><select id="santriPelanggaranMusyrifah" required></select></div>
                  <div class="form-group"><input type="date" id="tanggalPelanggaranMusyrifah" style="background-color: #e9ecef;"></div>
              </div>
-             <div class="form-group"><label for="isiPelanggaranMusyrifah">Masukkan Pelanggaran</label><textarea id="isiPelanggaranMusyrifah" rows="3" required></textarea></div>
-             <div class="form-group"><label for="solusiPelanggaranMusyrifah">Masukkan Solusi</label><textarea id="solusiPelanggaranMusyrifah" rows="3" required></textarea></div>
+             <div class="form-group">
+                <label for="isiPelanggaranMusyrifah">Masukkan Pelanggaran</label>
+                <textarea id="isiPelanggaranMusyrifah" rows="3" required></textarea>
+                <div id="pelanggaranMusyrifahSuggestions" class="mt-2 flex flex-wrap gap-2"></div>
+             </div>
+             <div class="form-group">
+                <label for="solusiPelanggaranMusyrifah">Masukkan Solusi</label>
+                <textarea id="solusiPelanggaranMusyrifah" rows="3" required></textarea>
+                <div id="solusiMusyrifahSuggestions" class="mt-2 flex flex-wrap gap-2"></div>
+             </div>
             <button type="submit" class="submit-btn">Simpan Laporan Pelanggaran</button>
         </form>
     </div>
     
-    <!-- AREA TAMPILAN LAPORAN HARI INI -->
-     <div id="dailyReportContainerMusyrifah" class="mt-12 pt-8 border-t-2 border-gray-200">
+    <div id="dailyReportContainerMusyrifah" class="mt-12 pt-8 border-t-2 border-gray-200">
          <h2 class="text-2xl font-semibold text-gray-700 mb-4">Laporan Masuk Hari Ini</h2>
          <div id="reportTableMusyrifah" class="overflow-x-auto bg-white rounded-lg shadow">
              <p class="p-6 text-center text-gray-500">Belum ada laporan yang masuk hari ini.</p>
          </div>
      </div>
 </div>
+
+<!-- === AKHIR HALAMAN MUSYRIFAH === -->
+    
+    <!-- AREA TAMPILAN LAPORAN HARI INI -->
+     
 
 <div id="halaman-ujian-admin" class="page-section hidden container section">
     <h2 class="text-3xl font-bold text-gray-800">Buka Akses Ujian Manual</h2>
@@ -2061,7 +2148,7 @@
         </div>
 </div>
 
-<!-- === AKHIR HALAMAN MUSYRIFAH === -->
+
 <div id="ujian-online" class="page-section hidden container section">
     <h2 class="text-3xl font-bold text-gray-800">Jadwal Ujian Online</h2>
     <p class="mb-8 text-gray-600">Silakan pilih mata pelajaran di bawah ini untuk memulai ujian. Pastikan Anda sudah siap sebelum memulai.</p>
@@ -2417,6 +2504,293 @@ document.addEventListener('DOMContentLoaded', function() {
         { juz: 30, start: { surah: "An-Naba'", ayat: 1 }, end: { surah: "An-Nas", ayat: 6 } }
     ];
 	
+	const JUZ_DETAIL_DATA = {
+  1: {
+    totalAyat: 148,
+    contents: [
+      { surah: 1, nama: "Al-Fatihah", totalAyat: 7, start: 1, end: 7 },
+      { surah: 2, nama: "Al-Baqarah", totalAyat: 286, start: 1, end: 141 }
+    ]
+  },
+  2: {
+    totalAyat: 111,
+    contents: [
+      { surah: 2, nama: "Al-Baqarah", totalAyat: 286, start: 142, end: 252 }
+    ]
+  },
+  3: {
+    totalAyat: 126,
+    contents: [
+      { surah: 2, nama: "Al-Baqarah", totalAyat: 286, start: 253, end: 286 },
+      { surah: 3, nama: "Ali 'Imran", totalAyat: 200, start: 1, end: 92 }
+    ]
+  },
+  4: {
+    totalAyat: 131,
+    contents: [
+      { surah: 3, nama: "Ali 'Imran", totalAyat: 200, start: 93, end: 200 },
+      { surah: 4, nama: "An-Nisa'", totalAyat: 176, start: 1, end: 23 }
+    ]
+  },
+  5: {
+    totalAyat: 124,
+    contents: [
+      { surah: 4, nama: "An-Nisa'", totalAyat: 176, start: 24, end: 147 }
+    ]
+  },
+  6: {
+    totalAyat: 110,
+    contents: [
+      { surah: 4, nama: "An-Nisa'", totalAyat: 176, start: 148, end: 176 },
+      { surah: 5, nama: "Al-Ma'idah", totalAyat: 120, start: 1, end: 81 }
+    ]
+  },
+  7: {
+    totalAyat: 149,
+    contents: [
+      { surah: 5, nama: "Al-Ma'idah", totalAyat: 120, start: 82, end: 120 },
+      { surah: 6, nama: "Al-An'am", totalAyat: 165, start: 1, end: 110 }
+    ]
+  },
+  8: {
+    totalAyat: 142,
+    contents: [
+      { surah: 6, nama: "Al-An'am", totalAyat: 165, start: 111, end: 165 },
+      { surah: 7, nama: "Al-A'raf", totalAyat: 206, start: 1, end: 87 }
+    ]
+  },
+  9: {
+    totalAyat: 159,
+    contents: [
+      { surah: 7, nama: "Al-A'raf", totalAyat: 206, start: 88, end: 206 },
+      { surah: 8, nama: "Al-Anfal", totalAyat: 75, start: 1, end: 40 }
+    ]
+  },
+  10: {
+    totalAyat: 127,
+    contents: [
+      { surah: 8, nama: "Al-Anfal", totalAyat: 75, start: 41, end: 75 },
+      { surah: 9, nama: "At-Tawbah", totalAyat: 129, start: 1, end: 92 }
+    ]
+  },
+  11: {
+    totalAyat: 151,
+    contents: [
+      { surah: 9, nama: "At-Tawbah", totalAyat: 129, start: 93, end: 129 },
+      { surah: 10, nama: "Yunus", totalAyat: 109, start: 1, end: 109 },
+      { surah: 11, nama: "Hud", totalAyat: 123, start: 1, end: 5 }
+    ]
+  },
+  12: {
+    totalAyat: 170,
+    contents: [
+      { surah: 11, nama: "Hud", totalAyat: 123, start: 6, end: 123 },
+      { surah: 12, nama: "Yusuf", totalAyat: 111, start: 1, end: 52 }
+    ]
+  },
+  13: {
+    totalAyat: 154,
+    contents: [
+      { surah: 12, nama: "Yusuf", totalAyat: 111, start: 53, end: 111 },
+      { surah: 13, nama: "Ar-Ra'd", totalAyat: 43, start: 1, end: 43 },
+      { surah: 14, nama: "Ibrahim", totalAyat: 52, start: 1, end: 52 }
+    ]
+  },
+  14: {
+    totalAyat: 227,
+    contents: [
+      { surah: 15, nama: "Al-Hijr", totalAyat: 99, start: 1, end: 99 },
+      { surah: 16, nama: "An-Nahl", totalAyat: 128, start: 1, end: 128 }
+    ]
+  },
+  15: {
+    totalAyat: 185,
+    contents: [
+      { surah: 17, nama: "Al-Isra'", totalAyat: 111, start: 1, end: 111 },
+      { surah: 18, nama: "Al-Kahf", totalAyat: 110, start: 1, end: 74 }
+    ]
+  },
+  16: {
+    totalAyat: 269,
+    contents: [
+      { surah: 18, nama: "Al-Kahf", totalAyat: 110, start: 75, end: 110 },
+      { surah: 19, nama: "Maryam", totalAyat: 98, start: 1, end: 98 },
+      { surah: 20, nama: "Taha", totalAyat: 135, start: 1, end: 135 }
+    ]
+  },
+  17: {
+    totalAyat: 190,
+    contents: [
+      { surah: 21, nama: "Al-Anbiya'", totalAyat: 112, start: 1, end: 112 },
+      { surah: 22, nama: "Al-Hajj", totalAyat: 78, start: 1, end: 78 }
+    ]
+  },
+  18: {
+    totalAyat: 202,
+    contents: [
+      { surah: 23, nama: "Al-Mu'minun", totalAyat: 118, start: 1, end: 118 },
+      { surah: 24, nama: "An-Nur", totalAyat: 64, start: 1, end: 64 },
+      { surah: 25, nama: "Al-Furqan", totalAyat: 77, start: 1, end: 20 }
+    ]
+  },
+  19: {
+    totalAyat: 339,
+    contents: [
+      { surah: 25, nama: "Al-Furqan", totalAyat: 77, start: 21, end: 77 },
+      { surah: 26, nama: "Asy-Syu'ara'", totalAyat: 227, start: 1, end: 227 },
+      { surah: 27, nama: "An-Naml", totalAyat: 93, start: 1, end: 55 }
+    ]
+  },
+  20: {
+    totalAyat: 171,
+    contents: [
+      { surah: 27, nama: "An-Naml", totalAyat: 93, start: 56, end: 93 },
+      { surah: 28, nama: "Al-Qasas", totalAyat: 88, start: 1, end: 88 },
+      { surah: 29, nama: "Al-'Ankabut", totalAyat: 69, start: 1, end: 45 }
+    ]
+  },
+  21: {
+    totalAyat: 178,
+    contents: [
+      { surah: 29, nama: "Al-'Ankabut", totalAyat: 69, start: 46, end: 69 },
+      { surah: 30, nama: "Ar-Rum", totalAyat: 60, start: 1, end: 60 },
+      { surah: 31, nama: "Luqman", totalAyat: 34, start: 1, end: 34 },
+      { surah: 32, nama: "As-Sajdah", totalAyat: 30, start: 1, end: 30 },
+      { surah: 33, nama: "Al-Ahzab", totalAyat: 73, start: 1, end: 30 }
+    ]
+  },
+  22: {
+    totalAyat: 169,
+    contents: [
+      { surah: 33, nama: "Al-Ahzab", totalAyat: 73, start: 31, end: 73 },
+      { surah: 34, nama: "Saba'", totalAyat: 54, start: 1, end: 54 },
+      { surah: 35, nama: "Fatir", totalAyat: 45, start: 1, end: 45 },
+      { surah: 36, nama: "Yasin", totalAyat: 83, start: 1, end: 27 }
+    ]
+  },
+  23: {
+    totalAyat: 357,
+    contents: [
+      { surah: 36, nama: "Yasin", totalAyat: 83, start: 28, end: 83 },
+      { surah: 37, nama: "As-Saffat", totalAyat: 182, start: 1, end: 182 },
+      { surah: 38, nama: "Sad", totalAyat: 88, start: 1, end: 88 },
+      { surah: 39, nama: "Az-Zumar", totalAyat: 75, start: 1, end: 31 }
+    ]
+  },
+  24: {
+    totalAyat: 175,
+    contents: [
+      { surah: 39, nama: "Az-Zumar", totalAyat: 75, start: 32, end: 75 },
+      { surah: 40, nama: "Ghafir", totalAyat: 85, start: 1, end: 85 },
+      { surah: 41, nama: "Fussilat", totalAyat: 54, start: 1, end: 46 }
+    ]
+  },
+  25: {
+    totalAyat: 246,
+    contents: [
+      { surah: 41, nama: "Fussilat", totalAyat: 54, start: 47, end: 54 },
+      { surah: 42, nama: "Asy-Syura", totalAyat: 53, start: 1, end: 53 },
+      { surah: 43, nama: "Az-Zukhruf", totalAyat: 89, start: 1, end: 89 },
+      { surah: 44, nama: "Ad-Dukhan", totalAyat: 59, start: 1, end: 59 },
+      { surah: 45, nama: "Al-Jasiyah", totalAyat: 37, start: 1, end: 37 }
+    ]
+  },
+  26: {
+    totalAyat: 195,
+    contents: [
+      { surah: 46, nama: "Al-Ahqaf", totalAyat: 35, start: 1, end: 35 },
+      { surah: 47, nama: "Muhammad", totalAyat: 38, start: 1, end: 38 },
+      { surah: 48, nama: "Al-Fath", totalAyat: 29, start: 1, end: 29 },
+      { surah: 49, nama: "Al-Hujurat", totalAyat: 18, start: 1, end: 18 },
+      { surah: 50, nama: "Qaf", totalAyat: 45, start: 1, end: 45 },
+      { surah: 51, nama: "Az-Zariyat", totalAyat: 60, start: 1, end: 30 }
+    ]
+  },
+  27: {
+    totalAyat: 399,
+    contents: [
+      { surah: 51, nama: "Az-Zariyat", totalAyat: 60, start: 31, end: 60 },
+      { surah: 52, nama: "At-Tur", totalAyat: 49, start: 1, end: 49 },
+      { surah: 53, nama: "An-Najm", totalAyat: 62, start: 1, end: 62 },
+      { surah: 54, nama: "Al-Qamar", totalAyat: 55, start: 1, end: 55 },
+      { surah: 55, nama: "Ar-Rahman", totalAyat: 78, start: 1, end: 78 },
+      { surah: 56, nama: "Al-Waqi'ah", totalAyat: 96, start: 1, end: 96 },
+      { surah: 57, nama: "Al-Hadid", totalAyat: 29, start: 1, end: 29 }
+    ]
+  },
+  28: {
+    totalAyat: 137,
+    contents: [
+      { surah: 58, nama: "Al-Mujadilah", totalAyat: 22, start: 1, end: 22 },
+      { surah: 59, nama: "Al-Hasyr", totalAyat: 24, start: 1, end: 24 },
+      { surah: 60, nama: "Al-Mumtahanah", totalAyat: 13, start: 1, end: 13 },
+      { surah: 61, nama: "As-Saff", totalAyat: 14, start: 1, end: 14 },
+      { surah: 62, nama: "Al-Jumu'ah", totalAyat: 11, start: 1, end: 11 },
+      { surah: 63, nama: "Al-Munafiqun", totalAyat: 11, start: 1, end: 11 },
+      { surah: 64, nama: "At-Taghabun", totalAyat: 18, start: 1, end: 18 },
+      { surah: 65, nama: "At-Talaq", totalAyat: 12, start: 1, end: 12 },
+      { surah: 66, nama: "At-Tahrim", totalAyat: 12, start: 1, end: 12 }
+    ]
+  },
+  29: {
+    totalAyat: 431,
+    contents: [
+      { surah: 67, nama: "Al-Mulk", totalAyat: 30, start: 1, end: 30 },
+      { surah: 68, nama: "Al-Qalam", totalAyat: 52, start: 1, end: 52 },
+      { surah: 69, nama: "Al-Haqqah", totalAyat: 52, start: 1, end: 52 },
+      { surah: 70, nama: "Al-Ma'arij", totalAyat: 44, start: 1, end: 44 },
+      { surah: 71, nama: "Nuh", totalAyat: 28, start: 1, end: 28 },
+      { surah: 72, nama: "Al-Jinn", totalAyat: 28, start: 1, end: 28 },
+      { surah: 73, nama: "Al-Muzzammil", totalAyat: 20, start: 1, end: 20 },
+      { surah: 74, nama: "Al-Muddassir", totalAyat: 56, start: 1, end: 56 },
+      { surah: 75, nama: "Al-Qiyamah", totalAyat: 40, start: 1, end: 40 },
+      { surah: 76, nama: "Al-Insan", totalAyat: 31, start: 1, end: 31 },
+      { surah: 77, nama: "Al-Mursalat", totalAyat: 50, start: 1, end: 50 }
+    ]
+  },
+  30: {
+    totalAyat: 564,
+    contents: [
+      { surah: 78, nama: "An-Naba'", totalAyat: 40, start: 1, end: 40 },
+      { surah: 79, nama: "An-Nazi'at", totalAyat: 46, start: 1, end: 46 },
+      { surah: 80, nama: "'Abasa", totalAyat: 42, start: 1, end: 42 },
+      { surah: 81, nama: "At-Takwir", totalAyat: 29, start: 1, end: 29 },
+      { surah: 82, nama: "Al-Infithar", totalAyat: 19, start: 1, end: 19 },
+      { surah: 83, nama: "Al-Muthaffifin", totalAyat: 36, start: 1, end: 36 },
+      { surah: 84, nama: "Al-Insyiqaq", totalAyat: 25, start: 1, end: 25 },
+      { surah: 85, nama: "Al-Buruj", totalAyat: 22, start: 1, end: 22 },
+      { surah: 86, nama: "Ath-Thariq", totalAyat: 17, start: 1, end: 17 },
+      { surah: 87, nama: "Al-A'la", totalAyat: 19, start: 1, end: 19 },
+      { surah: 88, nama: "Al-Ghasyiyah", totalAyat: 26, start: 1, end: 26 },
+      { surah: 89, nama: "Al-Fajr", totalAyat: 30, start: 1, end: 30 },
+      { surah: 90, nama: "Al-Balad", totalAyat: 20, start: 1, end: 20 },
+      { surah: 91, nama: "Asy-Syams", totalAyat: 15, start: 1, end: 15 },
+      { surah: 92, nama: "Al-Lail", totalAyat: 21, start: 1, end: 21 },
+      { surah: 93, nama: "Adh-Dhuha", totalAyat: 11, start: 1, end: 11 },
+      { surah: 94, nama: "Asy-Syarh", totalAyat: 8, start: 1, end: 8 },
+      { surah: 95, nama: "At-Tin", totalAyat: 8, start: 1, end: 8 },
+      { surah: 96, nama: "Al-'Alaq", totalAyat: 19, start: 1, end: 19 },
+      { surah: 97, nama: "Al-Qadr", totalAyat: 5, start: 1, end: 5 },
+      { surah: 98, nama: "Al-Bayyinah", totalAyat: 8, start: 1, end: 8 },
+      { surah: 99, nama: "Az-Zalzalah", totalAyat: 8, start: 1, end: 8 },
+      { surah: 100, nama: "Al-'Adiyat", totalAyat: 11, start: 1, end: 11 },
+      { surah: 101, nama: "Al-Qari'ah", totalAyat: 11, start: 1, end: 11 },
+      { surah: 102, nama: "At-Takatsur", totalAyat: 8, start: 1, end: 8 },
+      { surah: 103, nama: "Al-'Ashr", totalAyat: 3, start: 1, end: 3 },
+      { surah: 104, nama: "Al-Humazah", totalAyat: 9, start: 1, end: 9 },
+      { surah: 105, nama: "Al-Fil", totalAyat: 5, start: 1, end: 5 },
+      { surah: 106, nama: "Quraisy", totalAyat: 4, start: 1, end: 4 },
+      { surah: 107, nama: "Al-Ma'un", totalAyat: 7, start: 1, end: 7 },
+      { surah: 108, nama: "Al-Kautsar", totalAyat: 3, start: 1, end: 3 },
+      { surah: 109, nama: "Al-Kafirun", totalAyat: 6, start: 1, end: 6 },
+      { surah: 110, nama: "An-Nashr", totalAyat: 3, start: 1, end: 3 },
+      { surah: 111, nama: "Al-Lahab", totalAyat: 5, start: 1, end: 5 },
+      { surah: 112, nama: "Al-Ikhlas", totalAyat: 4, start: 1, end: 4 },
+      { surah: 113, nama: "Al-Falaq", totalAyat: 5, start: 1, end: 5 },
+      { surah: 114, nama: "An-Nas", totalAyat: 6, start: 1, end: 6 }
+    ]
+  }
+};
 	
 			let selectedFundraisingFile = null; // Variabel untuk menyimpan file gambar yang dipilih
 // === TAMBAHKAN BLOK KODE INI DI BAGIAN ATAS SCRIPT ANDA ===
@@ -3980,10 +4354,13 @@ function setupExamSecurityListeners() {
 }
 
 let tahfidzChartInstance = null;
+let murajaahChartInstance = null;
 
 async function renderTahfidzChart(santriName, startDate, endDate) {
+    const container = document.getElementById('ziyadah-chart-content');
+    container.innerHTML = '<canvas id="tahfidzChart" style="height: 400px;"></canvas>';
     const ctx = document.getElementById('tahfidzChart').getContext('2d');
-    
+
     try {
         const response = await fetch(CONFIG.SCRIPT_URL, {
             method: 'POST',
@@ -3991,9 +4368,11 @@ async function renderTahfidzChart(santriName, startDate, endDate) {
         });
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
-        
-        const labels = result.data.map(item => item.label);
-        const points = result.data.map(item => item.points);
+
+        // FILTER HANYA ZIYADAH
+        const ziyadahData = result.data.filter(item => item.label.includes('Ziyadah'));
+        const labels = ziyadahData.map(item => item.label);
+        const points = ziyadahData.map(item => item.points);
 
         if (tahfidzChartInstance) {
             tahfidzChartInstance.destroy();
@@ -4020,19 +4399,151 @@ async function renderTahfidzChart(santriName, startDate, endDate) {
             },
             options: {
                 responsive: true,
-				maintainAspectRatio: false,
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y_poin: {
-                        beginAtZero: true,
-                        position: 'left',
-                        title: { display: true, text: 'Poin' }
-                    }
+                    y_poin: { beginAtZero: true, position: 'left', title: { display: true, text: 'Poin' } }
                 }
             }
         });
     } catch (error) {
-        console.error("Gagal membuat grafik:", error);
+        console.error("Gagal membuat grafik Ziyadah:", error);
+    }
+}
+
+function calculateDecayColor(avgPoin, lastDateStr) {
+    let R, G, B;
+
+    // 1. Tentukan Warna Dasar berdasarkan Poin (avgPoin)
+    if (avgPoin >= 9)      { R = 59; G = 130; B = 246; } // Biru
+    else if (avgPoin > 7)  { R = 22; G = 163; B = 74;  } // Hijau
+    else if (avgPoin > 5)  { R = 234; G = 179; B = 8;   } // Kuning
+    else if (avgPoin > 0)  { R = 220; G = 38; B = 38;   } // Merah
+    else                   { R = 156; G = 163; B = 175; } // Abu-abu (jika poin 0)
+
+    // 2. Tentukan Opacity berdasarkan Tanggal (lastDateStr)
+    let opacity = 1.0; // Default: solid
+
+    if (!lastDateStr) {
+        // Jika tidak ada tanggal (seharusnya tidak terjadi jika persen > 0, tapi untuk keamanan)
+        opacity = 0.7; // Beri opacity standar
+    } else {
+        const today = new Date();
+        const lastDate = new Date(lastDateStr);
+        const diffTime = Math.abs(today - lastDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays >= 365) {
+            // Jika lebih dari setahun, buat transparan (efek "putih")
+            opacity = 0.1; // Opacity minimal (hampir transparan)
+        } else {
+            // Hitung opacity: 1.0 (baru) -> 0.1 (setahun)
+            opacity = 1.0 - (diffDays / 365) * 0.90;
+        }
+    }
+    
+    return `rgba(${R}, ${G}, ${B}, ${opacity})`;
+}
+
+
+/**
+ * FUNGSI YANG DIPERBAIKI (V4.1): Merender Grafik Muraja'ah
+ * 1. (FIX) Menerapkan Ide 1 (Grafik Simpel)
+ * 2. (FIX) Menerapkan Ide 2 (Warna Memudar + Warna Poin)
+ */
+async function renderMurajaahJuzChart(santriName) {
+    const container = document.getElementById('murajaah-chart-content');
+    container.innerHTML = '<canvas id="murajaahChart" style="height: 400px;"></canvas>';
+    const ctx = document.getElementById('murajaahChart').getContext('2d');
+
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getMurajaahJuzReport', santriName: santriName })
+        });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        // --- IMPLEMENTASI IDE 1 (GRAFIK SIMPEL) ---
+        // Filter data: Ambil HANYA item yang progresnya lebih dari 0%
+        const filteredReport = result.report.filter(item => item.percent > 0);
+
+        if (filteredReport.length === 0) {
+            container.innerHTML = '<p class="p-8 text-center text-gray-500">Belum ada progres muraja\'ah yang tercatat untuk santri ini.</p>';
+            if (murajaahChartInstance) {
+                murajaahChartInstance.destroy();
+            }
+            return;
+        }
+
+        const labels = filteredReport.map(item => `Juz ${item.juz}`);
+        const percentages = filteredReport.map(item => item.percent);
+        
+        // --- IMPLEMENTASI IDE 2 (WARNA GABUNGAN) ---
+        // Hitung warna untuk setiap batang berdasarkan POIN dan TANGGAL
+        const barColors = filteredReport.map(item => 
+            calculateDecayColor(item.avgPoin, item.tanggalSetoranTerakhir)
+        );
+        // --- AKHIR IMPLEMENTASI ---
+
+
+        if (murajaahChartInstance) {
+            murajaahChartInstance.destroy();
+        }
+
+        murajaahChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels, 
+                datasets: [{
+                    label: 'Persentase Selesai',
+                    data: percentages, 
+                    backgroundColor: barColors, // Menggunakan warna gabungan
+                    borderColor: barColors.map(color => color.replace(/, [0-9.]+\)/, ', 1)')), // Versi solid
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const item = filteredReport[context.dataIndex];
+                                const avgPoin = item.avgPoin ? item.avgPoin.toFixed(1) : '0';
+                                
+                                let dateText = 'Belum tersetor';
+                                if (item.tanggalSetoranTerakhir) {
+                                    dateText = `Setoran terakhir: ${new Date(item.tanggalSetoranTerakhir).toLocaleDateString('id-ID')}`;
+                                }
+                                
+                                return `Status: ${item.percent}% | Avg. Poin: ${avgPoin} | ${dateText}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { callback: value => value + '%' }
+                    },
+                    x: { 
+                        ticks: { 
+                            autoSkip: false, 
+                            maxRotation: 90, 
+                            minRotation: 45 
+                        } 
+                    }
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error("Gagal membuat grafik Muraja'ah:", error);
+        container.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat grafik: ${error.message}</p>`;
     }
 }
 
@@ -5910,12 +6421,12 @@ function showPage(hash) {
 				const datePicker = document.getElementById('laporanTanggal');
 				if (!datePicker.dataset.listenerAttached) {
 					datePicker.addEventListener('change', (e) => {
-						fetchAndRenderTahfidzReport(e.target.value);
-					});
+    fetchAndRenderAllDailyReports(e.target.value); // Panggil fungsi yang baru
+});
 					datePicker.dataset.listenerAttached = 'true';
 				}
 				datePicker.value = new Date().toISOString().slice(0, 10);
-				fetchAndRenderTahfidzReport(datePicker.value);
+				fetchAndRenderAllDailyReports(datePicker.value);
 
 				if (allowedJabatan.includes(userJabatan) || session.username === 'wawan' || session.username === 'admin') {
 					document.getElementById('tahfidz-chart-container').classList.remove('hidden');
@@ -5931,14 +6442,66 @@ function showPage(hash) {
 					endDateInput.value = today.toISOString().slice(0, 10);
 					today.setDate(today.getDate() - 30);
 					startDateInput.value = today.toISOString().slice(0, 10);
-					document.getElementById('show-chart-btn').onclick = () => {
-						const santriName = santriSelect.value;
-						if (!santriName) {
-							alert("Silakan pilih nama santri.");
-							return;
-						}
-						renderTahfidzChart(santriName, startDateInput.value, endDateInput.value);
-					};
+					document.getElementById('show-chart-btn').onclick = async () => {
+    const santriName = santriSelect.value;
+    if (!santriName) {
+        alert("Silakan pilih nama santri.");
+        return;
+    }
+
+    const btn = document.getElementById('show-chart-btn');
+    btn.disabled = true;
+    btn.textContent = 'Memuat...';
+
+    // Tampilkan pesan loading di kedua kontainer
+    // (Kita tampilkan di keduanya, karena kita tidak tahu tab mana yang aktif)
+    document.getElementById('ziyadah-chart-content').innerHTML = '<p class="p-8 text-center text-gray-500">Memuat grafik...</p>';
+    document.getElementById('murajaah-chart-content').innerHTML = '<p class="p-8 text-center text-gray-500">Memuat grafik...</p>';
+
+    try {
+        // Panggil KEDUA fungsi render
+        await renderTahfidzChart(santriName, startDateInput.value, endDateInput.value);
+        await renderMurajaahJuzChart(santriName);
+    } catch (error) {
+        showMessage('Gagal memuat grafik: ' + error.message, 'error');
+        // Jika gagal, bersihkan pesan loading
+        document.getElementById('ziyadah-chart-content').innerHTML = '';
+        document.getElementById('murajaah-chart-content').innerHTML = '';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Tampilkan Grafik';
+    }
+};
+
+// === AWAL KODE BARU: EVENT LISTENER TABS ===
+const tabZiyadah = document.getElementById('tab-ziyadah');
+const tabMurajaah = document.getElementById('tab-murajaah');
+const contentZiyadah = document.getElementById('ziyadah-chart-content');
+const contentMurajaah = document.getElementById('murajaah-chart-content');
+
+// Atur tab Ziyadah sebagai default
+tabZiyadah.classList.add('bg-white', 'text-teal-600', 'font-bold');
+tabZiyadah.classList.remove('bg-gray-100', 'text-gray-700');
+
+tabZiyadah.addEventListener('click', (e) => {
+    e.preventDefault();
+    contentZiyadah.classList.remove('hidden');
+    contentMurajaah.classList.add('hidden');
+    tabZiyadah.classList.add('bg-white', 'text-teal-600', 'font-bold');
+    tabZiyadah.classList.remove('bg-gray-100', 'text-gray-700');
+    tabMurajaah.classList.add('bg-gray-100', 'text-gray-700');
+    tabMurajaah.classList.remove('bg-white', 'text-teal-600', 'font-bold');
+});
+
+tabMurajaah.addEventListener('click', (e) => {
+    e.preventDefault();
+    contentZiyadah.classList.add('hidden');
+    contentMurajaah.classList.remove('hidden');
+    tabMurajaah.classList.add('bg-white', 'text-teal-600', 'font-bold');
+    tabMurajaah.classList.remove('bg-gray-100', 'text-gray-700');
+    tabZiyadah.classList.add('bg-gray-100', 'text-gray-700');
+    tabZiyadah.classList.remove('bg-white', 'text-teal-600', 'font-bold');
+});
 				}
 			}
         } else if (targetHash === '#slip-gaji') {
@@ -6241,6 +6804,11 @@ function showLoggedInView(userData) {
     if (session && session.loggedIn) {
         const username = session.username;
         const jabatan = session.userData.jabatan || '';
+		const adminPelanggaran = ['wawan', 'aria', 'admin'];
+        const isPengasuh = (jabatan.toLowerCase().includes('pengasuh'));
+        if (adminPelanggaran.includes(username) || isPengasuh) {
+            fetchPelanggaranNotifications();
+        }
 		const allowedUsernames = ['wawan', 'mia', 'reza', 'yeni', 'admin'];
         const isSantri = (jabatan || '').trim().toLowerCase() === 'santri';
         const isKepalaOrWaka = jabatan === 'Kepala Rumah Anak Yatim' || jabatan === 'Kepala Rumah Tahfidz' || jabatan === 'Waka Kurikulum';
@@ -7369,15 +7937,26 @@ function setupMusyrifEventListeners(role) {
     initializeJuzCheckboxes(role);
     setupMurajaahToggle(role);
 
-    // 2. Deklarasikan variabel yang dibutuhkan (hanya sekali)
+    // 2. Deklarasikan variabel yang dibutuhkan
     const pageSelector = `#${role}`;
-    const formKegiatan = document.querySelector(`${pageSelector} #formKegiatan${role.charAt(0).toUpperCase() + role.slice(1)}`);
-    const formTahfidz = document.querySelector(`${pageSelector} #formTahfidz${role.charAt(0).toUpperCase() + role.slice(1)}`);
-    const formPelanggaran = document.querySelector(`${pageSelector} #formPelanggaran${role.charAt(0).toUpperCase() + role.slice(1)}`);
+    const roleCapitalized = role.charAt(0).toUpperCase() + role.slice(1);
+    const formKegiatan = document.querySelector(`${pageSelector} #formKegiatan${roleCapitalized}`);
+    const formTahfidz = document.querySelector(`${pageSelector} #formTahfidz${roleCapitalized}`);
+    const formPelanggaran = document.querySelector(`${pageSelector} #formPelanggaran${roleCapitalized}`);
+    
+    // --- (BARU) DAFTAR SARAN ---
+    const saranKegiatan = ['Tidak Piket', 'Tidak Solat/terlambat', 'tidak dzikir', 'susah bangun tidur', 'tidak mandi', 'tidak sikat gigi', 'melanggar adab'];
+    const saranPelanggaran = ['Mendzolimi teman (bully)', 'Mengoshob/Mencuri', 'tidak menghormati Musyrif/ah', 'Berbohong', 'Melakukan perbuatan Bid\'ah', 'Berkata Buruk/Mengumpat', 'mengakses konten terlarang di laptop', 'keluar area tanpa izin pengasuh', 'Jajan berlebihan', 'merokok', 'membuka aurat saat diluar asrama', 'memutar musik', 'interaksi dengan lawan jenis (berzina)', 'melakukan maksiat lainnya'];
+    const saranSolusi = ['Peringatan Lisan (menasehati 4 mata)', 'diberikan tugas tambahan', 'ganti rugi', 'penyitaan/pemusnahan barang', 'skorsing', 'hukuman fisik ringan'];
+
+    // --- (BARU) PANGGIL FUNGSI PEMBUAT CHIP ---
+    createSuggestionChips(`kegiatan${roleCapitalized}Suggestions`, saranKegiatan, `keteranganKegiatan${roleCapitalized}`);
+    createSuggestionChips(`pelanggaran${roleCapitalized}Suggestions`, saranPelanggaran, `isiPelanggaran${roleCapitalized}`);
+    createSuggestionChips(`solusi${roleCapitalized}Suggestions`, saranSolusi, `solusiPelanggaran${roleCapitalized}`);
     
     // 3. Pasang event listener untuk radio button kegiatan
-    const statusRadios = document.querySelectorAll(`input[name="statusKegiatan${role.charAt(0).toUpperCase() + role.slice(1)}"]`);
-    const keteranganContainer = document.getElementById(`keteranganKegiatan${role.charAt(0).toUpperCase() + role.slice(1)}Container`);
+    const statusRadios = document.querySelectorAll(`input[name="statusKegiatan${roleCapitalized}"]`);
+    const keteranganContainer = document.getElementById(`keteranganKegiatan${roleCapitalized}Container`);
     statusRadios.forEach(radio => {
         radio.addEventListener('change', function() {
             keteranganContainer.classList.toggle('hidden', this.value !== 'Ada yang tidak dikerjakan');
@@ -7385,16 +7964,16 @@ function setupMusyrifEventListeners(role) {
     });
 
     // 4. Pasang event listener untuk form submit
-    if (formKegiatan) formKegiatan.addEventListener('submit', (e) => handleMusyrifFormSubmit(e, role, 'Kegiatan'));
-    if (formTahfidz) formTahfidz.addEventListener('submit', (e) => handleMusyrifFormSubmit(e, role, 'Tahfidz'));
+    if (formKegiatan) formKegiatan.addEventListener('submit', (e) => handleMusyrifFormSubmit(e, role, 'KegiatanHarian'));
+    if (formTahfidz) formTahfidz.addEventListener('submit', (e) => handleMusyrifFormSubmit(e, role, 'NilaiTahfidz'));
     if (formPelanggaran) formPelanggaran.addEventListener('submit', (e) => handleMusyrifFormSubmit(e, role, 'Pelanggaran'));
 
-    // 5. Inisialisasi tampilan awal dengan benar
+    // 5. Inisialisasi tampilan awal
     updateMurajaahFromJuz(role);
 }
 
 // GANTI SELURUH ISI FUNGSI INI
-function handleMusyrifFormSubmit(event, role, type) {
+function handleMusyrifFormSubmit(event, role, sheetName) { // Diubah dari 'type' ke 'sheetName'
     event.preventDefault();
     const session = getActiveSession();
     if (!session || !session.loggedIn) {
@@ -7406,7 +7985,6 @@ function handleMusyrifFormSubmit(event, role, type) {
     const submitBtn = form.querySelector('button[type="submit"]');
     const santriSelect = form.querySelector('select');
 
-    // VALIDASI: Pastikan nama santri sudah dipilih
     if (!santriSelect.value) {
         showMessage('Silakan pilih nama santri terlebih dahulu.', 'error');
         return;
@@ -7416,7 +7994,7 @@ function handleMusyrifFormSubmit(event, role, type) {
     submitBtn.textContent = 'Mengirim...';
 
     let data = {
-        action: `submit${type}`,
+        action: `submit${sheetName}`, // (PERUBAHAN) Menggunakan sheetName langsung
         musyrif: session.userData.profileName,
         tanggal: form.querySelector('input[type="date"]').value,
         namaSantri: santriSelect.value,
@@ -7424,10 +8002,11 @@ function handleMusyrifFormSubmit(event, role, type) {
 
     const roleCapitalized = role.charAt(0).toUpperCase() + role.slice(1);
 
-    if (type === 'Kegiatan') {
+    if (sheetName === 'KegiatanHarian') { // (PERUBAHAN)
         data.status = form.querySelector(`input[name="statusKegiatan${roleCapitalized}"]:checked`).value;
         data.keterangan = form.querySelector(`#keteranganKegiatan${roleCapitalized}`).value || '-';
-    } else if (type === 'Tahfidz') {
+    } else if (sheetName === 'NilaiTahfidz') { // (PERUBAHAN)
+        // ... (Logika poin dan teks tahfidz tetap sama) ...
         const zPAwal = document.getElementById(`ziyadahPAyatAwal${roleCapitalized}`).value;
         const zPAkhir = document.getElementById(`ziyadahPAyatAkhir${roleCapitalized}`).value;
         const zSAwal = document.getElementById(`ziyadahSAyatAwal${roleCapitalized}`).value;
@@ -7436,19 +8015,13 @@ function handleMusyrifFormSubmit(event, role, type) {
         const mAAwal = document.getElementById(`murajaahAyatAwal${roleCapitalized}`).value;
         const mSAkhir = document.getElementById(`murajaahSurahAkhir${roleCapitalized}`).value;
         const mAAkhir = document.getElementById(`murajaahAyatAkhir${roleCapitalized}`).value;
-
-        // Mengambil poin dan menggabungkan teks untuk Ziyadah Pagi
         data.ziyadahPoin = document.getElementById(`ziyadahPoin${roleCapitalized}`).value || '0';
         data.ziyadahPText = zPAwal ? `${document.getElementById(`ziyadahPSurah${roleCapitalized}`).value}: ${zPAwal}-${zPAkhir}` : '-';
-        
-        // Mengambil poin dan menggabungkan teks untuk Ziyadah Sore
         data.ziyadahSPoin = document.getElementById(`ziyadahSPoin${roleCapitalized}`).value || '0';
         data.ziyadahSText = zSAwal ? `${document.getElementById(`ziyadahSSurah${roleCapitalized}`).value}: ${zSAwal}-${zSAkhir}` : '-';
-        
-        // Mengambil poin dan menggabungkan teks untuk Muraja'ah
         data.murajaahPoin = document.getElementById(`murajaahPoin${roleCapitalized}`).value || '0';
         data.murajaahText = mSAwal ? `${mSAwal}: ${mAAwal} - ${mSAkhir}: ${mAAkhir}` : '-';
-    } else if (type === 'Pelanggaran') {
+    } else if (sheetName === 'Pelanggaran') { // (PERUBAHAN)
         data.pelanggaran = document.getElementById(`isiPelanggaran${roleCapitalized}`).value;
         data.solusi = document.getElementById(`solusiPelanggaran${roleCapitalized}`).value;
     }
@@ -7461,15 +8034,16 @@ function handleMusyrifFormSubmit(event, role, type) {
     .then(res => res.json())
     .then(result => {
         if (result.status === 'success') {
-            showMessage(`Laporan ${type} berhasil disimpan!`, 'success');
+            showMessage(`Laporan ${sheetName} berhasil disimpan!`, 'success');
             form.reset();
 			form.querySelector('input[type="date"]').value = new Date().toISOString().slice(0, 10);
-            // Mengembalikan radio button ke default setelah reset
-            if(type === 'Kegiatan') {
+            if(sheetName === 'KegiatanHarian') {
                 form.querySelector('input[value="Sudah dilaksanakan semua"]').checked = true;
                 document.getElementById(`keteranganKegiatan${roleCapitalized}Container`).classList.add('hidden');
             }
-            fetchAndRenderDailyReports(role); // Refresh tampilan
+            fetchAndRenderDailyReports(role);
+        } else if (result.status === 'duplicate') { // (BARU) Menangani pesan duplikat
+             showMessage(result.message, 'error');
         } else {
             throw new Error(result.message);
         }
@@ -7479,7 +8053,7 @@ function handleMusyrifFormSubmit(event, role, type) {
     })
     .finally(() => {
         submitBtn.disabled = false;
-        submitBtn.textContent = `Simpan Laporan ${type}`;
+        submitBtn.textContent = `Simpan Laporan ${sheetName}`;
     });
 }
 
@@ -7542,17 +8116,139 @@ function fetchAndRenderDailyReports(role) {
     });
 }
 
-// FUNGSI BARU UNTUK HALAMAN LAPORAN TAHFIDZ
-function fetchAndRenderTahfidzReport(dateString) {
-    const reportContainer = document.getElementById('laporanContainer');
-    reportContainer.innerHTML = '<p class="p-6 text-center text-gray-500">Memuat laporan untuk tanggal ' + dateString + '...</p>';
+// --- (BARU) FUNGSI UNTUK MEMBUAT CHIP SARAN ---
+function createSuggestionChips(containerId, suggestions, textareaId) {
+    const container = document.getElementById(containerId);
+    const textarea = document.getElementById(textareaId);
+    if (!container || !textarea) return;
 
-    // Ubah format YYYY-MM-DD dari date picker ke DD/MM/YYYY yang dibutuhkan script
+    container.innerHTML = ''; // Kosongkan
+    suggestions.forEach(suggestion => {
+        const chip = document.createElement('button');
+        chip.type = 'button'; // Mencegah form submit
+        chip.className = 'suggestion-chip px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm hover:bg-gray-300';
+        chip.textContent = suggestion;
+        chip.onclick = () => {
+            if (textarea.value.trim() === '') {
+                textarea.value = suggestion;
+            } else {
+                // Cek agar tidak menambahkan koma jika sudah ada
+                if (textarea.value.endsWith(',') || textarea.value.endsWith(', ')) {
+                    textarea.value += ` ${suggestion}`;
+                } else {
+                    textarea.value += `, ${suggestion}`;
+                }
+            }
+        };
+        container.appendChild(chip);
+    });
+}
+
+// --- (BARU) FUNGSI UNTUK MENGAMBIL NOTIFIKASI PELANGGARAN ---
+async function fetchPelanggaranNotifications() {
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getUnresolvedPelanggaran' })
+        });
+        const result = await response.json();
+        
+        if (result.status === 'success' && result.count > 0) {
+            // Tampilkan notifikasi pada menu "Sistem Informasi" dan "Laporan Harian"
+            const wrappers = [
+                document.querySelector('#sistemInformasiNav .nav-link-wrapper'),
+                document.querySelector('#laporanNav .nav-link-wrapper') // Jika #laporanNav punya wrapper
+            ];
+
+            wrappers.forEach(wrapper => {
+                if (wrapper) {
+                    const oldDot = wrapper.querySelector('.notification-dot');
+                    if (oldDot) oldDot.remove();
+                    
+                    const dot = document.createElement('span');
+                    dot.className = 'notification-dot';
+                    dot.textContent = result.count;
+                    wrapper.appendChild(dot);
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Gagal mengambil notifikasi pelanggaran:", error);
+    }
+}
+
+
+// FUNGSI BARU UNTUK HALAMAN LAPORAN TAHFIDZ
+function renderReportTable(container, title, data, headers, allowedUsers = []) {
+    const session = getActiveSession();
+    const isAdmin = session && allowedUsers.includes(session.username);
+
+    container.innerHTML = ''; // Kosongkan kontainer
+    let tableHTML = `<h3 class="text-2xl font-semibold text-gray-700 mb-4">${title}</h3>`;
+    
+    if (!data || data.length === 0) {
+        tableHTML += '<div class="overflow-x-auto bg-white rounded-lg shadow"><p class="p-6 text-center text-gray-500">Tidak ada data.</p></div>';
+        container.innerHTML = tableHTML;
+        return;
+    }
+
+    tableHTML += '<div class="overflow-x-auto bg-white rounded-lg shadow"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr>';
+    
+    // Buat header tabel
+    headers.forEach(header => {
+        tableHTML += `<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">${header.label}</th>`;
+    });
+    if (isAdmin) {
+        tableHTML += `<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>`;
+    }
+    tableHTML += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+
+    // Isi baris tabel
+    data.forEach(item => {
+        tableHTML += `<tr>`;
+        headers.forEach(header => {
+            tableHTML += `<td class="px-4 py-4 text-sm text-gray-600">${item[header.key] || '-'}</td>`;
+        });
+        
+        // Tambahkan tombol "Selesai" jika admin dan statusnya "Baru"
+        if (isAdmin) {
+            const isBaru = (item.status === 'Baru' || item.status === '');
+            tableHTML += `<td class="px-4 py-4 text-sm">`;
+            if (isBaru) {
+                tableHTML += `<button class="masalah-selesai-btn px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600" data-timestamp="${item.timestampRaw}">Tandai Selesai</button>`;
+            } else {
+                tableHTML += `<span class="px-3 py-1 bg-gray-200 text-gray-600 rounded text-xs">Selesai</span>`;
+            }
+            tableHTML += `</td>`;
+        }
+        tableHTML += `</tr>`;
+    });
+
+    tableHTML += '</tbody></table></div>';
+    container.innerHTML = tableHTML;
+}
+
+/**
+ * FUNGSI DIPERBARUI: Mengambil dan merender SEMUA laporan harian.
+ * (Sebelumnya: fetchAndRenderTahfidzReport)
+ */
+function fetchAndRenderAllDailyReports(dateString) {
+    const tahfidzContainer = document.getElementById('tahfidzReportContainer');
+    const kegiatanContainer = document.getElementById('kegiatanReportContainer');
+    const pelanggaranContainer = document.getElementById('pelanggaranReportContainer');
+    
+    // Tampilkan pesan loading di semua kontainer
+    const loadingHTML = '<p class="p-6 text-center text-gray-500">Memuat laporan...</p>';
+    tahfidzContainer.innerHTML = loadingHTML;
+    kegiatanContainer.innerHTML = loadingHTML;
+    pelanggaranContainer.innerHTML = loadingHTML;
+
+    // Ubah format YYYY-MM-DD dari date picker ke DD/MM/YYYY
     const parts = dateString.split('-');
     const formattedDateForScript = `${parts[2]}/${parts[1]}/${parts[0]}`;
 
     const data = {
-        action: 'getTahfidzReport',
+        action: 'getAllDailyReportsByDate', // Memanggil fungsi backend yang baru
         dateString: formattedDateForScript
     };
 
@@ -7564,38 +8260,64 @@ function fetchAndRenderTahfidzReport(dateString) {
     .then(res => res.json())
     .then(result => {
         if (result.status === 'success') {
-            if (result.reports.length > 0) {
-                let tableHTML = '<table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr>' +
-                                '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Santri</th>' +
-                                '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Musyrif/ah</th>' +
-                                '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ziyadah (P)</th>' +
-                                '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ziyadah (S)</th>' +
-                                '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Muraja\'ah</th>' +
-                                '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
-                
-                result.reports.forEach(item => {
-                    tableHTML += `<tr>
-                                    <td class="px-4 py-4 font-medium text-gray-900">${item.namaSantri}</td>
-                                    <td class="px-4 py-4 text-sm text-gray-500">${item.musyrif}</td>
-                                    <td class="px-4 py-4 text-sm text-gray-500">${item.ziyadahPText || '-'} (${item.ziyadahP || '0'})</td>
-                                    <td class="px-4 py-4 text-sm text-gray-500">${item.ziyadahSText || '-'} (${item.ziyadahS || '0'})</td>
-                                    <td class="px-4 py-4 text-sm text-gray-500">${item.murajaahText || '-'} (${item.murajaah || '0'})</td>
-                                  </tr>`;
-                });
+            const reports = result.reports;
+            
+            // 1. Render Laporan Tahfidz
+            renderReportTable(
+                tahfidzContainer,
+                'Laporan Nilai Tahfidz',
+                reports.tahfidz,
+                [
+                    { label: 'Nama Santri', key: 'namaSantri' },
+                    { label: 'Musyrif/ah', key: 'musyrif' },
+                    { label: 'Ziyadah (P)', key: 'ziyadahPText' },
+                    { label: 'Poin (P)', key: 'ziyadahP' },
+                    { label: 'Ziyadah (S)', key: 'ziyadahSText' },
+                    { label: 'Poin (S)', key: 'ziyadahS' },
+                    { label: 'Muraja\'ah', key: 'murajaahText' },
+                    { label: 'Poin (M)', key: 'murajaah' }
+                ]
+            );
 
-                tableHTML += '</tbody></table>';
-                reportContainer.innerHTML = tableHTML;
-            } else {
-                reportContainer.innerHTML = `<p class="p-6 text-center text-gray-500">Tidak ada laporan Tahfidz yang masuk pada tanggal ${dateString}.</p>`;
-            }
+            // 2. Render Laporan Kegiatan
+            renderReportTable(
+                kegiatanContainer,
+                'Laporan Kegiatan Harian',
+                reports.kegiatan,
+                [
+                    { label: 'Nama Santri', key: 'namaSantri' },
+                    { label: 'Musyrif/ah', key: 'musyrif' },
+                    { label: 'Status', key: 'status' },
+                    { label: 'Keterangan', key: 'keterangan' }
+                ]
+            );
+
+            // 3. Render Laporan Pelanggaran (dengan user admin)
+            renderReportTable(
+                pelanggaranContainer,
+                'Laporan Pelanggaran',
+                reports.pelanggaran,
+                [
+                    { label: 'Nama Santri', key: 'namaSantri' },
+                    { label: 'Musyrif/ah', key: 'musyrif' },
+                    { label: 'Pelanggaran', key: 'pelanggaran' },
+                    { label: 'Solusi', key: 'solusi' },
+                    { label: 'Status', key: 'status' }
+                ],
+                ['wawan', 'aria', 'admin'] // Daftar user yang bisa melihat tombol "Selesai"
+            );
+            
         } else {
             throw new Error(result.message);
         }
     })
     .catch(error => {
-        reportContainer.innerHTML = `<p class="p-6 text-center text-red-500">Gagal memuat laporan: ${error.message}</p>`;
+        const errorHTML = `<p class="p-6 text-center text-red-500">Gagal memuat laporan: ${error.message}</p>`;
+        tahfidzContainer.innerHTML = errorHTML;
+        kegiatanContainer.innerHTML = errorHTML;
+        pelanggaranContainer.innerHTML = errorHTML;
     });
-}	
+}
 
 
 const handleKrsClick = async (event, userData = null) => {
@@ -8953,6 +9675,51 @@ function handleInputMateriFromModal() {
         if (ui.donasiBtn) ui.donasiBtn.onclick = () => document.getElementById('donasiModal').style.display = "block";
     
     document.body.addEventListener('click', function(event) {
+	if (event.target.classList.contains('masalah-selesai-btn')) {
+            const btn = event.target;
+            const timestamp = btn.dataset.timestamp;
+
+            if (!timestamp) {
+                showMessage('Error: Timestamp tidak ditemukan.', 'error');
+                return;
+            }
+            
+            if (!confirm('Apakah Anda yakin ingin menandai masalah ini sebagai "Selesai"?')) {
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
+
+            fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'markPelanggaranSelesai',
+                    timestampString: timestamp
+                }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    showMessage('Masalah ditandai selesai.', 'success');
+                    // Ganti tombol menjadi status "Selesai" tanpa refresh halaman
+                    btn.textContent = 'Selesai';
+                    btn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                    btn.classList.add('bg-gray-200', 'text-gray-600');
+                    btn.disabled = true;
+                    // Refresh notifikasi
+                    fetchPelanggaranNotifications();
+                } else {
+                    throw new Error(result.message);
+                }
+            })
+            .catch(error => {
+                showMessage(`Gagal: ${error.message}`, 'error');
+                btn.disabled = false;
+                btn.textContent = 'Tandai Selesai';
+            });
+        }
         // Cek jika tombol kembali KRS/KHS diklik
         if (event.target.closest('#back-to-santri-krs') || event.target.closest('#back-to-santri-khs')) {
             handleBackToSantriList();
