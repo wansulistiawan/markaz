@@ -2177,6 +2177,8 @@
 
         <div class="form-group">
             <h3 class="text-base font-semibold mb-2">3. Pratinjau, Isi Kunci Jawaban, dan Simpan</h3>
+            
+            
             <div id="soal-preview-container" class="border rounded-lg overflow-hidden">
                 <p class="p-8 text-center text-gray-400">Pratinjau soal akan muncul di sini setelah Anda mem-paste teks di atas.</p>
                 </div>
@@ -4144,41 +4146,93 @@ questionsContainer.innerHTML = loadingHTML;
     }
 }
 
+/**
+ * FUNGSI BARU: Menghitung Levenshtein Distance (mengukur typo)
+ * @param {string} a - String pertama (jawaban santri)
+ * @param {string} b - String kedua (kunci jawaban)
+ * @returns {number} - Jumlah "jarak" atau typo
+ */
+function getLevenshteinDistance(a, b) {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            const cost = a[j - 1] === b[i - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+                matrix[i - 1][j] + 1,      // penghapusan
+                matrix[i][j - 1] + 1,      // penyisipan
+                matrix[i - 1][j - 1] + cost // penggantian
+            );
+        }
+    }
+    return matrix[b.length][a.length];
+}
+
 function calculateAndShowResult() {
     
     alarmSound.pause();
     alarmSound.currentTime = 0;
 
-    // --- AWAL BAGIAN YANG DIPERBAIKI ---
-    const isForceSubmit = false; // Tambahkan ini untuk mengatasi error 'isForceSubmit is not defined'
-    // --- AKHIR BAGIAN YANG DIPERBAIKI ---
+    const isForceSubmit = false; 
 
-    let correctAnswers = 0;
-currentQuestions.forEach((q, index) => {
-    // PERBAIKAN: Cocokkan jawaban berdasarkan teks soal (q.q)
-    if (examAnswers[q.q] === q.a) {
-        correctAnswers++;
-    }
-});
+    // --- (BARU) Logika Penilaian dengan Poin dan Toleransi Typo ---
+    let totalPoinSantri = 0;
+    let totalPoinMaksimal = 0;
 
-    const totalQuestions = currentQuestions.length;
-    const score = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+    currentQuestions.forEach((q, index) => {
+        const poinSoal = q.p || 4; // Ambil poin soal (default 4)
+        totalPoinMaksimal += poinSoal;
+
+        const jawabanSantri = examAnswers[q.q] || ""; // q.q adalah IsiSoal
+        const kunciJawaban = q.a || ""; // q.a adalah KunciJawabanTeks
+
+        if (q.j === 'PG') { // Soal Pilihan Ganda
+            // Jawaban PG harus sama persis (setelah dinormalisasi)
+            if (jawabanSantri.toLowerCase().trim() === kunciJawaban.toLowerCase().trim()) {
+                totalPoinSantri += poinSoal;
+            }
+        } else { // Soal Isian
+            const jawabanSantriNorm = jawabanSantri.toLowerCase().trim();
+            const kunciJawabanNorm = kunciJawaban.toLowerCase().trim();
+
+            if (jawabanSantriNorm === kunciJawabanNorm) {
+                // Jawaban benar sempurna
+                totalPoinSantri += poinSoal;
+            } else if (kunciJawabanNorm.length > 3) { 
+                // Terapkan toleransi typo HANYA jika kunci jawaban > 3 huruf
+                
+                // Hitung jarak typo
+                const distance = getLevenshteinDistance(jawabanSantriNorm, kunciJawabanNorm);
+                
+                // Tentukan toleransi: 1 typo untuk jawaban pendek, 2 typo untuk jawaban panjang
+                const toleransiTypo = (kunciJawabanNorm.length > 8) ? 2 : 1;
+
+                if (distance <= toleransiTypo) {
+                    // Jawaban benar dengan typo, beri 75% poin (pengurangan 1/4)
+                    totalPoinSantri += (poinSoal * 0.75);
+                }
+            }
+            // Jika tidak, totalPoinSantri tidak bertambah (jawaban salah)
+        }
+    });
+
+    // Hitung skor akhir (pembulatan)
+    const score = totalPoinMaksimal > 0 ? Math.round((totalPoinSantri / totalPoinMaksimal) * 100) : 0;
+    // --- Akhir Logika Penilaian Baru ---
     
     let finalScore;
     const previousAttempts = currentAttemptHistory ? currentAttemptHistory.percobaan : 0;
     const firstScore = currentAttemptHistory ? currentAttemptHistory.skor : score;
     
-    // --- AWAL BAGIAN YANG DIPERBAIKI ---
-    // Definisikan 'isRemedial' berdasarkan jumlah percobaan sebelumnya
     const isRemedial = previousAttempts === 1;
-    // --- AKHIR BAGIAN YANG DIPERBAIKI ---
 
     if (previousAttempts > 0) {
         const highestPreviousScore = currentAttemptHistory.skorAkhir || currentAttemptHistory.skor || 0;
-        // Ambil nilai percobaan saat ini
         let remedialScore = score; 
         
-        // **LOGIKA BARU: Jika nilai remedial melebihi 80, batasi menjadi 80**
         if (remedialScore > 80) {
             remedialScore = 80;
         }
@@ -4208,6 +4262,7 @@ currentQuestions.forEach((q, index) => {
         skorAkhir: finalScore  
     };
     
+    // (Sisa fungsi ini tetap sama seperti sebelumnya)
     fetch(CONFIG.SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify(dataToSave),
@@ -4738,8 +4793,8 @@ function setupInputSoalPage() {
     const materiSelect = document.getElementById('materi-soal-select');
     const previewContainer = document.getElementById('soal-preview-container');
     const simpanBtn = document.getElementById('simpan-soal-btn');
-
-    // Inisialisasi editor Quill.js dengan toolbar yang sudah lengkap
+    
+    // Inisialisasi editor Quill.js
     const quillEditor = new Quill('#quill-editor-container', {
         theme: 'snow',
         modules: {
@@ -4751,13 +4806,13 @@ function setupInputSoalPage() {
                 ['clean']
             ]
         },
-        placeholder: 'Salin dan tempel (paste) soal dari MS. Word di sini...\nContoh:\n1. Apa ibu kota Indonesia?\na. Bandung\nb. Surabaya dst...'
+        placeholder: 'Tempel (paste) soal dari MS. Word di sini...\n\nKunci Jawaban bisa dideteksi otomatis dengan:\n1. Menebalkan (Bold) pilihan PG (cth: <b>A. Jakarta</b>)\n2. Menulis "Kunci Jawaban : A" atau "Kunci Jawaban : Ini jawabannya" di akhir soal.'
     });
 
-    // BARU: Panggil handler untuk mengaktifkan unggah gambar otomatis
+    // Panggil handler untuk unggah gambar
     imageUploadHandler(quillEditor);
 
-    // Isi dropdown materi (logika ini tetap sama)
+    // Isi dropdown materi (logika tetap sama)
     if (materiSelect && materiSelect.options.length <= 1) {
         const uniqueSubjects = {};
         Object.values(appState.processedSchedules).flat().forEach(item => {
@@ -4776,45 +4831,105 @@ function setupInputSoalPage() {
         }
     }
 
-    // Event listener untuk memicu pratinjau
+    // Event listener untuk memicu pratinjau saat mengetik
     let typingTimer;
     quillEditor.on('text-change', () => {
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
-            renderSoalPreview(quillEditor.getText());
+            const isAutoFillChecked = document.getElementById('auto-fill-keys-checkbox') 
+                ? document.getElementById('auto-fill-keys-checkbox').checked 
+                : true;
+            renderSoalPreview(quillEditor.root.innerHTML, isAutoFillChecked);
         }, 300);
     });
 
-    // Fungsi renderSoalPreview tetap sama, tidak perlu diubah
-    function renderSoalPreview(fullText) {
-        const soalArray = fullText.split(/\n(?=\d+[.)])/).map(s => s.trim()).filter(Boolean);
+    // Event delegation untuk checkbox yang dinamis
+    previewContainer.addEventListener('change', (event) => {
+        if (event.target.id === 'auto-fill-keys-checkbox') {
+            renderSoalPreview(quillEditor.root.innerHTML, event.target.checked);
+        }
+    });
+
+    /**
+     * (DIPERBARUI) Fungsi pratinjau
+     */
+    function renderSoalPreview(fullHtml, isAutoFillChecked) {
+        
+        const autoFillKeys = isAutoFillChecked;
+        const soalArray = fullHtml.split(/(?=<p[^>]*>\s*\d+[.)])/i).map(s => s.trim()).filter(Boolean);
+
         if (soalArray.length === 0) {
             previewContainer.innerHTML = `<p class="p-8 text-center text-gray-400">Pratinjau soal akan muncul di sini.</p>`;
             simpanBtn.classList.add('hidden');
             return;
         }
+        
+        // Buat header tabel secara dinamis
         let tableHTML = `
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Isi Soal</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-48">Kunci Jawaban (A/B/C/D)</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-48">
+                            <div class="flex items-center">
+                                <span>Kunci Jawaban</span>
+                                <input type="checkbox" id="auto-fill-keys-checkbox" class="ml-2 h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500" title="Otomatis deteksi kunci jawaban" ${autoFillKeys ? 'checked' : ''}>
+                            </div>
+                        </th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-24">Poin</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">`;
-        soalArray.forEach((soal, index) => {
-            const cleanSoal = soal.replace(/^\d+[.)]\s*/, '');
+
+        // Siapkan Regex untuk membersihkan soal
+        const keyTextRegex = /<p[^>]*>Kunci Jawaban\s*:\s*(.*?)<\/p>|Kunci Jawaban\s*:\s*(.*?)(?=<br>|$)/i;
+        const boldRegex = /<(strong|b)[^>]*>\s*([A-D])[.)\s]/i;
+        const boldReplaceRegex = /<(strong|b)[^>]*>(\s*[A-D][.)\s])/i;
+        const numberRegex = /(<p[^>]*>)\s*\d+[.)]\s*/i; // Regex untuk nomor soal
+
+        soalArray.forEach((soalHtml, index) => {
+            let kunciJawaban = '';
+            let poin = 4;
+
+            // --- 1. DETEKSI KUNCI (Hanya jika dicentang) ---
+            if (autoFillKeys) {
+                const keyMatch = soalHtml.match(keyTextRegex);
+                if (keyMatch) {
+                    let keyText = (keyMatch[1] || keyMatch[2] || '').trim().replace(/<[^>]+>/g, '').trim();
+                    const pgMatch = keyText.match(/^([A-D])[.)\s]?/i);
+                    if (pgMatch) {
+                        kunciJawaban = pgMatch[1].toUpperCase();
+                    } else {
+                        kunciJawaban = keyText;
+                    }
+                }
+
+                if (!kunciJawaban) {
+                    const boldMatch = soalHtml.match(boldRegex);
+                    if (boldMatch) {
+                        kunciJawaban = boldMatch[2].toUpperCase();
+                    }
+                }
+            }
+
+            // --- 2. PEMBERSIHAN SOAL (Selalu dijalankan) ---
+            // Variabel baru ini akan berisi HTML yang sudah dibersihkan
+            const cleanedSoalHtml = soalHtml
+                .replace(keyTextRegex, '')       // (Goal 1) Hapus "Kunci Jawaban : ..."
+                .replace(boldReplaceRegex, '$2') // (Goal 2) Hapus tag bold dari opsi (cth: <b>A.</b>)
+                .replace(numberRegex, '$1');     // (Goal 3) Hapus nomor soal (cth: <p>1. )
+
+            // --- 3. RENDER TABEL ---
             tableHTML += `
                 <tr class="soal-row">
                     <td class="px-4 py-3 align-top">${index + 1}</td>
-                    <td class="px-4 py-3 text-sm text-gray-800 whitespace-pre-wrap">${cleanSoal}</td>
+                    <td class="px-4 py-3 text-sm text-gray-800">${cleanedSoalHtml}</td>
                     <td class="px-4 py-3 align-top">
-                        <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md uppercase" maxlength="1" placeholder="Cth: A">
+                        <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md uppercase" value="${kunciJawaban}" placeholder="${autoFillKeys ? 'Otomatis...' : 'Isi manual...'}">
                     </td>
                     <td class="px-4 py-3 align-top">
-                        <input type="number" class="poin-soal-input w-full p-2 border rounded-md" value="4">
+                        <input type="number" class="poin-soal-input w-full p-2 border rounded-md" value="${poin}">
                     </td>
                 </tr>
             `;
@@ -4829,7 +4944,6 @@ function setupInputSoalPage() {
     }
 }
 
-// GANTI FUNGSI INI SECARA KESELURUHAN
 // GANTI FUNGSI INI SECARA KESELURUHAN
 function handleSimpanSoal() {
     const materiSelect = document.getElementById('materi-soal-select');
@@ -4850,9 +4964,13 @@ function handleSimpanSoal() {
         dataSoal.push({
             kodeMateri: materiKode,
             nomorSoal: index + 1,
-            isiSoal: row.querySelector('td:nth-child(2)').textContent,
+            // --- (D) PERUBAHAN DI SINI ---
+            // Kita mengambil .innerHTML agar tag <img> ikut tersimpan
+            isiSoal: row.querySelector('td:nth-child(2)').innerHTML,
+            // --- AKHIR PERUBAHAN (D) ---
             kunciJawaban: row.querySelector('.kunci-jawaban-input').value.toUpperCase() || '',
-            poin: parseInt(row.querySelector('.poin-soal-input').value) || 4
+            poin: parseInt(row.querySelector('.poin-soal-input').value) || 4,
+            mediaLink: '' // Kita tambahkan properti mediaLink kosong untuk jaga-jaga
         });
     });
     
@@ -4877,7 +4995,10 @@ function handleSimpanSoal() {
     .then(result => {
         if (result.status === 'success') {
             showMessage(result.message, 'success');
-            document.getElementById('paste-soal-area').value = '';
+            // Reset editor Quill
+            const quillEditor = new Quill('#quill-editor-container');
+            quillEditor.setContents([]); // Kosongkan editor
+            
             document.getElementById('soal-preview-container').innerHTML = `<p class="p-8 text-center text-gray-400">Pratinjau soal akan muncul di sini.</p>`;
             simpanBtn.classList.add('hidden');
             materiSelect.value = '';
