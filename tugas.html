@@ -51,6 +51,21 @@
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.7); z-index: 10000; display: flex; align-items: center; justify-content: center; }
         .loader { border: 8px solid #f3f3f3; border-top: 8px solid var(--primary-color); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+		@keyframes flash-red-border {
+            0%   { border-color: #ef4444; } /* red-500 */
+            50%  { border-color: #fecaca; } /* red-200 */
+            100% { border-color: #ef4444; }
+        }
+        .deadline-warning {
+            animation: flash-red-border 1.5s infinite;
+            border-width: 2px;
+            border-style: solid;
+        }
+		.is-archived {
+            display: none; /* Sembunyikan arsip secara default */
+            background-color: #f9fafb; /* bg-gray-50 */
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
@@ -58,9 +73,9 @@
     <div id="loading-overlay" class="hidden"><div class="loader"></div></div>
 
     <div class="container">
-        <div class="page-header">
+        <div class="page-header justify-start items-center gap-4">
+            <a href="index.html" class="btn bg-red-600 hover:bg-red-700">Kembali ke Beranda</a>
             <h1 class="text-2xl font-bold text-gray-800">Halaman Tugas</h1>
-            <a href="index.html" class="btn btn-secondary">Kembali ke Beranda</a>
         </div>
 
         <div id="initial-view" class="section text-center"><p>Memeriksa sesi login Anda...</p></div>
@@ -72,6 +87,12 @@
             </div>
             <div class="section">
                 <h3 class="text-lg font-semibold mb-4">Daftar Tugas yang Telah Dibuat</h3>
+
+                <div class="text-right mb-4">
+                    <button id="btn-toggle-archive-teacher" class="text-sm text-blue-600 hover:underline">
+                        Tampilkan Arsip Tugas (0)
+                    </button>
+                </div>
                 <div id="tugas-list-teacher" class="space-y-3"><p>Memuat daftar tugas...</p></div>
             </div>
         </div>
@@ -79,6 +100,12 @@
         <div id="student-view" class="hidden">
              <div class="section">
                 <h2 class="text-xl font-bold mb-4">Daftar Tugas</h2>
+                
+                <div class="text-right mb-4">
+                    <button id="btn-toggle-archive" class="text-sm text-blue-600 hover:underline">
+                        Tampilkan Arsip Tugas (0)
+                    </button>
+                </div>
                 <div id="tugas-list-student" class="space-y-3"><p>Memuat daftar tugas...</p></div>
             </div>
         </div>
@@ -112,6 +139,8 @@
         </div>
         
         <div id="submission-view" class="hidden section">
+             <button type="button" id="btn-cancel-submission-top" class="btn btn-secondary float-right">Kembali ke Daftar Tugas</button>
+             
              <h2 id="submission-title" class="text-xl font-bold mb-2"></h2>
              <p class="text-sm text-gray-500 mb-4" id="submission-deadline"></p>
              <div class="p-4 border rounded-lg bg-gray-50 mb-6">
@@ -126,15 +155,17 @@
                  </div>
                  <div class="flex gap-4 mt-8">
                     <button type="submit" class="btn btn-primary">Kirim Jawaban</button>
-                    <button type="button" id="btn-cancel-submission" class="btn btn-secondary">Kembali</button>
+                    <button type="button" id="btn-cancel-submission" class.="btn btn-secondary">Kembali ke Daftar Tugas</button>
                 </div>
              </form>
         </div>
 
         <div id="grading-view" class="hidden section">
+            <button id="btn-back-to-teacher-dash-top" class="btn btn-secondary float-right">Kembali ke Daftar Tugas</button>
+            
             <h2 id="grading-title" class="text-xl font-bold mb-4"></h2>
             <div id="submission-list" class="space-y-6"><p>Memuat jawaban santri...</p></div>
-            <button id="btn-back-to-teacher-dash" class="btn btn-secondary mt-6">Kembali ke Dashboard</button>
+            <button id="btn-back-to-teacher-dash" class="btn btn-secondary mt-6">Kembali ke Daftar Tugas</button>
         </div>
     </div>
 
@@ -194,38 +225,105 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function loadTeacherDashboard() {
-        const container = document.getElementById('tugas-list-teacher');
-        container.innerHTML = '<p>Memuat daftar tugas...</p>';
-        try {
-            const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getTugas', for: 'teacher' }) });
-            const result = await response.json();
-            if (result.status !== 'success') throw new Error(result.message);
+    const container = document.getElementById('tugas-list-teacher');
+    const archiveBtn = document.getElementById('btn-toggle-archive-teacher'); 
+    container.innerHTML = '<p>Memuat daftar tugas...</p>';
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getTugas', for: 'teacher' }) });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
 
-            container.innerHTML = result.data.length === 0 ? '<p class="text-gray-500">Belum ada tugas yang dibuat.</p>' : '';
-            result.data.forEach(tugas => {
-                const deadline = new Date(tugas.Deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-                const div = document.createElement('div');
-                div.className = 'border p-4 rounded-lg flex justify-between items-center';
-                div.innerHTML = `
-                    <div>
-                        <p class="font-bold">${tugas.Judul}</p>
-                        <p class="text-sm text-gray-500">Untuk: ${tugas.KodeMateri || 'Umum'} | Batas Waktu: ${deadline}</p>
-                    </div>
-                    <div class="flex gap-2">
-						<button class="btn btn-secondary btn-edit-tugas" data-id="${tugas.ID}">Edit</button>
-                        <button class="btn btn-info btn-grade" data-id="${tugas.ID}">Lihat & Nilai (${tugas.JumlahKiriman || 0})</button>
-                    </div>`;
-                container.appendChild(div);
-            });
-        } catch (error) { container.innerHTML = `<p class="text-red-500">Gagal memuat tugas: ${error.message}</p>`; }
+        container.innerHTML = result.data.length === 0 ? '<p class="text-gray-500">Belum ada tugas yang dibuat.</p>' : '';
+        
+        const now = new Date();
+        now.setHours(0,0,0,0);
+        let archivedCount = 0;
+
+        result.data.forEach(tugas => {
+            const deadline = new Date(tugas.Deadline);
+            deadline.setHours(23, 59, 59, 999);
+            const deadlineString = deadline.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            // Cek status penilaian
+            const totalKiriman = tugas.JumlahKiriman || 0;
+            const totalDinilai = tugas.JumlahDinilai || 0;
+            const allGraded = (totalKiriman > 0 && totalKiriman === totalDinilai);
+            const partiallyGraded = (totalDinilai > 0 && totalKiriman > totalDinilai);
+
+            // Logika Arsip
+            const diffTime = now - deadline;
+            const daysPassed = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const isArchived = (allGraded && daysPassed > 14);
+
+            // --- (PERBAIKAN BUG) Logika Tombol Penilaian ---
+            let buttonHtml = '';
+            let buttonText = '';
+            let buttonColorClass = '';
+
+            if (totalKiriman === 0) {
+                // Belum ada kiriman
+                buttonText = `Lihat & Nilai (0)`;
+                buttonColorClass = 'btn-secondary'; // Tombol kuning
+            } else if (allGraded) {
+                // Semua sudah dinilai (tapi tetap bisa diklik)
+                buttonText = `Sudah Dinilai (${totalDinilai})`;
+                buttonColorClass = 'bg-gray-500 hover:bg-gray-600 text-white'; // Tombol abu-abu
+            } else if (partiallyGraded) {
+                // Sebagian sudah dinilai
+                buttonText = `Dinilai Sebagian (${totalDinilai}/${totalKiriman})`;
+                buttonColorClass = 'btn-info'; // Tombol biru
+            } else {
+                // Ada kiriman, belum ada yang dinilai
+                buttonText = `Lihat & Nilai (${totalKiriman})`;
+                buttonColorClass = 'btn-info'; // Tombol biru
+            }
+            
+            // Tombol selalu memiliki kelas 'btn' dan 'btn-grade', dan TIDAK PERNAH 'disabled'
+            buttonHtml = `<button class="btn btn-grade ${buttonColorClass}" data-id="${tugas.ID}">
+                              ${buttonText}
+                          </button>`;
+            // --- AKHIR PERBAIKAN ---
+
+            const editButton = `<button class="btn btn-secondary btn-edit-tugas" data-id="${tugas.ID}">Edit</button>`;
+
+            const div = document.createElement('div');
+            div.className = 'border p-4 rounded-lg flex justify-between items-center';
+            
+            if (isArchived) {
+                div.classList.add('is-archived');
+                archivedCount++;
+            }
+
+            div.innerHTML = `
+                <div>
+                    <p class="font-bold">${tugas.Judul}</p>
+                    <p class="text-sm text-gray-500">Untuk: ${tugas.KodeMateri || 'Umum'} | Batas Waktu: ${deadlineString}</p>
+                </div>
+                <div class="flex gap-2">
+                    ${editButton}
+                    ${buttonHtml}
+                </div>`;
+            container.appendChild(div);
+        });
+
+        // Update teks tombol arsip
+        archiveBtn.textContent = `Tampilkan Arsip Tugas (${archivedCount})`;
+        archiveBtn.dataset.state = "hidden";
+
+    } catch (error) { 
+        container.innerHTML = `<p class="text-red-500">Gagal memuat tugas: ${error.message}</p>`; 
     }
+}
     
-    async function showCreateForm() {
+    async function showCreateForm(isEditing = false) { // (DIUBAH) Tambah parameter
         showView('form');
         document.getElementById('form-title').textContent = 'Buat Tugas Baru';
-        document.getElementById('form-tugas').reset();
-        if (!editor) editor = initializeEditor('#editor-container');
-        editor.setContents([]);
+        
+        // (DIUBAH) Hanya reset jika BUKAN mode edit
+        if (!isEditing) {
+            document.getElementById('form-tugas').reset();
+            if (editor) editor.setContents([]);
+        }
 
         // Populate dropdown materi
         const materiSelect = document.getElementById('input-materi');
@@ -310,113 +408,161 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 	
 	async function showEditForm(tugasId) {
-    showLoading();
-    showView('form');
-    document.getElementById('form-tugas').reset();
-    
-    // Tambahkan input tersembunyi untuk menyimpan ID tugas
-    const form = document.getElementById('form-tugas');
-    let idInput = form.querySelector('input[name="tugasId"]');
-    if (!idInput) {
-        idInput = document.createElement('input');
-        idInput.type = 'hidden';
-        idInput.name = 'tugasId';
-        form.appendChild(idInput);
+        showLoading();
+        // (DIUBAH) Panggil showCreateForm dengan mode 'true' (sedang mengedit)
+        await showCreateForm(true); 
+        showView('form'); // Pastikan view terlihat setelah 'await'
+        
+        // (Sisa fungsi ini hampir sama, hanya memindahkan inisialisasi editor)
+        const form = document.getElementById('form-tugas');
+        let idInput = form.querySelector('input[name="tugasId"]');
+        if (!idInput) {
+            idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'tugasId';
+            form.appendChild(idInput);
+        }
+        idInput.value = tugasId;
+
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getTugasDetail', tugasId: tugasId }) });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+            
+            const tugas = result.data;
+            document.getElementById('form-title').textContent = 'Edit Tugas';
+            document.getElementById('input-judul').value = tugas.Judul;
+            document.getElementById('input-deadline').value = new Date(tugas.Deadline).toISOString().split('T')[0];
+            
+            // (DIUBAH) Inisialisasi editor dipindah ke sini
+            if (!editor) editor = initializeEditor('#editor-container');
+            editor.root.innerHTML = tugas.KontenHTML;
+
+            // (DIUBAH) Diberi jeda agar dropdown (dari showCreateForm) selesai render
+            setTimeout(() => {
+                document.getElementById('input-materi').value = tugas.KodeMateri;
+            }, 100); // 100ms harusnya cukup
+
+        } catch (error) {
+            showMessage(`Gagal memuat data tugas: ${error.message}`, 'error');
+            showView('teacher');
+        } finally {
+            hideLoading();
+        }
     }
-    idInput.value = tugasId;
-
-    try {
-        // Panggil backend untuk ambil detail tugas yang spesifik
-        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getTugasDetail', tugasId: tugasId }) });
-        const result = await response.json();
-        if (result.status !== 'success') throw new Error(result.message);
-        
-        const tugas = result.data;
-        document.getElementById('form-title').textContent = 'Edit Tugas';
-        document.getElementById('input-judul').value = tugas.Judul;
-        
-        // Format tanggal agar sesuai dengan input type="date" (YYYY-MM-DD)
-        document.getElementById('input-deadline').value = new Date(tugas.Deadline).toISOString().split('T')[0];
-        
-        // Panggil fungsi showCreateForm untuk mengisi dropdown materi
-        await showCreateForm();
-        
-        // Beri jeda sedikit agar dropdown terisi penuh, lalu pilih materi yang sesuai
-        setTimeout(() => {
-            document.getElementById('input-materi').value = tugas.KodeMateri;
-        }, 500);
-
-        if (!editor) editor = initializeEditor('#editor-container');
-        editor.root.innerHTML = tugas.KontenHTML;
-
-    } catch (error) {
-        showMessage(`Gagal memuat data tugas: ${error.message}`, 'error');
-        showView('teacher');
-    } finally {
-        hideLoading();
-    }
-}
 
 
     async function loadStudentDashboard() {
-    const container = document.getElementById('tugas-list-student');
-    container.innerHTML = '<p>Memuat daftar tugas...</p>';
+        const container = document.getElementById('tugas-list-student');
+        const archiveBtn = document.getElementById('btn-toggle-archive'); // (BARU)
+        container.innerHTML = '<p>Memuat daftar tugas...</p>';
+        
+        try {
+            const session = getActiveSession();
+            const response = await fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    action: 'getTugas', 
+                    for: 'student', 
+                    username: session.username, 
+                    namaSantri: session.userData.profileName 
+                })
+            });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+            
+            container.innerHTML = result.data.length === 0 ? '<p class="text-gray-500">Tidak ada tugas yang relevan untuk Anda saat ini.</p>' : '';
+            
+            const now = new Date();
+            now.setHours(0,0,0,0);
+            let archivedCount = 0; // (BARU)
+
+            result.data.forEach(tugas => {
+                const deadlineDate = new Date(tugas.Deadline);
+                deadlineDate.setHours(23, 59, 59, 999);
+
+                // (PERBAIKAN BUG 3) Cek nilai tidak boleh null, undefined, ATAU string kosong
+                const sudahDinilai = (tugas.Nilai !== null && tugas.Nilai !== undefined && tugas.Nilai !== '');
+
+                const diffTime = now - deadlineDate;
+                const daysPassed = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const isArchived = (sudahDinilai && daysPassed > 14); // (BARU)
+
+                const deadlineString = deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                let statusHtml = '';
+
+                if (tugas.Status === 'Terkirim') {
+                    const lewatBatasWaktu = now > deadlineDate;
+
+                    if (sudahDinilai) {
+                        // (PERBAIKAN BUG 3) Tombol abu-abu
+                        statusHtml = `<button class="btn bg-gray-400 text-gray-800 cursor-not-allowed" disabled>Selesai (Nilai: ${tugas.Nilai})</button>`;
+                    } else if (lewatBatasWaktu) {
+                        statusHtml = `<div class="text-sm font-semibold text-red-500">Batas Waktu Habis</div>`;
+                    } else {
+                        statusHtml = `<button class="btn btn-secondary btn-edit-jawaban" data-id="${tugas.ID}" data-submission-id="${tugas.SubmissionID}">Edit Jawaban</button>`;
+                    }
+                } else {
+                    statusHtml = `<button class="btn btn-info btn-work" data-id="${tugas.ID}">Kerjakan</button>`;
+                }
+
+                const div = document.createElement('div');
+                div.className = 'border p-4 rounded-lg flex justify-between items-center';
+
+                // (PERBAIKAN BUG 2) Tambahkan kelas arsip
+                if (isArchived) {
+                    div.classList.add('is-archived');
+                    archivedCount++;
+                }
+
+                const diffDaysUntilDeadline = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));
+                if (tugas.Status !== 'Terkirim' && diffDaysUntilDeadline <= 2 && diffDaysUntilDeadline >= 0) {
+                    div.classList.add('deadline-warning');
+                }
+
+                div.innerHTML = `
+                    <div>
+                        <p class="font-bold">${tugas.Judul}</p>
+                        <p class="text-sm text-gray-500">Untuk: ${tugas.KodeMateri} | Batas Waktu: ${deadlineString}</p>
+                    </div>
+                    <div>${statusHtml}</div>`;
+                container.appendChild(div);
+            });
+
+            // (PERBAIKAN BUG 2) Update teks tombol arsip
+            archiveBtn.textContent = `Tampilkan Arsip Tugas (${archivedCount})`;
+            archiveBtn.dataset.state = "hidden"; // Set status awal
+
+        } catch (error) { 
+            container.innerHTML = `<p class="text-red-500">Gagal memuat tugas: ${error.message}</p>`; 
+        }
+    }
+
+async function fetchGradingNotifications() {
     try {
         const session = getActiveSession();
         const response = await fetch(CONFIG.SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({ 
-                action: 'getTugas', 
-                for: 'student', 
-                username: session.username, 
-                namaSantri: session.userData.profileName 
+                action: 'getGradingNotifications',
+                profileName: session.userData.profileName
             })
         });
         const result = await response.json();
-        if (result.status !== 'success') throw new Error(result.message);
-        
-        container.innerHTML = result.data.length === 0 ? '<p class="text-gray-500">Tidak ada tugas yang relevan untuk Anda saat ini.</p>' : '';
-        
-        const now = new Date(); // Ambil waktu saat ini
-
-        result.data.forEach(tugas => {
-            const deadlineDate = new Date(tugas.Deadline);
-            deadlineDate.setHours(23, 59, 59, 999); // Set deadline ke akhir hari
-
-            const deadlineString = deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-            let statusHtml = '';
-
-            if (tugas.Status === 'Terkirim') {
-                const sudahDinilai = tugas.Nilai && tugas.Nilai !== '';
-                const lewatBatasWaktu = now > deadlineDate;
-
-                if (sudahDinilai) {
-                    // 1. Jika sudah ada nilai, tidak bisa edit.
-                    statusHtml = `<div class="text-sm font-semibold text-green-600">Selesai (Nilai: ${tugas.Nilai})</div>`;
-                } else if (lewatBatasWaktu) {
-                    // 2. Jika lewat batas waktu dan belum dinilai, tidak bisa edit.
-                    statusHtml = `<div class="text-sm font-semibold text-red-500">Batas Waktu Habis</div>`;
-                } else {
-                    // 3. Jika belum dinilai DAN belum lewat batas waktu, BISA EDIT.
-                    statusHtml = `<button class="btn btn-secondary btn-edit-jawaban" data-id="${tugas.ID}" data-submission-id="${tugas.SubmissionID}">Edit Jawaban</button>`;
-                }
-            } else {
-                // Jika belum dikerjakan sama sekali
-                statusHtml = `<button class="btn btn-info btn-work" data-id="${tugas.ID}">Kerjakan</button>`;
+        if (result.status === 'success' && result.count > 0) {
+            const wrapper = document.querySelector('#tugasNav .nav-link-wrapper');
+            if (wrapper) {
+                const oldDot = wrapper.querySelector('.notification-dot');
+                if (oldDot) oldDot.remove(); // Hapus dot lama jika ada
+                
+                const dot = document.createElement('span');
+                dot.className = 'notification-dot';
+                dot.textContent = result.count;
+                wrapper.appendChild(dot);
             }
-
-            const div = document.createElement('div');
-            div.className = 'border p-4 rounded-lg flex justify-between items-center';
-            div.innerHTML = `
-                <div>
-                    <p class="font-bold">${tugas.Judul}</p>
-                    <p class="text-sm text-gray-500">Untuk: ${tugas.KodeMateri} | Batas Waktu: ${deadlineString}</p>
-                </div>
-                <div>${statusHtml}</div>`;
-            container.appendChild(div);
-        });
-    } catch (error) { 
-        container.innerHTML = `<p class="text-red-500">Gagal memuat tugas: ${error.message}</p>`; 
+        }
+    } catch (error) {
+        console.error("Gagal mengambil notifikasi grading:", error);
     }
 }
 
@@ -548,52 +694,107 @@ async function showEditJawabanForm(tugasId, submissionId) {
 
 
     // === Event Listeners ===
-    document.getElementById('btn-create-new')?.addEventListener('click', showCreateForm);
+    document.getElementById('btn-create-new')?.addEventListener('click', () => showCreateForm(false)); // (DIUBAH)
     document.getElementById('form-tugas')?.addEventListener('submit', handleSaveTugas);
     document.getElementById('btn-cancel-form')?.addEventListener('click', () => {
         showView('teacher');
         loadTeacherDashboard();
     });
+    document.getElementById('btn-toggle-archive')?.addEventListener('click', (e) => {
+        const btn = e.target;
+        const archivedTasks = document.querySelectorAll('.is-archived');
+        
+        if (btn.dataset.state === "hidden") {
+            // Tampilkan arsip
+            archivedTasks.forEach(task => {
+                task.style.display = 'flex'; // Gunakan 'flex' agar layout tetap
+            });
+            btn.textContent = `Sembunyikan Arsip (${archivedTasks.length})`;
+            btn.dataset.state = "shown";
+        } else {
+            // Sembunyikan arsip
+            archivedTasks.forEach(task => {
+                task.style.display = 'none';
+            });
+            btn.textContent = `Tampilkan Arsip (${archivedTasks.length})`;
+            btn.dataset.state = "hidden";
+        }
+    });
+	
+	document.getElementById('btn-toggle-archive-teacher')?.addEventListener('click', (e) => {
+    const btn = e.target;
+    const archivedTasks = document.querySelectorAll('#tugas-list-teacher .is-archived');
+
+    if (btn.dataset.state === "hidden") {
+        // Tampilkan arsip
+        archivedTasks.forEach(task => {
+            task.style.display = 'flex'; // Gunakan 'flex' agar layout tetap
+        });
+        btn.textContent = `Sembunyikan Arsip (${archivedTasks.length})`;
+        btn.dataset.state = "shown";
+    } else {
+        // Sembunyikan arsip
+        archivedTasks.forEach(task => {
+            task.style.display = 'none';
+        });
+        btn.textContent = `Tampilkan Arsip (${archivedTasks.length})`;
+        btn.dataset.state = "hidden";
+    }
+});
+	
+    // (DIUBAH) Menggunakan tombol Bawah
     document.getElementById('btn-back-to-teacher-dash')?.addEventListener('click', () => {
         showView('teacher');
         loadTeacherDashboard();
     });
+    // (BARU) Menggunakan tombol Atas
+    document.getElementById('btn-back-to-teacher-dash-top')?.addEventListener('click', () => {
+        showView('teacher');
+        loadTeacherDashboard();
+    });
     
-    // Event listener untuk tombol kerjakan/nilai (event delegation)
-    document.body.addEventListener('click', function(event) {
-    if (event.target.classList.contains('btn-edit-tugas')) { // <-- BLOK BARU
-        showEditForm(event.target.dataset.id);
-    }
-	if (event.target.classList.contains('btn-edit-jawaban')) { // <-- BLOK BARU
-        const tugasId = event.target.dataset.id;
-        const submissionId = event.target.dataset.submissionId;
-        showEditJawabanForm(tugasId, submissionId);
-    }
-    if (event.target.classList.contains('btn-grade')) {
-        showGradingView(event.target.dataset.id);
-    }
-    if (event.target.classList.contains('btn-work')) {
-        showSubmissionView(event.target.dataset.id);
-    }
-    if (event.target.classList.contains('btn-save-grade')) {
-        const submissionId = event.target.dataset.id;
-        const nilaiInput = event.target.previousElementSibling;
-        handleGradeSubmission(submissionId, nilaiInput.value, event.target);
-    }
-});
-
-    // Event listener untuk form kirim tugas (santri)
-    document.getElementById('form-submission')?.addEventListener('submit', handleSubmitTugas);
+    // (DIUBAH) Menggunakan tombol Bawah
     document.getElementById('btn-cancel-submission')?.addEventListener('click', () => {
         showView('student');
         loadStudentDashboard();
     });
+    // (BARU) Menggunakan tombol Atas
+    document.getElementById('btn-cancel-submission-top')?.addEventListener('click', () => {
+        showView('student');
+        loadStudentDashboard();
+    });
 
-async function initializeApp() {
-    // === Inisialisasi Aplikasi ===
-    checkUserAccess();
-	}
-	 initializeApp();
+    // Event listener untuk tombol kerjakan/nilai (event delegation)
+    document.body.addEventListener('click', function(event) {
+        if (event.target.classList.contains('btn-edit-tugas')) {
+            showEditForm(event.target.dataset.id);
+        }
+        if (event.target.classList.contains('btn-edit-jawaban')) {
+            const tugasId = event.target.dataset.id;
+            const submissionId = event.target.dataset.submissionId;
+            showEditJawabanForm(tugasId, submissionId);
+        }
+        if (event.target.classList.contains('btn-grade')) {
+            showGradingView(event.target.dataset.id);
+        }
+        if (event.target.classList.contains('btn-work')) {
+            showSubmissionView(event.target.dataset.id);
+        }
+        if (event.target.classList.contains('btn-save-grade')) {
+            const submissionId = event.target.dataset.id;
+            const nilaiInput = event.target.previousElementSibling;
+            handleGradeSubmission(submissionId, nilaiInput.value, event.target);
+        }
+    });
+
+    // Event listener untuk form kirim tugas (santri)
+    document.getElementById('form-submission')?.addEventListener('submit', handleSubmitTugas);
+
+    async function initializeApp() {
+        // === Inisialisasi Aplikasi ===
+        checkUserAccess();
+    }
+    initializeApp();
 });
 </script>
 </body>
