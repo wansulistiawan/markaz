@@ -7303,11 +7303,10 @@ function showLoggedInView(userData) {
         ui.navProfilePic.src = 'https://placehold.co/80x80/e9ecef/343a40?text=F';
     }
     ui.userProfile.classList.remove('hidden');
-    
+
     const session = getActiveSession();
     if (session && session.loggedIn) {
         const username = session.username;
-        // Variabel yang benar di fungsi ini adalah 'jabatan'
         const jabatan = session.userData.jabatan || ''; 
 		const adminPelanggaran = ['wawan', 'aria', 'admin'];
         const isPengasuh = (jabatan.toLowerCase().includes('pengasuh'));
@@ -7321,15 +7320,13 @@ function showLoggedInView(userData) {
 		const isMusyrifah = jabatan === 'Musyrifah' || ['wawan', 'admin'].includes(username);
         const financeUsers = ['mia', 'wawan', 'aria', 'yeni', 'admin'];
         const karyawanUsers = ['wawan', 'admin', 'aria', 'yeni', 'mia', 'zhofri', 'erwan', 'mahadi', 'zaidun', 'yanti', 'ryza', 'reza', 'uswah', 'erma'];
-        
-        // (BENAR) 'isBendahara' didefinisikan menggunakan 'jabatan'
-        const isBendahara = (jabatan.toLowerCase().trim() === 'bendahara');
 
+        const isBendahara = (jabatan.toLowerCase().trim() === 'bendahara');
         const isGuru = (jabatan || '').trim().toLowerCase() === 'guru' || appData.teachers.some(t => t.name === session.userData.profileName);
         const canAccessBankSoal = isGuru || userData.username === 'mia' || userData.username === 'wawan' || userData.username === 'admin';
         const isAdminUjian = ['wawan', 'mia', 'admin'].includes(username);
 		const canSupervise = isGuru || ['wawan', 'mia', 'aria', 'zhofri', 'admin'].includes(username);
-		
+
 		const lihatNilaiNav = document.getElementById('lihatNilaiNav');
         if (lihatNilaiNav) {
             const isWaka = jabatan === 'Waka Kurikulum';
@@ -7337,9 +7334,11 @@ function showLoggedInView(userData) {
             const canAccessNilai = isGuru || isWaka || allowedUsernamesNilai.includes(username);
             lihatNilaiNav.classList.toggle('hidden', !canAccessNilai);
         }
-		
+
 		if (isGuru) {
             fetchAndShowTeacherNotifications();
+            // (PERUBAHAN DI SINI) Panggil notifikasi grading untuk guru
+            fetchGradingNotifications(); 
         }
 
         document.getElementById('attendanceNav').classList.toggle('hidden', isSantri);
@@ -7354,14 +7353,13 @@ function showLoggedInView(userData) {
             const canSeeKasir = allowedUsernames.includes(username) || jabatan === 'santri' || ['wawan', 'admin'].includes(username) ;
             kasirNav.classList.toggle('hidden', !canSeeKasir);
         }
-        
-        // (BENAR) Logika akses menggunakan 'isBendahara'
+
         const canAccessSlipGaji = karyawanUsers.includes(username) || isBendahara;
         const canAccessKeuangan = financeUsers.includes(username) || isBendahara;
 
         const showDropdown = isSantri || isKepalaOrWaka || isMusyrif || isMusyrifah || canAccessKeuangan || canAccessSlipGaji || isAdminUjian;
         document.getElementById('sistemInformasiDropdown').classList.toggle('hidden', !showDropdown);
-        
+
         const halamanUjianAdminNav = document.getElementById('halamanUjianAdminNav');
         if(halamanUjianAdminNav) {
             halamanUjianAdminNav.classList.toggle('hidden', !isAdminUjian);
@@ -7370,52 +7368,49 @@ function showLoggedInView(userData) {
 		if (pengawasUjianNav) {
 			pengawasUjianNav.classList.toggle('hidden', !canSupervise);
 		}
-        
+
         document.getElementById('krsNav').classList.toggle('hidden', !isSantri);
         document.getElementById('khsNav').classList.toggle('hidden', !isSantri);
-
-        // (BENAR) Logika tampilan menggunakan 'canAccess...'
         document.getElementById('slipGajiNav').classList.toggle('hidden', !canAccessSlipGaji);
         document.getElementById('laporanKeuanganNav').classList.toggle('hidden', !canAccessKeuangan);
-		
+
 		if (canAccessKeuangan) {
             const tutupBukuContainer = document.getElementById('tutup-buku-gaji-container');
             if(tutupBukuContainer) tutupBukuContainer.classList.remove('hidden');
-
             populateMonthYearDropdowns(
                 document.getElementById('tutupBukuBulan'), 
                 document.getElementById('tutupBukuTahun')
             ); 
-
             populateMonthYearDropdowns(
                 document.getElementById('totalGajiBulan'), 
                 document.getElementById('totalGajiTahun')
             );
         }
-		
+
         document.getElementById('laporanNav').classList.toggle('hidden', !isKepalaOrWaka);
         document.getElementById('musyrifNav').classList.toggle('hidden', !isMusyrif);
         document.getElementById('musyrifahNav').classList.toggle('hidden', !isMusyrifah);
         document.getElementById('halamanGuruNav').classList.toggle('hidden', !canAccessBankSoal);
         document.getElementById('inputSoalNav').classList.toggle('hidden', !isAdminUjian);
-		
+
 		const createFundraisingContainer = document.getElementById('create-fundraising-btn-container');
         if (createFundraisingContainer) {
             const canCreate = ['mia', 'wawan', 'admin'].includes(username);
             createFundraisingContainer.classList.toggle('hidden', !canCreate);
         }
-		
+
         const tugasNav = document.getElementById('tugasNav');
         if (tugasNav) {
             const canAccessTugas = isSantri || isGuru || ['wawan', 'mia', 'aria', 'admin'].includes(username);
             tugasNav.classList.toggle('hidden', !canAccessTugas);
 
             if (isSantri) {
+                // (PERUBAHAN DI SINI) Panggil notifikasi tugas santri
                 fetchTugasNotifications();
             }
         }
     }
-    
+
     if (window.location.hash === '#login') { window.location.hash = '#beranda'; }
 }
 
@@ -8979,6 +8974,35 @@ async function fetchTugasNotifications() {
         }
     } catch (error) {
         console.error("Gagal mengambil notifikasi tugas:", error);
+    }
+}
+
+// --- TAMBAHKAN FUNGSI BARU INI UNTUK NOTIFIKASI GURU ---
+async function fetchGradingNotifications() {
+    try {
+        const session = getActiveSession();
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: 'getGradingNotifications',
+                profileName: session.userData.profileName
+            })
+        });
+        const result = await response.json();
+        if (result.status === 'success' && result.count > 0) {
+            const wrapper = document.querySelector('#tugasNav .nav-link-wrapper');
+            if (wrapper) {
+                const oldDot = wrapper.querySelector('.notification-dot');
+                if (oldDot) oldDot.remove(); // Hapus dot lama jika ada
+
+                const dot = document.createElement('span');
+                dot.className = 'notification-dot';
+                dot.textContent = result.count;
+                wrapper.appendChild(dot);
+            }
+        }
+    } catch (error) {
+        console.error("Gagal mengambil notifikasi grading:", error);
     }
 }
 
