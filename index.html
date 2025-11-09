@@ -1130,6 +1130,17 @@
     color: #374151; /* text-gray-700 */
 }
 
+@keyframes flash-red-glow {
+    0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+    70%  { box-shadow: 0 0 10px 15px rgba(220, 38, 38, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+.flash-red-alert {
+    /* Memberi border merah tebal DAN animasi kedip (glow) */
+    border: 3px solid #dc2626 !important; 
+    animation: flash-red-glow 1.5s 2; /* Mainkan animasi 2 kali (total 3 detik) */
+}
+
     </style>
 </head>
 <body>
@@ -2144,6 +2155,13 @@
     <h2 class="text-3xl font-bold text-gray-800">Dasbor Pengawas Ujian</h2>
     <p class="mb-8 text-gray-600">Pantau aktivitas santri yang sedang melaksanakan ujian secara real-time.</p>
 
+    <button id="proctor-stop-alarm-btn" class="hidden fixed bottom-10 right-10 z-[9999] bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M12 12l.01.01M18.364 5.636a9 9 0 010 12.728M5.636 5.636a9 9 0 0112.728 0" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 18L6 6" />
+        </svg>
+        Matikan Alarm
+    </button>
     <div id="proctor-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         </div>
 </div>
@@ -2311,15 +2329,19 @@
         <h2 class="text-2xl font-bold text-green-700 mb-4">Pemberitahuan Penting</h2>
         <img src="warning.png" alt="Pengumuman" class="mx-auto mb-4 rounded-lg" style="max-height: 200px;">
         <p class="text-gray-700 mb-6">
-            update terbaru :
+            Update Terbaru :
         </p>
+		<p class="text-4xl font-bold text-red-700 mb-4">November 2025</h2>
+		</p>
 		<ul class="list-disc list-inside text-gray-700 text-left space-y-2 mb-6">
-            <li>Menu Digilib (Digital Library) atau Perpustakaan Digital</li>
-            <li>Menu Tabungan Santri</li>
-            <li>Slip Gaji bulan Agustus 2025 Sudah bisa dilihat</li>
-            <li>Absensi yang lebih akurat</li>
-            <li>KRS dan KHS yang lebih powerfull</li>
-            <li>Ujian online untuk Santri dengan keamanan tinggi</li>
+            <li>Roster KBM berubah untuk semester 2</li>
+            <li>Tambahan absensi santri untuk tiap guru</li>
+            <li>Input Soal sudah mendukung gambar dan soal model isian</li>
+            <li>Laporan keuangan lebih fresh dan lebih mudah di lihat</li>
+            <li>Laporan Harian musyrif/ah lebih spesifik dan lebih mudah digunakan</li>
+            <li>Laporan Tahfidz kini menampilkan Laporan Keseharian, Laporan Nilai, Laporan Pelanggaran</li>
+            <li>Laporan Tahfidz kini juga menampilkan Grafik yang lebih mudah dibaca</li>
+            <li>Slip gaji dibuat lebih spesifik (penambahan piutang ke yayasan)</li>
         </ul>
         <button id="understandPopupBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
             Saya Mengerti
@@ -2337,6 +2359,25 @@
         <div class="text-right">
                 <button id="simpan-materi-btn" class="submit-btn" style="width: auto; padding: 10px 30px;">Input</button>
             </div>
+    </div>
+</div>
+
+<div id="customConfirmModal" class="modal">
+    <div class="modal-content text-center">
+        <h2 id="confirmModalTitle" class="text-2xl font-bold text-yellow-600 mb-4">Konfirmasi Tindakan</h2>
+        
+        <img src="warning.png" alt="Peringatan" class="mx-auto mb-4 rounded-lg" style="max-height: 150px;">
+        
+        <p id="confirmModalMessage" class="text-gray-700 text-lg mb-8">Apakah Anda yakin ingin melanjutkan?</p>
+        
+        <div class="flex justify-center gap-4">
+            <button id="confirmModalYesBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg">
+                Ya
+            </button>
+            <button id="confirmModalNoBtn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-8 rounded-lg">
+                Batal
+            </button>
+        </div>
     </div>
 </div>
 
@@ -4370,10 +4411,17 @@ function forceExitExamByAdmin() {
 function setupExamSecurityListeners() {
     document.addEventListener('fullscreenchange', () => {
         if (document.fullscreenElement) {
+            // Pengguna KEMBALI ke fullscreen
             alarmSound.pause();
             alarmSound.currentTime = 0;
             document.getElementById('fullscreenWarningModal').style.display = 'none';
+            
+            // --- (BARU) KIRIM LOG INI KE PENGAWAS ---
+            logAction('AKSES_KEMBALI', 'Santri kembali ke mode layar penuh.');
+            // --- AKHIR KODE BARU ---
+
         } else if (isExamInProgress) {
+            // Pengguna KELUAR dari fullscreen
 			logAction('PELANGGARAN', 'Keluar dari mode layar penuh.');
             playAlarm();
         }
@@ -4652,11 +4700,58 @@ async function fetchAndShowTeacherNotifications() {
 // === FUNGSI-FUNGSI BARU UNTUK HALAMAN PENGAWAS UJIAN ===
 // =======================================================
 let proctorInterval = null; // Variabel untuk menyimpan interval refresh
+let seenViolationTimestamps = new Set(); // Pindahkan Set ke scope global
 
+/**
+ * (DIPERBARUI V2) Fungsi setup Halaman Pengawas Ujian
+ * - Menambah tombol stop manual
+ * - Alarm berhenti otomatis saat santri kembali
+ */
 function setupPengawasUjianPage() {
     if (proctorInterval) clearInterval(proctorInterval);
 
     const proctorGridContainer = document.getElementById('proctor-grid-container');
+    const alarmAudio = document.getElementById('proctor-alarm-sound');
+    const stopAlarmBtn = document.getElementById('proctor-stop-alarm-btn'); // (BARU)
+
+    seenViolationTimestamps.clear(); // (PINDAH) Reset Set setiap kali halaman dibuka
+    let isAudioUnlocked = false;
+
+    // (BARU) Fungsi untuk menghentikan alarm (manual atau otomatis)
+    const stopProctorAlarm = () => {
+        if (!alarmAudio) return;
+        alarmAudio.pause();
+        alarmAudio.currentTime = 0;
+        stopAlarmBtn.classList.add('hidden'); // Sembunyikan tombol
+    };
+
+    // (BARU) Fungsi untuk memutar alarm
+    const playProctorAlarm = () => {
+        if (!alarmAudio) return;
+        
+        stopAlarmBtn.classList.remove('hidden'); // Tampilkan tombol stop
+        alarmAudio.volume = 1.0;
+        alarmAudio.currentTime = 0;
+        const playPromise = alarmAudio.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.then(_ => {
+                isAudioUnlocked = true;
+            }).catch(error => {
+                console.warn("Audio alarm gagal diputar:", error);
+                if (!isAudioUnlocked) {
+                    showMessage('Audio alarm diblokir. Klik halaman untuk mengaktifkan.', 'error');
+                    document.body.addEventListener('click', () => {
+                        alarmAudio.play();
+                        isAudioUnlocked = true;
+                    }, { once: true });
+                }
+            });
+        }
+    };
+
+    // (BARU) Pasang listener untuk tombol stop manual
+    stopAlarmBtn.addEventListener('click', stopProctorAlarm);
 
     const refreshProctorView = async () => {
         try {
@@ -4670,7 +4765,6 @@ function setupPengawasUjianPage() {
 
             const allLogs = result.data;
 
-            // 1. Kelompokkan semua log berdasarkan username santri
             const logsBySantri = allLogs.reduce((acc, log) => {
                 if (!acc[log.Username]) {
                     acc[log.Username] = {
@@ -4682,46 +4776,93 @@ function setupPengawasUjianPage() {
                 return acc;
             }, {});
 
-            // 2. Tentukan santri mana yang sedang aktif ujian
             let activeSantriUsernames = [];
             for (const username in logsBySantri) {
                 const userLogs = logsBySantri[username].logs;
                 const lastLog = userLogs.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp))[0];
                 if (lastLog) {
                     const lastActionTime = new Date(lastLog.Timestamp);
-                    // Anggap santri 'aktif' jika log terakhirnya kurang dari 2 jam yang lalu
                     if ((new Date() - lastActionTime) < (2 * 60 * 60 * 1000)) {
                         activeSantriUsernames.push(username);
                     }
                 }
             }
 
-            // 3. Render ulang seluruh grid
-            proctorGridContainer.innerHTML = '';
+            document.querySelectorAll('.santri-proctor-card').forEach(card => {
+                const username = card.id.replace('proctor-card-', '');
+                if (!activeSantriUsernames.includes(username)) {
+                    card.remove();
+                }
+            });
+
             if (activeSantriUsernames.length === 0) {
                 proctorGridContainer.innerHTML = '<p class="col-span-full text-center text-gray-500">Tidak ada santri yang sedang ujian saat ini.</p>';
-            } else {
-                activeSantriUsernames.forEach(username => {
-                    const santriData = logsBySantri[username];
-                    const santriCard = document.createElement('div');
+            }
+
+            activeSantriUsernames.sort((a, b) => logsBySantri[a].profileName.localeCompare(logsBySantri[b].profileName));
+
+            activeSantriUsernames.forEach(username => {
+                const santriData = logsBySantri[username];
+                
+                let santriCard = document.getElementById(`proctor-card-${username}`);
+                if (!santriCard) {
+                    santriCard = document.createElement('div');
                     santriCard.className = 'santri-proctor-card';
-
-                    // Urutkan log dari yang terbaru ke terlama
-                    const sortedLogs = santriData.logs.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp));
-                    const logHTML = sortedLogs.map(log => {
-                        const time = new Date(log.Timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                        let color = 'text-gray-700';
-                        if (log.ActionType.includes('PELANGGARAN')) color = 'text-red-600 font-bold';
-                        if (log.ActionType.includes('SELESAI')) color = 'text-green-600 font-bold';
-                        return `<p class="${color}"><span class="text-gray-400 mr-2">${time}</span>${log.ActionDetail}</p>`;
-                    }).join('');
-
-                    santriCard.innerHTML = `
-                        <div class="header">${santriData.profileName}</div>
-                        <div class="log-container">${logHTML}</div>
-                    `;
+                    santriCard.id = `proctor-card-${username}`;
                     proctorGridContainer.appendChild(santriCard);
+                }
+
+                const sortedLogs = santriData.logs.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp));
+                let logHTML = '';
+                let hasNewViolation = false;
+                let hasReturned = false; // (BARU)
+
+                sortedLogs.forEach(log => {
+                    const time = new Date(log.Timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    const timestamp = new Date(log.Timestamp).getTime();
+                    let color = 'text-gray-700';
+                    
+                    const isViolation = log.ActionType.includes('PELANGGARAN');
+                    const isReturn = log.ActionType.includes('AKSES_KEMBALI'); // (BARU)
+
+                    if (isViolation) {
+                        color = 'text-red-600 font-bold';
+                        if (!seenViolationTimestamps.has(timestamp)) {
+                            hasNewViolation = true;
+                            seenViolationTimestamps.add(timestamp);
+                            playProctorAlarm(); // Putar alarm
+                        }
+                    } else if (isReturn) { // (BARU)
+                        color = 'text-green-600 font-bold'; // Log "kembali" kita beri warna hijau
+                        if (!seenViolationTimestamps.has(timestamp)) {
+                            hasReturned = true;
+                            seenViolationTimestamps.add(timestamp);
+                            stopProctorAlarm(); // Matikan alarm
+                        }
+                    }
+                    
+                    logHTML += `<p class="${color}"><span class="text-gray-400 mr-2">${time}</span>${log.ActionDetail}</p>`;
                 });
+
+                santriCard.innerHTML = `
+                    <div class="header">${santriData.profileName}</div>
+                    <div class="log-container">${logHTML}</div>
+                `;
+                
+                if (hasNewViolation) {
+                    santriCard.classList.add('flash-red-alert');
+                    setTimeout(() => santriCard.classList.remove('flash-red-alert'), 3000);
+                }
+
+                // (BARU) Jika log terbaru adalah "kembali", hapus kedipan merah
+                if (hasReturned) {
+                    santriCard.classList.remove('flash-red-alert');
+                }
+            });
+
+            const placeholder = proctorGridContainer.querySelector('p');
+            if (placeholder && activeSantriUsernames.length > 0) {
+                placeholder.remove();
             }
 
         } catch (error) {
@@ -4730,7 +4871,7 @@ function setupPengawasUjianPage() {
     };
     
     refreshProctorView();
-    proctorInterval = setInterval(refreshProctorView, 7000); // Refresh setiap 7 detik
+    proctorInterval = setInterval(refreshProctorView, 5000); // Refresh setiap 5 detik
 }
 
 // Fungsi untuk membersihkan interval saat pindah halaman
@@ -5373,44 +5514,20 @@ function setupKeuanganEventListeners() {
         fetchAndRenderKeuanganReport(tahun, bulan);
     });
 
-    document.getElementById('kunciGajiBtn')?.addEventListener('click', () => {
-        const bulan = document.getElementById('tutupBukuBulan').value;
-        const tahun = document.getElementById('tutupBukuTahun').value;
-        const periode = `${tahun}-${bulan}`;
+    document.getElementById('kunciGajiBtn')?.addEventListener('click', async () => {
+    const bulan = document.getElementById('tutupBukuBulan').value;
+    const tahun = document.getElementById('tutupBukuTahun').value;
+    const periode = `${tahun}-${bulan}`;
+    const btn = document.getElementById('kunciGajiBtn');
 
-        if (!confirm(`Anda akan "Menutup Buku" dan menyimpan data gaji permanen untuk bulan ${periode}.\n\nDATA YANG SUDAH DISIMPAN TIDAK BISA DIUBAH.\n\nPastikan semua absensi, bonus, dan potongan sudah final.\n\nLanjutkan?`)) {
-            return;
-        }
+    // Konfirmasi lokal pertama (tetap ada)
+    if (!confirm(`Anda akan "Menutup Buku" dan menyimpan data gaji permanen untuk bulan ${periode}.\n\nDATA YANG SUDAH DISIMPAN TIDAK BISA DIUBAH (kecuali ditimpa).\n\nLanjutkan?`)) {
+        return;
+    }
 
-        const btn = document.getElementById('kunciGajiBtn');
-        btn.disabled = true;
-        btn.textContent = 'MEMPROSES SEMUA KARYAWAN...';
-        showLoading(); // Tampilkan loading overlay
-
-        fetch(CONFIG.SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ 
-                action: 'kunciGajiBulanan', 
-                periode: periode,
-				requesterUsername: getActiveSession().username
-            }),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        })
-        .then(res => res.json())
-        .then(result => {
-            if (result.status === 'success') {
-                showMessage(result.message, 'success');
-            } else {
-                throw new Error(result.message);
-            }
-        })
-        .catch(error => showMessage(`Gagal: ${error.message}`, 'error'))
-        .finally(() => {
-            btn.disabled = false;
-            btn.textContent = 'Kunci & Simpan Gaji Bulan Ini';
-            hideLoading(); // Sembunyikan loading overlay
-        });
-    });
+    // Panggil fungsi baru (Langkah 1)
+    runKunciGajiProcess(periode, btn);
+});
     document.getElementById('addKeuanganRowBtn')?.addEventListener('click', addKeuanganInputRow);
     document.getElementById('saveKeuanganBtn')?.addEventListener('click', handleSaveKeuangan);
 
@@ -5438,6 +5555,140 @@ function setupKeuanganEventListeners() {
     document.getElementById('downloadYearlySummaryBtn')?.addEventListener('click', () => downloadOrShareSummary('download'));
     document.getElementById('shareYearlySummaryBtn')?.addEventListener('click', () => downloadOrShareSummary('share'));
 	
+}
+
+async function runKunciGajiProcess(periode, btn) {
+    btn.disabled = true;
+    btn.textContent = 'MEMERIKSA DATA LAMA...';
+    showLoading();
+
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: 'kunciGajiBulanan', 
+                periode: periode,
+                requesterUsername: getActiveSession().username,
+                forceOverwrite: false // Kirim 'false' untuk memeriksa dulu
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            // Jika tidak ada duplikat, langsung sukses
+            hideLoading();
+            showMessage(result.message, 'success');
+            btn.disabled = false;
+            btn.textContent = 'Kunci & Simpan Gaji Bulan Ini';
+        } else if (result.status === 'confirm_overwrite') {
+            // Jika ada duplikat, panggil modal kustom
+            hideLoading();
+            
+            // --- INI BAGIAN YANG BERUBAH ---
+            const userConfirmed = await showCustomConfirm(
+                'Konfirmasi Penimpaan Data',
+                result.message, // Pesan dari backend
+                'Ya, Timpa Data', // Teks tombol "Ya"
+                'Batal'           // Teks tombol "Batal"
+            );
+            // --- AKHIR PERUBAHAN ---
+
+            if (userConfirmed) {
+                // Jika user setuju, panggil fungsi 'force'
+                forceKunciGaji(periode, btn);
+            } else {
+                showMessage('Tindakan dibatalkan.', 'error');
+                btn.disabled = false;
+                btn.textContent = 'Kunci & Simpan Gaji Bulan Ini';
+            }
+        } else {
+            // Error lain
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        hideLoading();
+        showMessage(`Gagal: ${error.message}`, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Kunci & Simpan Gaji Bulan Ini';
+    }
+}
+
+// --- (BARU) FUNGSI LANGKAH 2: MENIMPA DATA (JIKA DIKONFIRMASI) ---
+function forceKunciGaji(periode, btn) {
+    btn.disabled = true;
+    btn.textContent = 'MENIMPA DATA...';
+    showLoading();
+
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ 
+            action: 'kunciGajiBulanan', 
+            periode: periode,
+            requesterUsername: getActiveSession().username,
+            forceOverwrite: true // Kirim 'true' untuk menimpa data
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status === 'success') {
+            showMessage(result.message, 'success');
+        } else {
+            throw new Error(result.message);
+        }
+    })
+    .catch(error => showMessage(`Gagal menimpa: ${error.message}`, 'error'))
+    .finally(() => {
+        hideLoading();
+        btn.disabled = false;
+        btn.textContent = 'Kunci & Simpan Gaji Bulan Ini';
+    });
+}
+
+function showCustomConfirm(title, message, yesText = 'Ya', noText = 'Batal') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('customConfirmModal');
+        const titleEl = document.getElementById('confirmModalTitle');
+        const messageEl = document.getElementById('confirmModalMessage');
+        const yesBtn = document.getElementById('confirmModalYesBtn');
+        const noBtn = document.getElementById('confirmModalNoBtn');
+
+        // Isi konten modal
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        yesBtn.textContent = yesText;
+        noBtn.textContent = noText;
+
+        // Tampilkan modal
+        modal.style.display = 'block';
+
+        // Buat fungsi handler agar bisa dihapus nanti
+        const yesHandler = () => {
+            modal.style.display = 'none';
+            cleanup();
+            resolve(true);
+        };
+        
+        const noHandler = () => {
+            modal.style.display = 'none';
+            cleanup();
+            resolve(false);
+        };
+        
+        // Hapus listener lama (jika ada) dan pasang yang baru
+        const cleanup = () => {
+            yesBtn.removeEventListener('click', yesHandler);
+            noBtn.removeEventListener('click', noHandler);
+        };
+
+        // Hapus dulu sebelum menambah, untuk jaga-jaga
+        yesBtn.removeEventListener('click', yesHandler);
+        noBtn.removeEventListener('click', noHandler);
+
+        yesBtn.addEventListener('click', yesHandler);
+        noBtn.addEventListener('click', noHandler);
+    });
 }
 
 function updateKelompokKeuangan() {
@@ -6626,67 +6877,74 @@ tabMurajaah.addEventListener('click', (e) => {
 				}
 			}
         } else if (targetHash === '#slip-gaji') {
-            const session = getActiveSession();
-            if (session && session.loggedIn) {
-                const userJabatan = session.userData.jabatan || '';
-                const isAdmin = (session.username === 'aria' || session.username === 'wawan' || session.username === 'admin' || session.username === 'yeni');
-                const employeeSelector = document.getElementById('employeeSelectorContainer');
-                
-                populateMonthYearDropdowns(document.getElementById('monthSelectNew'), document.getElementById('yearSelect'));
+    const session = getActiveSession();
+    if (session && session.loggedIn) {
+        const userJabatan = session.userData.jabatan || '';
+        
+        // --- (PERUBAHAN DI SINI) ---
+        // Menambahkan pengecekan 'isBendahara'
+        const isBendahara = (userJabatan.toLowerCase().trim() === 'bendahara');
+        // (DIPERBARUI) Menyatukan daftar admin slip gaji
+        const isAdminGaji = (session.username === 'aria' || session.username === 'wawan' || session.username === 'admin' || session.username === 'yeni' || isBendahara);
+        // --- AKHIR PERUBAHAN ---
 
-                if (isAdmin) {
-                    employeeSelector.classList.remove('hidden');
-                    populateEmployeeDropdown();
-                } else {
-                    employeeSelector.classList.add('hidden');
-                }
-                
-                const showBtn = document.getElementById('showSlipGajiBtn');
-                if (!showBtn.dataset.listenerAttached) {
-                    showBtn.addEventListener('click', fetchAndRenderSlipGaji);
-                    showBtn.dataset.listenerAttached = 'true';
-                }
-				
-				// === AWAL KODE BARU UNTUK TOMBOL TOTAL GAJI ===
-document.getElementById('tampilkanTotalGajiBtn')?.addEventListener('click', () => {
-    const bulan = document.getElementById('totalGajiBulan').value;
-    const tahun = document.getElementById('totalGajiTahun').value;
-    const periode = `${tahun}-${bulan}`;
-    const reportContainer = document.getElementById('total-gaji-report-container');
-    const btn = document.getElementById('tampilkanTotalGajiBtn');
+        const employeeSelector = document.getElementById('employeeSelectorContainer');
+        
+        populateMonthYearDropdowns(document.getElementById('monthSelectNew'), document.getElementById('yearSelect'));
 
-    reportContainer.innerHTML = '<p class="p-4 text-center text-gray-500">Memuat laporan total gaji...</p>';
-    btn.disabled = true;
-    btn.textContent = 'Memuat...';
-
-    fetch(CONFIG.SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({ 
-            action: 'getPayrollReport', 
-            periode: periode
-        }),
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    })
-    .then(res => res.json())
-    .then(result => {
-        if (result.status === 'success') {
-            renderTotalGajiTable(result.report, result.grandTotal);
+        // (DIPERBARUI) Menggunakan 'isAdminGaji'
+        if (isAdminGaji) {
+            employeeSelector.classList.remove('hidden');
+            populateEmployeeDropdown();
         } else {
-            throw new Error(result.message);
+            employeeSelector.classList.add('hidden');
         }
-    })
-    .catch(error => {
-        reportContainer.innerHTML = `<p class="p-4 text-center text-red-500">Gagal memuat: ${error.message}</p>`;
-    })
-    .finally(() => {
-        btn.disabled = false;
-        btn.textContent = 'Tampilkan Laporan';
-    });
-});
-// === AKHIR KODE BARU ===
-				
-            }
-        } else if (targetHash === '#laporan-keuangan') {
+        
+        const showBtn = document.getElementById('showSlipGajiBtn');
+        if (!showBtn.dataset.listenerAttached) {
+            showBtn.addEventListener('click', fetchAndRenderSlipGaji);
+            showBtn.dataset.listenerAttached = 'true';
+        }
+        
+        document.getElementById('tampilkanTotalGajiBtn')?.addEventListener('click', () => {
+            const bulan = document.getElementById('totalGajiBulan').value;
+            const tahun = document.getElementById('totalGajiTahun').value;
+            const periode = `${tahun}-${bulan}`;
+            const reportContainer = document.getElementById('total-gaji-report-container');
+            const btn = document.getElementById('tampilkanTotalGajiBtn');
+
+            reportContainer.innerHTML = '<p class="p-4 text-center text-gray-500">Memuat laporan total gaji...</p>';
+            btn.disabled = true;
+            btn.textContent = 'Memuat...';
+
+            fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    action: 'getPayrollReport', 
+                    periode: periode,
+                    requesterUsername: getActiveSession().username // (BARU) Tambahkan ini
+                }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    renderTotalGajiTable(result.report, result.grandTotal);
+                } else {
+                    throw new Error(result.message);
+                }
+            })
+            .catch(error => {
+                reportContainer.innerHTML = `<p class="p-4 text-center text-red-500">Gagal memuat: ${error.message}</p>`;
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = 'Tampilkan Laporan';
+            });
+        });
+        
+    }
+} else if (targetHash === '#laporan-keuangan') {
             const session = getActiveSession();
             const allowedUsers = ['mia', 'wawan', 'aria', 'yeni', 'billy', 'admin'];
             if (session && session.loggedIn && allowedUsers.includes(session.username)) {
@@ -6924,7 +7182,8 @@ function showLoggedInView(userData) {
     const session = getActiveSession();
     if (session && session.loggedIn) {
         const username = session.username;
-        const jabatan = session.userData.jabatan || '';
+        // Variabel yang benar di fungsi ini adalah 'jabatan'
+        const jabatan = session.userData.jabatan || ''; 
 		const adminPelanggaran = ['wawan', 'aria', 'admin'];
         const isPengasuh = (jabatan.toLowerCase().includes('pengasuh'));
         if (adminPelanggaran.includes(username) || isPengasuh) {
@@ -6937,21 +7196,22 @@ function showLoggedInView(userData) {
 		const isMusyrifah = jabatan === 'Musyrifah' || ['wawan', 'admin'].includes(username);
         const financeUsers = ['mia', 'wawan', 'aria', 'yeni', 'admin'];
         const karyawanUsers = ['wawan', 'admin', 'aria', 'yeni', 'mia', 'zhofri', 'erwan', 'mahadi', 'zaidun', 'yanti', 'ryza', 'reza', 'uswah', 'erma'];
+        
+        // (BENAR) 'isBendahara' didefinisikan menggunakan 'jabatan'
+        const isBendahara = (jabatan.toLowerCase().trim() === 'bendahara');
+
         const isGuru = (jabatan || '').trim().toLowerCase() === 'guru' || appData.teachers.some(t => t.name === session.userData.profileName);
         const canAccessBankSoal = isGuru || userData.username === 'mia' || userData.username === 'wawan' || userData.username === 'admin';
         const isAdminUjian = ['wawan', 'mia', 'admin'].includes(username);
 		const canSupervise = isGuru || ['wawan', 'mia', 'aria', 'zhofri', 'admin'].includes(username);
 		
 		const lihatNilaiNav = document.getElementById('lihatNilaiNav');
-if (lihatNilaiNav) {
-    const isGuru = (jabatan || '').trim().toLowerCase() === 'guru';
-    const isWaka = jabatan === 'Waka Kurikulum';
-    const allowedUsernames = ['wawan', 'mia', 'aria', 'admin'];
-
-    const canAccessNilai = isGuru || isWaka || allowedUsernames.includes(username);
-
-    lihatNilaiNav.classList.toggle('hidden', !canAccessNilai);
-}
+        if (lihatNilaiNav) {
+            const isWaka = jabatan === 'Waka Kurikulum';
+            const allowedUsernamesNilai = ['wawan', 'mia', 'aria', 'admin'];
+            const canAccessNilai = isGuru || isWaka || allowedUsernamesNilai.includes(username);
+            lihatNilaiNav.classList.toggle('hidden', !canAccessNilai);
+        }
 		
 		if (isGuru) {
             fetchAndShowTeacherNotifications();
@@ -6969,7 +7229,12 @@ if (lihatNilaiNav) {
             const canSeeKasir = allowedUsernames.includes(username) || jabatan === 'santri' || ['wawan', 'admin'].includes(username) ;
             kasirNav.classList.toggle('hidden', !canSeeKasir);
         }
-        const showDropdown = isSantri || isKepalaOrWaka || isMusyrif || isMusyrifah || financeUsers.includes(username) || karyawanUsers.includes(username) || isAdminUjian;
+        
+        // (BENAR) Logika akses menggunakan 'isBendahara'
+        const canAccessSlipGaji = karyawanUsers.includes(username) || isBendahara;
+        const canAccessKeuangan = financeUsers.includes(username) || isBendahara;
+
+        const showDropdown = isSantri || isKepalaOrWaka || isMusyrif || isMusyrifah || canAccessKeuangan || canAccessSlipGaji || isAdminUjian;
         document.getElementById('sistemInformasiDropdown').classList.toggle('hidden', !showDropdown);
         
         const halamanUjianAdminNav = document.getElementById('halamanUjianAdminNav');
@@ -6983,24 +7248,25 @@ if (lihatNilaiNav) {
         
         document.getElementById('krsNav').classList.toggle('hidden', !isSantri);
         document.getElementById('khsNav').classList.toggle('hidden', !isSantri);
-        document.getElementById('slipGajiNav').classList.toggle('hidden', !karyawanUsers.includes(username));
-        document.getElementById('laporanKeuanganNav').classList.toggle('hidden', !financeUsers.includes(username));
+
+        // (BENAR) Logika tampilan menggunakan 'canAccess...'
+        document.getElementById('slipGajiNav').classList.toggle('hidden', !canAccessSlipGaji);
+        document.getElementById('laporanKeuanganNav').classList.toggle('hidden', !canAccessKeuangan);
 		
-		if (financeUsers.includes(username)) {
-    const tutupBukuContainer = document.getElementById('tutup-buku-gaji-container');
-    if(tutupBukuContainer) tutupBukuContainer.classList.remove('hidden');
+		if (canAccessKeuangan) {
+            const tutupBukuContainer = document.getElementById('tutup-buku-gaji-container');
+            if(tutupBukuContainer) tutupBukuContainer.classList.remove('hidden');
 
-    // Mengisi dropdown "Tutup Buku"
-    populateMonthYearDropdowns(
-        document.getElementById('tutupBukuBulan'), 
-        document.getElementById('tutupBukuTahun')
-    ); 
+            populateMonthYearDropdowns(
+                document.getElementById('tutupBukuBulan'), 
+                document.getElementById('tutupBukuTahun')
+            ); 
 
-    populateMonthYearDropdowns(
-        document.getElementById('totalGajiBulan'), 
-        document.getElementById('totalGajiTahun')
-    );
-    }
+            populateMonthYearDropdowns(
+                document.getElementById('totalGajiBulan'), 
+                document.getElementById('totalGajiTahun')
+            );
+        }
 		
         document.getElementById('laporanNav').classList.toggle('hidden', !isKepalaOrWaka);
         document.getElementById('musyrifNav').classList.toggle('hidden', !isMusyrif);
@@ -7014,22 +7280,16 @@ if (lihatNilaiNav) {
             createFundraisingContainer.classList.toggle('hidden', !canCreate);
         }
 		
-        // --- KODE YANG DIPINDAHKAN, DITEMPEL DI SINI ---
         const tugasNav = document.getElementById('tugasNav');
         if (tugasNav) {
-            // Tampilkan tombol Tugas untuk Santri dan Guru/Admin
             const canAccessTugas = isSantri || isGuru || ['wawan', 'mia', 'aria', 'admin'].includes(username);
             tugasNav.classList.toggle('hidden', !canAccessTugas);
 
-            // Jika yang login adalah Santri, panggil fungsi untuk cek notifikasi
             if (isSantri) {
                 fetchTugasNotifications();
             }
         }
-        // --- AKHIR DARI KODE YANG DIPINDAHKAN ---
     }
-	
-	
     
     if (window.location.hash === '#login') { window.location.hash = '#beranda'; }
 }
@@ -7586,169 +7846,168 @@ function populateEmployeeDropdown() {
 
 // GANTI SELURUH FUNGSI LAMA DENGAN VERSI BARU INI
 function fetchAndRenderSlipGaji() {
-        const slipContainer = document.getElementById('slipGajiContainer');
-        const downloadContainer = document.getElementById('downloadSlipContainer');
-        downloadContainer.classList.add('hidden'); // Sembunyikan tombol download
+    const slipContainer = document.getElementById('slipGajiContainer');
+    const downloadContainer = document.getElementById('downloadSlipContainer');
+    downloadContainer.classList.add('hidden'); 
+
+    const session = getActiveSession();
+    const userJabatan = (session && session.userData) ? session.userData.jabatan : '';
     
-        const session = getActiveSession();
-        const userJabatan = (session && session.userData) ? session.userData.jabatan : '';
-        const isAdmin = (session.username === 'aria' || session.username === 'wawan' || session.username === 'admin');
-        const targetProfileName = isAdmin ? document.getElementById('employeeSelect').value : session.userData.profileName;
-        const selectedMonth = document.getElementById('monthSelectNew').value;
-        const selectedYear = document.getElementById('yearSelect').value;
-        const targetMonth = `${selectedYear}-${selectedMonth}`;
-    
-        if (isAdmin && !targetProfileName) {
-            showMessage('Silakan pilih nama karyawan terlebih dahulu.', 'error');
+    // --- (PERUBAHAN DI SINI) ---
+    // Menambahkan pengecekan 'isBendahara'
+    const isBendahara = (userJabatan.toLowerCase().trim() === 'bendahara');
+    const isAdminGaji = (session.username === 'aria' || session.username === 'wawan' || session.username === 'admin' || session.username === 'yeni' || isBendahara);
+    // --- AKHIR PERUBAHAN ---
+
+    // (DIPERBARUI) Menggunakan 'isAdminGaji'
+    const targetProfileName = isAdminGaji ? document.getElementById('employeeSelect').value : session.userData.profileName;
+    const selectedMonth = document.getElementById('monthSelectNew').value;
+    const selectedYear = document.getElementById('yearSelect').value;
+    const targetMonth = `${selectedYear}-${selectedMonth}`;
+
+    if (isAdminGaji && !targetProfileName) {
+        showMessage('Silakan pilih nama karyawan terlebih dahulu.', 'error');
+        return;
+    }
+
+    slipContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Mencari riwayat slip gaji...</p>';
+
+    const data = {
+        action: 'getSlipGaji',
+        targetProfileName: targetProfileName,
+        targetMonth: targetMonth,
+        requesterUsername: session.username,
+        requesterJabatan: userJabatan
+    };
+
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.status === 'error' || result.status === 'pending') {
+            let colorClass = result.status === 'error' ? 'text-red-600 bg-red-50' : 'text-blue-600 bg-blue-50';
+            slipContainer.innerHTML = `<p class="p-8 text-center ${colorClass} rounded-lg">${result.message}</p>`;
             return;
         }
-    
-        slipContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Mencari riwayat slip gaji...</p>';
-    
-        const data = {
-            action: 'getSlipGaji', // Fungsi ini SEKARANG membaca dari HistoryGaji
-            targetProfileName: targetProfileName,
-            targetMonth: targetMonth,
-            requesterUsername: session.username,
-            requesterJabatan: userJabatan
-        };
-    
-        fetch(CONFIG.SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify(data),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        })
-        .then(res => res.json())
-        .then(result => {
-            // Logika baru: Jika status 'error' ATAU 'pending', tampilkan pesannya.
-            // Pesan error sekarang berarti "Gaji belum diinput".
-            if (result.status === 'error' || result.status === 'pending') {
-                let colorClass = result.status === 'error' ? 'text-red-600 bg-red-50' : 'text-blue-600 bg-blue-50';
-                slipContainer.innerHTML = `<p class="p-8 text-center ${colorClass} rounded-lg">${result.message}</p>`;
-                return; // Hentikan fungsi di sini
-            }
-    
-            // Jika status 'success', kita lanjutkan
-            const s = result.slip;
-            const formatRp = num => (num || 0).toLocaleString('id-ID');
-    
-            // Buat HTML Pendapatan (sudah dihitung backend)
-            let pendapatanHTML = '';
-            if (s.pendapatan.gajiPokokRinci && Object.keys(s.pendapatan.gajiPokokRinci).length > 0) {
-            // Jika ada rincian, tampilkan rinciannya
-            for (const jabatan in s.pendapatan.gajiPokokRinci) {
-                pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok (${jabatan})</span> <span>${formatRp(s.pendapatan.gajiPokokRinci[jabatan])}</span></div>`;
-            }
-        } else if (s.pendapatan.gajiPokok > 0) {
-            // Jika tidak ada rincian (misal: guru), tampilkan totalnya
-            pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok</span> <span>${formatRp(s.pendapatan.gajiPokok)}</span></div>`;
-        }
-			if (s.pendapatan.honorMengajar > 0) pendapatanHTML += `<div class="flex justify-between"><span>Honor Mengajar</span> <span>${formatRp(s.pendapatan.honorMengajar)}</span></div>`;
-            if (s.pendapatan.tunjanganMakan > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan Makan</span> <span>${formatRp(s.pendapatan.tunjanganMakan)}</span></div>`;
-            if (s.pendapatan.tunjanganBPJS > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan BPJamsostek</span> <span>${formatRp(s.pendapatan.tunjanganBPJS)}</span></div>`;
-            if (s.pendapatan.tunjanganFasilitas > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan Fasilitas</span> <span>${formatRp(s.pendapatan.tunjanganFasilitas)}</span></div>`;
-            if (s.pendapatan.lembur > 0) pendapatanHTML += `<div class="flex justify-between"><span>Lembur</span> <span>${formatRp(s.pendapatan.lembur)}</span></div>`;
-            if (s.pendapatan.bonusLain > 0) pendapatanHTML += `<div class="flex justify-between"><span>Bonus Lain</span> <span>${formatRp(s.pendapatan.bonusLain)}</span></div>`;
-            if (s.pendapatan.bonusRapat > 0) pendapatanHTML += `<div class="flex justify-between"><span>Bonus Rapat</span> <span>${formatRp(s.pendapatan.bonusRapat)}</span></div>`;
-            const totalPendapatan = Object.values(s.pendapatan).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0);
-    
-            // Buat HTML Potongan (sudah dihitung backend)
-            let potonganHTML = '';
-            if (s.potongan.potonganMakan > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Makan</span> <span>${formatRp(s.potongan.potonganMakan)}</span></div>`;
-            if (s.potongan.potonganBPJS > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan BPJamsostek</span> <span>${formatRp(s.potongan.potonganBPJS)}</span></div>`;
-            if (s.potongan.potonganFasilitas > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Fasilitas</span> <span>${formatRp(s.potongan.potonganFasilitas)}</span></div>`;
-            if (s.potongan.potonganAbsen > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Absen</span> <span>${formatRp(s.potongan.potonganAbsen)}</span></div>`;
-            if (s.potongan.potonganTerlambat > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Terlambat</span> <span>${formatRp(s.potongan.potonganTerlambat)}</span></div>`;
-            if (s.potongan.hutang > 0) potonganHTML += `<div class="flex justify-between"><span>Hutang</span> <span>${formatRp(s.potongan.hutang)}</span></div>`;
-            if (s.potongan.denda > 0) potonganHTML += `<div class="flex justify-between"><span>Denda</span> <span>${formatRp(s.potongan.denda)}</span></div>`;
-            const totalPotongan = Object.values(s.potongan).reduce((a, b) => a + b, 0);
-    
-            // Buat HTML Kehadiran (sudah disiapkan backend)
-            let kehadiranHTML = '';
-        if (s.kehadiran.infoGuru) kehadiranHTML += `<li>Total Mengajar: ${s.kehadiran.infoGuru}</li>`;
-        if (s.kehadiran.infoStaf) kehadiranHTML += `<li>Kehadiran Staf: ${s.kehadiran.infoStaf}</li>`;
 
-        let catatanKeterlambatanHTML = '';
-        if (s.kehadiran.totalSesiTerlambat > 0) {
-            catatanKeterlambatanHTML = `
-            <div class="text-xs text-gray-500 mt-6 border-t pt-2">
-                <b>Catatan Potongan Keterlambatan:</b>
-                <ul>
-                    <li>Anda terlambat di <b>${s.kehadiran.totalSesiTerlambat} sesi</b> mengajar dari total ${s.kehadiran.totalMengajar} sesi bulan ini.</li>
-                    <li>Total akumulasi keterlambatan Anda adalah <b>${s.kehadiran.totalMenitTerlambat} menit</b>.</li>
-                    <li>Aturan: Potongan Rp 8.000 untuk keterlambatan >= 10 menit, ditambah Rp 5.000 untuk setiap kelipatan 5 menit berikutnya per sesi.</li>
-                </ul>
-            </div>`;
+        const s = result.slip;
+        const formatRp = num => (num || 0).toLocaleString('id-ID');
+
+        // (Sisa fungsi ini tetap sama persis seperti di file Anda)
+        let pendapatanHTML = '';
+        if (s.pendapatan.gajiPokokRinci && Object.keys(s.pendapatan.gajiPokokRinci).length > 0) {
+        for (const jabatan in s.pendapatan.gajiPokokRinci) {
+            pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok (${jabatan})</span> <span>${formatRp(s.pendapatan.gajiPokokRinci[jabatan])}</span></div>`;
         }
-    
-            const gajiBersih = totalPendapatan - totalPotongan;
-    
-            // Render HTML slip gaji
-            const slipHTML = `
-                <div id="slipGajiContent" data-nama="${s.nama}" data-periode="${s.periode}">
-                    <div class="bg-white p-6 rounded-lg shadow-lg border">
-                        <div class="text-center border-b pb-4 mb-4">
-                            <h3 class="text-2xl font-bold">SLIP GAJI</h3>
-                            <p class="text-gray-600">Periode: ${new Date(s.periode + '-02').toLocaleString('id-ID', {month:'long', year:'numeric'})}</p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 text-sm mb-6">
-                            <div><span class="font-semibold">Nama:</span> ${s.nama}</div>
-                            <div><span class="font-semibold">Jabatan:</span> ${s.jabatan}</div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <h4 class="font-bold text-lg text-green-600 border-b mb-2 pb-1">Pendapatan</h4>
-                                <div class="space-y-2">${pendapatanHTML || '<div class="flex justify-between"><span>-</span> <span>0</span></div>'}</div>
-                                <div class="flex justify-between font-bold border-t pt-2 mt-2"><span>Total Pendapatan</span> <span>${formatRp(totalPendapatan)}</span></div>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-lg text-red-600 border-b mb-2 pb-1">Potongan</h4>
-                                <div class="space-y-2">${potonganHTML || '<div class="flex justify-between"><span>-</span> <span>0</span></div>'}</div>
-                                <div class="flex justify-between font-bold border-t pt-2 mt-2"><span>Total Potongan</span> <span>${formatRp(totalPotongan)}</span></div>
-                            </div>
-                        </div>
-                        <div class="border-t mt-6 pt-4">
-                           <div class="flex justify-between font-bold text-xl">
-                                <span>GAJI BERSIH</span>
-                                <span>Rp ${formatRp(gajiBersih)}</span>
-                           </div>
-                        </div>
-						
-                        ${kehadiranHTML ? `<div class="text-xs text-gray-500 mt-6 border-t pt-2"><b>Rincian Kehadiran:</b><ul>${kehadiranHTML}</ul></div>` : ''}
-                        ${catatanKeterlambatanHTML} 
-						${s.piutang && s.piutang.persentase > 0 ? `
-                        <div class="mt-6 pt-4 border-t-2 border-dashed border-red-300">
-                            <h4 class="font-bold text-lg text-red-700 mb-2">Informasi Piutang Yayasan</h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span>Gaji Bersih (Utuh)</span> 
-                                    <span>${formatRp(gajiBersih)}</span>
-                                </div>
-                                <div class="flex justify-between text-red-600">
-                                    <span>Pinjaman ${s.piutang.persentase}% (Bulan ${s.piutang.jumlahBulan})</span> 
-                                    <span>- ${formatRp(s.piutang.jumlahBulanIni)}</span>
-                                </div>
-                                <div class="flex justify-between font-bold text-base border-t pt-2 mt-2">
-                                    <span>GAJI DITERIMA (TUNAI)</span> 
-                                    <span>${formatRp(gajiBersih - s.piutang.jumlahBulanIni)}</span>
-                                </div>
-                            </div>
-                            <div class="mt-4 text-xs text-gray-500">
-                                Total akumulasi piutang Anda (termasuk bulan ini) adalah <b>${formatRp(s.piutang.totalAkumulasi)}</b> selama <b>${s.piutang.jumlahBulan} bulan</b>.
-                            </div>
-                        </div>
-                    ` : ''}
-                    </div>
-                </div>`;
-            slipContainer.innerHTML = slipHTML;
-            downloadContainer.classList.remove('hidden'); // Tampilkan tombol download
-            document.getElementById('downloadSlipBtn').onclick = downloadSlipPDF; // Pasang listener
-            
-        })
-        .catch(error => {
-            slipContainer.innerHTML = `<p class="p-8 text-center text-red-600 bg-red-50 rounded-lg">Gagal memuat slip gaji: ${error.message}</p>`;
-        });
+    } else if (s.pendapatan.gajiPokok > 0) {
+        pendapatanHTML += `<div class="flex justify-between"><span>Gaji Pokok</span> <span>${formatRp(s.pendapatan.gajiPokok)}</span></div>`;
     }
+        if (s.pendapatan.honorMengajar > 0) pendapatanHTML += `<div class="flex justify-between"><span>Honor Mengajar</span> <span>${formatRp(s.pendapatan.honorMengajar)}</span></div>`;
+        if (s.pendapatan.tunjanganMakan > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan Makan</span> <span>${formatRp(s.pendapatan.tunjanganMakan)}</span></div>`;
+        if (s.pendapatan.tunjanganBPJS > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan BPJamsostek</span> <span>${formatRp(s.pendapatan.tunjanganBPJS)}</span></div>`;
+        if (s.pendapatan.tunjanganFasilitas > 0) pendapatanHTML += `<div class="flex justify-between"><span>Tunjangan Fasilitas</span> <span>${formatRp(s.pendapatan.tunjanganFasilitas)}</span></div>`;
+        if (s.pendapatan.lembur > 0) pendapatanHTML += `<div class="flex justify-between"><span>Lembur</span> <span>${formatRp(s.pendapatan.lembur)}</span></div>`;
+        if (s.pendapatan.bonusLain > 0) pendapatanHTML += `<div class="flex justify-between"><span>Bonus Lain</span> <span>${formatRp(s.pendapatan.bonusLain)}</span></div>`;
+        if (s.pendapatan.bonusRapat > 0) pendapatanHTML += `<div class="flex justify-between"><span>Bonus Rapat</span> <span>${formatRp(s.pendapatan.bonusRapat)}</span></div>`;
+        const totalPendapatan = Object.values(s.pendapatan).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0);
+
+        let potonganHTML = '';
+        if (s.potongan.potonganMakan > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Makan</span> <span>${formatRp(s.potongan.potonganMakan)}</span></div>`;
+        if (s.potongan.potonganBPJS > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan BPJamsostek</span> <span>${formatRp(s.potongan.potonganBPJS)}</span></div>`;
+        if (s.potongan.potonganFasilitas > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Fasilitas</span> <span>${formatRp(s.potongan.potonganFasilitas)}</span></div>`;
+        if (s.potongan.potonganAbsen > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Absen</span> <span>${formatRp(s.potongan.potonganAbsen)}</span></div>`;
+        if (s.potongan.potonganTerlambat > 0) potonganHTML += `<div class="flex justify-between"><span>Potongan Terlambat</span> <span>${formatRp(s.potongan.potonganTerlambat)}</span></div>`;
+        if (s.potongan.hutang > 0) potonganHTML += `<div class="flex justify-between"><span>Hutang</span> <span>${formatRp(s.potongan.hutang)}</span></div>`;
+        if (s.potongan.denda > 0) potonganHTML += `<div class="flex justify-between"><span>Denda</span> <span>${formatRp(s.potongan.denda)}</span></div>`;
+        const totalPotongan = Object.values(s.potongan).reduce((a, b) => a + b, 0);
+
+        let kehadiranHTML = '';
+    if (s.kehadiran.infoGuru) kehadiranHTML += `<li>Total Mengajar: ${s.kehadiran.infoGuru}</li>`;
+    if (s.kehadiran.infoStaf) kehadiranHTML += `<li>Kehadiran Staf: ${s.kehadiran.infoStaf}</li>`;
+
+    let catatanKeterlambatanHTML = '';
+    if (s.kehadiran.totalSesiTerlambat > 0) {
+        catatanKeterlambatanHTML = `
+        <div class="text-xs text-gray-500 mt-6 border-t pt-2">
+            <b>Catatan Potongan Keterlambatan:</b>
+            <ul>
+                <li>Anda terlambat di <b>${s.kehadiran.totalSesiTerlambat} sesi</b> mengajar dari total ${s.kehadiran.totalMengajar} sesi bulan ini.</li>
+                <li>Total akumulasi keterlambatan Anda adalah <b>${s.kehadiran.totalMenitTerlambat} menit</b>.</li>
+                <li>Aturan: Potongan Rp 8.000 untuk keterlambatan >= 10 menit, ditambah Rp 5.000 untuk setiap kelipatan 5 menit berikutnya per sesi.</li>
+            </ul>
+        </div>`;
+    }
+
+        const gajiBersih = totalPendapatan - totalPotongan;
+
+        const slipHTML = `
+            <div id="slipGajiContent" data-nama="${s.nama}" data-periode="${s.periode}">
+                <div class="bg-white p-6 rounded-lg shadow-lg border">
+                    <div class="text-center border-b pb-4 mb-4">
+                        <h3 class="text-2xl font-bold">SLIP GAJI</h3>
+                        <p class="text-gray-600">Periode: ${new Date(s.periode + '-02').toLocaleString('id-ID', {month:'long', year:'numeric'})}</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-sm mb-6">
+                        <div><span class="font-semibold">Nama:</span> ${s.nama}</div>
+                        <div><span class="font-semibold">Jabatan:</span> ${s.jabatan}</div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-bold text-lg text-green-600 border-b mb-2 pb-1">Pendapatan</h4>
+                            <div class="space-y-2">${pendapatanHTML || '<div class="flex justify-between"><span>-</span> <span>0</span></div>'}</div>
+                            <div class="flex justify-between font-bold border-t pt-2 mt-2"><span>Total Pendapatan</span> <span>${formatRp(totalPendapatan)}</span></div>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-lg text-red-600 border-b mb-2 pb-1">Potongan</h4>
+                            <div class="space-y-2">${potonganHTML || '<div class="flex justify-between"><span>-</span> <span>0</span></div>'}</div>
+                            <div class="flex justify-between font-bold border-t pt-2 mt-2"><span>Total Potongan</span> <span>${formatRp(totalPotongan)}</span></div>
+                        </div>
+                    </div>
+                    <div class="border-t mt-6 pt-4">
+                       <div class="flex justify-between font-bold text-xl">
+                            <span>GAJI BERSIH</span>
+                            <span>Rp ${formatRp(gajiBersih)}</span>
+                       </div>
+                    </div>
+                    
+                    ${kehadiranHTML ? `<div class="text-xs text-gray-500 mt-6 border-t pt-2"><b>Rincian Kehadiran:</b><ul>${kehadiranHTML}</ul></div>` : ''}
+                    ${catatanKeterlambatanHTML} 
+                    ${s.piutang && s.piutang.persentase > 0 ? `
+                    <div class="mt-6 pt-4 border-t-2 border-dashed border-red-300">
+                        <h4 class="font-bold text-lg text-red-700 mb-2">Informasi Piutang Yayasan</h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span>Gaji Bersih (Utuh)</span> 
+                                <span>${formatRp(gajiBersih)}</span>
+                            </div>
+                            <div class="flex justify-between text-red-600">
+                                <span>Pinjaman ${s.piutang.persentase}% (Bulan ${s.piutang.jumlahBulan})</span> 
+                                <span>- ${formatRp(s.piutang.jumlahBulanIni)}</span>
+                            </div>
+                            <div class="flex justify-between font-bold text-base border-t pt-2 mt-2">
+                                <span>GAJI DITERIMA (TUNAI)</span> 
+                                <span>${formatRp(gajiBersih - s.piutang.jumlahBulanIni)}</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-xs text-gray-500">
+                            Total akumulasi piutang Anda (termasuk bulan ini) adalah <b>${formatRp(s.piutang.totalAkumulasi)}</b> selama <b>${s.piutang.jumlahBulan} bulan</b>.
+                        </div>
+                    </div>
+                ` : ''}
+                </div>
+            </div>`;
+        slipContainer.innerHTML = slipHTML;
+        downloadContainer.classList.remove('hidden');
+        document.getElementById('downloadSlipBtn').onclick = downloadSlipPDF;
+        
+    })
+    .catch(error => {
+        slipContainer.innerHTML = `<p class="p-8 text-center text-red-600 bg-red-50 rounded-lg">Gagal memuat slip gaji: ${error.message}</p>`;
+    });
+}
 
 /**
  * FUNGSI BARU: Menghitung jumlah hari libur (selain Minggu) dalam bulan tertentu.
