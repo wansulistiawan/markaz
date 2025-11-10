@@ -1187,6 +1187,106 @@
     margin-top: 10px;
 }
 
+/* === (BARU) CSS UNTUK ANIMASI TIPS === */
+@keyframes bobbing {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+
+#tips-container {
+    position: fixed;
+    bottom: 70px;
+    left: 50px; /* Pindah ke kiri agar tidak tabrakan dengan tombol sholat */
+    z-index: 40; /* Di bawah modal, tapi di atas konten */
+    width: 280px;
+    display: flex;
+    align-items: flex-end;
+}
+
+#tips-santri {
+    width: 80px;
+    height: auto;
+    animation: bobbing 3s ease-in-out infinite;
+    z-index: 42;
+}
+
+#tips-bubble {
+    position: relative;
+    background: #f1f5f9; /* bg-slate-100 */
+    border-radius: 10px;
+    padding: 12px;
+    margin-left: -15px;
+    margin-bottom: 20px;
+    width: 215px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border: 1px solid #cbd5e1; /* border-slate-300 */
+    z-index: 41;
+    
+    /* Logika Tampil/Sembunyi */
+    opacity: 0;
+    transform: translateY(20px);
+    visibility: hidden;
+    transition: all 0.4s ease-out;
+}
+
+#tips-bubble.visible {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+/* Ekor gelembung */
+#tips-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: 15px;
+    left: -10px;
+    width: 0;
+    height: 0;
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-right: 10px solid #cbd5e1; /* Warna border */
+}
+#tips-bubble::before {
+    content: '';
+    position: absolute;
+    bottom: 15px;
+    left: -9px;
+    width: 0;
+    height: 0;
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-right: 10px solid #f1f5f9; /* Warna background */
+    z-index: 1;
+}
+
+#tips-content {
+    font-size: 0.9rem;
+    color: #334155; /* text-slate-700 */
+    max-height: 100px; /* Batasi tinggi tip */
+    overflow-y: auto;
+}
+
+/* Style untuk link di dalam bubble */
+#tips-content a {
+    color: #0d6efd; /* var(--info-color) */
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+/* Interaktivitas: Transparan saat hover */
+#tips-container:hover #tips-bubble {
+    opacity: 0.2;
+    transition: opacity 0.2s;
+}
+
+/* Interaktivitas: Pengecualian jika ada link */
+#tips-container:hover #tips-bubble.has-link {
+    opacity: 1.0;
+    cursor: pointer;
+}
+
     </style>
 </head>
 <body>
@@ -2510,6 +2610,16 @@
         </div>
 </div>
 
+<div id="tips-container" class="hidden">
+    <img id="tips-santri" src="tips.png" alt="Animasi Santri">
+    
+    <div id="tips-bubble">
+        <div id="tips-content">
+            Memuat tips...
+        </div>
+    </div>
+</div>
+
 	<footer><div class="container"><p>&copy; 2025 Yayasan Markaz Yatim Duafa Qurani. Semua Hak Cipta Dilindungi.</p><p>Jl. Protokol Desa Sei Kamah II, Sei Dadap, Asahan, Sumut | <a href="mailto:markazyatimduafaqurani@gmail.com">markazyatimduafaqurani@gmail.com</a> | 085261804096</p></div></footer>
 	
 	<script src="https://www.youtube.com/iframe_api"></script>
@@ -2973,6 +3083,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Data yang sudah diproses akan disimpan di sini
        processedSchedules: {}
     };
+	
+	let userTips = [];
+let tipInterval = null;
+let currentTipIndex = 0;
 	
 	
     /**
@@ -7320,7 +7434,7 @@ function showLoggedInView(userData) {
 		const isMusyrifah = jabatan === 'Musyrifah' || ['wawan', 'admin'].includes(username);
         const financeUsers = ['mia', 'wawan', 'aria', 'yeni', 'admin'];
         const karyawanUsers = ['wawan', 'admin', 'aria', 'yeni', 'mia', 'zhofri', 'erwan', 'mahadi', 'zaidun', 'yanti', 'ryza', 'reza', 'uswah', 'erma'];
-
+		fetchAndStartTips(jabatan);
         const isBendahara = (jabatan.toLowerCase().trim() === 'bendahara');
         const isGuru = (jabatan || '').trim().toLowerCase() === 'guru' || appData.teachers.some(t => t.name === session.userData.profileName);
         const canAccessBankSoal = isGuru || userData.username === 'mia' || userData.username === 'wawan' || userData.username === 'admin';
@@ -7427,6 +7541,10 @@ function showLoggedInView(userData) {
 		document.getElementById('slipGajiNav').classList.add('hidden');
 		document.getElementById('laporanKeuanganNav').classList.add('hidden');
 		document.getElementById('sistemInformasiDropdown').classList.add('hidden');
+		if (tipInterval) clearInterval(tipInterval);
+    tipInterval = null;
+    userTips = [];
+    document.getElementById('tips-container').classList.add('hidden');
         localStorage.removeItem('userSession');
         sessionStorage.removeItem('userSession');
         const protectedHashes = ['#absensi', '#profile', '#sistem-informasi'];
@@ -8714,6 +8832,65 @@ async function fetchPelanggaranNotifications() {
     } catch (error) {
         console.error("Gagal mengambil notifikasi pelanggaran:", error);
     }
+}
+
+async function fetchAndStartTips(jabatan) {
+  // Hentikan interval lama jika ada
+  if (tipInterval) clearInterval(tipInterval);
+
+  try {
+    const response = await fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'getTips', jabatan: jabatan }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    });
+    const result = await response.json();
+
+    if (result.status === 'success' && result.tips.length > 0) {
+        userTips = result.tips; // Simpan tips
+        currentTipIndex = 0; // Mulai dari awal
+
+        // Tampilkan container animasi
+        document.getElementById('tips-container').classList.remove('hidden');
+
+        // Panggil rotasi pertama kali, lalu set interval
+        rotateTips(); // Tampilkan tip pertama
+        // Interval = 10 detik (tampil) + 4 detik (sembunyi) = 14 detik
+        tipInterval = setInterval(rotateTips, 14000); 
+    }
+  } catch (error) {
+    console.error("Gagal mengambil tips:", error);
+  }
+}
+
+/**
+ * FUNGSI BARU: Menampilkan satu tip dan menjadwalkan untuk sembunyi
+ */
+function rotateTips() {
+    if (userTips.length === 0) return;
+
+    const bubble = document.getElementById('tips-bubble');
+    const content = document.getElementById('tips-content');
+    if (!bubble || !content) return;
+
+    // Ambil tip berikutnya
+    const tipHtml = userTips[currentTipIndex];
+    content.innerHTML = tipHtml;
+
+    // Cek apakah tip ini mengandung link
+    const containsLink = /<a|http/i.test(tipHtml);
+    bubble.classList.toggle('has-link', containsLink);
+
+    // Tampilkan bubble
+    bubble.classList.add('visible');
+
+    // Jadwalkan untuk sembunyi setelah 10 detik
+    setTimeout(() => {
+        bubble.classList.remove('visible');
+    }, 10000); // Durasi tampil 10 detik
+
+    // Pindah ke indeks tip berikutnya
+    currentTipIndex = (currentTipIndex + 1) % userTips.length;
 }
 
 
