@@ -7709,11 +7709,49 @@ function renderNewsCards() {
 }
 
     function populateSubstituteTeachers() {
-        const selectElement = document.getElementById('substituteTeacherName');
-        if (!selectElement) return;
-        const session = getActiveSession();
-        const currentTeacherName = (session && session.userData) ? session.userData.profileName : '';
-        selectElement.innerHTML = '<option value="">Pilih Guru...</option>'; 
+    const selectElement = document.getElementById('substituteTeacherName');
+    if (!selectElement) return;
+
+    const session = getActiveSession();
+    const currentTeacherName = (session && session.userData) ? session.userData.profileName : '';
+    selectElement.innerHTML = '<option value="">Pilih Guru...</option>'; 
+
+    try {
+        // --- AWAL LOGIKA BARU ---
+        
+        // 1. Dapatkan data jadwal untuk bulan akademik saat ini
+        // appState.activeMonthKey sudah diatur saat inisialisasi oleh setDefaultActiveTab()
+        const activeSchedule = appState.processedSchedules[appState.activeMonthKey];
+
+        if (!activeSchedule || activeSchedule.length === 0) {
+            // Jika roster bulan ini kosong, lempar error agar ditangani fallback
+            throw new Error("Jadwal roster untuk bulan ini tidak ditemukan.");
+        }
+
+        // 2. Ambil semua nama guru unik dari roster bulan ini
+        const activeTeachers = activeSchedule
+            .map(item => item.teacher) // Ambil semua nama guru
+            .filter(Boolean); // Hapus entri yang kosong (misal: "Istirahat")
+        
+        const uniqueTeacherNames = [...new Set(activeTeachers)].sort(); // Ambil nama unik dan urutkan
+
+        // 3. Isi dropdown dengan guru yang aktif di roster
+        uniqueTeacherNames.forEach(teacherName => {
+            // Jangan masukkan diri sendiri ke daftar yang bisa digantikan
+            if (teacherName !== currentTeacherName) {
+                const option = document.createElement('option');
+                option.value = teacherName;
+                option.textContent = teacherName;
+                selectElement.appendChild(option);
+            }
+        });
+        // --- AKHIR LOGIKA BARU ---
+
+    } catch (error) {
+        // Fallback: Jika terjadi error (misal roster gagal dimuat),
+        // gunakan data statis 'appData.teachers' agar form tetap berfungsi.
+        console.warn("Gagal memuat guru dari roster, menggunakan daftar statis:", error.message);
+        
         appData.teachers.forEach(teacher => {
             if (teacher.name !== currentTeacherName) {
                 const option = document.createElement('option');
@@ -7723,6 +7761,7 @@ function renderNewsCards() {
             }
         });
     }
+}
     
 function handleLoginSubmit(event) {
     event.preventDefault();
