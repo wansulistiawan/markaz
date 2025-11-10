@@ -8630,7 +8630,7 @@ function setupMusyrifEventListeners(role) {
 }
 
 // GANTI SELURUH ISI FUNGSI INI
-function handleMusyrifFormSubmit(event, role, sheetName) { // Diubah dari 'type' ke 'sheetName'
+function handleMusyrifFormSubmit(event, role, sheetName) {
     event.preventDefault();
     const session = getActiveSession();
     if (!session || !session.loggedIn) {
@@ -8650,8 +8650,18 @@ function handleMusyrifFormSubmit(event, role, sheetName) { // Diubah dari 'type'
     submitBtn.disabled = true;
     submitBtn.textContent = 'Mengirim...';
 
+    // --- (BARU) Pemetaan dari sheetName ke action backend ---
+    // Ini memperbaiki bug di mana frontend mengirim 'submitNilaiTahfidz'
+    // padahal backend mengharapkan 'submitTahfidz'.
+    const actionMap = {
+        'KegiatanHarian': 'submitKegiatan',
+        'NilaiTahfidz': 'submitTahfidz',
+        'Pelanggaran': 'submitPelanggaran'
+    };
+    // --- AKHIR BLOK BARU ---
+
     let data = {
-        action: `submit${sheetName}`, // (PERUBAHAN) Menggunakan sheetName langsung
+        action: actionMap[sheetName], // (PERBAIKAN) Menggunakan action name yang benar
         musyrif: session.userData.profileName,
         tanggal: form.querySelector('input[type="date"]').value,
         namaSantri: santriSelect.value,
@@ -8659,11 +8669,10 @@ function handleMusyrifFormSubmit(event, role, sheetName) { // Diubah dari 'type'
 
     const roleCapitalized = role.charAt(0).toUpperCase() + role.slice(1);
 
-    if (sheetName === 'KegiatanHarian') { // (PERUBAHAN)
+    if (sheetName === 'KegiatanHarian') {
         data.status = form.querySelector(`input[name="statusKegiatan${roleCapitalized}"]:checked`).value;
         data.keterangan = form.querySelector(`#keteranganKegiatan${roleCapitalized}`).value || '-';
-    } else if (sheetName === 'NilaiTahfidz') { // (PERUBAHAN)
-        // ... (Logika poin dan teks tahfidz tetap sama) ...
+    } else if (sheetName === 'NilaiTahfidz') {
         const zPAwal = document.getElementById(`ziyadahPAyatAwal${roleCapitalized}`).value;
         const zPAkhir = document.getElementById(`ziyadahPAyatAkhir${roleCapitalized}`).value;
         const zSAwal = document.getElementById(`ziyadahSAyatAwal${roleCapitalized}`).value;
@@ -8678,7 +8687,7 @@ function handleMusyrifFormSubmit(event, role, sheetName) { // Diubah dari 'type'
         data.ziyadahSText = zSAwal ? `${document.getElementById(`ziyadahSSurah${roleCapitalized}`).value}: ${zSAwal}-${zSAkhir}` : '-';
         data.murajaahPoin = document.getElementById(`murajaahPoin${roleCapitalized}`).value || '0';
         data.murajaahText = mSAwal ? `${mSAwal}: ${mAAwal} - ${mSAkhir}: ${mAAkhir}` : '-';
-    } else if (sheetName === 'Pelanggaran') { // (PERUBAHAN)
+    } else if (sheetName === 'Pelanggaran') {
         data.pelanggaran = document.getElementById(`isiPelanggaran${roleCapitalized}`).value;
         data.solusi = document.getElementById(`solusiPelanggaran${roleCapitalized}`).value;
     }
@@ -8699,7 +8708,7 @@ function handleMusyrifFormSubmit(event, role, sheetName) { // Diubah dari 'type'
                 document.getElementById(`keteranganKegiatan${roleCapitalized}Container`).classList.add('hidden');
             }
             fetchAndRenderDailyReports(role);
-        } else if (result.status === 'duplicate') { // (BARU) Menangani pesan duplikat
+        } else if (result.status === 'duplicate') {
              showMessage(result.message, 'error');
         } else {
             throw new Error(result.message);
