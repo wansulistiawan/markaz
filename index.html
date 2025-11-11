@@ -1374,6 +1374,7 @@
 						<a href="#roster-kbm" id="rosterKbmNav">Roster KBM</a>
 						<a href="#krs" id="krsNav">KRS (Kartu Rencana Studi)</a>
 						<a href="#khs" id="khsNav">KHS (Kartu Hasil Studi)</a>
+						<a href="#hafalan" id="hafalanNav" class="hidden">Progres Hafalan</a>
 						<a href="#slip-gaji" id="slipGajiNav">Slip Gaji</a>
 						<a href="#laporan-keuangan" id="laporanKeuanganNav">Laporan Keuangan</a>
 						<a href="#laporan" id="laporanNav">Laporan Tahfidz</a>
@@ -1422,6 +1423,64 @@
     
     <div id="kegiatanReportContainer" class="mt-8">
         </div>
+	</div>
+	<div id="hafalan" class="page-section hidden container section">
+    <h2 class="text-3xl font-bold text-gray-800">Progres Hafalan Saya</h2>
+    <p class="mb-6 text-gray-600">Grafik ini menampilkan progres muraja'ah Anda per juz. Warna batang menunjukkan kualitas (poin) dan tingkat pudar menunjukkan kapan terakhir kali Anda mengulang hafalan tersebut.</p>
+
+    <div id="hafalan-chart-content" class="bg-white p-4 rounded-lg shadow" style="height: 400px;">
+        <canvas id="hafalanChart" style="height: 400px;"></canvas>
+    </div>
+
+    <div id="hafalan-legend-container" class="mt-6 p-4 bg-gray-50 rounded-lg border">
+        <h4 class="text-base font-bold mb-3 text-gray-800">Keterangan Grafik:</h4>
+        
+        <div class="mb-4">
+            <p class="text-sm font-semibold mb-2">Warna Batang (berdasarkan Poin Rata-rata):</p>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(59, 130, 246);"></span>
+                    <span class="legend-text">Sangat Baik (9.0+)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(22, 163, 74);"></span>
+                    <span class="legend-text">Baik (7.1 - 8.9)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(234, 179, 8);"></span>
+                    <span class="legend-text">Cukup (5.1 - 7.0)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(220, 38, 38);"></span>
+                    <span class="legend-text">Kurang (&lt; 5.1)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(156, 163, 175);"></span>
+                    <span class="legend-text">Poin 0</span>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <p class="text-sm font-semibold mb-2">Tingkat Pudar (berdasarkan Waktu Muraja'ah Terakhir):</p>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(22, 163, 74); opacity: 1.0;"></span>
+                    <span class="legend-text">Baru Saja</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color-box" style="background-color: rgb(22, 163, 74); opacity: 0.6;"></span>
+                    <span class="legend-text">Beberapa Bulan Lalu</span>
+                </div>
+                <div class="legend-item">
+                <span class="legend-color-box" style="background-color: rgb(22, 163, 74); opacity: 0.1; border: 1px solid #ddd;"></span>
+                    <span class="legend-text">> 1 Tahun (Hilang)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+	
 </div>
 	
 	<div id="tahfidz-chart-container" class="mt-12 pt-8 border-t hidden px-4">
@@ -4692,6 +4751,7 @@ function setupExamSecurityListeners() {
 
 let tahfidzChartInstance = null;
 let murajaahChartInstance = null;
+let hafalanChartInstance = null;
 
 async function renderTahfidzChart(santriName, startDate, endDate) {
     const container = document.getElementById('ziyadah-chart-content');
@@ -4880,6 +4940,103 @@ async function renderMurajaahJuzChart(santriName) {
 
     } catch (error) {
         console.error("Gagal membuat grafik Muraja'ah:", error);
+        container.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat grafik: ${error.message}</p>`;
+    }
+}
+
+async function renderSantriHafalanChart(santriName) {
+    // ID BARU (sesuai halaman #hafalan)
+    const container = document.getElementById('hafalan-chart-content'); 
+    if (!container) {
+        console.error("Gagal menemukan kontainer #hafalan-chart-content");
+        return; 
+    }
+    
+    container.innerHTML = '<canvas id="hafalanChart" style="height: 400px;"></canvas>'; // ID BARU
+    const ctx = document.getElementById('hafalanChart').getContext('2d'); // ID BARU
+
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getMurajaahJuzReport', santriName: santriName })
+        });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        const filteredReport = result.report.filter(item => item.percent > 0);
+
+        if (filteredReport.length === 0) {
+            container.innerHTML = '<p class="p-8 text-center text-gray-500">Belum ada progres muraja\'ah yang tercatat untuk Anda.</p>';
+            if (hafalanChartInstance) { // INSTANCE BARU
+                hafalanChartInstance.destroy();
+            }
+            return;
+        }
+
+        const labels = filteredReport.map(item => `Juz ${item.juz}`);
+        const percentages = filteredReport.map(item => item.percent);
+        
+        const barColors = filteredReport.map(item => 
+            calculateDecayColor(item.avgPoin, item.tanggalSetoranTerakhir)
+        );
+
+        if (hafalanChartInstance) { // INSTANCE BARU
+            hafalanChartInstance.destroy();
+        }
+
+        // INSTANCE BARU
+        hafalanChartInstance = new Chart(ctx, { 
+            type: 'bar',
+            data: {
+                labels: labels, 
+                datasets: [{
+                    label: 'Persentase Selesai',
+                    data: percentages, 
+                    backgroundColor: barColors,
+                    borderColor: barColors.map(color => color.replace(/, [0-9.]+\)/, ', 1)')),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const item = filteredReport[context.dataIndex];
+                                const avgPoin = item.avgPoin ? item.avgPoin.toFixed(1) : '0';
+                                
+                                let dateText = 'Belum tersetor';
+                                if (item.tanggalSetoranTerakhir) {
+                                    dateText = `Setoran terakhir: ${new Date(item.tanggalSetoranTerakhir).toLocaleDateString('id-ID')}`;
+                                }
+                                
+                                return `Status: ${item.percent}% | Avg. Poin: ${avgPoin} | ${dateText}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { callback: value => value + '%' }
+                    },
+                    x: { 
+                        ticks: { 
+                            autoSkip: false, 
+                            maxRotation: 90, 
+                            minRotation: 45 
+                        } 
+                    }
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error("Gagal membuat grafik Hafalan santri:", error);
         container.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat grafik: ${error.message}</p>`;
     }
 }
@@ -7115,6 +7272,14 @@ tabMurajaah.addEventListener('click', (e) => {
 });
 				}
 			}
+			} else if (targetHash === '#hafalan') {
+        const session = getActiveSession();
+        // Pastikan itu santri, lalu panggil fungsi render baru
+        if (session && session.loggedIn && (session.userData.jabatan || '').trim().toLowerCase() === 'santri') {
+            const santriName = session.userData.profileName;
+            // Panggil fungsi render baru yang akan kita buat
+            renderSantriHafalanChart(santriName);
+        }
         } else if (targetHash === '#slip-gaji') {
     const session = getActiveSession();
     if (session && session.loggedIn) {
@@ -7417,7 +7582,7 @@ function showLoggedInView(userData) {
         ui.navProfilePic.src = 'https://placehold.co/80x80/e9ecef/343a40?text=F';
     }
     ui.userProfile.classList.remove('hidden');
-
+    
     const session = getActiveSession();
     if (session && session.loggedIn) {
         const username = session.username;
@@ -7440,7 +7605,7 @@ function showLoggedInView(userData) {
         const canAccessBankSoal = isGuru || userData.username === 'mia' || userData.username === 'wawan' || userData.username === 'admin';
         const isAdminUjian = ['wawan', 'mia', 'admin'].includes(username);
 		const canSupervise = isGuru || ['wawan', 'mia', 'aria', 'zhofri', 'admin'].includes(username);
-
+		
 		const lihatNilaiNav = document.getElementById('lihatNilaiNav');
         if (lihatNilaiNav) {
             const isWaka = jabatan === 'Waka Kurikulum';
@@ -7448,10 +7613,9 @@ function showLoggedInView(userData) {
             const canAccessNilai = isGuru || isWaka || allowedUsernamesNilai.includes(username);
             lihatNilaiNav.classList.toggle('hidden', !canAccessNilai);
         }
-
+		
 		if (isGuru) {
             fetchAndShowTeacherNotifications();
-            // (PERUBAHAN DI SINI) Panggil notifikasi grading untuk guru
             fetchGradingNotifications(); 
         }
 
@@ -7467,13 +7631,13 @@ function showLoggedInView(userData) {
             const canSeeKasir = allowedUsernames.includes(username) || jabatan === 'santri' || ['wawan', 'admin'].includes(username) ;
             kasirNav.classList.toggle('hidden', !canSeeKasir);
         }
-
+        
         const canAccessSlipGaji = karyawanUsers.includes(username) || isBendahara;
         const canAccessKeuangan = financeUsers.includes(username) || isBendahara;
 
         const showDropdown = isSantri || isKepalaOrWaka || isMusyrif || isMusyrifah || canAccessKeuangan || canAccessSlipGaji || isAdminUjian;
         document.getElementById('sistemInformasiDropdown').classList.toggle('hidden', !showDropdown);
-
+        
         const halamanUjianAdminNav = document.getElementById('halamanUjianAdminNav');
         if(halamanUjianAdminNav) {
             halamanUjianAdminNav.classList.toggle('hidden', !isAdminUjian);
@@ -7482,12 +7646,17 @@ function showLoggedInView(userData) {
 		if (pengawasUjianNav) {
 			pengawasUjianNav.classList.toggle('hidden', !canSupervise);
 		}
-
+        
         document.getElementById('krsNav').classList.toggle('hidden', !isSantri);
         document.getElementById('khsNav').classList.toggle('hidden', !isSantri);
+        
+        // --- (PERUBAHAN DI SINI) ---
+        document.getElementById('hafalanNav').classList.toggle('hidden', !isSantri);
+        // --- AKHIR PERUBAHAN ---
+
         document.getElementById('slipGajiNav').classList.toggle('hidden', !canAccessSlipGaji);
         document.getElementById('laporanKeuanganNav').classList.toggle('hidden', !canAccessKeuangan);
-
+		
 		if (canAccessKeuangan) {
             const tutupBukuContainer = document.getElementById('tutup-buku-gaji-container');
             if(tutupBukuContainer) tutupBukuContainer.classList.remove('hidden');
@@ -7500,31 +7669,30 @@ function showLoggedInView(userData) {
                 document.getElementById('totalGajiTahun')
             );
         }
-
+		
         document.getElementById('laporanNav').classList.toggle('hidden', !isKepalaOrWaka);
         document.getElementById('musyrifNav').classList.toggle('hidden', !isMusyrif);
         document.getElementById('musyrifahNav').classList.toggle('hidden', !isMusyrifah);
         document.getElementById('halamanGuruNav').classList.toggle('hidden', !canAccessBankSoal);
         document.getElementById('inputSoalNav').classList.toggle('hidden', !isAdminUjian);
-
+		
 		const createFundraisingContainer = document.getElementById('create-fundraising-btn-container');
         if (createFundraisingContainer) {
             const canCreate = ['mia', 'wawan', 'admin'].includes(username);
             createFundraisingContainer.classList.toggle('hidden', !canCreate);
         }
-
+		
         const tugasNav = document.getElementById('tugasNav');
         if (tugasNav) {
             const canAccessTugas = isSantri || isGuru || ['wawan', 'mia', 'aria', 'admin'].includes(username);
             tugasNav.classList.toggle('hidden', !canAccessTugas);
 
             if (isSantri) {
-                // (PERUBAHAN DI SINI) Panggil notifikasi tugas santri
                 fetchTugasNotifications();
             }
         }
     }
-
+    
     if (window.location.hash === '#login') { window.location.hash = '#beranda'; }
 }
 
