@@ -3510,7 +3510,7 @@ function findAcademicMonthForDate(referenceDateStr) {
             { date: "2025-09-22", title: "Awal Materi Bulan III", color: "event-green" },
             //{ date: "2025-10-20", title: "Awal Ujian Bulanan III", color: "event-lightblue", },
             { date: "2025-10-20", title: "Awal Materi Bulan IV", color: "event-green" },
-            { date: "2025-11-17", title: "Awal Ujian UAS Ganjil", color: "event-lightblue", },
+            { date: "2025-11-24", title: "Awal Ujian UAS Ganjil", color: "event-lightblue", },
             { date: "2025-12-01", title: "Penilaian Akhir Semester (PAS)", color: "event-darkblue", span: 12 },
             { date: "2025-12-13", title: "Penerimaan Rapor", color: "event-darkblue" },
 			{ date: "2025-12-15", title: "Pekan Olahraga", color: "event-purple", span: 6},
@@ -4749,6 +4749,25 @@ function setupExamSecurityListeners() {
     // --- AKHIR BLOK BARU ---
 }
 
+function timeAgo(date) {
+        if (!date) return "N/A";
+        const now = new Date();
+        const past = new Date(date);
+        const seconds = Math.floor((now - past) / 1000);
+        
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " tahun lalu";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " bulan lalu";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " hari lalu";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " jam lalu";
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " menit lalu";
+        return "Baru saja";
+    }
+
 let tahfidzChartInstance = null;
 let murajaahChartInstance = null;
 let hafalanChartInstance = null;
@@ -4766,10 +4785,14 @@ async function renderTahfidzChart(santriName, startDate, endDate) {
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
 
-        // FILTER HANYA ZIYADAH
-        const ziyadahData = result.data.filter(item => item.label.includes('Ziyadah'));
-        const labels = ziyadahData.map(item => item.label);
-        const points = ziyadahData.map(item => item.points);
+        // --- (PERBAIKAN BUG DI SINI) ---
+        // Filter lama (salah): const ziyadahData = result.data.filter(item => item.details && !item.details.includes('Muraja\'ah'));
+        // Filter baru (benar): Kita memfilter berdasarkan 'label'
+        const ziyadahData = result.data.filter(item => !item.label.startsWith('Murajaah'));
+        // --- (AKHIR PERBAIKAN) ---
+
+        const labels = ziyadahData.map(item => item.label); // Label sekarang hanya tanggal
+        const points = ziyadahData.map(item => item.points); // Poin sekarang adalah rata-rata P/S
 
         if (tahfidzChartInstance) {
             tahfidzChartInstance.destroy();
@@ -4797,7 +4820,26 @@ async function renderTahfidzChart(santriName, startDate, endDate) {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const item = ziyadahData[context.dataIndex];
+                                const poin = item.points ? item.points.toFixed(1) : '0';
+                                
+                                let label = `Poin (Rata-rata): ${poin}`;
+                                
+                                // (Logika tooltip ini sudah benar)
+                                if (item.details && item.details.length > 0) {
+                                    const detailsList = item.details.split(' | ').join('\n');
+                                    label += `\n\nSetoran:\n${detailsList}`;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
                 scales: {
                     y_poin: { beginAtZero: true, position: 'left', title: { display: true, text: 'Poin' } }
                 }
@@ -4808,34 +4850,36 @@ async function renderTahfidzChart(santriName, startDate, endDate) {
     }
 }
 
-function calculateDecayColor(avgPoin, lastDateStr) {
+function calculateDecayColor(latestPoin, lastDateStr) {
     let R, G, B;
 
-    // 1. Tentukan Warna Dasar berdasarkan Poin (avgPoin)
-    if (avgPoin >= 9)      { R = 59; G = 130; B = 246; } // Biru
-    else if (avgPoin > 7)  { R = 22; G = 163; B = 74;  } // Hijau
-    else if (avgPoin > 5)  { R = 234; G = 179; B = 8;   } // Kuning
-    else if (avgPoin > 0)  { R = 220; G = 38; B = 38;   } // Merah
-    else                   { R = 156; G = 163; B = 175; } // Abu-abu (jika poin 0)
+    // 1. Tentukan Warna Dasar berdasarkan Poin (latestPoin)
+    if (latestPoin >= 9)      { R = 59; G = 130; B = 246; } // Biru
+    else if (latestPoin > 7)  { R = 22; G = 163; B = 74;  } // Hijau
+    else if (latestPoin > 5)  { R = 234; G = 179; B = 8;   } // Kuning
+    else if (latestPoin > 0)  { R = 220; G = 38; B = 38;   } // Merah
+    else                      { R = 156; G = 163; B = 175; } // Abu-abu (jika poin 0)
 
     // 2. Tentukan Opacity berdasarkan Tanggal (lastDateStr)
     let opacity = 1.0; // Default: solid
 
-    if (!lastDateStr) {
-        // Jika tidak ada tanggal (seharusnya tidak terjadi jika persen > 0, tapi untuk keamanan)
-        opacity = 0.7; // Beri opacity standar
-    } else {
+    if (lastDateStr) {
         const today = new Date();
         const lastDate = new Date(lastDateStr);
         const diffTime = Math.abs(today - lastDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        if (diffDays >= 365) {
-            // Jika lebih dari setahun, buat transparan (efek "putih")
-            opacity = 0.1; // Opacity minimal (hampir transparan)
-        } else {
-            // Hitung opacity: 1.0 (baru) -> 0.1 (setahun)
-            opacity = 1.0 - (diffDays / 365) * 0.90;
+        // (PERUBAHAN REQ 2 & 3) Logika pudar per 3 bulan (90 hari)
+        if (diffDays <= 90) {         // 0-3 Bulan (Fresh)
+            opacity = 1.0;
+        } else if (diffDays <= 180) { // 3-6 Bulan
+            opacity = 0.75;
+        } else if (diffDays <= 270) { // 6-9 Bulan
+            opacity = 0.5;
+        } else if (diffDays <= 365) { // 9-12 Bulan
+            opacity = 0.25;
+        } else {                      // > 1 Tahun
+            opacity = 0.1;
         }
     }
     
@@ -4861,9 +4905,7 @@ async function renderMurajaahJuzChart(santriName) {
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
 
-        // --- IMPLEMENTASI IDE 1 (GRAFIK SIMPEL) ---
-        // Filter data: Ambil HANYA item yang progresnya lebih dari 0%
-        const filteredReport = result.report.filter(item => item.percent > 0);
+        const filteredReport = result.report.filter(item => item.percent > 0); 
 
         if (filteredReport.length === 0) {
             container.innerHTML = '<p class="p-8 text-center text-gray-500">Belum ada progres muraja\'ah yang tercatat untuk santri ini.</p>';
@@ -4876,13 +4918,15 @@ async function renderMurajaahJuzChart(santriName) {
         const labels = filteredReport.map(item => `Juz ${item.juz}`);
         const percentages = filteredReport.map(item => item.percent);
         
-        // --- IMPLEMENTASI IDE 2 (WARNA GABUNGAN) ---
-        // Hitung warna untuk setiap batang berdasarkan POIN dan TANGGAL
         const barColors = filteredReport.map(item => 
             calculateDecayColor(item.avgPoin, item.tanggalSetoranTerakhir)
         );
-        // --- AKHIR IMPLEMENTASI ---
-
+        const now = new Date();
+        const barGlows = filteredReport.map(item => {
+            if (!item.tanggalSetoranTerakhir) return 0;
+            const diffDays = (now - new Date(item.tanggalSetoranTerakhir)) / (1000 * 60 * 60 * 24);
+            return (diffDays <= 90) ? 10 : 0;
+        });
 
         if (murajaahChartInstance) {
             murajaahChartInstance.destroy();
@@ -4895,9 +4939,13 @@ async function renderMurajaahJuzChart(santriName) {
                 datasets: [{
                     label: 'Persentase Selesai',
                     data: percentages, 
-                    backgroundColor: barColors, // Menggunakan warna gabungan
-                    borderColor: barColors.map(color => color.replace(/, [0-9.]+\)/, ', 1)')), // Versi solid
-                    borderWidth: 1
+                    backgroundColor: barColors,
+                    borderColor: barColors.map(color => color.replace(/, [0-9.]+\)/, ', 1)')),
+                    borderWidth: 1,
+                    shadowColor: barColors, 
+                    shadowBlur: barGlows,   
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 0
                 }]
             },
             options: {
@@ -4906,19 +4954,31 @@ async function renderMurajaahJuzChart(santriName) {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        // --- (PERBAIKAN TOOLTIP DI SINI) ---
                         callbacks: {
                             label: function(context) {
                                 const item = filteredReport[context.dataIndex];
                                 const avgPoin = item.avgPoin ? item.avgPoin.toFixed(1) : '0';
                                 
+                                // Request 1: Berapa kali dimurajaah
+                                const reviewCountText = `Dimuraja'ah: ${item.reviewCount || 0} kali`;
+                                
+                                // Request 2: Sudah berapa lama
                                 let dateText = 'Belum tersetor';
                                 if (item.tanggalSetoranTerakhir) {
-                                    dateText = `Setoran terakhir: ${new Date(item.tanggalSetoranTerakhir).toLocaleDateString('id-ID')}`;
+                                    // Panggil helper timeAgo
+                                    dateText = `Terakhir: ${timeAgo(item.tanggalSetoranTerakhir)}`;
                                 }
                                 
-                                return `Status: ${item.percent}% | Avg. Poin: ${avgPoin} | ${dateText}`;
+                                // Kembalikan sebagai array agar tampil jadi beberapa baris
+                                return [
+                                    `Status: ${item.percent}% | Poin: ${avgPoin}`,
+                                    reviewCountText,
+                                    dateText
+                                ];
                             }
                         }
+                        // --- (AKHIR PERBAIKAN TOOLTIP) ---
                     }
                 },
                 scales: {
@@ -4945,15 +5005,11 @@ async function renderMurajaahJuzChart(santriName) {
 }
 
 async function renderSantriHafalanChart(santriName) {
-    // ID BARU (sesuai halaman #hafalan)
     const container = document.getElementById('hafalan-chart-content'); 
-    if (!container) {
-        console.error("Gagal menemukan kontainer #hafalan-chart-content");
-        return; 
-    }
+    if (!container) { console.error("Gagal menemukan kontainer #hafalan-chart-content"); return; }
     
-    container.innerHTML = '<canvas id="hafalanChart" style="height: 400px;"></canvas>'; // ID BARU
-    const ctx = document.getElementById('hafalanChart').getContext('2d'); // ID BARU
+    container.innerHTML = '<canvas id="hafalanChart" style="height: 400px;"></canvas>';
+    const ctx = document.getElementById('hafalanChart').getContext('2d');
 
     try {
         const response = await fetch(CONFIG.SCRIPT_URL, {
@@ -4963,11 +5019,11 @@ async function renderSantriHafalanChart(santriName) {
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
 
-        const filteredReport = result.report.filter(item => item.percent > 0);
+        const filteredReport = result.report.filter(item => item.percent > 0); 
 
         if (filteredReport.length === 0) {
             container.innerHTML = '<p class="p-8 text-center text-gray-500">Belum ada progres muraja\'ah yang tercatat untuk Anda.</p>';
-            if (hafalanChartInstance) { // INSTANCE BARU
+            if (hafalanChartInstance) { 
                 hafalanChartInstance.destroy();
             }
             return;
@@ -4979,12 +5035,17 @@ async function renderSantriHafalanChart(santriName) {
         const barColors = filteredReport.map(item => 
             calculateDecayColor(item.avgPoin, item.tanggalSetoranTerakhir)
         );
+        const now = new Date();
+        const barGlows = filteredReport.map(item => {
+            if (!item.tanggalSetoranTerakhir) return 0;
+            const diffDays = (now - new Date(item.tanggalSetoranTerakhir)) / (1000 * 60 * 60 * 24);
+            return (diffDays <= 90) ? 10 : 0;
+        });
 
-        if (hafalanChartInstance) { // INSTANCE BARU
+        if (hafalanChartInstance) { 
             hafalanChartInstance.destroy();
         }
-
-        // INSTANCE BARU
+        
         hafalanChartInstance = new Chart(ctx, { 
             type: 'bar',
             data: {
@@ -4994,7 +5055,11 @@ async function renderSantriHafalanChart(santriName) {
                     data: percentages, 
                     backgroundColor: barColors,
                     borderColor: barColors.map(color => color.replace(/, [0-9.]+\)/, ', 1)')),
-                    borderWidth: 1
+                    borderWidth: 1,
+                    shadowColor: barColors, 
+                    shadowBlur: barGlows,   
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 0
                 }]
             },
             options: {
@@ -5003,19 +5068,31 @@ async function renderSantriHafalanChart(santriName) {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        // --- (PERBAIKAN TOOLTIP DI SINI) ---
                         callbacks: {
                             label: function(context) {
                                 const item = filteredReport[context.dataIndex];
                                 const avgPoin = item.avgPoin ? item.avgPoin.toFixed(1) : '0';
                                 
+                                // Request 1: Berapa kali dimurajaah
+                                const reviewCountText = `Dimuraja'ah: ${item.reviewCount || 0} kali`;
+                                
+                                // Request 2: Sudah berapa lama
                                 let dateText = 'Belum tersetor';
                                 if (item.tanggalSetoranTerakhir) {
-                                    dateText = `Setoran terakhir: ${new Date(item.tanggalSetoranTerakhir).toLocaleDateString('id-ID')}`;
+                                    // Panggil helper timeAgo
+                                    dateText = `Terakhir: ${timeAgo(item.tanggalSetoranTerakhir)}`;
                                 }
                                 
-                                return `Status: ${item.percent}% | Avg. Poin: ${avgPoin} | ${dateText}`;
+                                // Kembalikan sebagai array agar tampil jadi beberapa baris
+                                return [
+                                    `Status: ${item.percent}% | Poin: ${avgPoin}`,
+                                    reviewCountText,
+                                    dateText
+                                ];
                             }
                         }
+                        // --- (AKHIR PERBAIKAN TOOLTIP) ---
                     }
                 },
                 scales: {
