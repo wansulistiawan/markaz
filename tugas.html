@@ -244,46 +244,37 @@ document.addEventListener('DOMContentLoaded', function() {
             deadline.setHours(23, 59, 59, 999);
             const deadlineString = deadline.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
-            // Cek status penilaian
             const totalKiriman = tugas.JumlahKiriman || 0;
             const totalDinilai = tugas.JumlahDinilai || 0;
             const allGraded = (totalKiriman > 0 && totalKiriman === totalDinilai);
             const partiallyGraded = (totalDinilai > 0 && totalKiriman > totalDinilai);
 
-            // Logika Arsip
             const diffTime = now - deadline;
             const daysPassed = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             const isArchived = (allGraded && daysPassed > 14);
 
-            // --- (PERBAIKAN BUG) Logika Tombol Penilaian ---
             let buttonHtml = '';
             let buttonText = '';
             let buttonColorClass = '';
 
             if (totalKiriman === 0) {
-                // Belum ada kiriman
                 buttonText = `Lihat & Nilai (0)`;
-                buttonColorClass = 'btn-secondary'; // Tombol kuning
+                buttonColorClass = 'btn-secondary'; 
             } else if (allGraded) {
-                // Semua sudah dinilai (tapi tetap bisa diklik)
                 buttonText = `Sudah Dinilai (${totalDinilai})`;
-                buttonColorClass = 'bg-gray-500 hover:bg-gray-600 text-white'; // Tombol abu-abu
+                buttonColorClass = 'bg-gray-500 hover:bg-gray-600 text-white'; 
             } else if (partiallyGraded) {
-                // Sebagian sudah dinilai
                 buttonText = `Dinilai Sebagian (${totalDinilai}/${totalKiriman})`;
-                buttonColorClass = 'btn-info'; // Tombol biru
+                buttonColorClass = 'btn-info'; 
             } else {
-                // Ada kiriman, belum ada yang dinilai
                 buttonText = `Lihat & Nilai (${totalKiriman})`;
-                buttonColorClass = 'btn-info'; // Tombol biru
+                buttonColorClass = 'btn-info'; 
             }
             
-            // Tombol selalu memiliki kelas 'btn' dan 'btn-grade', dan TIDAK PERNAH 'disabled'
             buttonHtml = `<button class="btn btn-grade ${buttonColorClass}" data-id="${tugas.ID}">
                               ${buttonText}
                           </button>`;
-            // --- AKHIR PERBAIKAN ---
-
+            
             const editButton = `<button class="btn btn-secondary btn-edit-tugas" data-id="${tugas.ID}">Edit</button>`;
 
             const div = document.createElement('div');
@@ -291,6 +282,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (isArchived) {
                 div.classList.add('is-archived');
+                
+                // --- (PERBAIKAN BUG DI SINI) ---
+                // Secara paksa sembunyikan elemen ini saat pertama kali dibuat
+                div.style.display = 'none'; 
+                // --- AKHIR PERBAIKAN ---
+
                 archivedCount++;
             }
 
@@ -316,46 +313,50 @@ document.addEventListener('DOMContentLoaded', function() {
 }
     
     async function showCreateForm(isEditing = false) { // (DIUBAH) Tambah parameter
-        showView('form');
-        document.getElementById('form-title').textContent = 'Buat Tugas Baru';
-        
-        // (DIUBAH) Hanya reset jika BUKAN mode edit
-        if (!isEditing) {
-            document.getElementById('form-tugas').reset();
-            if (editor) editor.setContents([]);
-        }
+    showView('form');
+    document.getElementById('form-title').textContent = 'Buat Tugas Baru';
+    
+    // --- (PERBAIKAN BUG) Baris ini hilang dan ditambahkan kembali ---
+    if (!editor) editor = initializeEditor('#editor-container');
+    // --- AKHIR PERBAIKAN ---
 
-        // Populate dropdown materi
-        const materiSelect = document.getElementById('input-materi');
-        materiSelect.innerHTML = '<option value="">Memuat materi...</option>';
-        try {
-            const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getRosterData' }) });
-            const result = await response.json();
-            if (result.status !== 'success') throw new Error(result.message);
-
-            const uniqueSubjects = new Map();
-            result.data.forEach(item => {
-                if (item.subject && item.subject.includes(':')) {
-                    const code = item.subject.split(':')[0].trim();
-                    if (!uniqueSubjects.has(code)) {
-                        uniqueSubjects.set(code, item.subject);
-                    }
-                }
-            });
-
-            materiSelect.innerHTML = '<option value="">-- Pilih Materi Pelajaran --</option>';
-            Array.from(uniqueSubjects.entries())
-                 .sort((a,b) => a[1].localeCompare(b[1]))
-                 .forEach(([code, subject]) => {
-                    const option = document.createElement('option');
-                    option.value = code;
-                    option.textContent = subject;
-                    materiSelect.appendChild(option);
-            });
-        } catch (error) {
-            materiSelect.innerHTML = `<option value="">Gagal memuat: ${error.message}</option>`;
-        }
+    // (DIUBAH) Hanya reset jika BUKAN mode edit
+    if (!isEditing) {
+        document.getElementById('form-tugas').reset();
+        if (editor) editor.setContents([]); // Sekarang 'editor' pasti ada
     }
+
+    // Populate dropdown materi
+    const materiSelect = document.getElementById('input-materi');
+    materiSelect.innerHTML = '<option value="">Memuat materi...</option>';
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getRosterData' }) });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        const uniqueSubjects = new Map();
+        result.data.forEach(item => {
+            if (item.subject && item.subject.includes(':')) {
+                const code = item.subject.split(':')[0].trim();
+                if (!uniqueSubjects.has(code)) {
+                    uniqueSubjects.set(code, item.subject);
+                }
+            }
+        });
+
+        materiSelect.innerHTML = '<option value="">-- Pilih Materi Pelajaran --</option>';
+        Array.from(uniqueSubjects.entries())
+             .sort((a,b) => a[1].localeCompare(b[1]))
+             .forEach(([code, subject]) => {
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = subject;
+                materiSelect.appendChild(option);
+        });
+    } catch (error) {
+        materiSelect.innerHTML = `<option value="">Gagal memuat: ${error.message}</option>`;
+    }
+}
 
     async function handleSaveTugas(event) {
     event.preventDefault();
