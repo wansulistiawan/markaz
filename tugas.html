@@ -66,6 +66,94 @@
             background-color: #f9fafb; /* bg-gray-50 */
             opacity: 0.7;
         }
+		
+		/* (BARU) CSS untuk Form Tugas Dinamis */
+        .dynamic-form-section {
+            display: none; /* Sembunyi secara default */
+        }
+        .dynamic-form-section.active {
+            display: block; /* Tampil jika aktif */
+        }
+        
+        /* (BARU) Styling untuk Form Makalah Santri */
+        .makalah-field {
+            margin-bottom: 20px;
+        }
+        .makalah-field label {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .makalah-field textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        /* (BARU) Styling untuk bagian Pendahuluan (read-only) */
+        .makalah-pendahuluan {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+        }
+        .makalah-pendahuluan h4 {
+            font-weight: 600;
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        .makalah-pendahuluan p {
+            margin: 0 0 10px 0;
+            color: #555;
+            white-space: pre-wrap; /* Agar baris baru tetap terlihat */
+        }
+        
+        /* (BARU) Styling untuk Penjelasan Masalah Dinamis */
+        .penjelasan-masalah-item {
+            position: relative;
+            padding-right: 40px; /* Ruang untuk tombol hapus */
+            margin-bottom: 10px;
+        }
+        .btn-hapus-masalah {
+            position: absolute;
+            top: 5px;
+            right: 0;
+            background: #dc3545;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 30px;
+            text-align: center;
+        }
+		
+		/* (BARU) CSS untuk editor-editor di form Makalah Santri */
+        .quill-makalah-editor {
+            min-height: 150px; /* Beri tinggi minimal */
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+        }
+        .quill-makalah-editor .ql-container {
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+        .quill-makalah-editor .ql-toolbar {
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+		
     </style>
 </head>
 <body>
@@ -111,54 +199,124 @@
         </div>
         
         <div id="form-view" class="hidden section">
-            <h2 id="form-title" class="text-xl font-bold mb-6">Buat Tugas Baru</h2>
-            <form id="form-tugas">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="form-group">
-                        <label for="input-judul">Judul Tugas</label>
-                        <input type="text" id="input-judul" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="input-materi">Untuk Materi Pelajaran</label>
-                        <select id="input-materi" required><option value="">Memuat materi...</option></select>
-                    </div>
-                </div>
-                 <div class="form-group">
-                    <label for="input-deadline">Batas Waktu Pengumpulan</label>
-                    <input type="date" id="input-deadline" required>
-                </div>
-                <div class="form-group">
-                    <label>Instruksi / Soal Tugas</label>
-                    <div id="editor-container"></div>
-                </div>
-                <div class="flex gap-4 mt-8">
-                    <button type="submit" class="btn btn-primary">Simpan Tugas</button>
-                    <button type="button" id="btn-cancel-form" class="btn btn-secondary">Batal</button>
-                </div>
-            </form>
+    <h2 id="form-title" class="text-xl font-bold mb-6">Buat Tugas Baru</h2>
+    <form id="form-tugas">
+        <div class="form-group">
+            <label for="input-jenis-tugas">Jenis Tugas</label>
+            <select id="input-jenis-tugas" required>
+                <option value="Essay">Essay (Default)</option>
+                <option value="Makalah">Makalah</option>
+                <option value="Proposal">Proposal</option>
+                <option value="Pilihan Ganda">Pilihan Ganda</option>
+                <option value="Praktik">Praktik</option>
+                <option value="Presentasi">Presentasi</option>
+                <option value="Tugas Lainnya">Tugas Lainnya</option>
+            </select>
         </div>
         
-        <div id="submission-view" class="hidden section">
-             <button type="button" id="btn-cancel-submission-top" class="btn btn-secondary float-right">Kembali ke Daftar Tugas</button>
-             
-             <h2 id="submission-title" class="text-xl font-bold mb-2"></h2>
-             <p class="text-sm text-gray-500 mb-4" id="submission-deadline"></p>
-             <div class="p-4 border rounded-lg bg-gray-50 mb-6">
-                 <h3 class="font-semibold mb-2">Instruksi Tugas:</h3>
-                 <div id="submission-instruction" class="prose content-display"></div>
-             </div>
-             <form id="form-submission">
-                 <input type="hidden" id="submission-tugas-id">
-                 <div class="form-group">
-                     <label>Jawaban Anda</label>
-                     <div id="submission-editor-container"></div>
-                 </div>
-                 <div class="flex gap-4 mt-8">
-                    <button type="submit" class="btn btn-primary">Kirim Jawaban</button>
-                    <button type="button" id="btn-cancel-submission" class.="btn btn-secondary">Kembali ke Daftar Tugas</button>
-                </div>
-             </form>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="form-group">
+                <label for="input-judul">Judul Tugas</label>
+                <input type="text" id="input-judul" required>
+            </div>
+            <div class="form-group">
+                <label for="input-materi">Untuk Materi Pelajaran</label>
+                <select id="input-materi" required><option value="">Memuat materi...</option></select>
+            </div>
         </div>
+         <div class="form-group">
+            <label for="input-deadline">Batas Waktu Pengumpulan</label>
+            <input type="date" id="input-deadline" required>
+        </div>
+        
+        <div id="essay-form-fields" class="dynamic-form-section active">
+            <div class="form-group">
+                <label>Instruksi / Soal Tugas</label>
+                <div id="editor-container"></div>
+            </div>
+        </div>
+        
+        <div id="makalah-form-fields" class="dynamic-form-section">
+            <div class="form-group">
+                <label for="input-makalah-penjelasan">Penjelasan Tugas (Latar Belakang)</label>
+                <textarea id="input-makalah-penjelasan" rows="5" class="w-full p-3 border rounded-md"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="input-makalah-masalah">Permasalahan (Apa yang harus dicari santri)</label>
+                <textarea id="input-makalah-masalah" rows="5" class="w-full p-3 border rounded-md"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="input-makalah-tujuan">Tujuan Tugas</label>
+                <textarea id="input-makalah-tujuan" rows="3" class="w-full p-3 border rounded-md"></textarea>
+            </div>
+        </div>
+        
+        <div class="flex gap-4 mt-8">
+            <button type="submit" class="btn btn-primary">Simpan Tugas</button>
+            <button type="button" id="btn-cancel-form" class="btn btn-secondary">Batal</button>
+        </div>
+    </form>
+</div>
+        
+        <div id="submission-view" class="hidden section">
+     <button type="button" id="btn-cancel-submission-top" class="btn btn-secondary float-right">Kembali ke Daftar Tugas</button>
+     
+     <h2 id="submission-title" class="text-xl font-bold mb-2"></h2>
+     <p class="text-sm text-gray-500 mb-4" id="submission-deadline"></p>
+     
+     <div class="p-4 border rounded-lg bg-gray-50 mb-6">
+         <h3 class="font-semibold mb-2">Instruksi Tugas:</h3>
+         <div id="submission-instruction" class="prose content-display"></div>
+     </div>
+     
+     <form id="form-submission">
+         <input type="hidden" id="submission-tugas-id">
+         <input type="hidden" id="submission-jenis-tugas"> <div id="essay-submission-fields" class="dynamic-form-section active">
+             <div class="form-group">
+                 <label>Jawaban Anda</label>
+                 <div id="submission-editor-container"></div>
+             </div>
+         </div>
+         
+         <div id="makalah-submission-fields" class="dynamic-form-section">
+            <div class="makalah-field">
+                <label for="makalah-cover">Cover (Judul, Nama, Kelas)</label>
+                <div id="makalah-cover" class="quill-makalah-editor"></div>
+            </div>
+            <div class="makalah-field">
+                <label for="makalah-pengantar">Kata Pengantar</label>
+                <div id="makalah-pengantar" class="quill-makalah-editor"></div>
+            </div>
+            
+            <div class="makalah-field">
+                <label>Pendahuluan (Dari Guru)</label>
+                <div id="makalah-pendahuluan" class="makalah-pendahuluan">
+                    </div>
+            </div>
+            
+            <div class="makalah-field">
+                <label>Pembahasan Masalah</label>
+                <div id="penjelasan-masalah-container">
+                    </div>
+                <button type="button" id="btn-tambah-masalah" class="btn btn-info mt-2">+ Tambah Bagian Pembahasan</button>
+            </div>
+            
+             <div class="makalah-field">
+                <label for="makalah-kesimpulan">Kesimpulan dan Saran</label>
+                <div id="makalah-kesimpulan" class="quill-makalah-editor"></div>
+            </div>
+             <div class="makalah-field">
+                <label for="makalah-pustaka">Sumber (Daftar Pustaka)</label>
+                <div id="makalah-pustaka" class="quill-makalah-editor"></div>
+            </div>
+         </div>
+         
+         <div class="flex gap-4 mt-8">
+            <button type="submit" class="btn btn-primary">Kirim Jawaban</button>
+            <button type="button" id="btn-cancel-submission" class="btn btn-secondary">Kembali ke Daftar Tugas</button>
+        </div>
+     </form>
+</div>
 
         <div id="grading-view" class="hidden section">
             <button id="btn-back-to-teacher-dash-top" class="btn btn-secondary float-right">Kembali ke Daftar Tugas</button>
@@ -182,6 +340,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const messageBox = document.getElementById('messageBox');
     
     let editor, submissionEditor;
+	let makalahEditors = {}; // Untuk menyimpan semua instance editor makalah
+    let isFormDirty = false;  // Untuk melacak perubahan form
 
     const showLoading = () => loadingOverlay.classList.remove('hidden');
     const hideLoading = () => loadingOverlay.classList.add('hidden');
@@ -191,6 +351,81 @@ document.addEventListener('DOMContentLoaded', function() {
     function showView(viewId) { Object.values(views).forEach(v => v.classList.add('hidden')); if(views[viewId]) views[viewId].classList.remove('hidden'); }
     function initializeEditor(containerId) { return new Quill(containerId, { theme: 'snow', modules: { toolbar: [[{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline', 'strike'], ['link', 'image', 'formula'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] } }); }
     
+	function addPenjelasanMasalah(nomor, konten = '') {
+        const container = document.getElementById('penjelasan-masalah-container');
+        const newItem = document.createElement('div');
+        newItem.className = 'penjelasan-masalah-item';
+        const newEditorId = `makalah-masalah-${nomor}`; // ID unik untuk div
+
+        // (DIUBAH) Buat div untuk Quill, bukan textarea
+        newItem.innerHTML = `
+            <div id="${newEditorId}" class="quill-makalah-editor">${konten}</div>
+            <button type="button" class="btn-hapus-masalah" data-id="${newEditorId}">×</button>
+        `;
+        container.appendChild(newItem);
+
+        // (BARU) Inisialisasi Quill untuk editor baru
+        const newEditor = initializeEditor(`#${newEditorId}`);
+        makalahEditors[newEditorId] = newEditor; // Simpan instance editor
+        
+        // (BARU) Pasang listener untuk 'form dirty' (Request 2)
+        newEditor.on('text-change', () => { isFormDirty = true; });
+
+        // Pasang listener ke tombol hapus
+        newItem.querySelector('.btn-hapus-masalah').addEventListener('click', (e) => {
+            if (document.querySelectorAll('.penjelasan-masalah-item').length > 1) {
+                const editorId = e.target.dataset.id;
+                delete makalahEditors[editorId]; // Hapus instance editor dari object
+                e.target.closest('.penjelasan-masalah-item').remove();
+            } else {
+                showMessage('Minimal harus ada satu bagian pembahasan.', 'error');
+            }
+        });
+    }
+
+// (BARU) Fungsi untuk menggabungkan jawaban Makalah
+function combineMakalahAnswers() {
+        let html = '';
+        
+        const addSection = (title, contentHtml) => {
+            // Cek jika konten BUKAN default Quill (<p><br></p>)
+            if (contentHtml && contentHtml !== '<p><br></p>') {
+                // Tidak perlu replace \n, karena Quill sudah menghasilkan HTML
+                html += `<h2>${title}</h2><div>${contentHtml}</div><br /><hr /><br />`;
+            }
+        };
+
+        // (DIUBAH) Ambil konten dari editor Quill
+        addSection('Cover', makalahEditors.cover.root.innerHTML);
+        addSection('Kata Pengantar', makalahEditors.pengantar.root.innerHTML);
+        
+        // Ambil Pendahuluan (yang read-only)
+        const pendahuluanEl = document.getElementById('makalah-pendahuluan');
+        html += `<h2>Pendahuluan (Instruksi Guru)</h2>
+                 <div style="background:#f4f4f4; padding:10px; border-radius:5px;">
+                   <h4>Latar Belakang:</h4>
+                   <p>${pendahuluanEl.querySelector('#guru-penjelasan').innerHTML}</p>
+                   <h4>Permasalahan:</h4>
+                   <p>${pendahuluanEl.querySelector('#guru-masalah').innerHTML}</p>
+                   <h4>Tujuan:</h4>
+                   <p>${pendahuluanEl.querySelector('#guru-tujuan').innerHTML}</p>
+                 </div><br /><hr /><br />`;
+        
+        // Ambil semua Pembahasan Masalah
+        Object.keys(makalahEditors).forEach(key => {
+            if (key.startsWith('makalah-masalah-')) {
+                const nomor = key.split('-')[2];
+                addSection(`Pembahasan Masalah ${nomor}`, makalahEditors[key].root.innerHTML);
+            }
+        });
+
+        // (DIUBAH) Ambil konten dari editor Quill
+        addSection('Kesimpulan dan Saran', makalahEditors.kesimpulan.root.innerHTML);
+        addSection('Daftar Pustaka', makalahEditors.pustaka.root.innerHTML);
+
+        return html;
+    }
+	
     function findAcademicMonthForDate(referenceDateStr) {
         if (!referenceDateStr || !referenceDateStr.includes('-')) return 0;
         const refParts = referenceDateStr.split('-');
@@ -312,232 +547,275 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
     
-    async function showCreateForm(isEditing = false) { // (DIUBAH) Tambah parameter
-    showView('form');
-    document.getElementById('form-title').textContent = 'Buat Tugas Baru';
-    
-    // --- (PERBAIKAN BUG) Baris ini hilang dan ditambahkan kembali ---
-    if (!editor) editor = initializeEditor('#editor-container');
-    // --- AKHIR PERBAIKAN ---
+    async function showCreateForm(isEditing = false) { 
+        showView('form');
+        document.getElementById('form-title').textContent = 'Buat Tugas Baru';
+        
+        isFormDirty = false; // (BARU) Reset status
 
-    // (DIUBAH) Hanya reset jika BUKAN mode edit
-    if (!isEditing) {
-        document.getElementById('form-tugas').reset();
-        if (editor) editor.setContents([]); // Sekarang 'editor' pasti ada
+        if (!editor) editor = initializeEditor('#editor-container');
+        
+        const jenisTugasSelect = document.getElementById('input-jenis-tugas');
+        const essayFields = document.getElementById('essay-form-fields');
+        const makalahFields = document.getElementById('makalah-form-fields');
+        
+        if (!isEditing) {
+            document.getElementById('form-tugas').reset();
+            if (editor) editor.setContents([]);
+            jenisTugasSelect.value = "Essay"; 
+        }
+        
+        essayFields.classList.add('active');
+        makalahFields.classList.remove('active');
+
+        jenisTugasSelect.removeEventListener('change', handleJenisTugasChange);
+        jenisTugasSelect.addEventListener('change', handleJenisTugasChange);
+        
+        // --- (BARU) Pasang listener 'dirty' ---
+        editor.on('text-change', () => { isFormDirty = true; });
+        document.getElementById('input-judul').oninput = () => { isFormDirty = true; };
+        document.getElementById('input-deadline').oninput = () => { isFormDirty = true; };
+        document.getElementById('input-makalah-penjelasan').oninput = () => { isFormDirty = true; };
+        document.getElementById('input-makalah-masalah').oninput = () => { isFormDirty = true; };
+        document.getElementById('input-makalah-tujuan').oninput = () => { isFormDirty = true; };
+        // --- AKHIR BLOK BARU ---
+
+
+        // Populate dropdown materi (Logic tetap sama)
+        const materiSelect = document.getElementById('input-materi');
+        materiSelect.innerHTML = '<option value="">Memuat materi...</option>';
+        try {
+            const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getRosterData' }) });
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+            const uniqueSubjects = new Map();
+            result.data.forEach(item => { if (item.subject && item.subject.includes(':')) { const code = item.subject.split(':')[0].trim(); if (!uniqueSubjects.has(code)) { uniqueSubjects.set(code, item.subject); } } });
+            materiSelect.innerHTML = '<option value="">-- Pilih Materi Pelajaran --</option>';
+            Array.from(uniqueSubjects.entries()).sort((a,b) => a[1].localeCompare(b[1])).forEach(([code, subject]) => { const option = document.createElement('option'); option.value = code; option.textContent = subject; materiSelect.appendChild(option); });
+        } catch (error) {
+            materiSelect.innerHTML = `<option value="">Gagal memuat: ${error.message}</option>`;
+        }
     }
 
-    // Populate dropdown materi
-    const materiSelect = document.getElementById('input-materi');
-    materiSelect.innerHTML = '<option value="">Memuat materi...</option>';
-    try {
-        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getRosterData' }) });
-        const result = await response.json();
-        if (result.status !== 'success') throw new Error(result.message);
+function handleJenisTugasChange() {
+    const jenis = document.getElementById('input-jenis-tugas').value;
+    const essayFields = document.getElementById('essay-form-fields');
+    const makalahFields = document.getElementById('makalah-form-fields');
 
-        const uniqueSubjects = new Map();
-        result.data.forEach(item => {
-            if (item.subject && item.subject.includes(':')) {
-                const code = item.subject.split(':')[0].trim();
-                if (!uniqueSubjects.has(code)) {
-                    uniqueSubjects.set(code, item.subject);
-                }
-            }
-        });
+    // Sembunyikan semua
+    essayFields.classList.remove('active');
+    makalahFields.classList.remove('active');
 
-        materiSelect.innerHTML = '<option value="">-- Pilih Materi Pelajaran --</option>';
-        Array.from(uniqueSubjects.entries())
-             .sort((a,b) => a[1].localeCompare(b[1]))
-             .forEach(([code, subject]) => {
-                const option = document.createElement('option');
-                option.value = code;
-                option.textContent = subject;
-                materiSelect.appendChild(option);
-        });
-    } catch (error) {
-        materiSelect.innerHTML = `<option value="">Gagal memuat: ${error.message}</option>`;
+    // Tampilkan yang relevan
+    if (jenis === 'Makalah') {
+        makalahFields.classList.add('active');
+    } else {
+        // Default ke Essay (untuk Essay, Praktik, Presentasi, dll)
+        essayFields.classList.add('active');
     }
 }
 
     async function handleSaveTugas(event) {
     event.preventDefault();
+
+    if (isFormDirty) { // (BARU) Hanya setel false jika memang dirty
+        isFormDirty = false; // (BARU) Nonaktifkan peringatan
+    }
+
     showLoading();
-    
+    // ... (sisa kodenya sama persis) ...
     const form = event.target;
     const tugasIdInput = form.querySelector('input[name="tugasId"]');
     const isEditing = tugasIdInput && tugasIdInput.value;
-
+    const jenisTugas = document.getElementById('input-jenis-tugas').value;
     const session = getActiveSession();
     const data = {
-        action: isEditing ? 'updateTugas' : 'createTugas', // <-- Logika cerdas di sini
+        action: isEditing ? 'updateTugas' : 'createTugas',
         Judul: document.getElementById('input-judul').value,
         KodeMateri: document.getElementById('input-materi').value,
         Deadline: document.getElementById('input-deadline').value,
-        KontenHTML: editor.root.innerHTML,
-        DibuatOleh: session.userData.profileName
+        DibuatOleh: session.userData.profileName,
+        JenisTugas: jenisTugas
     };
-
-    // Jika sedang mengedit, tambahkan ID tugas ke data yang dikirim
-    if (isEditing) {
-        data.tugasId = tugasIdInput.value;
+    if (isEditing) { data.tugasId = tugasIdInput.value; }
+    if (jenisTugas === 'Makalah') {
+        const makalahData = {
+            penjelasan: document.getElementById('input-makalah-penjelasan').value,
+            masalah: document.getElementById('input-makalah-masalah').value,
+            tujuan: document.getElementById('input-makalah-tujuan').value
+        };
+        data.KontenHTML = JSON.stringify(makalahData);
+    } else {
+        data.KontenHTML = editor.root.innerHTML;
+        if (data.KontenHTML === '<p><br></p>') {
+            showMessage('Instruksi tugas tidak boleh kosong.', 'error');
+            hideLoading();
+            isFormDirty = true; // (BARU) Gagal simpan, aktifkan lagi
+            return;
+        }
     }
-
-    if (data.KontenHTML === '<p><br></p>') {
-        showMessage('Instruksi tugas tidak boleh kosong.', 'error');
-        hideLoading();
-        return;
-    }
-
     try {
         const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
-        
         showMessage(`Tugas berhasil ${isEditing ? 'diperbarui' : 'disimpan'}!`, 'success');
-        
-        // Hapus ID tugas dari form agar form kembali ke mode 'buat baru'
-        if (tugasIdInput) {
-            tugasIdInput.value = '';
-        }
-
+        if (tugasIdInput) { tugasIdInput.value = ''; }
         await loadTeacherDashboard();
         showView('teacher');
     } catch (error) {
         showMessage(`Gagal menyimpan: ${error.message}`, 'error');
+        isFormDirty = true; // (BARU) Gagal simpan, aktifkan lagi
     } finally {
         hideLoading();
     }
 }
 	
 	async function showEditForm(tugasId) {
-        showLoading();
-        // (DIUBAH) Panggil showCreateForm dengan mode 'true' (sedang mengedit)
-        await showCreateForm(true); 
-        showView('form'); // Pastikan view terlihat setelah 'await'
-        
-        // (Sisa fungsi ini hampir sama, hanya memindahkan inisialisasi editor)
-        const form = document.getElementById('form-tugas');
-        let idInput = form.querySelector('input[name="tugasId"]');
-        if (!idInput) {
-            idInput = document.createElement('input');
-            idInput.type = 'hidden';
-            idInput.name = 'tugasId';
-            form.appendChild(idInput);
-        }
-        idInput.value = tugasId;
+    showLoading();
+    await showCreateForm(true); // Panggil form, tapi tandai sebagai mode edit
+    showView('form'); 
 
-        try {
-            const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getTugasDetail', tugasId: tugasId }) });
-            const result = await response.json();
-            if (result.status !== 'success') throw new Error(result.message);
-            
-            const tugas = result.data;
-            document.getElementById('form-title').textContent = 'Edit Tugas';
-            document.getElementById('input-judul').value = tugas.Judul;
-            document.getElementById('input-deadline').value = new Date(tugas.Deadline).toISOString().split('T')[0];
-            
-            // (DIUBAH) Inisialisasi editor dipindah ke sini
+    const form = document.getElementById('form-tugas');
+    let idInput = form.querySelector('input[name="tugasId"]');
+    if (!idInput) {
+        idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'tugasId';
+        form.appendChild(idInput);
+    }
+    idInput.value = tugasId;
+
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getTugasDetail', tugasId: tugasId }) });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        const tugas = result.data;
+        document.getElementById('form-title').textContent = 'Edit Tugas';
+        document.getElementById('input-judul').value = tugas.Judul;
+        document.getElementById('input-deadline').value = new Date(tugas.Deadline).toISOString().split('T')[0];
+
+        // (BARU) Set Jenis Tugas dan picu listener-nya
+        const jenisTugasSelect = document.getElementById('input-jenis-tugas');
+        jenisTugasSelect.value = tugas.JenisTugas || 'Essay';
+        handleJenisTugasChange(); // Panggil ini untuk menampilkan form yang benar
+
+        // (BARU) Isi form sesuai JenisTugas
+        if (tugas.JenisTugas === 'Makalah') {
+            try {
+                const makalahData = JSON.parse(tugas.KontenHTML);
+                document.getElementById('input-makalah-penjelasan').value = makalahData.penjelasan || '';
+                document.getElementById('input-makalah-masalah').value = makalahData.masalah || '';
+                document.getElementById('input-makalah-tujuan').value = makalahData.tujuan || '';
+            } catch(e) {
+                console.error("Gagal parse JSON Makalah:", e);
+            }
+        } else {
+            // Jika Essay (atau lainnya), isi editor
             if (!editor) editor = initializeEditor('#editor-container');
             editor.root.innerHTML = tugas.KontenHTML;
-
-            // (DIUBAH) Diberi jeda agar dropdown (dari showCreateForm) selesai render
-            setTimeout(() => {
-                document.getElementById('input-materi').value = tugas.KodeMateri;
-            }, 100); // 100ms harusnya cukup
-
-        } catch (error) {
-            showMessage(`Gagal memuat data tugas: ${error.message}`, 'error');
-            showView('teacher');
-        } finally {
-            hideLoading();
         }
+
+        setTimeout(() => {
+            document.getElementById('input-materi').value = tugas.KodeMateri;
+        }, 100); 
+
+    } catch (error) {
+        showMessage(`Gagal memuat data tugas: ${error.message}`, 'error');
+        showView('teacher');
+    } finally {
+        hideLoading();
     }
+}
 
 
     async function loadStudentDashboard() {
-        const container = document.getElementById('tugas-list-student');
-        const archiveBtn = document.getElementById('btn-toggle-archive'); // (BARU)
-        container.innerHTML = '<p>Memuat daftar tugas...</p>';
+    const container = document.getElementById('tugas-list-student');
+    const archiveBtn = document.getElementById('btn-toggle-archive');
+    container.innerHTML = '<p>Memuat daftar tugas...</p>';
+    
+    try {
+        const session = getActiveSession();
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: 'getTugas', 
+                for: 'student', 
+                username: session.username, 
+                namaSantri: session.userData.profileName 
+            })
+        });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
         
-        try {
-            const session = getActiveSession();
-            const response = await fetch(CONFIG.SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ 
-                    action: 'getTugas', 
-                    for: 'student', 
-                    username: session.username, 
-                    namaSantri: session.userData.profileName 
-                })
-            });
-            const result = await response.json();
-            if (result.status !== 'success') throw new Error(result.message);
+        container.innerHTML = result.data.length === 0 ? '<p class="text-gray-500">Tidak ada tugas yang relevan untuk Anda saat ini.</p>' : '';
+        
+        const now = new Date();
+        now.setHours(0,0,0,0);
+        let archivedCount = 0;
+
+        result.data.forEach(tugas => {
+            const deadlineDate = new Date(tugas.Deadline);
+            deadlineDate.setHours(23, 59, 59, 999);
+            const sudahDinilai = (tugas.Nilai !== null && tugas.Nilai !== undefined && tugas.Nilai !== '');
+            const diffTime = now - deadlineDate;
+            const daysPassed = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
-            container.innerHTML = result.data.length === 0 ? '<p class="text-gray-500">Tidak ada tugas yang relevan untuk Anda saat ini.</p>' : '';
+            // (PERBAIKAN DI SINI) Tentukan status 'Gagal'
+            const isGagal = (tugas.Status === 'Gagal');
+
+            // (PERBAIKAN - REQ 2) Logika Arsip baru
+            const isArchived = (sudahDinilai && daysPassed > 14) || // Tugas lama yang sudah dinilai
+                               (isGagal); // (BARU) Tugas yang Gagal (lewat deadline, 0)
             
-            const now = new Date();
-            now.setHours(0,0,0,0);
-            let archivedCount = 0; // (BARU)
+            const deadlineString = deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            let statusHtml = '';
 
-            result.data.forEach(tugas => {
-                const deadlineDate = new Date(tugas.Deadline);
-                deadlineDate.setHours(23, 59, 59, 999);
-
-                // (PERBAIKAN BUG 3) Cek nilai tidak boleh null, undefined, ATAU string kosong
-                const sudahDinilai = (tugas.Nilai !== null && tugas.Nilai !== undefined && tugas.Nilai !== '');
-
-                const diffTime = now - deadlineDate;
-                const daysPassed = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                const isArchived = (sudahDinilai && daysPassed > 14); // (BARU)
-
-                const deadlineString = deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-                let statusHtml = '';
-
-                if (tugas.Status === 'Terkirim') {
-                    const lewatBatasWaktu = now > deadlineDate;
-
-                    if (sudahDinilai) {
-                        // (PERBAIKAN BUG 3) Tombol abu-abu
-                        statusHtml = `<button class="btn bg-gray-400 text-gray-800 cursor-not-allowed" disabled>Selesai (Nilai: ${tugas.Nilai})</button>`;
-                    } else if (lewatBatasWaktu) {
-                        statusHtml = `<div class="text-sm font-semibold text-red-500">Batas Waktu Habis</div>`;
-                    } else {
-                        statusHtml = `<button class="btn btn-secondary btn-edit-jawaban" data-id="${tugas.ID}" data-submission-id="${tugas.SubmissionID}">Edit Jawaban</button>`;
-                    }
+            if (tugas.Status === 'Terkirim') {
+                const lewatBatasWaktu = now > deadlineDate;
+                if (sudahDinilai) {
+                    statusHtml = `<button class="btn bg-gray-400 text-gray-800 cursor-not-allowed" disabled>Selesai (Nilai: ${tugas.Nilai})</button>`;
+                } else if (lewatBatasWaktu) {
+                    statusHtml = `<div class="text-sm font-semibold text-red-500">Batas Waktu Habis</div>`;
                 } else {
-                    statusHtml = `<button class="btn btn-info btn-work" data-id="${tugas.ID}">Kerjakan</button>`;
+                    statusHtml = `<button class="btn btn-secondary btn-edit-jawaban" data-id="${tugas.ID}" data-submission-id="${tugas.SubmissionID}">Edit Jawaban</button>`;
                 }
+            } else if (isGagal) { // (PERBAIKAN) Gunakan status 'Gagal'
+                statusHtml = `<button class="btn bg-red-600 text-white cursor-not-allowed" disabled>Tugas Tidak Selesai (Nilai: 0)</button>`;
+            } else { // Status 'Belum Dikerjakan'
+                statusHtml = `<button class="btn btn-info btn-work" data-id="${tugas.ID}">Kerjakan</button>`;
+            }
 
-                const div = document.createElement('div');
-                div.className = 'border p-4 rounded-lg flex justify-between items-center';
+            const div = document.createElement('div');
+            div.className = 'border p-4 rounded-lg flex justify-between items-center';
+            
+            if (isArchived) {
+                div.classList.add('is-archived');
+                div.style.display = 'none'; 
+                archivedCount++;
+            }
 
-                // (PERBAIKAN BUG 2) Tambahkan kelas arsip
-                if (isArchived) {
-                    div.classList.add('is-archived');
-                    archivedCount++;
-                }
+            const diffDaysUntilDeadline = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));
+            if (tugas.Status === 'Belum Dikerjakan' && diffDaysUntilDeadline <= 2 && diffDaysUntilDeadline >= 0) {
+                div.classList.add('deadline-warning');
+            }
 
-                const diffDaysUntilDeadline = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));
-                if (tugas.Status !== 'Terkirim' && diffDaysUntilDeadline <= 2 && diffDaysUntilDeadline >= 0) {
-                    div.classList.add('deadline-warning');
-                }
+            div.innerHTML = `
+                <div>
+                    <p class="font-bold">${tugas.Judul}</p>
+                    <p class="text-sm text-gray-500">Untuk: ${tugas.KodeMateri} | Batas Waktu: ${deadlineString}</p>
+                </div>
+                <div>${statusHtml}</div>`;
+            container.appendChild(div);
+        });
 
-                div.innerHTML = `
-                    <div>
-                        <p class="font-bold">${tugas.Judul}</p>
-                        <p class="text-sm text-gray-500">Untuk: ${tugas.KodeMateri} | Batas Waktu: ${deadlineString}</p>
-                    </div>
-                    <div>${statusHtml}</div>`;
-                container.appendChild(div);
-            });
+        archiveBtn.textContent = `Tampilkan Arsip Tugas (${archivedCount})`;
+        archiveBtn.dataset.state = "hidden";
 
-            // (PERBAIKAN BUG 2) Update teks tombol arsip
-            archiveBtn.textContent = `Tampilkan Arsip Tugas (${archivedCount})`;
-            archiveBtn.dataset.state = "hidden"; // Set status awal
-
-        } catch (error) { 
-            container.innerHTML = `<p class="text-red-500">Gagal memuat tugas: ${error.message}</p>`; 
-        }
+    } catch (error) { 
+        container.innerHTML = `<p class="text-red-500">Gagal memuat tugas: ${error.message}</p>`; 
     }
+}
 
 async function fetchGradingNotifications() {
     try {
@@ -620,74 +898,131 @@ async function showEditJawabanForm(tugasId, submissionId) {
     function showSubmissionView(tugasId) {
         showView('submission');
         showLoading();
+        isFormDirty = false; // (BARU) Reset status
+
         document.getElementById('form-submission').reset();
         document.getElementById('submission-tugas-id').value = tugasId;
 
-        // Cari data tugas dari daftar yang sudah dimuat
-        const tugasData = Array.from(document.querySelectorAll('#tugas-list-student .border')).find(div => div.querySelector('button')?.dataset.id === tugasId);
-        if(tugasData) {
-            const judul = tugasData.querySelector('.font-bold').textContent;
-            const deadline = tugasData.querySelector('.text-gray-500').textContent;
-            document.getElementById('submission-title').textContent = judul;
-            document.getElementById('submission-deadline').textContent = deadline;
-        }
+        const essayFields = document.getElementById('essay-submission-fields');
+        const makalahFields = document.getElementById('makalah-submission-fields');
+        const instructionContainer = document.getElementById('submission-instruction');
+        const pendahuluanContainer = document.getElementById('makalah-pendahuluan');
+        
+        essayFields.classList.remove('active');
+        makalahFields.classList.remove('active');
 
-        // Ambil instruksi detail dari backend
+        // (BARU) Hapus semua editor makalah lama
+        Object.values(makalahEditors).forEach(editor => {
+            if (editor && typeof editor.disable === 'function') {
+                editor.disable();
+            }
+        });
+        makalahEditors = {};
+
         fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getTugasDetail', tugasId: tugasId }) })
             .then(res => res.json())
             .then(result => {
                 if (result.status !== 'success') throw new Error(result.message);
-                document.getElementById('submission-instruction').innerHTML = result.data.KontenHTML;
-                if(!submissionEditor) submissionEditor = initializeEditor('#submission-editor-container');
-                submissionEditor.setContents([]);
+                
+                const tugas = result.data;
+                document.getElementById('submission-title').textContent = tugas.Judul;
+                document.getElementById('submission-deadline').textContent = `Batas Waktu: ${new Date(tugas.Deadline).toLocaleDateString('id-ID')}`;
+                document.getElementById('submission-jenis-tugas').value = tugas.JenisTugas;
+
+                if (tugas.JenisTugas === 'Makalah') {
+                    makalahFields.classList.add('active');
+                    instructionContainer.innerHTML = 'Silakan isi formulir makalah di bawah ini.';
+                    try {
+                        const makalahData = JSON.parse(tugas.KontenHTML);
+                        pendahuluanContainer.innerHTML = `
+                            <h4>Latar Belakang:</h4>
+                            <p id="guru-penjelasan">${makalahData.penjelasan || ''}</p>
+                            <h4>Permasalahan:</h4>
+                            <p id="guru-masalah">${makalahData.masalah || ''}</p>
+                            <h4>Tujuan:</h4>
+                            <p id="guru-tujuan">${makalahData.tujuan || ''}</p>
+                        `;
+                    } catch (e) {
+                        pendahuluanContainer.innerHTML = '<p class="text-red-500">Gagal memuat instruksi makalah.</p>';
+                    }
+                    
+                    document.getElementById('penjelasan-masalah-container').innerHTML = '';
+                    
+                    makalahEditors.cover = initializeEditor('#makalah-cover');
+                    makalahEditors.pengantar = initializeEditor('#makalah-pengantar');
+                    makalahEditors.kesimpulan = initializeEditor('#makalah-kesimpulan');
+                    makalahEditors.pustaka = initializeEditor('#makalah-pustaka');
+                    addPenjelasanMasalah(1); 
+
+                    // (BARU) Pasang listener 'dirty'
+                    Object.values(makalahEditors).forEach(editor => {
+                        editor.on('text-change', () => { isFormDirty = true; });
+                    });
+
+                } else {
+                    essayFields.classList.add('active');
+                    instructionContainer.innerHTML = tugas.KontenHTML;
+                    if(!submissionEditor) submissionEditor = initializeEditor('#submission-editor-container');
+                    submissionEditor.setContents([]);
+                    
+                    // (BARU) Pasang listener 'dirty'
+                    submissionEditor.on('text-change', () => { isFormDirty = true; });
+                }
             })
-            .catch(error => document.getElementById('submission-instruction').innerHTML = `<p class="text-red-500">${error.message}</p>`)
+            .catch(error => instructionContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`)
             .finally(() => hideLoading());
     }
 
     async function handleSubmitTugas(event) {
     event.preventDefault();
-    showLoading();
 
+    if (isFormDirty) { // (BARU) Hanya setel false jika memang dirty
+        isFormDirty = false; // (BARU) Nonaktifkan peringatan
+    }
+
+    showLoading();
+    // ... (sisa kodenya sama persis) ...
     const form = event.target;
     const submissionIdInput = form.querySelector('input[name="submissionId"]');
     const isEditing = submissionIdInput && submissionIdInput.value;
-    
+    const jenisTugas = document.getElementById('submission-jenis-tugas').value;
     const session = getActiveSession();
     const data = {
-        action: isEditing ? 'updateJawaban' : 'submitTugas', // <-- Logika cerdas
+        action: isEditing ? 'updateJawaban' : 'submitTugas',
         TugasID: document.getElementById('submission-tugas-id').value,
         UsernameSantri: session.username,
         NamaSantri: session.userData.profileName,
-        KontenHTML: submissionEditor.root.innerHTML
+        KontenHTML: ''
     };
-
-    // Jika mengedit, kirim ID jawabannya
-    if (isEditing) {
-        data.submissionId = submissionIdInput.value;
+    if (isEditing) { data.submissionId = submissionIdInput.value; }
+    if (jenisTugas === 'Makalah') {
+        data.KontenHTML = combineMakalahAnswers();
+        if (data.KontenHTML.length < 100) { 
+             showMessage('Harap isi semua bagian makalah.', 'error');
+             hideLoading();
+             isFormDirty = true; // (BARU) Gagal, aktifkan lagi
+             return;
+        }
+    } else {
+        data.KontenHTML = submissionEditor.root.innerHTML;
+        if (data.KontenHTML === '<p><br></p>') {
+            showMessage('Jawaban tidak boleh kosong.', 'error');
+            hideLoading();
+            isFormDirty = true; // (BARU) Gagal, aktifkan lagi
+            return;
+        }
     }
-
-    if (data.KontenHTML === '<p><br></p>') {
-        showMessage('Jawaban tidak boleh kosong.', 'error');
-        hideLoading();
-        return;
-    }
-
     try {
         const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
-        
         showMessage(`Jawaban berhasil ${isEditing ? 'diperbarui' : 'dikirim'}!`, 'success');
-        
-        if (submissionIdInput) { // Kosongkan lagi setelah selesai
-            submissionIdInput.value = '';
-        }
-
+        if (submissionIdInput) { submissionIdInput.value = ''; }
         await loadStudentDashboard();
         showView('student');
     } catch (error) {
         showMessage(`Gagal mengirim: ${error.message}`, 'error');
+        isFormDirty = true; // (BARU) Gagal, aktifkan lagi
     } finally {
         hideLoading();
     }
@@ -695,6 +1030,61 @@ async function showEditJawabanForm(tugasId, submissionId) {
 
 
     // === Event Listeners ===
+	document.getElementById('btn-cancel-form')?.addEventListener('click', () => {
+        // (BARU) Cek 'dirty'
+        if (isFormDirty && !confirm('Anda memiliki perubahan yang belum disimpan. Yakin ingin kembali?')) {
+            return;
+        }
+        isFormDirty = false; // Reset
+        showView('teacher');
+        loadTeacherDashboard();
+    });
+    
+    // (DIUBAH) Menggunakan tombol Bawah
+    document.getElementById('btn-back-to-teacher-dash')?.addEventListener('click', () => {
+        // (BARU) Cek 'dirty'
+        if (isFormDirty && !confirm('Anda memiliki perubahan yang belum disimpan. Yakin ingin kembali?')) {
+            return;
+        }
+        isFormDirty = false; // Reset
+        showView('teacher');
+        loadTeacherDashboard();
+    });
+    // (BARU) Menggunakan tombol Atas
+    document.getElementById('btn-back-to-teacher-dash-top')?.addEventListener('click', () => {
+        // (BARU) Cek 'dirty'
+        if (isFormDirty && !confirm('Anda memiliki perubahan yang belum disimpan. Yakin ingin kembali?')) {
+            return;
+        }
+        isFormDirty = false; // Reset
+        showView('teacher');
+        loadTeacherDashboard();
+    });
+    
+    // (DIUBAH) Menggunakan tombol Bawah
+    document.getElementById('btn-cancel-submission')?.addEventListener('click', () => {
+        // (BARU) Cek 'dirty'
+        if (isFormDirty && !confirm('Anda memiliki perubahan yang belum disimpan. Yakin ingin kembali?')) {
+            return;
+        }
+        isFormDirty = false; // Reset
+        showView('student');
+        loadStudentDashboard();
+    });
+    // (BARU) Menggunakan tombol Atas
+    document.getElementById('btn-cancel-submission-top')?.addEventListener('click', () => {
+        // (BARU) Cek 'dirty'
+        if (isFormDirty && !confirm('Anda memiliki perubahan yang belum disimpan. Yakin ingin kembali?')) {
+            return;
+        }
+        isFormDirty = false; // Reset
+        showView('student');
+        loadStudentDashboard();
+    });
+	document.getElementById('btn-tambah-masalah')?.addEventListener('click', () => {
+    const count = document.querySelectorAll('.penjelasan-masalah-item').length;
+    addPenjelasanMasalah(count + 1);
+});
     document.getElementById('btn-create-new')?.addEventListener('click', () => showCreateForm(false)); // (DIUBAH)
     document.getElementById('form-tugas')?.addEventListener('submit', handleSaveTugas);
     document.getElementById('btn-cancel-form')?.addEventListener('click', () => {
@@ -792,6 +1182,24 @@ async function showEditJawabanForm(tugasId, submissionId) {
     document.getElementById('form-submission')?.addEventListener('submit', handleSubmitTugas);
 
     async function initializeApp() {
+        // (BARU) Listener Peringatan Keluar Halaman (Keluar/Refresh Browser)
+        window.addEventListener('beforeunload', (event) => {
+            if (isFormDirty) {
+                // Tampilkan pesan konfirmasi browser
+                event.preventDefault();
+                event.returnValue = ''; // Wajib untuk browser modern
+                return ''; // Untuk browser lama
+            }
+        });
+        
+        // (BARU) Listener untuk tombol navigasi internal (Kembali ke Beranda)
+        document.querySelector('.page-header a[href="index.html"]').addEventListener('click', (e) => {
+            if (isFormDirty && !confirm('Anda memiliki perubahan yang belum disimpan. Yakin ingin kembali ke Beranda?')) {
+                e.preventDefault(); // Batalkan pindah halaman
+            } else {
+                isFormDirty = false; // Izinkan pindah halaman
+            }
+        });
         // === Inisialisasi Aplikasi ===
         checkUserAccess();
     }
