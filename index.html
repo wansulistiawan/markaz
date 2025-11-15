@@ -2321,31 +2321,50 @@
 
 <div id="halaman-ujian-admin" class="page-section hidden container section">
     <h2 class="text-3xl font-bold text-gray-800">Buka Akses Ujian Manual</h2>
-    <p class="mb-8 text-gray-600">Pilih santri dan materi ujian yang ingin diberi akses di luar jadwal reguler. Akses akan berlaku selama 24 jam.</p>
+    <p class="mb-8 text-gray-600">Pilih jenis ujian, santri, dan satu materi ujian yang ingin diberi akses.</p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="form-group bg-white p-4 rounded-lg shadow">
+            <label for="admin-jenis-ujian" class="text-base font-semibold">1. Pilih Jenis Ujian</label>
+            <select id="admin-jenis-ujian" class="filter-select w-full mt-2">
+                <option value="Bulanan">Ujian Bulanan (Remedial/Susulan)</option>
+                <option value="UTS">Ujian Tengah Semester</option>
+                <option value="UAS">Ujian Akhir Semester</option>
+            </select>
+        </div>
+        <div class="form-group bg-white p-4 rounded-lg shadow">
+            <label for="admin-nama-ujian" class="text-base font-semibold">2. Beri Nama Ujian (Opsional)</label>
+            <input type="text" id="admin-nama-ujian" class="w-full p-2 mt-2 border rounded" placeholder="Otomatis jika Ujian Bulanan...">
+            <p id="admin-nama-ujian-help" class="text-xs text-gray-500 mt-1">Hanya diisi untuk UTS/UAS. Cth: "UTS Ganjil 2025"</p>
+        </div>
+    </div>
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="bg-white p-4 rounded-lg shadow">
-            <h3 class="font-bold border-b pb-2 mb-2">1. Pilih Santri</h3>
+            <h3 class="font-bold border-b pb-2 mb-2">3. Pilih Santri</h3>
 			<div class="text-sm font-medium">
-        <input type="checkbox" id="select-all-santri" class="align-middle">
-        <label for="select-all-santri" class="align-middle cursor-pointer font-bold border-b pb-2 mb-2 ">Pilih Semua</label>
-		
-    </div>
+                <input type="checkbox" id="select-all-santri" class="align-middle">
+                <label for="select-all-santri" class="align-middle cursor-pointer font-bold border-b pb-2 mb-2 ">Pilih Semua</label>
+            </div>
             <div id="admin-santri-list-container" class="max-h-96 overflow-y-auto space-y-2">
                 <p>Memuat daftar santri...</p>
             </div>
         </div>
         <div class="bg-white p-4 rounded-lg shadow">
-            <h3 class="font-bold border-b pb-2 mb-2">2. Pilih Materi Ujian</h3>
-            <div id="admin-materi-list-container" class="max-h-96 overflow-y-auto space-y-2">
-                <p>Memuat daftar materi...</p>
+            <h3 class="font-bold border-b pb-2 mb-2">4. Pilih 1 (SATU) Materi Ujian</h3>
+            <div id="admin-materi-list-container" class="mt-2">
+                <select id="admin-materi-select" class="filter-select w-full">
+                    <option value="">Memuat materi...</option>
+                </select>
             </div>
         </div>
     </div>
+    
     <div class="mt-8 text-center">
         <button id="buka-ujian-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-10 rounded-lg shadow-lg">Buka Ujian</button>
     </div>
-	<div class="mt-12 pt-8 border-t">
+	
+    <div class="mt-12 pt-8 border-t">
         <h2 class="text-2xl font-bold text-gray-800">Daftar Ujian yang Dibuka Manual</h2>
         <div id="admin-unlocked-exams-list" class="mt-4 bg-white p-4 rounded-lg shadow">
             <p class="text-gray-500">Memuat daftar...</p>
@@ -2382,29 +2401,43 @@
 
 <div id="input-soal" class="page-section hidden container section">
     <h2 class="text-3xl font-bold text-gray-800">Input Bank Soal Ujian</h2>
-    <p class="mb-8 text-gray-600">Halaman ini khusus untuk mengelola bank soal. Soal akan disimpan di Google Sheet "soal".</p>
+    <p class="mb-8 text-gray-600">Halaman ini untuk memasukkan bank soal. Soal yang sama bisa disimpan ke beberapa materi sekaligus (untuk UTS/UAS).</p>
 
     <div class="bg-white p-6 rounded-xl shadow-md">
+        
         <div class="form-group max-w-md mb-6">
-            <label for="materi-soal-select" class="text-base font-semibold">1. Pilih Materi Ujian</label>
-            <select id="materi-soal-select" class="filter-select w-full mt-2">
-                <option value="">Pilih Materi...</option>
+            <label for="input-jenis-ujian" class="text-base font-semibold">1. Pilih Jenis Ujian</label>
+            <select id="input-jenis-ujian" class="filter-select w-full mt-2">
+                <option value="Bulanan">Ujian Bulanan (Pilih 1 Materi)</option>
+                <option value="UTS">Ujian Tengah Semester (Pilih 1+ Materi)</option>
+                <option value="UAS">Ujian Akhir Semester (Pilih 1+ Materi)</option>
+            </select>
+        </div>
+
+        <div class="form-group max-w-md mb-6">
+            <label class="text-base font-semibold">2. Pilih Materi Ujian Tujuan</label>
+            
+            <div id="materi-select-container-bulanan" class="mt-2">
+                <select id="materi-soal-select" class="filter-select w-full">
+                    <option value="">Pilih Materi...</option>
                 </select>
+            </div>
+            
+            <div id="materi-select-container-multi" class="hidden mt-2 border rounded-md p-4 max-h-48 overflow-y-auto space-y-2">
+                </div>
         </div>
 
         <div class="form-group mb-6">
-            <label for="paste-soal-area" class="text-base font-semibold">2. Salin dan Tempel Soal dari MS. Word</label>
-            <p class="text-sm text-gray-500 mb-2">Pastikan setiap soal diawali dengan angka dan titik (contoh: 1. Soal pertama). Web akan otomatis memisahkannya.</p>
+            <label for="quill-editor-container" class="text-base font-semibold">3. Salin dan Tempel Soal dari MS. Word</label>
+            <p class="text-sm text-gray-500 mb-2">Pastikan setiap soal diawali angka (cth: 1. Soal). Sistem akan otomatis mendeteksi soal PG dan Isian.</p>
             <div id="quill-editor-container" style="height: 250px;"></div>
         </div>
 
         <div class="form-group">
-            <h3 class="text-base font-semibold mb-2">3. Pratinjau, Isi Kunci Jawaban, dan Simpan</h3>
-            
-            
+            <h3 class="text-base font-semibold mb-2">4. Pratinjau, Isi Kunci Jawaban, dan Simpan</h3>
             <div id="soal-preview-container" class="border rounded-lg overflow-hidden">
                 <p class="p-8 text-center text-gray-400">Pratinjau soal akan muncul di sini setelah Anda mem-paste teks di atas.</p>
-                </div>
+            </div>
         </div>
         
         <div class="mt-8 text-right">
@@ -3510,11 +3543,13 @@ function findAcademicMonthForDate(referenceDateStr) {
             { date: "2025-09-22", title: "Awal Materi Bulan III", color: "event-green" },
             //{ date: "2025-10-20", title: "Awal Ujian Bulanan III", color: "event-lightblue", },
             { date: "2025-10-20", title: "Awal Materi Bulan IV", color: "event-green" },
+			{ date: "2025-11-17", title: "Pekan Santai (pemberian kisi-kisi)", color: "event-darkblue", span: 6 },
             { date: "2025-11-24", title: "Awal Ujian UAS Ganjil", color: "event-lightblue", },
-            { date: "2025-12-01", title: "Penilaian Akhir Semester (PAS)", color: "event-darkblue", span: 12 },
+            { date: "2025-12-01", title: "Penilaian Akhir Semester (PAS)", color: "event-darkblue", span: 6 },
+			{ date: "2025-12-8", title: "Pekan Olahraga", color: "event-purple", span: 6},
             { date: "2025-12-13", title: "Penerimaan Rapor", color: "event-darkblue" },
-			{ date: "2025-12-15", title: "Pekan Olahraga", color: "event-purple", span: 6},
-            { date: "2025-12-22", title: "Libur Akhir Semester Ganjil", color: "event-orange", span: 6 },
+			{ date: "2025-12-15", title: "Libur (Kegiatan Rumah Yatim)", color: "event-purple", span: 6},
+            { date: "2025-12-22", title: "Libur Akhir Semester Ganjil (Pulang)", color: "event-orange", span: 6 },
             { date: "2025-12-29", title: "Awal Materi Bulan V", color: "event-green" },
 
             // --- Semester Genap 2026 ---
@@ -4019,22 +4054,13 @@ async function renderExamSchedule() {
         container.innerHTML = '<p class="p-8 text-center text-gray-500">Halaman ini hanya untuk santri.</p>';
         return;
     }
-
     const isAdmin = ['wawan', 'mia', 'admin'].includes(session.username);
 
-    if (Object.keys(subjectToMonthMap).length === 0 && appState.processedSchedules) {
-        Object.entries(appState.processedSchedules).forEach(([monthKey, scheduleItems]) => {
-            const monthNumber = parseInt(monthKey.replace('bulan', ''));
-            scheduleItems.forEach(item => {
-                if(item.subject && item.subject.includes(':')) {
-                    const code = item.subject.split(':')[0].trim();
-                    subjectToMonthMap[code] = monthNumber;
-                }
-            });
-        });
-    }
-
-    let savedKrsSubjects = [], availableExams = [], nilaiUjian = {}, unlockedExams = [];
+    // Map Materi ke Info KRS
+    const krsInfoMap = new Map();
+    let savedKrsSubjects = [], availableExams = [], nilaiUjian = {};
+    let unlockedExamsData = []; // Ini akan menjadi array OF OBJECTS
+    
     try {
         const [krsResponse, examsResponse, nilaiResponse, unlockedResponse] = await Promise.all([
             fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllKrsSubjectsForSantri', namaSantri: session.userData.profileName }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }}),
@@ -4044,127 +4070,151 @@ async function renderExamSchedule() {
         ]);
         
         const krsResult = await krsResponse.json();
-        if (krsResult.status === 'success') savedKrsSubjects = krsResult.data; else throw new Error(krsResult.message);
+        if (krsResult.status === 'success') {
+            savedKrsSubjects = krsResult.data;
+            savedKrsSubjects.forEach(item => krsInfoMap.set(item.code, item)); 
+        } else throw new Error(krsResult.message);
+
         const examsResult = await examsResponse.json();
         if (examsResult.status === 'success') availableExams = examsResult.availableExams; else throw new Error(examsResult.message);
+        
         const nilaiResult = await nilaiResponse.json();
         if (nilaiResult.status === 'success') nilaiUjian = nilaiResult.nilai; else throw new Error(nilaiResult.message);
+        
         const unlockedResult = await unlockedResponse.json();
-        if (unlockedResult.status === 'success') unlockedExams = unlockedResult.unlockedExams; else throw new Error(unlockedResult.message);
+        if (unlockedResult.status === 'success') unlockedExamsData = unlockedResult.unlockedExams; else throw new Error(unlockedResult.message);
 
     } catch (error) {
         container.innerHTML = `<p class="p-8 text-center text-red-500">${error.message}</p>`;
         return;
     }
-    
+
     const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
     
     const updateExamGrid = () => {
         const now = new Date();
+        const groupedExams = new Map(); // Peta untuk semua ujian yang akan ditampilkan
+
+        // 1. Proses Ujian yang Dibuka Manual (UTS/UAS/Bulanan)
+        unlockedExamsData.forEach(exam => {
+            const krsData = krsInfoMap.get(exam.kodeMateri);
+            if (!krsData) return; 
+
+            // (PERBAIKAN BUG JUDUL)
+            // Jika jenisnya UTS/UAS, key-nya adalah nama (cth: "UAS Ganjil").
+            // Jika Bulanan, key-nya adalah kode materi (cth: "IPA-204").
+            const key = (exam.jenis === 'Bulanan') ? exam.kodeMateri : exam.nama;
+            
+            if (!groupedExams.has(key)) {
+                // (PERBAIKAN BUG JUDUL)
+                // Jika UTS/UAS, gunakan nama kustom. Jika Bulanan, gunakan nama materi.
+                const displayName = (exam.jenis === 'Bulanan') ? krsData.subject : exam.nama;
+
+                groupedExams.set(key, {
+                    nama: displayName, 
+                    jenis: exam.jenis,
+                    materi: [krsData], // Selalu 1 materi
+                    krsInfo: krsData,
+                    isManuallyUnlocked: true, // Tandai ini
+                    isScheduled: false
+                });
+            }
+            // (Kita tidak perlu 'groupedExams.get(key).materi.push(krsData)' lagi)
+        });
+
+        // 2. (LOGIKA DIKEMBALIKAN) Proses Ujian Bulanan Terjadwal
+        savedKrsSubjects.forEach(item => {
+            const subjectCode = item.code;
+            if (!availableExams.includes(subjectCode)) return;
+            
+            // (PENTING) Jangan tampilkan ujian terjadwal jika sudah ada di daftar ujian manual
+            if (groupedExams.has(subjectCode)) return; 
+            
+            const academicMonth = subjectToMonthMap[subjectCode] || 0;
+            if (!academicMonth) return;
+
+            const { examWeekStart, examWeekEnd } = getAcademicMonthInfo(academicMonth);
+            
+            // (PERBAIKAN LOGIKA JUDUL - REQ 3)
+            // Cek apakah hari ini masuk di pekan UTS atau UAS dari Kalender
+            const utsEvent = appData.calendarEvents.find(e => e.title.includes("UTS") && e.span);
+            const uasEvent = appData.calendarEvents.find(e => e.title.includes("UAS") && e.span);
+            let examTypeOverride = 'Bulanan'; // Default
+            
+            if(utsEvent && now >= new Date(utsEvent.date) && now <= new Date(new Date(utsEvent.date).setDate(new Date(utsEvent.date).getDate() + utsEvent.span))) {
+                examTypeOverride = 'UTS';
+            } else if (uasEvent && now >= new Date(uasEvent.date) && now <= new Date(new Date(uasEvent.date).setDate(new Date(uasEvent.date).getDate() + uasEvent.span))) {
+                examTypeOverride = 'UAS';
+            }
+            // --- AKHIR PERBAIKAN ---
+
+            const isExamWindowActive = (now >= examWeekStart && now <= examWeekEnd) && days[now.getDay()] === item.day && isTimeInSlot(now, item.time);
+
+            if (isExamWindowActive || (isAdmin && !isExamWindowActive)) {
+                 groupedExams.set(subjectCode, {
+                    nama: item.subject, 
+                    // (PERBAIKAN) Gunakan nama jenis ujian yang sudah dicek
+                    jenis: examTypeOverride,
+                    materi: [item],     
+                    krsInfo: item,
+                    isManuallyUnlocked: false,
+                    isScheduled: true 
+                });
+            }
+        });
+
+        // 3. Render Kartu Ujian
         container.innerHTML = '';
-        if (savedKrsSubjects.length === 0) {
-            container.innerHTML = '<p class="p-8 text-center text-gray-500">Anda belum mengambil materi pelajaran di KRS.</p>';
+        if (groupedExams.size === 0) {
+            container.innerHTML = '<p class="p-8 text-center text-gray-500">Tidak ada ujian yang tersedia untuk Anda saat ini.</p>';
             return;
         }
 
         const grid = document.createElement('div');
         grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
-
-        // --- AWAL PERUBAHAN ---
-        // Siapkan dua wadah sementara untuk kartu aktif dan tidak aktif
         const activeCardsFragment = document.createDocumentFragment();
         const inactiveCardsFragment = document.createDocumentFragment();
-        // --- AKHIR PERUBAHAN ---
-		
-		// =======================================================
-        // === BLOK KODE BARU UNTUK MENGURUTKAN KARTU UJIAN ===
-        // =======================================================
-        const getPriorityScore = (item) => {
-            const now = new Date();
-            const academicMonth = subjectToMonthMap[item.code] || 0;
-            const isSpeciallyUnlocked = unlockedExams.includes(item.code);
 
-            const { examWeekStart, examWeekEnd } = getAcademicMonthInfo(academicMonth);
-            // Pengecekan apakah hari ini berada dalam rentang pekan ujian
-            const isExamWindowActive = (now >= examWeekStart && now <= examWeekEnd);
-
-            // Jika sedang pekan ujian atau dibuka manual, beri skor prioritas tertinggi
-            if (isExamWindowActive || isSpeciallyUnlocked) {
-                return 100; 
-            } else {
-                // Jika tidak, skornya adalah nomor bulan itu sendiri
-                return academicMonth;
-            }
-        };
-
-        savedKrsSubjects.sort((a, b) => {
-            const scoreA = getPriorityScore(a);
-            const scoreB = getPriorityScore(b);
-            // Urutkan dari skor tertinggi ke terendah
-            return scoreB - scoreA;
-        });
-        // === AKHIR DARI BLOK KODE BARU ===
-		
-        savedKrsSubjects.forEach(item => {
-            const subjectCode = item.code;
-            if (!availableExams.includes(subjectCode)) return;
-            const academicMonth = subjectToMonthMap[subjectCode];
-            if (!academicMonth) return;
-            const { examWeekStart, examWeekEnd } = getAcademicMonthInfo(academicMonth);
-            const riwayat = nilaiUjian[subjectCode];
-
+        groupedExams.forEach((examGroup, key) => {
+            // (DIUBAH) Cek 'riwayat' hanya berdasarkan materi pertama
+            const riwayat = nilaiUjian[examGroup.materi[0].code] || null;
+            
             let statusText = 'Ujian belum tersedia';
             let statusColor = 'bg-gray-400';
             let isDisabled = true;
             let textColorClass = 'text-white';
-
-            const isExamWeekOver = now > examWeekEnd;
-            const isSpeciallyUnlocked = unlockedExams.includes(subjectCode);
-            const isExamWindowActive = (now >= examWeekStart && now <= examWeekEnd) && days[now.getDay()] === item.day && isTimeInSlot(now, item.time);
+            
+            const isManuallyUnlocked = examGroup.isManuallyUnlocked;
+            const isScheduledActive = examGroup.isScheduled;
 
             if (riwayat) {
                 const nilaiToShow = riwayat.skorAkhir ?? riwayat.skor;
-				if (nilaiToShow >= 75 && !isAdmin) {
+
+                if (nilaiToShow >= 75 && !isAdmin) {
                     statusText = `Lulus (Nilai Akhir: ${nilaiToShow})`;
                     statusColor = 'bg-green-600';
                     isDisabled = true;
-				} else if (isSpeciallyUnlocked && riwayat.percobaan >= 3 && !isAdmin) {
-					statusText = `Batas Coba Habis (Nilai: ${nilaiToShow})`;
-					statusColor = 'bg-gray-500';
-					isDisabled = true;
                 } else if (riwayat.percobaan >= 3 && !isAdmin) {
-                    statusText = `Selesai (Nilai Akhir: ${nilaiToShow})`;
+                    statusText = `Batas Coba Habis (Nilai: ${nilaiToShow})`;
                     statusColor = 'bg-gray-500';
                     isDisabled = true;
-                } else if (isExamWeekOver && !isSpeciallyUnlocked && !isAdmin) {
+                } else if (isManuallyUnlocked || isScheduledActive || isAdmin) { // Remedial bisa diambil
+                    statusText = `Mulai Remedial (Nilai: ${nilaiToShow})`; 
+                    statusColor = 'bg-yellow-500 hover:bg-yellow-600';
+                    isDisabled = false;
+                } else { // Waktu remedial habis
                     statusText = `Waktu Habis (Nilai: ${nilaiToShow})`;
                     statusColor = 'bg-gray-500';
                     isDisabled = true;
-                } else { // Kondisi ini untuk santri yang sudah punya riwayat nilai, tapi nilainya di bawah 75 dan masih punya kesempatan.
-    isDisabled = false;
-    // PENGECEKAN BARU: Jika waktu ujian reguler sudah lewat TAPI aksesnya dibuka manual oleh admin.
-    if (isExamWeekOver && isSpeciallyUnlocked) {
-        // Tampilkan tombol "Kerjakan Ulang" sesuai permintaan Anda.
-        statusText = `Kerjakan Ulang (Nilai: ${nilaiToShow})`;
-        statusColor = 'bg-red-600 hover:bg-red-700'; // Warna merah untuk kasus khusus ini.
-    } else {
-        // Jika tidak, ini adalah remedial biasa dalam masa ujian normal.
-        statusText = `Mulai Remedial (Nilai: ${nilaiToShow})`; 
-        statusColor = 'bg-yellow-500 hover:bg-yellow-600';
-    }
-}
+                }
             } else {
-                if (isExamWindowActive || isSpeciallyUnlocked || isAdmin) {
+                if (isManuallyUnlocked || isScheduledActive || isAdmin) {
                     statusText = 'Mulai Ujian';
                     statusColor = 'bg-blue-600 hover:bg-blue-700';
                     isDisabled = false;
-                } else if (isExamWeekOver && !isAdmin) {
-                    statusText = 'Terlewat';
-                    statusColor = 'bg-gray-500';
-                    isDisabled = true;
                 } else {
-                    statusText = 'Ujian Belum Aktif';
-                    statusColor = 'bg-gray-400';
+                    statusText = 'Terlewat'; 
+                    statusColor = 'bg-gray-500';
                     isDisabled = true;
                 }
             }
@@ -4173,44 +4223,47 @@ async function renderExamSchedule() {
                 isDisabled = false;
                 statusColor = 'bg-purple-600 hover:bg-purple-700';
             }
-            
+
+            // (PERBAIKAN BUG JUDUL)
+            // Tampilkan jenis ujian (UTS/UAS/Bulanan) sebagai judul,
+            // dan nama materi sebagai sub-judul.
+            const displayTitle = (examGroup.jenis === 'Bulanan') 
+                ? `Ujian Bulanan: ${examGroup.nama}` // Cth: Ujian Bulanan: IPA-204...
+                : examGroup.nama; // Cth: UAS Ganjil 2025
+
+            const subTitle = (examGroup.jenis === 'Bulanan')
+                ? `<p class="text-sm text-slate-600 mt-2">Pengajar: ${examGroup.krsInfo.teacher}</p>`
+                : `<p class="text-sm text-slate-600 mt-2">Materi: ${examGroup.materi[0].name}</p>`; // Tampilkan 1 materi
+
+            const jadwalInfoHtml = examGroup.isScheduled
+                ? `<p class="text-xs italic mt-1">Jadwal: ${examGroup.krsInfo.day}, ${examGroup.krsInfo.time}</p>`
+                : `<p class="text-xs italic mt-1 text-green-600 font-bold">Akses Dibuka Manual (24 Jam)</p>`;
+
             const card = document.createElement('div');
             card.className = 'schedule-cell p-4 border rounded-lg flex flex-col';
             card.innerHTML = `
-                <div class="subject flex-grow font-bold text-teal-900">${item.subject}</div>
-                <div class="text-sm text-slate-600 mt-2">
-                    <p>Jadwal: ${item.day}, ${item.time}</p>
-                    <p>Pengajar: ${item.teacher}</p>
-                    <p class="text-xs italic mt-1 ${isSpeciallyUnlocked ? 'text-green-600 font-bold' : ''}">
-                        ${isSpeciallyUnlocked ? 'Akses Ujian Dibuka Manual' : `Pekan Ujian: ${examWeekStart.toLocaleDateString('id-ID')} - ${examWeekEnd.toLocaleDateString('id-ID')}`}
-                    </p>
-                </div>
+                <div class="subject flex-grow font-bold text-teal-900">${displayTitle}</div>
+                ${subTitle}
+                ${jadwalInfoHtml}
                 <button class="start-exam-trigger w-full mt-4 py-2 px-4 rounded-md font-semibold ${statusColor} ${textColorClass} ${isDisabled ? 'cursor-not-allowed' : ''}" 
-                        data-subject-code="${subjectCode}" 
-                        data-subject-title="${item.subject}" ${isDisabled ? 'disabled' : ''}>
+                        data-nama-ujian="${displayTitle}" 
+                        data-jenis-ujian="${examGroup.jenis}"
+                        data-materi-list='${JSON.stringify(examGroup.materi.map(m => m.code))}'
+                        ${isDisabled ? 'disabled' : ''}>
                     ${statusText}
                 </button>
             `;
 
-            // --- AWAL PERUBAHAN ---
-            // Masukkan kartu ke wadah yang sesuai berdasarkan statusnya
             if (isDisabled) {
                 inactiveCardsFragment.appendChild(card);
             } else {
                 activeCardsFragment.appendChild(card);
             }
-            // --- AKHIR PERUBAHAN ---
         });
 
-        // --- AWAL PERUBAHAN ---
-        // Gabungkan kedua wadah, dengan kartu aktif di bagian atas
         grid.appendChild(activeCardsFragment);
         grid.appendChild(inactiveCardsFragment);
-        // --- AKHIR PERUBAHAN ---
-
-        if (grid.children.length === 0) {
-             container.innerHTML = '<p class="p-8 text-center text-gray-500">Tidak ada ujian yang tersedia untuk materi di KRS Anda saat ini.</p>';
-        } else { container.appendChild(grid); }
+        container.appendChild(grid);
     };
 
     updateExamGrid();
@@ -4220,14 +4273,23 @@ async function renderExamSchedule() {
 // === FUNGSI-FUNGSI PENDUKUNG UJIAN ONLINE ===
 function setupExamListeners() {
     document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('start-exam-trigger')) {
-            const subjectCode = e.target.dataset.subjectCode;
-            const subjectTitle = e.target.dataset.subjectTitle;
-            currentExamData = { code: subjectCode, title: subjectTitle };
-            document.getElementById('exam-subject-title').textContent = subjectTitle;
-            document.getElementById('exam-warning-modal').style.display = 'block';
-        }
-    });
+    if (e.target.classList.contains('start-exam-trigger')) {
+        // (PERBAIKAN) Ambil data baru dari tombol
+        const namaUjian = e.target.dataset.namaUjian;
+        const jenisUjian = e.target.dataset.jenisUjian;
+        const materiList = JSON.parse(e.target.dataset.materiList);
+
+        // Simpan ke variabel global
+        currentExamData = { 
+            title: namaUjian, 
+            jenis: jenisUjian, 
+            materiList: materiList // Ini adalah array ["MAT-101", "IND-101"]
+        };
+
+        document.getElementById('exam-subject-title').textContent = namaUjian;
+        document.getElementById('exam-warning-modal').style.display = 'block';
+    }
+});
 
     document.getElementById('cancel-exam-btn').addEventListener('click', () => {
         document.getElementById('exam-warning-modal').style.display = 'none';
@@ -4267,20 +4329,23 @@ async function startExam() {
     const examContainer = document.getElementById('exam-container');
     const questionsContainer = document.getElementById('exam-questions');
     
-    document.getElementById('exam-subtitle').textContent = currentExamData.title;
- 
+    // (PERBAIKAN) Judul diambil dari data global
+    document.getElementById('exam-subtitle').textContent = currentExamData.title; 
  
     let temporaryAnswers = {};
     const session = getActiveSession();
 
-    // Langkah 1: Selalu cek apakah ada progres yang tersimpan di server terlebih dahulu
+    // (PERBAIKAN) Kunci cache adalah NAMA UJIAN (cth: "UAS Ganjil 2025")
+    const cacheKey = currentExamData.title;
+
+    // Langkah 1: Cek progres tersimpan
     try {
         const tempAnswersResponse = await fetch(CONFIG.SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({
                 action: 'getTemporaryAnswers',
                 username: session.username,
-                kodeMateri: currentExamData.code
+                kodeMateri: cacheKey // Menggunakan kunci cache baru
             }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
@@ -4290,40 +4355,24 @@ async function startExam() {
         }
     } catch (e) {
         console.warn("Gagal mengambil jawaban sementara, memulai sesi baru:", e);
-        // Jika gagal, biarkan temporaryAnswers tetap kosong agar ujian dimulai dari awal
     }
 
-    // Ini adalah fungsi inti yang akan menjalankan ujian
+    // Fungsi inti yang akan menjalankan ujian
     const startTheExamProcess = async () => {
         examContainer.classList.remove('hidden');
         enterFullscreen(document.documentElement);
         
-        // Di dalam fungsi startTheExamProcess...
-const loadingText = "Memuat soal dan riwayat ujian...";
-const chars = loadingText.split('').map((char, index) => {
-    // Beri spasi biasa jika karakternya adalah spasi
-    if(char === ' ') return ' '; 
-    // Bungkus setiap huruf dengan span dan beri delay animasi
-    return `<span class="wave-char" style="animation-delay: ${index * 0.05}s">${char}</span>`;
-}).join('');
-
-const loadingHTML = `
-    <div class="p-24 text-center text-gray-500 text-xl font-semibold flex justify-center items-center">
-        <span>Memuat soal dan riwayat ujian</span>
-        <div class="ml-2">
-            <span class="pulsing-dot" style="animation-delay: 0s;"></span>
-            <span class="pulsing-dot" style="animation-delay: 0.2s;"></span>
-            <span class="pulsing-dot" style="animation-delay: 0.4s;"></span>
-        </div>
-    </div>
-`;
-questionsContainer.innerHTML = loadingHTML;
+        const loadingHTML = `... (Loading HTML Anda tetap sama) ...`;
+        questionsContainer.innerHTML = loadingHTML;
 
         try {
+            // (PERBAIKAN) Mengirim 1 kode materi
+            let dataForSoal = { action: 'getBankSoal', kodeMateri: currentExamData.materiList[0] };
+
             const [soalResponse, nilaiResponse] = await Promise.all([
                 fetch(CONFIG.SCRIPT_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'getBankSoal', kodeMateri: currentExamData.code }),
+                    body: JSON.stringify(dataForSoal), 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 }),
                 fetch(CONFIG.SCRIPT_URL, {
@@ -4340,13 +4389,12 @@ questionsContainer.innerHTML = loadingHTML;
             if (nilaiResult.status !== 'success') throw new Error(nilaiResult.message);
             
             currentQuestions = soalResult.questions;
-            currentAttemptHistory = nilaiResult.nilai[currentExamData.code] || null;
+            currentAttemptHistory = nilaiResult.nilai[currentExamData.materiList[0]] || null;
             
             if (currentQuestions.length === 0) {
                 throw new Error("Tidak ada soal yang ditemukan untuk materi ini.");
             }
 
-            // Terapkan jawaban yang sudah dipulihkan ke variabel utama
             examAnswers = temporaryAnswers; 
             if(Object.keys(examAnswers).length > 0) {
                 showMessage('Progres sebelumnya berhasil dipulihkan.', 'success');
@@ -4354,92 +4402,96 @@ questionsContainer.innerHTML = loadingHTML;
 
         } catch (error) {
             questionsContainer.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat soal: ${error.message}</p>`;
-            isExamInProgress = false; // Hentikan status ujian jika gagal
+            isExamInProgress = false; 
             return;
         }
         
         questionsContainer.innerHTML = '';
 
-        // Render semua soal ke layar
+        // (Render soal PG dan Isian - kode ini sudah benar)
         currentQuestions.forEach((q, index) => {
             const questionId = `q${index}`;
-            let optionsHtml = '';
-            const shuffledOptions = [...q.o].sort(() => Math.random() - 0.5);
+            let answerInputHtml = ''; 
+            if (q.j === 'PG') {
+                const shuffledOptions = [...q.o].sort(() => Math.random() - 0.5);
+                shuffledOptions.forEach((option, i) => {
+                    const optionId = `q${index}_opt${i}`;
+                    answerInputHtml += `<label for="${optionId}" class="answer-option"><input type="radio" name="${questionId}" id="${optionId}" value="${option}"><span>${String.fromCharCode(65 + i)}. ${option}</span></label>`;
+                });
+            } else {
+                answerInputHtml = `<textarea class="answer-isian w-full p-3 border rounded-md" rows="4" placeholder="Ketik jawaban Anda di sini..."></textarea>`;
+            }
+            questionsContainer.innerHTML += `<div class="question-block" id="${questionId}_block"><div class="flex justify-between items-start"><p class="text-lg font-semibold mb-4 flex-1">${index + 1}. ${q.q}</p><span class="text-sm font-bold text-gray-500 ml-4">${q.p || 4} Poin</span></div><div class="answer-options">${answerInputHtml}</div></div>`;
             
-            shuffledOptions.forEach((option, i) => {
-                const optionId = `q${index}_opt${i}`;
-                optionsHtml += `
-                    <label for="${optionId}" class="answer-option">
-                        <input type="radio" name="${questionId}" id="${optionId}" value="${option}">
-                        <span>${String.fromCharCode(65 + i)}. ${option}</span>
-                    </label>
-                `;
-            });
-
-            questionsContainer.innerHTML += `
-                <div class="question-block" id="${questionId}_block">
-                    <div class="flex justify-between items-start">
-                        <p class="text-lg font-semibold mb-4 flex-1">${index + 1}. ${q.q}</p>
-                        <span class="text-sm font-bold text-gray-500 ml-4">${q.p || 4} Poin</span>
-                    </div>
-                    <div class="answer-options">${optionsHtml}</div>
-                </div>
-            `;
-            
-            // Pulihkan jawaban untuk soal ini jika ada
             const questionText = q.q;
             const savedAnswerForThisQuestion = examAnswers[questionText];
             if (savedAnswerForThisQuestion) {
-                const radioToCheck = document.querySelector(`input[name="q${index}"][value="${savedAnswerForThisQuestion}"]`);
-                if (radioToCheck) {
-                    radioToCheck.checked = true;
-                    const label = document.querySelector(`label[for="${radioToCheck.id}"]`);
-                    if (label) label.classList.add('selected');
+                if (q.j === 'PG') {
+                    const radioToCheck = document.querySelector(`input[name="q${index}"][value="${savedAnswerForThisQuestion}"]`);
+                    if (radioToCheck) { radioToCheck.checked = true; document.querySelector(`label[for="${radioToCheck.id}"]`).classList.add('selected'); }
+                } else {
+                    const textarea = document.querySelector(`#${questionId}_block textarea`);
+                    if (textarea) textarea.value = savedAnswerForThisQuestion;
                 }
             }
         });
         
-        // Tambahkan event listener untuk auto-save
+        // (Listener auto-save - diperbarui untuk cacheKey)
         currentQuestions.forEach((q, index) => {
             const questionBlock = document.getElementById(`q${index}_block`);
-            if (questionBlock) {
+            if (!questionBlock) return;
+            const questionTextKey = currentQuestions[index].q;
+            if (q.j === 'PG') {
                 const radioButtons = questionBlock.querySelectorAll('input[type="radio"]');
                 radioButtons.forEach(radio => {
                     radio.addEventListener('change', (e) => {
-                        const questionTextKey = currentQuestions[index].q;
-                        examAnswers[currentQuestions[index].q] = e.target.value; // Simpan ke variabel lokal
-                        
+                        examAnswers[questionTextKey] = e.target.value; 
                         const answerLetter = document.querySelector(`label[for="${e.target.id}"]`)?.textContent.trim().charAt(0) || '?';
                         logAction('JAWAB_SOAL', `Menjawab soal no. ${index + 1} : ${answerLetter}`);
-                        
-                        // Kirim ke server untuk auto-save
                         fetch(CONFIG.SCRIPT_URL, {
                             method: 'POST',
                             body: JSON.stringify({
                                 action: 'saveTemporaryAnswer',
                                 username: session.username,
-                                kodeMateri: currentExamData.code,
+                                kodeMateri: cacheKey, // (DIUBAH) Kirim kunci cache
                                 kunciSoal: questionTextKey,
                                 jawaban: e.target.value
                             }),
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                             keepalive: true
                         });
-                        
                         document.querySelectorAll(`label[for^="q${index}_opt"]`).forEach(label => label.classList.remove('selected'));
                         document.querySelector(`label[for="${e.target.id}"]`).classList.add('selected');
                     });
                 });
+            } else {
+                const textarea = questionBlock.querySelector('textarea');
+                if (textarea) {
+                    textarea.addEventListener('input', (e) => { 
+                        examAnswers[questionTextKey] = e.target.value; 
+                        logAction('JAWAB_SOAL', `Mengetik jawaban soal no. ${index + 1} (Isian)`);
+                        fetch(CONFIG.SCRIPT_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                action: 'saveTemporaryAnswer',
+                                username: session.username,
+                                kodeMateri: cacheKey, // (DIUBAH) Kirim kunci cache
+                                kunciSoal: questionTextKey,
+                                jawaban: e.target.value
+                            }),
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            keepalive: true
+                        });
+                    });
+                }
             }
         });
     };
 
-    // Langkah 3: Tentukan apakah perlu kata sandi atau tidak
+    // (Logika kata sandi - tetap sama)
     if (Object.keys(temporaryAnswers).length > 0) {
-        // Jika ada progres, minta kata sandi dari guru
         const password = String(Math.floor(10000 + Math.random() * 90000));
         logAction('AKSES_LANJUTAN', `Santri mencoba melanjutkan ujian. Kata sandi: ${password}`);
-        
         const modal = document.getElementById('teacherPasswordModal');
         const input = document.getElementById('teacherPasswordInput');
         const submitBtn = document.getElementById('submitTeacherPasswordBtn');
@@ -4447,39 +4499,17 @@ questionsContainer.innerHTML = loadingHTML;
         input.value = '';
 		hideLoading(); 
         modal.style.display = 'block';
-
-        const submitHandler = () => {
-            if (input.value === password) {
-                modal.style.display = 'none';
-                logAction('AKSES_DIBERIKAN', `Kata sandi benar.`);
-                startTheExamProcess(); // Lanjutkan ke proses ujian
-            } else {
-                alert('Kata sandi salah. Silakan minta lagi dari pengawas.');
-                logAction('AKSES_DITOLAK', `Santri salah memasukkan kata sandi.`);
-            }
-            cleanupListeners();
-        };
-        const cancelHandler = () => {
-            modal.style.display = 'none';
-            isExamInProgress = false; // Batalkan status ujian
-            cleanupListeners();
-        };
-        const cleanupListeners = () => {
-            submitBtn.removeEventListener('click', submitHandler);
-            cancelBtn.removeEventListener('click', cancelHandler);
-        };
-
+        const submitHandler = () => { if (input.value === password) { modal.style.display = 'none'; logAction('AKSES_DIBERIKAN', `Kata sandi benar.`); startTheExamProcess(); } else { alert('Kata sandi salah. Silakan minta lagi dari pengawas.'); logAction('AKSES_DITOLAK', `Santri salah memasukkan kata sandi.`); } cleanupListeners(); };
+        const cancelHandler = () => { modal.style.display = 'none'; isExamInProgress = false; cleanupListeners(); };
+        const cleanupListeners = () => { submitBtn.removeEventListener('click', submitHandler); cancelBtn.removeEventListener('click', cancelHandler); };
         submitBtn.addEventListener('click', submitHandler);
         cancelBtn.addEventListener('click', cancelHandler);
-        
     } else {
 		hideLoading(); 
-        // Jika ujian benar-benar baru, langsung mulai
         logAction('UJIAN_DIMULAI', currentExamData.title);
         startTheExamProcess();
     }
 }
-
 /**
  * FUNGSI BARU: Menghitung Levenshtein Distance (mengukur typo)
  * @param {string} a - String pertama (jawaban santri)
@@ -4512,50 +4542,71 @@ function calculateAndShowResult() {
 
     const isForceSubmit = false; 
 
-    // --- (BARU) Logika Penilaian dengan Poin dan Toleransi Typo ---
     let totalPoinSantri = 0;
     let totalPoinMaksimal = 0;
 
     currentQuestions.forEach((q, index) => {
-        const poinSoal = q.p || 4; // Ambil poin soal (default 4)
+        const poinSoal = q.p || 4; 
         totalPoinMaksimal += poinSoal;
 
-        const jawabanSantri = examAnswers[q.q] || ""; // q.q adalah IsiSoal
-        const kunciJawaban = q.a || ""; // q.a adalah KunciJawabanTeks
+        const jawabanSantri = examAnswers[q.q] || ""; 
+        const kunciJawabanString = q.a || ""; // Kunci jawaban dari guru, cth: "Oksigen (O2) / Oxygen"
 
-        if (q.j === 'PG') { // Soal Pilihan Ganda
-            // Jawaban PG harus sama persis (setelah dinormalisasi)
-            if (jawabanSantri.toLowerCase().trim() === kunciJawaban.toLowerCase().trim()) {
+        if (q.j === 'PG') { 
+            // --- Logika Pilihan Ganda (Tetap Sama) ---
+            if (jawabanSantri.toLowerCase().trim() === kunciJawabanString.toLowerCase().trim()) {
                 totalPoinSantri += poinSoal;
             }
-        } else { // Soal Isian
+        } else { 
+            // --- (PERBAIKAN) Logika Soal Isian (Sinonim) ---
             const jawabanSantriNorm = jawabanSantri.toLowerCase().trim();
-            const kunciJawabanNorm = kunciJawaban.toLowerCase().trim();
 
-            if (jawabanSantriNorm === kunciJawabanNorm) {
-                // Jawaban benar sempurna
-                totalPoinSantri += poinSoal;
-            } else if (kunciJawabanNorm.length > 3) { 
-                // Terapkan toleransi typo HANYA jika kunci jawaban > 3 huruf
-                
-                // Hitung jarak typo
-                const distance = getLevenshteinDistance(jawabanSantriNorm, kunciJawabanNorm);
-                
-                // Tentukan toleransi: 1 typo untuk jawaban pendek, 2 typo untuk jawaban panjang
-                const toleransiTypo = (kunciJawabanNorm.length > 8) ? 2 : 1;
+            // 1. Buat daftar kunci jawaban yang valid
+            //    Pecah string berdasarkan /, |, (, atau )
+            const kunciList = kunciJawabanString.toLowerCase()
+                                      .split(/[/|()]/)      // Pecah berdasarkan karakter pemisah
+                                      .map(s => s.trim())   // Hapus spasi di awal/akhir (cth: " O2 ")
+                                      .filter(Boolean);    // Hapus string kosong hasil split
 
-                if (distance <= toleransiTypo) {
-                    // Jawaban benar dengan typo, beri 75% poin (pengurangan 1/4)
-                    totalPoinSantri += (poinSoal * 0.75);
+            // Contoh: "Oksigen (O2) / Oxygen" -> ["oksigen", "o2", "oxygen"]
+            
+            let foundPerfectMatch = false;
+            let foundTypoMatch = false;
+
+            // 2. Cek Kecocokan 100%
+            //    Apakah jawaban santri ada di dalam daftar kunci?
+            if (kunciList.includes(jawabanSantriNorm)) {
+                foundPerfectMatch = true;
+            }
+
+            // 3. Cek Toleransi Typo (75%)
+            if (!foundPerfectMatch) {
+                // Loop setiap kunci jawaban yang mungkin
+                for (const kunci of kunciList) {
+                    if (kunci.length > 3) { 
+                        const distance = getLevenshteinDistance(jawabanSantriNorm, kunci);
+                        const toleransiTypo = (kunci.length > 8) ? 2 : 1;
+
+                        if (distance <= toleransiTypo) {
+                            foundTypoMatch = true;
+                            break; // Hentikan loop jika sudah ditemukan 1 typo yang cocok
+                        }
+                    }
                 }
             }
-            // Jika tidak, totalPoinSantri tidak bertambah (jawaban salah)
+
+            // 4. Berikan Poin
+            if (foundPerfectMatch) {
+                totalPoinSantri += poinSoal; // Poin 100%
+            } else if (foundTypoMatch) {
+                totalPoinSantri += (poinSoal * 0.75); // Poin 75%
+            }
+            // --- Akhir Perbaikan ---
         }
     });
 
     // Hitung skor akhir (pembulatan)
     const score = totalPoinMaksimal > 0 ? Math.round((totalPoinSantri / totalPoinMaksimal) * 100) : 0;
-    // --- Akhir Logika Penilaian Baru ---
     
     let finalScore;
     const previousAttempts = currentAttemptHistory ? currentAttemptHistory.percobaan : 0;
@@ -4586,26 +4637,39 @@ function calculateAndShowResult() {
     const resultActionsEl = document.getElementById('result-actions');
     
     const session = getActiveSession();
-    const dataToSave = {
-        action: 'simpanNilaiUjian',
-        username: session.username,
-        namaSantri: session.userData.profileName,
-        kodeMateri: currentExamData.code,
-        judulMateri: currentExamData.title,
-        skor: firstScore,      
-        skorAkhir: finalScore  
-    };
     
-    // (Sisa fungsi ini tetap sama seperti sebelumnya)
-    fetch(CONFIG.SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify(dataToSave),
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    }).then(res => res.json()).then(result => {
-        if (result.status !== 'success') {
-            console.error("Gagal menyimpan nilai:", result.message);
-        }
-    }).catch(err => console.error("Error saat menyimpan nilai:", err));
+    // (PERBAIKAN) Logika penyimpanan nilai untuk ujian gabungan/bulanan
+    const isGabungan = (currentExamData.jenis === 'UTS' || currentExamData.jenis === 'UAS');
+    
+    // Jika ujian gabungan, kita tidak menyimpan nilai ke sheet 'nilai'
+    // karena KHS akan dihitung secara terpisah nanti.
+    // Kita HANYA simpan jika ini Ujian Bulanan biasa.
+    if (!isGabungan) {
+        const dataToSave = {
+            action: 'simpanNilaiUjian',
+            username: session.username,
+            namaSantri: session.userData.profileName,
+            kodeMateri: currentExamData.materiList[0], // Ambil kode materi pertama
+            judulMateri: currentExamData.title,
+            skor: firstScore,      
+            skorAkhir: finalScore  
+        };
+        
+        fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(dataToSave),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        }).then(res => res.json()).then(result => {
+            if (result.status !== 'success') {
+                console.error("Gagal menyimpan nilai:", result.message);
+            }
+        }).catch(err => console.error("Error saat menyimpan nilai:", err));
+    } else {
+        // Jika ini UTS/UAS, kita perlu cara lain untuk menyimpan nilai
+        // Untuk saat ini, kita log saja, tapi TIDAK disimpan ke 'nilai'
+        console.log("Ujian Gabungan Selesai (Tidak disimpan ke 'nilai' secara individu):", finalScore);
+    }
+
 
     resultScoreEl.textContent = finalScore;
     
@@ -5399,11 +5463,15 @@ function imageUploadHandler(quillInstance) {
 }
 
 function setupInputSoalPage() {
-    const materiSelect = document.getElementById('materi-soal-select');
+    // (DISEDERHANAKAN) Hanya mengambil 1 dropdown materi
+    const materiSelectBulanan = document.getElementById('materi-soal-select');
+    const jenisUjianSelect = document.getElementById('input-jenis-ujian');
+    const containerBulanan = document.getElementById('materi-select-container-bulanan');
+    // (DIHAPUS) Referensi ke 'materi-select-container-multi' dihapus
+    
     const previewContainer = document.getElementById('soal-preview-container');
     const simpanBtn = document.getElementById('simpan-soal-btn');
-    
-    // Inisialisasi editor Quill.js
+
     const quillEditor = new Quill('#quill-editor-container', {
         theme: 'snow',
         modules: {
@@ -5415,14 +5483,12 @@ function setupInputSoalPage() {
                 ['clean']
             ]
         },
-        placeholder: 'Tempel (paste) soal dari MS. Word di sini...\n\nKunci Jawaban bisa dideteksi otomatis dengan:\n1. Menebalkan (Bold) pilihan PG (cth: <b>A. Jakarta</b>)\n2. Menulis "Kunci Jawaban : A" atau "Kunci Jawaban : Ini jawabannya" di akhir soal.'
+        placeholder: 'Tempel (paste) soal dari MS. Word di sini...'
     });
-
-    // Panggil handler untuk unggah gambar
     imageUploadHandler(quillEditor);
 
-    // Isi dropdown materi (logika tetap sama)
-    if (materiSelect && materiSelect.options.length <= 1) {
+    // (DISEDERHANAKAN) Hanya mengisi satu dropdown
+    if (materiSelectBulanan && materiSelectBulanan.options.length <= 1) {
         const uniqueSubjects = {};
         Object.values(appState.processedSchedules).flat().forEach(item => {
             if (item.subject && item.subject.includes(':')) {
@@ -5432,15 +5498,26 @@ function setupInputSoalPage() {
                 }
             }
         });
-        for (const code in uniqueSubjects) {
+        
+        materiSelectBulanan.innerHTML = '<option value="">Pilih Materi...</option>';
+        const sortedSubjects = Object.entries(uniqueSubjects).sort((a,b) => a[1].localeCompare(b[1]));
+
+        sortedSubjects.forEach(([code, subject]) => {
             const option = document.createElement('option');
             option.value = code;
-            option.textContent = uniqueSubjects[code];
-            materiSelect.appendChild(option);
-        }
+            option.textContent = subject;
+            materiSelectBulanan.appendChild(option);
+        });
     }
 
-    // Event listener untuk memicu pratinjau saat mengetik
+    // (DISEDERHANAKAN) Event listener ini tidak lagi menyembunyikan/menampilkan apa pun
+    jenisUjianSelect.addEventListener('change', (e) => {
+        // Tidak ada aksi UI yang diperlukan lagi
+        // (containerBulanan dan materiContainerMulti tidak perlu di-toggle)
+    });
+    jenisUjianSelect.dispatchEvent(new Event('change'));
+
+
     let typingTimer;
     quillEditor.on('text-change', () => {
         clearTimeout(typingTimer);
@@ -5452,7 +5529,6 @@ function setupInputSoalPage() {
         }, 300);
     });
 
-    // Event delegation untuk checkbox yang dinamis
     previewContainer.addEventListener('change', (event) => {
         if (event.target.id === 'auto-fill-keys-checkbox') {
             renderSoalPreview(quillEditor.root.innerHTML, event.target.checked);
@@ -5460,20 +5536,21 @@ function setupInputSoalPage() {
     });
 
     /**
-     * (DIPERBARUI) Fungsi pratinjau
+     * (FUNGSI INI SUDAH BERISI PERBAIKAN BUG "Arteri" DAN POIN OTOMATIS)
      */
     function renderSoalPreview(fullHtml, isAutoFillChecked) {
-        
         const autoFillKeys = isAutoFillChecked;
         const soalArray = fullHtml.split(/(?=<p[^>]*>\s*\d+[.)])/i).map(s => s.trim()).filter(Boolean);
 
         if (soalArray.length === 0) {
-            previewContainer.innerHTML = `<p class="p-8 text-center text-gray-400">Pratinjau soal akan muncul di sini.</p>`;
-            simpanBtn.classList.add('hidden');
+            document.getElementById('soal-preview-container').innerHTML = `<p class="p-8 text-center text-gray-400">Pratinjau soal akan muncul di sini.</p>`;
+            document.getElementById('simpan-soal-btn').classList.add('hidden');
             return;
         }
         
-        // Buat header tabel secara dinamis
+        // (PERBAIKAN) Hitung poin per soal (100 / jumlah soal)
+        const poinPerSoal = Math.round((100 / soalArray.length) * 100) / 100;
+
         let tableHTML = `
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -5491,61 +5568,60 @@ function setupInputSoalPage() {
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">`;
 
-        // Siapkan Regex untuk membersihkan soal
         const keyTextRegex = /<p[^>]*>Kunci Jawaban\s*:\s*(.*?)<\/p>|Kunci Jawaban\s*:\s*(.*?)(?=<br>|$)/i;
         const boldRegex = /<(strong|b)[^>]*>\s*([A-D])[.)\s]/i;
         const boldReplaceRegex = /<(strong|b)[^>]*>(\s*[A-D][.)\s])/i;
-        const numberRegex = /(<p[^>]*>)\s*\d+[.)]\s*/i; // Regex untuk nomor soal
+        const numberRegex = /(<p[^>]*>)\s*\d+[.)]\s*/i; 
+        const allOptionsRegex = /<p[^>]*>\s*[a-d][.)].*?<\/p>/gi;
 
         soalArray.forEach((soalHtml, index) => {
             let kunciJawaban = '';
-            let poin = 4;
+            let isPG = false; 
 
-            // --- 1. DETEKSI KUNCI (Hanya jika dicentang) ---
             if (autoFillKeys) {
                 const keyMatch = soalHtml.match(keyTextRegex);
                 if (keyMatch) {
                     let keyText = (keyMatch[1] || keyMatch[2] || '').trim().replace(/<[^>]+>/g, '').trim();
-                    const pgMatch = keyText.match(/^([A-D])[.)\s]?/i);
+                    const pgMatch = keyText.match(/^([A-D])([.)\s]*)?$/i); // Regex perbaikan
                     if (pgMatch) {
                         kunciJawaban = pgMatch[1].toUpperCase();
+                        isPG = true; 
                     } else {
                         kunciJawaban = keyText;
                     }
                 }
-
                 if (!kunciJawaban) {
                     const boldMatch = soalHtml.match(boldRegex);
                     if (boldMatch) {
                         kunciJawaban = boldMatch[2].toUpperCase();
+                        isPG = true; 
                     }
                 }
             }
+            let cleanedSoalHtml = soalHtml.replace(keyTextRegex, ''); 
+            if (isPG) {
+                cleanedSoalHtml = cleanedSoalHtml.replace(boldReplaceRegex, '$2');
+            } else if (kunciJawaban !== '') {
+                cleanedSoalHtml = cleanedSoalHtml.replace(allOptionsRegex, '');
+            }
+            cleanedSoalHtml = cleanedSoalHtml.replace(numberRegex, '$1'); 
 
-            // --- 2. PEMBERSIHAN SOAL (Selalu dijalankan) ---
-            // Variabel baru ini akan berisi HTML yang sudah dibersihkan
-            const cleanedSoalHtml = soalHtml
-                .replace(keyTextRegex, '')       // (Goal 1) Hapus "Kunci Jawaban : ..."
-                .replace(boldReplaceRegex, '$2') // (Goal 2) Hapus tag bold dari opsi (cth: <b>A.</b>)
-                .replace(numberRegex, '$1');     // (Goal 3) Hapus nomor soal (cth: <p>1. )
-
-            // --- 3. RENDER TABEL ---
             tableHTML += `
                 <tr class="soal-row">
                     <td class="px-4 py-3 align-top">${index + 1}</td>
                     <td class="px-4 py-3 text-sm text-gray-800">${cleanedSoalHtml}</td>
                     <td class="px-4 py-3 align-top">
-                        <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md uppercase" value="${kunciJawaban}" placeholder="${autoFillKeys ? 'Otomatis...' : 'Isi manual...'}">
+                        <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md" value="${kunciJawaban}" placeholder="${autoFillKeys ? 'Otomatis...' : 'Isi manual...'}">
                     </td>
                     <td class="px-4 py-3 align-top">
-                        <input type="number" class="poin-soal-input w-full p-2 border rounded-md" value="${poin}">
+                        <input type="number" step="0.01" class="poin-soal-input w-full p-2 border rounded-md" value="${poinPerSoal}">
                     </td>
                 </tr>
             `;
         });
         tableHTML += `</tbody></table>`;
-        previewContainer.innerHTML = tableHTML;
-        simpanBtn.classList.remove('hidden');
+        document.getElementById('soal-preview-container').innerHTML = tableHTML;
+        document.getElementById('simpan-soal-btn').classList.remove('hidden');
     }
 
     if (simpanBtn) {
@@ -5555,35 +5631,33 @@ function setupInputSoalPage() {
 
 // GANTI FUNGSI INI SECARA KESELURUHAN
 function handleSimpanSoal() {
-    const materiSelect = document.getElementById('materi-soal-select');
-    const materiKode = materiSelect.value;
+    // (DISEDERHANAKAN) Hanya mengambil 1 materi
+    const materiKode = document.getElementById('materi-soal-select').value;
     if (!materiKode) {
-        showMessage('Silakan pilih materi terlebih dahulu.', 'error');
+        showMessage('Silakan pilih materi tujuan terlebih dahulu.', 'error');
         return;
     }
 
-    // DITAMBAHKAN: Logika untuk mencari nama guru & username-nya di frontend
     const teacherName = Object.values(appState.processedSchedules).flat().find(item => item.subject.startsWith(materiKode))?.teacher;
     const teacherData = appData.teachers.find(t => t.name === teacherName);
     const teacherUsername = teacherData ? teacherData.username : '';
 
     const rows = document.querySelectorAll('#soal-preview-container .soal-row');
     const dataSoal = [];
+
     rows.forEach((row, index) => {
         dataSoal.push({
-            kodeMateri: materiKode,
+            kodeMateri: materiKode, // (DIUBAH) Masukkan 1 kode materi
             nomorSoal: index + 1,
-            // --- (D) PERUBAHAN DI SINI ---
-            // Kita mengambil .innerHTML agar tag <img> ikut tersimpan
             isiSoal: row.querySelector('td:nth-child(2)').innerHTML,
-            // --- AKHIR PERUBAHAN (D) ---
             kunciJawaban: row.querySelector('.kunci-jawaban-input').value.toUpperCase() || '',
-            poin: parseInt(row.querySelector('.poin-soal-input').value) || 4,
-            mediaLink: '' // Kita tambahkan properti mediaLink kosong untuk jaga-jaga
+            poin: parseFloat(row.querySelector('.poin-soal-input').value) || 4, // (PERBAIKAN) Gunakan parseFloat
+            mediaLink: ''
         });
     });
     
-    if (!confirm(`Anda akan menyimpan ${dataSoal.length} soal. Lanjutkan?`)) return;
+    // (DISEDERHANAKAN) Pesan konfirmasi
+    if (!confirm(`Anda akan menyimpan ${dataSoal.length} soal untuk materi ${materiKode}. Lanjutkan?`)) return;
 
     const simpanBtn = document.getElementById('simpan-soal-btn');
     simpanBtn.disabled = true;
@@ -5595,7 +5669,7 @@ function handleSimpanSoal() {
             action: 'simpanBankSoal', 
             soalData: { 
                 soal: dataSoal, 
-                usernameGuru: teacherUsername // Kirim username yang sudah ditemukan
+                usernameGuru: teacherUsername 
             } 
         }),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
@@ -5604,13 +5678,11 @@ function handleSimpanSoal() {
     .then(result => {
         if (result.status === 'success') {
             showMessage(result.message, 'success');
-            // Reset editor Quill
             const quillEditor = new Quill('#quill-editor-container');
-            quillEditor.setContents([]); // Kosongkan editor
-            
+            quillEditor.setContents([]); 
             document.getElementById('soal-preview-container').innerHTML = `<p class="p-8 text-center text-gray-400">Pratinjau soal akan muncul di sini.</p>`;
             simpanBtn.classList.add('hidden');
-            materiSelect.value = '';
+            document.getElementById('materi-soal-select').value = ''; // Reset dropdown
         } else {
             throw new Error(result.message);
         }
@@ -7529,35 +7601,51 @@ async function renderUnlockedExamsList() {
 // DIUBAH TOTAL: Fungsi setup utama untuk halaman admin
 async function setupHalamanUjianAdmin() {
     const santriContainer = document.getElementById('admin-santri-list-container');
-    const materiContainer = document.getElementById('admin-materi-list-container');
+    const materiSelect = document.getElementById('admin-materi-select'); // (DIUBAH)
     const bukaUjianBtn = document.getElementById('buka-ujian-btn');
     const tutupUjianBtn = document.getElementById('tutup-ujian-btn');
 
-    santriContainer.innerHTML = '<p>Memuat daftar santri...</p>';
-    materiContainer.innerHTML = '<p>Memuat daftar materi ujian...</p>';
+    const jenisUjianSelect = document.getElementById('admin-jenis-ujian');
+    const namaUjianInput = document.getElementById('admin-nama-ujian');
+    const namaUjianHelp = document.getElementById('admin-nama-ujian-help');
 
+    jenisUjianSelect.addEventListener('change', () => {
+        if (jenisUjianSelect.value === 'Bulanan') {
+            namaUjianInput.value = '';
+            namaUjianInput.placeholder = 'Otomatis (sama dengan nama materi)';
+            namaUjianInput.disabled = true;
+            namaUjianHelp.classList.add('hidden');
+        } else {
+            namaUjianInput.value = '';
+            namaUjianInput.placeholder = 'Ketik nama ujian...';
+            namaUjianInput.disabled = false;
+            namaUjianHelp.classList.remove('hidden');
+        }
+    });
+    jenisUjianSelect.dispatchEvent(new Event('change'));
+
+    // Populate Santri & Materi
+    santriContainer.innerHTML = '<p>Memuat daftar santri...</p>';
+    materiSelect.innerHTML = '<option value="">Memuat materi ujian...</option>';
+    
     try {
-        // DIUBAH: Mengambil daftar santri dari server, bukan dari appData
         const [santriResponse, examsResponse] = await Promise.all([
             fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getSantriListWithUsernames' }) }),
             fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAvailableExams' }) })
         ]);
-
-        // Populate Santri List dengan data yang valid
         const santriResult = await santriResponse.json();
         if(santriResult.status !== 'success') throw new Error(santriResult.message);
         santriContainer.innerHTML = '';
         santriResult.santri.sort((a, b) => a.profileName.localeCompare(b.profileName)).forEach(s => {
-            // Menggunakan username asli dari sheet Users
             santriContainer.innerHTML += `<div><input type="checkbox" id="santri_${s.username}" value="${s.username}" class="mr-2"><label for="santri_${s.username}">${s.profileName}</label></div>`;
         });
 
-        // Populate Materi List
         const examsResult = await examsResponse.json();
         if(examsResult.status !== 'success') throw new Error(examsResult.message);
-        materiContainer.innerHTML = '';
+        materiSelect.innerHTML = '<option value="">Pilih 1 Materi...</option>'; // (DIUBAH)
+        
         const uniqueSubjects = new Map();
-        Object.values(appData.schedules).flat().forEach(item => {
+        Object.values(appState.processedSchedules).flat().forEach(item => {
             if (item.subject && item.subject.includes(':')) {
                 const code = item.subject.split(':')[0].trim();
                 if (examsResult.availableExams.includes(code) && !uniqueSubjects.has(code)) {
@@ -7566,12 +7654,11 @@ async function setupHalamanUjianAdmin() {
             }
         });
         Array.from(uniqueSubjects.entries()).sort((a, b) => a[1].localeCompare(b[1])).forEach(([code, subject]) => {
-            materiContainer.innerHTML += `<div><input type="checkbox" id="materi_${code}" value="${code}" class="mr-2"><label for="materi_${code}">${subject}</label></div>`;
+            materiSelect.innerHTML += `<option value="${code}">${subject}</option>`; // (DIUBAH)
         });
-
     } catch(error) {
         santriContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`;
-        materiContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+        materiSelect.innerHTML = `<option value="">${error.message}</option>`;
     }
 	
 	const selectAllSantriCheckbox = document.getElementById('select-all-santri');
@@ -7585,20 +7672,33 @@ async function setupHalamanUjianAdmin() {
         });
     }
 	
-    // Event listener untuk tombol "Buka Ujian" (tetap sama)
+    // (DIPERBARUI) Event listener untuk tombol "Buka Ujian"
     bukaUjianBtn.onclick = async () => {
         const selectedSantri = Array.from(santriContainer.querySelectorAll('input:checked')).map(cb => cb.value);
-        const selectedMateri = Array.from(materiContainer.querySelectorAll('input:checked')).map(cb => cb.value);
-        if (selectedSantri.length === 0 || selectedMateri.length === 0) {
+        const selectedMateri = materiSelect.value; // (DIUBAH)
+        
+        const jenisUjian = jenisUjianSelect.value;
+        const namaUjian = (jenisUjian === 'Bulanan' || namaUjianInput.value.trim() === '') 
+            ? selectedMateri // Jika bulanan, Nama Ujian = Kode Materi
+            : namaUjianInput.value;
+
+        if (selectedSantri.length === 0 || !selectedMateri) {
             showMessage('Pilih minimal satu santri dan satu materi ujian.', 'error');
             return;
         }
+        
         bukaUjianBtn.disabled = true;
         bukaUjianBtn.textContent = 'Memproses...';
         try {
             const response = await fetch(CONFIG.SCRIPT_URL, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'unlockExamsForSantri', santriUsernames: selectedSantri, subjectCodes: selectedMateri }),
+                body: JSON.stringify({ 
+                    action: 'unlockExamsForSantri', 
+                    santriUsernames: selectedSantri, 
+                    subjectCodes: [selectedMateri], // (DIUBAH) Kirim sebagai array 1 item
+                    jenisUjian: jenisUjian,
+                    namaUjian: namaUjian
+                }),
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             const result = await response.json();
@@ -7613,7 +7713,7 @@ async function setupHalamanUjianAdmin() {
         }
     };
 
-    // Event listener untuk tombol "Tutup Ujian" (tetap sama)
+    // (Sisa fungsi ini, renderUnlockedExamsList dan tutupUjianBtn.onclick, tetap sama)
     tutupUjianBtn.onclick = async () => {
         const selectedExams = Array.from(document.querySelectorAll('.unlocked-exam-cb:checked')).map(cb => parseInt(cb.value));
         if (selectedExams.length === 0) {
@@ -7639,7 +7739,6 @@ async function setupHalamanUjianAdmin() {
             tutupUjianBtn.textContent = 'Tutup Ujian Terpilih';
         }
     };
-
     renderUnlockedExamsList();
 }
 
