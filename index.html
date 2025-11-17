@@ -1290,6 +1290,55 @@
     white-space: pre-wrap; /* Ini akan memaksa placeholder untuk ganti baris */
 }
 
+#exam-nav-grid-container {
+    position: fixed; /* Mengambang di layar */
+    top: 20%;
+    right: 20px;
+    width: 220px;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 5001; /* Di atas konten ujian, tapi di bawah modal */
+    
+    display: grid;
+    /* (5 kolom, otomatis menyesuaikan) */
+    grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); 
+    gap: 6px;
+    max-height: 60vh; /* Batasi tinggi agar bisa di-scroll jika soal banyak */
+    overflow-y: auto;
+}
+
+.nav-box {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.nav-box.unanswered {
+    background-color: #e5e7eb; /* bg-gray-200 */
+    color: #374151; /* text-gray-700 */
+    border-color: #d1d5db; /* border-gray-300 */
+}
+.nav-box.unanswered:hover {
+    background-color: #f3f4f6; /* bg-gray-100 */
+}
+
+.nav-box.answered {
+    background-color: #10b981; /* bg-emerald-500 */
+    color: white;
+}
+.nav-box.answered:hover {
+    background-color: #059669; /* bg-emerald-600 */
+}
+
     </style>
 </head>
 <body>
@@ -2518,7 +2567,8 @@
         <div id="exam-footer" class="mt-8 pt-4 border-t">
             <button id="submit-exam-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg text-xl">Selesai & Kirim Jawaban</button>
         </div>
-    </div>
+    </div> <div id="exam-nav-grid-container">
+        </div>
 </div>
 
 <div id="exam-result-modal" class="modal">
@@ -2618,6 +2668,19 @@
             </button>
             <button id="confirmModalNoBtn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-8 rounded-lg">
                 Batal
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="alertModal" class="modal" style="z-index: 9999;">
+    <div class="modal-content text-center">
+        <h2 id="alertModalTitle" class="text-2xl font-bold text-red-600 mb-4">Peringatan</h2>
+        <img src="warning.png" alt="Peringatan" class="mx-auto mb-4 rounded-lg" style="max-height: 150px;">
+        <p id="alertModalMessage" class="text-gray-700 text-lg mb-8">Ini adalah pesan peringatan.</p>
+        <div class="flex justify-center gap-4">
+            <button id="alertModalOkBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">
+                Mengerti
             </button>
         </div>
     </div>
@@ -4276,37 +4339,45 @@ async function renderExamSchedule() {
 // === FUNGSI-FUNGSI PENDUKUNG UJIAN ONLINE ===
 function setupExamListeners() {
     document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('start-exam-trigger')) {
-        // (PERBAIKAN) Ambil data baru dari tombol
-        const namaUjian = e.target.dataset.namaUjian;
-        const jenisUjian = e.target.dataset.jenisUjian;
-        const materiList = JSON.parse(e.target.dataset.materiList);
-
-        // Simpan ke variabel global
-        currentExamData = { 
-            title: namaUjian, 
-            jenis: jenisUjian, 
-            materiList: materiList // Ini adalah array ["MAT-101", "IND-101"]
-        };
-
-        document.getElementById('exam-subject-title').textContent = namaUjian;
-        document.getElementById('exam-warning-modal').style.display = 'block';
-    }
-});
+        if (e.target.classList.contains('start-exam-trigger')) {
+            const namaUjian = e.target.dataset.namaUjian;
+            const jenisUjian = e.target.dataset.jenisUjian;
+            const materiList = JSON.parse(e.target.dataset.materiList);
+            
+            currentExamData = { 
+                title: namaUjian, 
+                jenis: jenisUjian, 
+                materiList: materiList 
+            };
+            
+            document.getElementById('exam-subject-title').textContent = namaUjian;
+            document.getElementById('exam-warning-modal').style.display = 'block';
+        }
+    });
 
     document.getElementById('cancel-exam-btn').addEventListener('click', () => {
         document.getElementById('exam-warning-modal').style.display = 'none';
     });
 
+    // --- (PERBAIKAN BUG 2 DI SINI) ---
     document.getElementById('start-exam-btn').addEventListener('click', () => {
+        
+        // (BARU) "Prime" audio agar bisa diputar nanti
+        // Ini adalah interaksi pengguna yang sah
+        alarmSound.play().catch(e => console.warn("Interaksi audio diperlukan"));
+        alarmSound.pause();
+        alarmSound.currentTime = 0;
+        
         document.getElementById('exam-warning-modal').style.display = 'none';
-        enterFullscreen(document.documentElement);
+        enterFullscreen(document.documentElement); // Hapus ini jika Anda tidak ingin fullscreen otomatis
         startExam();
     });
+    // --- AKHIR PERBAIKAN ---
 
     document.getElementById('submit-exam-btn').addEventListener('click', () => {
         if (Object.keys(examAnswers).length < currentQuestions.length) {
-            alert('Harap jawab semua pertanyaan sebelum mengirim.');
+            // (PERBAIKAN) Ganti alert dengan modal kustom
+            showCustomAlert('Harap jawab semua pertanyaan sebelum mengirim.');
             return;
         }
         if (confirm('Apakah Anda yakin ingin mengirim jawaban Anda?')) {
@@ -4326,29 +4397,83 @@ function setupResultModalListeners() {
     });
 }
 
+// === (BARU) FUNGSI-FUNGSI HELPER UNTUK NAVIGASI UJIAN ===
+
+/**
+ * Membuat kotak-kotak navigasi di sisi kanan
+ * @param {Array} questions - Array 'currentQuestions'
+ * @param {Object} answers - Objek 'examAnswers' (untuk memulihkan status)
+ */
+function renderExamNavGrid(questions, answers) {
+    const container = document.getElementById('exam-nav-grid-container');
+    if (!container) return;
+    
+    container.innerHTML = ''; // Kosongkan
+    
+    questions.forEach((q, index) => {
+        const box = document.createElement('a'); // Gunakan tag <a> agar bisa di-scroll
+        box.id = `nav-box-${index}`;
+        box.className = 'nav-box';
+        box.textContent = index + 1;
+        box.href = `#q${index}_block`; // Link ke blok soal
+
+        // Cek apakah sudah dijawab
+        const questionText = q.q;
+        const savedAnswer = answers[questionText] || "";
+        const isAnswered = (savedAnswer !== "");
+        
+        box.classList.add(isAnswered ? 'answered' : 'unanswered');
+        
+        // Buat agar scroll-nya mulus
+        box.onclick = (e) => {
+            e.preventDefault();
+            const targetBlock = document.getElementById(`q${index}_block`);
+            if (targetBlock) {
+                targetBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        };
+        
+        container.appendChild(box);
+    });
+}
+
+/**
+ * Mengubah warna kotak navigasi
+ * @param {number} index - Nomor soal (mulai dari 0)
+ * @param {boolean} isAnswered - Apakah sudah dijawab atau belum
+ */
+function updateNavBoxStatus(index, isAnswered) {
+    const box = document.getElementById(`nav-box-${index}`);
+    if (!box) return;
+    
+    if (isAnswered) {
+        box.classList.remove('unanswered');
+        box.classList.add('answered');
+    } else {
+        box.classList.remove('answered');
+        box.classList.add('unanswered');
+    }
+}
+// --- (AKHIR FUNGSI HELPER BARU) ---
+
 async function startExam() {
     isExamInProgress = true;
 	showLoading();
     const examContainer = document.getElementById('exam-container');
     const questionsContainer = document.getElementById('exam-questions');
     
-    // (PERBAIKAN) Judul diambil dari data global
     document.getElementById('exam-subtitle').textContent = currentExamData.title; 
- 
     let temporaryAnswers = {};
     const session = getActiveSession();
+    const cacheKey = (currentExamData.jenis === 'Bulanan') ? currentExamData.materiList[0] : currentExamData.title;
 
-    // (PERBAIKAN) Kunci cache adalah NAMA UJIAN (cth: "UAS Ganjil 2025")
-    const cacheKey = currentExamData.title;
-
-    // Langkah 1: Cek progres tersimpan
     try {
         const tempAnswersResponse = await fetch(CONFIG.SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({
                 action: 'getTemporaryAnswers',
                 username: session.username,
-                kodeMateri: cacheKey // Menggunakan kunci cache baru
+                kodeMateri: cacheKey 
             }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
@@ -4360,18 +4485,20 @@ async function startExam() {
         console.warn("Gagal mengambil jawaban sementara, memulai sesi baru:", e);
     }
 
-    // Fungsi inti yang akan menjalankan ujian
     const startTheExamProcess = async () => {
         examContainer.classList.remove('hidden');
-        enterFullscreen(document.documentElement);
+        // (DIHAPUS) enterFullscreen dipindah ke 'start-exam-btn'
         
         const loadingHTML = `... (Loading HTML Anda tetap sama) ...`;
         questionsContainer.innerHTML = loadingHTML;
 
         try {
-            // (PERBAIKAN) Mengirim 1 kode materi
-            let dataForSoal = { action: 'getBankSoal', kodeMateri: currentExamData.materiList[0] };
-
+            let dataForSoal;
+            if (currentExamData.jenis === 'Bulanan') {
+                dataForSoal = { action: 'getBankSoal', kodeMateri: currentExamData.materiList[0] };
+            } else {
+                dataForSoal = { action: 'getBankSoal', kodeMateriList: currentExamData.materiList };
+            }
             const [soalResponse, nilaiResponse] = await Promise.all([
                 fetch(CONFIG.SCRIPT_URL, {
                     method: 'POST',
@@ -4384,25 +4511,19 @@ async function startExam() {
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 })
             ]);
-
             const soalResult = await soalResponse.json();
             const nilaiResult = await nilaiResponse.json();
-
             if (soalResult.status !== 'success') throw new Error(soalResult.message);
             if (nilaiResult.status !== 'success') throw new Error(nilaiResult.message);
-            
             currentQuestions = soalResult.questions;
             currentAttemptHistory = nilaiResult.nilai[currentExamData.materiList[0]] || null;
-            
             if (currentQuestions.length === 0) {
                 throw new Error("Tidak ada soal yang ditemukan untuk materi ini.");
             }
-
             examAnswers = temporaryAnswers; 
             if(Object.keys(examAnswers).length > 0) {
                 showMessage('Progres sebelumnya berhasil dipulihkan.', 'success');
             }
-
         } catch (error) {
             questionsContainer.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat soal: ${error.message}</p>`;
             isExamInProgress = false; 
@@ -4410,6 +4531,7 @@ async function startExam() {
         }
         
         questionsContainer.innerHTML = '';
+        renderExamNavGrid(currentQuestions, examAnswers);
 
         // (Render soal PG dan Isian - kode ini sudah benar)
         currentQuestions.forEach((q, index) => {
@@ -4426,8 +4548,11 @@ async function startExam() {
             }
             questionsContainer.innerHTML += `<div class="question-block" id="${questionId}_block"><div class="flex justify-between items-start"><p class="text-lg font-semibold mb-4 flex-1">${index + 1}. ${q.q}</p><span class="text-sm font-bold text-gray-500 ml-4">${q.p || 4} Poin</span></div><div class="answer-options">${answerInputHtml}</div></div>`;
             
-            const questionText = q.q;
+            // (PERBAIKAN BUG 4) Pulihkan jawaban
+            // Kunci jawaban (Teks Soal) harus sama persis dengan yang disimpan
+            const questionText = q.q; 
             const savedAnswerForThisQuestion = examAnswers[questionText];
+            
             if (savedAnswerForThisQuestion) {
                 if (q.j === 'PG') {
                     const radioToCheck = document.querySelector(`input[name="q${index}"][value="${savedAnswerForThisQuestion}"]`);
@@ -4439,25 +4564,25 @@ async function startExam() {
             }
         });
         
-        // (Listener auto-save - diperbarui untuk cacheKey)
+        // (Listener auto-save)
         currentQuestions.forEach((q, index) => {
             const questionBlock = document.getElementById(`q${index}_block`);
             if (!questionBlock) return;
-            const questionTextKey = currentQuestions[index].q;
+            const questionTextKey = currentQuestions[index].q; // (PERBAIKAN BUG 4) Kuncinya adalah Teks Soal
             if (q.j === 'PG') {
                 const radioButtons = questionBlock.querySelectorAll('input[type="radio"]');
                 radioButtons.forEach(radio => {
                     radio.addEventListener('change', (e) => {
                         examAnswers[questionTextKey] = e.target.value; 
-                        const answerLetter = document.querySelector(`label[for="${e.target.id}"]`)?.textContent.trim().charAt(0) || '?';
-                        logAction('JAWAB_SOAL', `Menjawab soal no. ${index + 1} : ${answerLetter}`);
+                        logAction('JAWAB_SOAL', `Menjawab soal no. ${index + 1}`);
+                        updateNavBoxStatus(index, true); 
                         fetch(CONFIG.SCRIPT_URL, {
                             method: 'POST',
                             body: JSON.stringify({
                                 action: 'saveTemporaryAnswer',
                                 username: session.username,
-                                kodeMateri: cacheKey, // (DIUBAH) Kirim kunci cache
-                                kunciSoal: questionTextKey,
+                                kodeMateri: cacheKey, 
+                                kunciSoal: questionTextKey, // (PERBAIKAN BUG 4) Kirim Teks Soal
                                 jawaban: e.target.value
                             }),
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -4473,13 +4598,14 @@ async function startExam() {
                     textarea.addEventListener('input', (e) => { 
                         examAnswers[questionTextKey] = e.target.value; 
                         logAction('JAWAB_SOAL', `Mengetik jawaban soal no. ${index + 1} (Isian)`);
+                        updateNavBoxStatus(index, e.target.value.trim() !== '');
                         fetch(CONFIG.SCRIPT_URL, {
                             method: 'POST',
                             body: JSON.stringify({
                                 action: 'saveTemporaryAnswer',
                                 username: session.username,
-                                kodeMateri: cacheKey, // (DIUBAH) Kirim kunci cache
-                                kunciSoal: questionTextKey,
+                                kodeMateri: cacheKey, 
+                                kunciSoal: questionTextKey, // (PERBAIKAN BUG 4) Kirim Teks Soal
                                 jawaban: e.target.value
                             }),
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -4491,10 +4617,11 @@ async function startExam() {
         });
     };
 
-    // (Logika kata sandi - tetap sama)
+    // Langkah 3: Tentukan apakah perlu kata sandi
     if (Object.keys(temporaryAnswers).length > 0) {
         const password = String(Math.floor(10000 + Math.random() * 90000));
         logAction('AKSES_LANJUTAN', `Santri mencoba melanjutkan ujian. Kata sandi: ${password}`);
+        
         const modal = document.getElementById('teacherPasswordModal');
         const input = document.getElementById('teacherPasswordInput');
         const submitBtn = document.getElementById('submitTeacherPasswordBtn');
@@ -4502,17 +4629,42 @@ async function startExam() {
         input.value = '';
 		hideLoading(); 
         modal.style.display = 'block';
-        const submitHandler = () => { if (input.value === password) { modal.style.display = 'none'; logAction('AKSES_DIBERIKAN', `Kata sandi benar.`); startTheExamProcess(); } else { alert('Kata sandi salah. Silakan minta lagi dari pengawas.'); logAction('AKSES_DITOLAK', `Santri salah memasukkan kata sandi.`); } cleanupListeners(); };
-        const cancelHandler = () => { modal.style.display = 'none'; isExamInProgress = false; cleanupListeners(); };
-        const cleanupListeners = () => { submitBtn.removeEventListener('click', submitHandler); cancelBtn.removeEventListener('click', cancelHandler); };
+
+        const submitHandler = () => {
+            if (input.value === password) {
+                modal.style.display = 'none';
+                logAction('AKSES_DIBERIKAN', `Kata sandi benar.`);
+                startTheExamProcess(); 
+                cleanupListeners(); 
+            } else {
+                // --- (PERBAIKAN BUG 1: GANTI ALERT) ---
+                logAction('AKSES_DITOLAK', `Santri salah memasukkan kata sandi.`);
+                // Ganti 'alert' dengan 'showMessage'
+                showMessage('Kata sandi salah. Silakan minta lagi dari pengawas.', 'error');
+                // --- AKHIR PERBAIKAN ---
+            }
+        };
+        const cancelHandler = () => {
+            modal.style.display = 'none';
+            isExamInProgress = false; 
+            cleanupListeners(); 
+        };
+        const cleanupListeners = () => {
+            submitBtn.removeEventListener('click', submitHandler);
+            cancelBtn.removeEventListener('click', cancelHandler);
+        };
+
         submitBtn.addEventListener('click', submitHandler);
         cancelBtn.addEventListener('click', cancelHandler);
+        
     } else {
 		hideLoading(); 
         logAction('UJIAN_DIMULAI', currentExamData.title);
         startTheExamProcess();
     }
 }
+
+
 /**
  * FUNGSI BARU: Menghitung Levenshtein Distance (mengukur typo)
  * @param {string} a - String pertama (jawaban santri)
@@ -4539,6 +4691,8 @@ function getLevenshteinDistance(a, b) {
 }
 
 function calculateAndShowResult() {
+
+document.getElementById('exam-nav-grid-container').innerHTML = '';
     
     alarmSound.pause();
     alarmSound.currentTime = 0;
@@ -4737,13 +4891,16 @@ function exitFullscreen() {
 function playAlarm() {
     // Cek lagi untuk memastikan alarm hanya berbunyi saat ujian berlangsung
     if (isExamInProgress) {
+        
+        // (PERBAIKAN BUG 2) Mainkan audio yang sudah di-"prime"
         alarmSound.play().catch(error => {
             console.error("Gagal memutar audio:", error);
         });
+        
+        // (PERBAIKAN BUG 3) Tampilkan modal peringatan, jangan paksa fullscreen
         const warningModal = document.getElementById('fullscreenWarningModal');
-        warningModal.style.display = 'flex';
-        // TAMBAHKAN BARIS INI untuk membuat peringatan menjadi fullscreen
-        enterFullscreen(warningModal);
+        warningModal.style.display = 'flex'; 
+        // (DIHAPUS) Baris 'enterFullscreen(warningModal);' dihapus karena menyebabkan error.
     }
 }
 
@@ -5249,24 +5406,22 @@ function setupPengawasUjianPage() {
 
     const proctorGridContainer = document.getElementById('proctor-grid-container');
     const alarmAudio = document.getElementById('proctor-alarm-sound');
-    const stopAlarmBtn = document.getElementById('proctor-stop-alarm-btn'); // (BARU)
+    const stopAlarmBtn = document.getElementById('proctor-stop-alarm-btn'); 
 
-    seenViolationTimestamps.clear(); // (PINDAH) Reset Set setiap kali halaman dibuka
+    seenViolationTimestamps.clear(); 
     let isAudioUnlocked = false;
 
-    // (BARU) Fungsi untuk menghentikan alarm (manual atau otomatis)
     const stopProctorAlarm = () => {
         if (!alarmAudio) return;
         alarmAudio.pause();
         alarmAudio.currentTime = 0;
-        stopAlarmBtn.classList.add('hidden'); // Sembunyikan tombol
+        stopAlarmBtn.classList.add('hidden'); 
     };
 
-    // (BARU) Fungsi untuk memutar alarm
     const playProctorAlarm = () => {
         if (!alarmAudio) return;
         
-        stopAlarmBtn.classList.remove('hidden'); // Tampilkan tombol stop
+        stopAlarmBtn.classList.remove('hidden'); 
         alarmAudio.volume = 1.0;
         alarmAudio.currentTime = 0;
         const playPromise = alarmAudio.play();
@@ -5287,7 +5442,6 @@ function setupPengawasUjianPage() {
         }
     };
 
-    // (BARU) Pasang listener untuk tombol stop manual
     stopAlarmBtn.addEventListener('click', stopProctorAlarm);
 
     const refreshProctorView = async () => {
@@ -5319,7 +5473,8 @@ function setupPengawasUjianPage() {
                 const lastLog = userLogs.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp))[0];
                 if (lastLog) {
                     const lastActionTime = new Date(lastLog.Timestamp);
-                    if ((new Date() - lastActionTime) < (2 * 60 * 60 * 1000)) {
+                    // (PERBAIKAN) Hanya tampilkan santri yang aktif 1 jam terakhir
+                    if ((new Date() - lastActionTime) < (1 * 60 * 60 * 1000)) {
                         activeSantriUsernames.push(username);
                     }
                 }
@@ -5352,7 +5507,7 @@ function setupPengawasUjianPage() {
                 const sortedLogs = santriData.logs.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp));
                 let logHTML = '';
                 let hasNewViolation = false;
-                let hasReturned = false; // (BARU)
+                let hasReturned = false; 
 
                 sortedLogs.forEach(log => {
                     const time = new Date(log.Timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -5360,21 +5515,21 @@ function setupPengawasUjianPage() {
                     let color = 'text-gray-700';
                     
                     const isViolation = log.ActionType.includes('PELANGGARAN');
-                    const isReturn = log.ActionType.includes('AKSES_KEMBALI'); // (BARU)
+                    const isReturn = log.ActionType.includes('AKSES_KEMBALI'); 
 
                     if (isViolation) {
                         color = 'text-red-600 font-bold';
                         if (!seenViolationTimestamps.has(timestamp)) {
                             hasNewViolation = true;
                             seenViolationTimestamps.add(timestamp);
-                            playProctorAlarm(); // Putar alarm
+                            playProctorAlarm(); 
                         }
-                    } else if (isReturn) { // (BARU)
-                        color = 'text-green-600 font-bold'; // Log "kembali" kita beri warna hijau
+                    } else if (isReturn) { 
+                        color = 'text-green-600 font-bold'; 
                         if (!seenViolationTimestamps.has(timestamp)) {
                             hasReturned = true;
                             seenViolationTimestamps.add(timestamp);
-                            stopProctorAlarm(); // Matikan alarm
+                            stopProctorAlarm(); 
                         }
                     }
                     
@@ -5391,7 +5546,6 @@ function setupPengawasUjianPage() {
                     setTimeout(() => santriCard.classList.remove('flash-red-alert'), 3000);
                 }
 
-                // (BARU) Jika log terbaru adalah "kembali", hapus kedipan merah
                 if (hasReturned) {
                     santriCard.classList.remove('flash-red-alert');
                 }
@@ -5408,7 +5562,10 @@ function setupPengawasUjianPage() {
     };
     
     refreshProctorView();
-    proctorInterval = setInterval(refreshProctorView, 5000); // Refresh setiap 5 detik
+    // --- (PERBAIKAN BUG 5: REALTIME) ---
+    // Mengubah interval dari 7000ms (7 detik) menjadi 3000ms (3 detik)
+    proctorInterval = setInterval(refreshProctorView, 3000);
+    // --- AKHIR PERBAIKAN ---
 }
 
 // Fungsi untuk membersihkan interval saat pindah halaman
@@ -6395,6 +6552,25 @@ function showCustomConfirm(title, message, yesText = 'Ya', noText = 'Batal') {
         yesBtn.addEventListener('click', yesHandler);
         noBtn.addEventListener('click', noHandler);
     });
+}
+
+// --- (BARU) FUNGSI UNTUK MENAMPILKAN ALERT KUSTOM ---
+function showCustomAlert(message, title = "Peringatan") {
+    const modal = document.getElementById('alertModal');
+    document.getElementById('alertModalTitle').textContent = title;
+    document.getElementById('alertModalMessage').textContent = message;
+    modal.style.display = 'block';
+
+    const okBtn = document.getElementById('alertModalOkBtn');
+    
+    const okHandler = () => {
+        modal.style.display = 'none';
+        okBtn.removeEventListener('click', okHandler);
+    };
+    
+    // Hapus listener lama (jika ada) dan pasang yang baru
+    okBtn.removeEventListener('click', okHandler);
+    okBtn.addEventListener('click', okHandler);
 }
 
 function updateKelompokKeuangan() {
