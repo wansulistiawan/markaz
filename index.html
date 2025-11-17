@@ -1286,6 +1286,9 @@
     opacity: 1.0;
     cursor: pointer;
 }
+.ql-editor.ql-blank::before {
+    white-space: pre-wrap; /* Ini akan memaksa placeholder untuk ganti baris */
+}
 
     </style>
 </head>
@@ -2430,7 +2433,7 @@
         <div class="form-group mb-6">
             <label for="quill-editor-container" class="text-base font-semibold">3. Salin dan Tempel Soal dari MS. Word</label>
             <p class="text-sm text-gray-500 mb-2">Pastikan setiap soal diawali angka (cth: 1. Soal). Sistem akan otomatis mendeteksi soal PG dan Isian.</p>
-            <div id="quill-editor-container" style="height: 250px;"></div>
+            <div id="quill-editor-container" style="height: 350px;"></div>
         </div>
 
         <div class="form-group">
@@ -4835,6 +4838,8 @@ function timeAgo(date) {
 let tahfidzChartInstance = null;
 let murajaahChartInstance = null;
 let hafalanChartInstance = null;
+let quillEditor = null; // <-- (BARU) TAMBAHKAN VARIABEL INI
+
 
 async function renderTahfidzChart(santriName, startDate, endDate) {
     const container = document.getElementById('ziyadah-chart-content');
@@ -5462,17 +5467,101 @@ function imageUploadHandler(quillInstance) {
     });
 }
 
+/**
+ * Menangani unggah gambar kustom untuk editor Quill.
+ * Mengompres gambar, mengunggah ke Cloudinary, dan memasukkan URL.
+ */
+function imageUploadHandler(quillInstance) {
+    const toolbar = quillInstance.getModule('toolbar');
+    toolbar.addHandler('image', () => {
+        const input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        input.click();
+
+        input.onchange = async () => {
+            const file = input.files[0];
+            if (/^image\//.test(file.type)) {
+                showLoading(); // Tampilkan loading
+                try {
+                    // 1. Kompresi gambar sebelum diunggah
+                    const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280 };
+                    const compressedFile = await imageCompression(file, options);
+
+                    // 2. Siapkan data untuk Cloudinary
+                    const formData = new FormData();
+                    formData.append('file', compressedFile, file.name);
+                    formData.append('upload_preset', CONFIG.CLOUDINARY_UPLOAD_PRESET);
+
+                    // 3. Unggah ke Cloudinary
+                    const response = await fetch(CONFIG.CLOUDINARY_URL, { 
+                        method: 'POST', 
+                        body: formData 
+                    });
+                    
+                    if (!response.ok) throw new Error('Gagal mengunggah gambar ke Cloudinary.');
+
+                    const data = await response.json();
+                    const imageUrl = data.secure_url; // Dapatkan URL yang aman (https)
+
+                    // 4. Masukkan URL gambar ke dalam editor
+                    const range = quillInstance.getSelection(true);
+                    quillInstance.insertEmbed(range.index, 'image', imageUrl);
+                    quillInstance.setSelection(range.index + 1);
+
+                } catch (error) {
+                    showMessage(`Error: ${error.message}`, 'error');
+                } finally {
+                    hideLoading(); // Sembunyikan loading
+                }
+            } else {
+                showMessage('Hanya file gambar yang diizinkan.', 'error');
+            }
+        };
+    });
+}
+
+async function uploadPastedImage(base64Data) {
+    showLoading(); // Tampilkan loading
+    try {
+        // 1. Ubah data Base64 kembali menjadi file (blob)
+        const blob = await (await fetch(base64Data)).blob();
+        
+        // 2. Kompres file
+        const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280 };
+        const compressedFile = await imageCompression(blob, options);
+        
+        // 3. Siapkan untuk upload ke Cloudinary
+        const formData = new FormData();
+        formData.append('file', compressedFile, 'pasted-image.png');
+        formData.append('upload_preset', CONFIG.CLOUDINARY_UPLOAD_PRESET); // Pastikan preset ini ada
+
+        // 4. Upload ke Cloudinary
+        const response = await fetch(CONFIG.CLOUDINARY_URL, { 
+            method: 'POST', 
+            body: formData 
+        });
+        
+        if (!response.ok) throw new Error('Gagal mengunggah gambar yang di-paste.');
+        
+        const data = await response.json();
+        return data.secure_url; // Kembalikan URL yang aman
+    } catch (error) {
+        showMessage(`Error (Paste): ${error.message}`, 'error');
+        return null;
+    } finally {
+        hideLoading(); // Sembunyikan loading
+    }
+}
+
 function setupInputSoalPage() {
-    // (DISEDERHANAKAN) Hanya mengambil 1 dropdown materi
     const materiSelectBulanan = document.getElementById('materi-soal-select');
     const jenisUjianSelect = document.getElementById('input-jenis-ujian');
-    const containerBulanan = document.getElementById('materi-select-container-bulanan');
-    // (DIHAPUS) Referensi ke 'materi-select-container-multi' dihapus
-    
     const previewContainer = document.getElementById('soal-preview-container');
     const simpanBtn = document.getElementById('simpan-soal-btn');
 
-    const quillEditor = new Quill('#quill-editor-container', {
+    // (PERBAIKAN) Gunakan variabel global, hapus 'const'
+    quillEditor = new Quill('#quill-editor-container', {
         theme: 'snow',
         modules: {
             toolbar: [
@@ -5483,11 +5572,14 @@ function setupInputSoalPage() {
                 ['clean']
             ]
         },
-        placeholder: 'Tempel (paste) soal dari MS. Word di sini...'
+        placeholder: 'Tempel (paste) soal dari MS. Word di sini...\n\nFORMAT YANG DITERIMA:\n\n1. Soal Pilihan Ganda\n   a. Opsi A\n   b. Opsi B\n   c. Opsi D\n   Kunci Jawaban : B (atau tebalkan opsi B)\n\n2. Soal Isian\n   Pertanyaan soal isian...\n   Kunci Jawaban : Jawaban Benar (Sinonim bisa pakai | atau /)\n   Contoh Kunci: Oksigen (O2) / Oxygen'
     });
-    imageUploadHandler(quillEditor);
+    
+    // (PERBAIKAN) Hanya 1 handler yang diperlukan, yaitu untuk tombol toolbar 🖼️
+    imageUploadHandler(quillEditor); 
+    // (DIHAPUS) clipboard.addMatcher dihapus dari sini karena salah.
 
-    // (DISEDERHANAKAN) Hanya mengisi satu dropdown
+    // (Logika dropdown materi yang sudah disederhanakan)
     if (materiSelectBulanan && materiSelectBulanan.options.length <= 1) {
         const uniqueSubjects = {};
         Object.values(appState.processedSchedules).flat().forEach(item => {
@@ -5498,10 +5590,8 @@ function setupInputSoalPage() {
                 }
             }
         });
-        
         materiSelectBulanan.innerHTML = '<option value="">Pilih Materi...</option>';
         const sortedSubjects = Object.entries(uniqueSubjects).sort((a,b) => a[1].localeCompare(b[1]));
-
         sortedSubjects.forEach(([code, subject]) => {
             const option = document.createElement('option');
             option.value = code;
@@ -5509,15 +5599,9 @@ function setupInputSoalPage() {
             materiSelectBulanan.appendChild(option);
         });
     }
+    jenisUjianSelect.addEventListener('change', (e) => { /* Tidak ada aksi UI */ });
 
-    // (DISEDERHANAKAN) Event listener ini tidak lagi menyembunyikan/menampilkan apa pun
-    jenisUjianSelect.addEventListener('change', (e) => {
-        // Tidak ada aksi UI yang diperlukan lagi
-        // (containerBulanan dan materiContainerMulti tidak perlu di-toggle)
-    });
-    jenisUjianSelect.dispatchEvent(new Event('change'));
-
-
+    // (Listener untuk timer dan checkbox pratinjau)
     let typingTimer;
     quillEditor.on('text-change', () => {
         clearTimeout(typingTimer);
@@ -5528,7 +5612,6 @@ function setupInputSoalPage() {
             renderSoalPreview(quillEditor.root.innerHTML, isAutoFillChecked);
         }, 300);
     });
-
     previewContainer.addEventListener('change', (event) => {
         if (event.target.id === 'auto-fill-keys-checkbox') {
             renderSoalPreview(quillEditor.root.innerHTML, event.target.checked);
@@ -5536,11 +5619,11 @@ function setupInputSoalPage() {
     });
 
     /**
-     * (FUNGSI INI SUDAH BERISI PERBAIKAN BUG "Arteri" DAN POIN OTOMATIS)
+     * (Fungsi renderSoalPreview dengan SEMUA perbaikan)
      */
     function renderSoalPreview(fullHtml, isAutoFillChecked) {
         const autoFillKeys = isAutoFillChecked;
-        const soalArray = fullHtml.split(/(?=<p[^>]*>\s*\d+[.)])/i).map(s => s.trim()).filter(Boolean);
+        const soalArray = fullHtml.split(/(?=<p[^>]*>(?:Soal\s+)?\s*\d+[.)])/i).map(s => s.trim()).filter(Boolean);
 
         if (soalArray.length === 0) {
             document.getElementById('soal-preview-container').innerHTML = `<p class="p-8 text-center text-gray-400">Pratinjau soal akan muncul di sini.</p>`;
@@ -5548,7 +5631,6 @@ function setupInputSoalPage() {
             return;
         }
         
-        // (PERBAIKAN) Hitung poin per soal (100 / jumlah soal)
         const poinPerSoal = Math.round((100 / soalArray.length) * 100) / 100;
 
         let tableHTML = `
@@ -5568,10 +5650,11 @@ function setupInputSoalPage() {
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">`;
 
+        // (Regex deteksi dan pembersihan)
         const keyTextRegex = /<p[^>]*>Kunci Jawaban\s*:\s*(.*?)<\/p>|Kunci Jawaban\s*:\s*(.*?)(?=<br>|$)/i;
         const boldRegex = /<(strong|b)[^>]*>\s*([A-D])[.)\s]/i;
         const boldReplaceRegex = /<(strong|b)[^>]*>(\s*[A-D][.)\s])/i;
-        const numberRegex = /(<p[^>]*>)\s*\d+[.)]\s*/i; 
+        const numberRegex = /(<p[^>]*>)(?:Soal\s+)?\s*\d+[.)]\s*/i; 
         const allOptionsRegex = /<p[^>]*>\s*[a-d][.)].*?<\/p>/gi;
 
         soalArray.forEach((soalHtml, index) => {
@@ -5582,7 +5665,7 @@ function setupInputSoalPage() {
                 const keyMatch = soalHtml.match(keyTextRegex);
                 if (keyMatch) {
                     let keyText = (keyMatch[1] || keyMatch[2] || '').trim().replace(/<[^>]+>/g, '').trim();
-                    const pgMatch = keyText.match(/^([A-D])([.)\s]*)?$/i); // Regex perbaikan
+                    const pgMatch = keyText.match(/^([A-D])([.)\s]*)?$/i); 
                     if (pgMatch) {
                         kunciJawaban = pgMatch[1].toUpperCase();
                         isPG = true; 
@@ -5630,37 +5713,121 @@ function setupInputSoalPage() {
 }
 
 // GANTI FUNGSI INI SECARA KESELURUHAN
-function handleSimpanSoal() {
-    // (DISEDERHANAKAN) Hanya mengambil 1 materi
+async function handleSimpanSoal() { // (PERBAIKAN) Ubah menjadi 'async'
     const materiKode = document.getElementById('materi-soal-select').value;
     if (!materiKode) {
         showMessage('Silakan pilih materi tujuan terlebih dahulu.', 'error');
         return;
     }
+    
+    if (!quillEditor) { 
+        showMessage('Editor belum dimuat. Silakan muat ulang halaman.', 'error');
+        return;
+    }
 
-    const teacherName = Object.values(appState.processedSchedules).flat().find(item => item.subject.startsWith(materiKode))?.teacher;
-    const teacherData = appData.teachers.find(t => t.name === teacherName);
-    const teacherUsername = teacherData ? teacherData.username : '';
+    const fullHtmlFromEditor = quillEditor.root.innerHTML;
+    
+    // (DEFINISI REGEX)
+    const keyTextRegex = /<p[^>]*>Kunci Jawaban\s*:\s*(.*?)<\/p>|Kunci Jawaban\s*:\s*(.*?)(?=<br>|$)/i;
+    const boldRegex = /<(strong|b)[^>]*>\s*([A-D])[.)\s]/i;
+    const boldReplaceRegex = /<(strong|b)[^>]*>(\s*[A-D][.)\s])/i;
+    const numberRegex = /(<p[^>]*>)(?:Soal\s+)?\s*\d+[.)]\s*/i; 
+    const allOptionsRegex = /<p[^>]*>\s*[a-d][.)].*?<\/p>/gi;
+
+    // Parse ulang soal dari editor
+    const soalHtmlArray = fullHtmlFromEditor.split(/(?=<p[^>]*>(?:Soal\s+)?\s*\d+[.)])/i)
+        .map(s => s.trim())
+        .filter(Boolean);
+        
+    const cleanedSoalHtmlArray = soalHtmlArray.map(soalHtml => {
+        const isPG = boldRegex.test(soalHtml);
+        const isIsian = keyTextRegex.test(soalHtml);
+        let cleanedSoalHtml = soalHtml.replace(keyTextRegex, ''); 
+        if (isPG) {
+            cleanedSoalHtml = cleanedSoalHtml.replace(boldReplaceRegex, '$2');
+        } else if (isIsian) {
+            cleanedSoalHtml = cleanedSoalHtml.replace(allOptionsRegex, '');
+        }
+        cleanedSoalHtml = cleanedSoalHtml.replace(numberRegex, '$1'); 
+        return cleanedSoalHtml;
+    });
 
     const rows = document.querySelectorAll('#soal-preview-container .soal-row');
-    const dataSoal = [];
+    
+    if(cleanedSoalHtmlArray.length !== rows.length) {
+        showMessage(`Error: Jumlah soal di editor (${cleanedSoalHtmlArray.length}) tidak cocok dengan pratinjau (${rows.length}). Coba refresh.`, 'error');
+        return;
+    }
 
+    const dataSoal = [];
     rows.forEach((row, index) => {
         dataSoal.push({
-            kodeMateri: materiKode, // (DIUBAH) Masukkan 1 kode materi
+            kodeMateri: materiKode,
             nomorSoal: index + 1,
-            isiSoal: row.querySelector('td:nth-child(2)').innerHTML,
+            // (PENTING) Ambil isiSoal dari array bersih (yang mungkin masih Base64)
+            isiSoal: cleanedSoalHtmlArray[index], 
             kunciJawaban: row.querySelector('.kunci-jawaban-input').value.toUpperCase() || '',
-            poin: parseFloat(row.querySelector('.poin-soal-input').value) || 4, // (PERBAIKAN) Gunakan parseFloat
+            poin: parseFloat(row.querySelector('.poin-soal-input').value) || 4,
             mediaLink: ''
         });
     });
     
-    // (DISEDERHANAKAN) Pesan konfirmasi
-    if (!confirm(`Anda akan menyimpan ${dataSoal.length} soal untuk materi ${materiKode}. Lanjutkan?`)) return;
-
+    const teacherName = Object.values(appState.processedSchedules).flat().find(item => item.subject.startsWith(materiKode))?.teacher;
+    const teacherData = appData.teachers.find(t => t.name === teacherName);
+    const teacherUsername = teacherData ? teacherData.username : '';
+    
+    // --- (PERBAIKAN BUG UTAMA DI SINI) ---
+    // Inilah alur kerja yang Anda sarankan:
+    
     const simpanBtn = document.getElementById('simpan-soal-btn');
     simpanBtn.disabled = true;
+    simpanBtn.textContent = 'Memproses Gambar... (0%)';
+    showLoading();
+
+    const base64Regex = /<img src="(data:image\/[^"]+)"/g;
+    let totalImages = 0;
+    let imagesProcessed = 0;
+
+    // 1. Buat array "promise" untuk mengunggah setiap gambar
+    const uploadPromises = dataSoal.map(async (soal) => {
+        let isiSoal = soal.isiSoal;
+        const matches = [...isiSoal.matchAll(base64Regex)]; // Temukan semua gambar Base64
+        
+        if (matches.length > 0) {
+            totalImages += matches.length;
+            
+            for (const match of matches) {
+                const base64Data = match[1]; // Ambil data Base64
+                try {
+                    // Upload ke Cloudinary
+                    const cloudinaryUrl = await uploadPastedImage(base64Data); 
+                    
+                    if (cloudinaryUrl) {
+                        // Ganti data Base64 di string dengan URL Cloudinary
+                        isiSoal = isiSoal.replace(base64Data, cloudinaryUrl);
+                    }
+                    imagesProcessed++;
+                    simpanBtn.textContent = `Memproses Gambar... (${Math.round((imagesProcessed/totalImages)*100)}%)`;
+                } catch (e) {
+                    console.error("Gagal upload 1 gambar:", e);
+                }
+            }
+        }
+        soal.isiSoal = isiSoal; // Update soal dengan URL
+        return soal; // Kembalikan soal yang sudah bersih
+    });
+
+    // 2. Tunggu semua proses upload gambar selesai
+    const processedDataSoal = await Promise.all(uploadPromises);
+    // --- AKHIR BLOK PERBAIKAN ---
+
+    hideLoading();
+    if (!confirm(`Anda akan menyimpan ${processedDataSoal.length} soal untuk materi ${materiKode}. Lanjutkan?`)) {
+        simpanBtn.disabled = false;
+        simpanBtn.textContent = 'Simpan Semua Soal';
+        return;
+    }
+
     simpanBtn.textContent = 'Menyimpan...';
 
     fetch(CONFIG.SCRIPT_URL, {
@@ -5668,7 +5835,7 @@ function handleSimpanSoal() {
         body: JSON.stringify({ 
             action: 'simpanBankSoal', 
             soalData: { 
-                soal: dataSoal, 
+                soal: processedDataSoal, // (DIUBAH) Kirim data yang sudah bersih
                 usernameGuru: teacherUsername 
             } 
         }),
@@ -5678,11 +5845,10 @@ function handleSimpanSoal() {
     .then(result => {
         if (result.status === 'success') {
             showMessage(result.message, 'success');
-            const quillEditor = new Quill('#quill-editor-container');
             quillEditor.setContents([]); 
             document.getElementById('soal-preview-container').innerHTML = `<p class="p-8 text-center text-gray-400">Pratinjau soal akan muncul di sini.</p>`;
             simpanBtn.classList.add('hidden');
-            document.getElementById('materi-soal-select').value = ''; // Reset dropdown
+            document.getElementById('materi-soal-select').value = '';
         } else {
             throw new Error(result.message);
         }
