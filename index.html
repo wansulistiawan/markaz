@@ -5448,10 +5448,10 @@ function setupPengawasUjianPage() {
         try {
             const response = await fetch(CONFIG.SCRIPT_URL, {
                 method: 'POST',
-                // --- (PERBAIKAN BUG CACHE DI SINI) ---
+                // --- (PERBAIKAN 1: BUG CACHE) ---
                 body: JSON.stringify({ 
                     action: 'getSantriActivityLogs',
-                    cacheBuster: new Date().getTime() // Tambahkan ini agar request selalu unik
+                    cacheBuster: new Date().getTime() // Ini membuat request selalu unik
                 }),
                 // --- AKHIR PERBAIKAN ---
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
@@ -5478,7 +5478,7 @@ function setupPengawasUjianPage() {
                 const lastLog = userLogs.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp))[0];
                 if (lastLog) {
                     const lastActionTime = new Date(lastLog.Timestamp);
-                    if ((new Date() - lastActionTime) < (1 * 60 * 60 * 1000)) { // (Tetap 1 jam)
+                    if ((new Date() - lastActionTime) < (1 * 60 * 60 * 1000)) { 
                         activeSantriUsernames.push(username);
                     }
                 }
@@ -5567,7 +5567,7 @@ function setupPengawasUjianPage() {
     
     refreshProctorView();
     
-    // --- (PERBAIKAN REALTIME DI SINI) ---
+    // --- (PERBAIKAN 2: REALTIME) ---
     // Mengganti 7000ms (7 detik) menjadi 3000ms (3 detik)
     proctorInterval = setInterval(refreshProctorView, 3000);
     // --- AKHIR PERBAIKAN ---
