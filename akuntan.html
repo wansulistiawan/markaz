@@ -1,487 +1,552 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  LayoutDashboard, PlusCircle, FileText, TrendingUp, AlertTriangle, 
-  Trash2, Save, DollarSign, Utensils, Users, Calendar, Printer, 
-  Clock, Banknote, UserPlus, CheckSquare, XCircle, RefreshCw,
-  MapPin, Navigation, Calculator, Package, Download, BarChart3
-} from 'lucide-react';
-
-// --- 1. DATA STATIS ---
-const INITIAL_EXPENSES = [
-  { id: 173101, date: '2025-11-01', item: 'Beras Premium', category: 'Bahan Baku (Lauk Protein)', qty: 100, unit: 'kg', price: 13500, total: 1350000, tax: 0, vendor: 'Toko Jaya Abadi', type: 'Stok' },
-  { id: 173102, date: '2025-11-01', item: 'Kompor Mawar High Pressure', category: 'Aset Tetap', qty: 2, unit: 'set', price: 1500000, total: 3000000, tax: 330000, vendor: 'CV Dapur Nusantara', type: 'Aset' }, 
-];
-
-const INITIAL_EMPLOYEES = [
-  { id: 'emp_001', name: 'Budi Santoso', role: 'Kepala Dapur', type: 'Bulanan', basicRate: 4500000, overtimeRate: 25000, taxRate: 5 }, 
-  { id: 'emp_002', name: 'Siti Aminah', role: 'Juru Masak', type: 'Harian', basicRate: 120000, overtimeRate: 15000, taxRate: 0 }, 
-];
-
-const INITIAL_ATTENDANCE = [
-  { id: 'att_1', employeeId: 'emp_001', date: '2025-11-01', timeIn: '07:00', status: 'Hadir', overtime: 2 },
-  { id: 'att_2', employeeId: 'emp_002', date: '2025-11-01', timeIn: '07:15', status: 'Hadir', overtime: 0 },
-];
-
-const INITIAL_STOCK = [
-  { id: 'stk_1', name: 'Beras Premium', unit: 'kg', in: 100, out: 20, current: 80 },
-  { id: 'stk_2', name: 'Minyak Goreng', unit: 'liter', in: 50, out: 5, current: 45 },
-];
-
-const INITIAL_BUDGET = 150000000; // Contoh Pagu Anggaran Bulan Ini
-
-// --- Helper ---
-const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
-
-export default function MBGFinalSystem() {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [salaryPeriod, setSalaryPeriod] = useState('2025-11');
-  const [lpjPeriod, setLpjPeriod] = useState('2025-11');
-  const [selectedSlip, setSelectedSlip] = useState(null);
-
-  // --- LOCAL STORAGE ---
-  const useStickyState = (key, defaultValue) => {
-    const [value, setValue] = useState(() => {
-      const stickyValue = window.localStorage.getItem(key);
-      return stickyValue !== null ? JSON.parse(stickyValue) : defaultValue;
-    });
-    useEffect(() => { window.localStorage.setItem(key, JSON.stringify(value)); }, [key, value]);
-    return [value, setValue];
-  };
-
-  const [expenses, setExpenses] = useStickyState('mbg_final_expenses_v2', INITIAL_EXPENSES);
-  const [employees, setEmployees] = useStickyState('mbg_final_employees_v2', INITIAL_EMPLOYEES);
-  const [attendanceData, setAttendanceData] = useStickyState('mbg_final_attendance_v2', INITIAL_ATTENDANCE);
-  const [stockData, setStockData] = useStickyState('mbg_final_stock_v2', INITIAL_STOCK);
-  const [budgetLimit, setBudgetLimit] = useStickyState('mbg_final_budget_v2', INITIAL_BUDGET);
-
-  // --- FORMS ---
-  const [formData, setFormData] = useState({
-    item: '', category: 'Bahan Baku (Lauk Protein)', qty: 1, unit: 'kg', price: 0, vendor: '', tax: 0, type: 'Habis Pakai', date: new Date().toISOString().split('T')[0]
-  });
-  
-  const [stockUsageForm, setStockUsageForm] = useState({ id: '', qty: 0 });
-
-  // --- GPS Logic ---
-  const [gpsStatus, setGpsStatus] = useState('Siap');
-  const [currentLocation, setCurrentLocation] = useState(null);
-  const [selectedEmpForClockIn, setSelectedEmpForClockIn] = useState('');
-
-  // --- CALCULATIONS ---
-  
-  // 1. Payroll + PPh 21
-  const calculatedPayroll = useMemo(() => {
-    if (!salaryPeriod) return [];
-    return employees.map(emp => {
-      const records = attendanceData.filter(r => r.employeeId === emp.id && r.date.startsWith(salaryPeriod));
-      const days = records.filter(r => r.status === 'Hadir').length;
-      const otHours = records.reduce((sum, r) => sum + (r.overtime || 0), 0);
-      
-      const basic = emp.type === 'Harian' ? days * emp.basicRate : emp.basicRate;
-      const otPay = otHours * emp.overtimeRate;
-      const gross = basic + otPay;
-      const tax = gross * (emp.taxRate / 100); // PPh 21
-      
-      return { ...emp, gross, tax, net: gross - tax, days, otHours };
-    });
-  }, [employees, attendanceData, salaryPeriod]);
-
-  // 2. LPJ Data Aggregation (Expenses + Payroll)
-  const lpjData = useMemo(() => {
-    const periodExpenses = expenses.filter(e => e.date.startsWith(lpjPeriod)).map(e => ({
-      date: e.date,
-      desc: `Belanja: ${e.item} (${e.qty} ${e.unit})`,
-      debet: 0,
-      kredit: e.total,
-      tax: e.tax || 0,
-      type: e.type === 'Aset' ? 'Belanja Modal (Aset)' : 'Belanja Barang'
-    }));
-
-    const payrollForLpj = employees.map(emp => {
-      const records = attendanceData.filter(r => r.employeeId === emp.id && r.date.startsWith(lpjPeriod));
-      const days = records.filter(r => r.status === 'Hadir').length;
-      if (days === 0 && emp.type === 'Harian') return null;
-
-      const otHours = records.reduce((sum, r) => sum + (r.overtime || 0), 0);
-      const basic = emp.type === 'Harian' ? days * emp.basicRate : emp.basicRate;
-      const gross = basic + (otHours * emp.overtimeRate);
-      const tax = gross * (emp.taxRate / 100);
-
-      return {
-        date: `${lpjPeriod}-28`, 
-        desc: `Gaji & Tunjangan: ${emp.name}`,
-        debet: 0,
-        kredit: gross, 
-        tax: tax, 
-        type: 'Belanja Pegawai'
-      };
-    }).filter(Boolean);
-
-    return [...periodExpenses, ...payrollForLpj].sort((a, b) => new Date(a.date) - new Date(b.date));
-  }, [expenses, employees, attendanceData, lpjPeriod]);
-
-  const totalRealization = useMemo(() => lpjData.reduce((a,b) => a + b.kredit, 0), [lpjData]);
-
-  // --- HANDLERS ---
-  const handleAddExpense = (e) => {
-    e.preventDefault();
-    const total = Number(formData.qty) * Number(formData.price);
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem MBG Enterprise - Akuntansi & Stok</title>
     
-    // 1. Add Expense Record
-    setExpenses([{ id: Date.now(), ...formData, qty: Number(formData.qty), price: Number(formData.price), tax: Number(formData.tax), total }, ...expenses]);
+    <!-- 1. Load Tailwind CSS (Untuk Desain) -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    // 2. Auto-Update Stock if type is Stock
-    if (formData.type === 'Stok') {
-      const existingStock = stockData.find(s => s.name.toLowerCase() === formData.item.toLowerCase());
-      if (existingStock) {
-         setStockData(stockData.map(s => s.id === existingStock.id ? { ...s, in: s.in + Number(formData.qty), current: s.current + Number(formData.qty) } : s));
-      } else {
-         setStockData([...stockData, { id: `stk_${Date.now()}`, name: formData.item, unit: formData.unit, in: Number(formData.qty), out: 0, current: Number(formData.qty) }]);
-      }
-    }
-
-    setFormData({ ...formData, item: '', qty: 1, price: 0, tax: 0 });
-    alert('Transaksi tersimpan & Stok terupdate (jika barang stok)!');
-  };
-
-  const handleUseStock = (e) => {
-     e.preventDefault();
-     const { id, qty } = stockUsageForm;
-     setStockData(stockData.map(s => s.id === id ? { ...s, out: s.out + Number(qty), current: s.current - Number(qty) } : s));
-     setStockUsageForm({ id: '', qty: 0 });
-     alert('Pemakaian stok tercatat!');
-  };
-
-  const handleClockIn = () => {
-    if (!selectedEmpForClockIn) return alert('Pilih karyawan!');
-    const today = new Date().toISOString().split('T')[0];
-    if (attendanceData.find(a => a.employeeId === selectedEmpForClockIn && a.date === today)) return alert('Sudah absen!');
+    <!-- 2. Load React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    setAttendanceData([{
-      id: Date.now(),
-      employeeId: selectedEmpForClockIn,
-      date: today,
-      timeIn: new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}),
-      location: currentLocation ? `${currentLocation.lat}, ${currentLocation.lng}` : 'No GPS',
-      status: 'Hadir',
-      overtime: 0
-    }, ...attendanceData]);
-    alert('Berhasil Absen!');
-    setSelectedEmpForClockIn('');
-  };
+    <!-- 3. Load Babel (Untuk menerjemahkan kode React di browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  const downloadCSV = () => {
-    const headers = ["Tanggal", "Uraian", "Jenis", "Nominal", "Pajak"];
-    const rows = lpjData.map(d => [d.date, d.desc, d.type, d.kredit, d.tax]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].map(e => e.join(",")).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Laporan_MBG_${lpjPeriod}.csv`);
-    document.body.appendChild(link);
-    link.click();
-  };
+    <!-- Font & Style Tambahan -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; }
+            .shadow-lg, .shadow-sm, .border { box-shadow: none !important; border: none !important; }
+        }
+        .print-only { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
 
-  return (
-    <div className="min-h-screen bg-gray-50 text-slate-800 font-sans pb-20">
-      {/* Header */}
-      <header className="bg-emerald-900 text-white p-4 sticky top-0 z-30 shadow-md">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/10 p-2 rounded"><FileText size={24}/></div>
-            <div><h1 className="font-bold text-lg">Sistem MBG Enterprise</h1><p className="text-xs text-emerald-300">Akuntansi, Stok & Pajak Terintegrasi</p></div>
-          </div>
-          <button onClick={() => {localStorage.clear(); window.location.reload()}} className="bg-red-600 px-3 py-1 rounded text-xs hover:bg-red-700">Reset Data</button>
-        </div>
-      </header>
+    <div id="root"></div>
 
-      {/* Navigasi Tab */}
-      <div className="bg-white border-b sticky top-[72px] z-20 overflow-x-auto shadow-sm">
-        <div className="max-w-6xl mx-auto flex">
-          {[
-            {id:'dashboard', label:'Dashboard & Budget', icon:BarChart3},
-            {id:'lpj', label:'Laporan & Audit', icon:FileText}, 
-            {id:'keuangan', label:'Input Belanja', icon:DollarSign},
-            {id:'stok', label:'Gudang Stok', icon:Package},
-            {id:'absensi', label:'Absensi GPS', icon:MapPin},
-            {id:'gaji', label:'Payroll', icon:Banknote},
-          ].map(t => (
-            <button key={t.id} onClick={()=>setActiveTab(t.id)} className={`flex items-center gap-2 px-6 py-4 border-b-2 transition-colors ${activeTab===t.id ? 'border-emerald-600 text-emerald-800 font-bold bg-emerald-50' : 'border-transparent text-gray-500 hover:text-emerald-600'}`}>
-              <t.icon size={18}/> {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
 
-      <main className="max-w-6xl mx-auto p-4 mt-4">
+        // --- ICON COMPONENTS (SVG Manual pengganti Lucide) ---
+        const Icon = ({ path }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                {path}
+            </svg>
+        );
+        
+        const Icons = {
+            Dashboard: <Icon path={<><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></>} />,
+            FileText: <Icon path={<><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></>} />,
+            DollarSign: <Icon path={<><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>} />,
+            Package: <Icon path={<><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22v-10"/></>} />,
+            Users: <Icon path={<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} />,
+            Printer: <Icon path={<><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></>} />,
+            Trash2: <Icon path={<><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></>} />,
+            Save: <Icon path={<><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>} />,
+            PlusCircle: <Icon path={<><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></>} />,
+            MapPin: <Icon path={<><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></>} />,
+            Banknote: <Icon path={<><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></>} />,
+            Download: <Icon path={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></>} />,
+            Navigation: <Icon path={<><polygon points="3 11 22 2 13 21 11 13 3 11"/></>} />,
+            Clock: <Icon path={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />,
+            Calculator: <Icon path={<><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></>} />,
+            RefreshCw: <Icon path={<><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></>} />,
+            XCircle: <Icon path={<><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></>} />
+        };
 
-        {/* DASHBOARD & BUDGET CONTROL */}
-        {activeTab === 'dashboard' && (
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-xl border shadow-sm">
-               <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-lg flex items-center gap-2"><BarChart3/> Kontrol Anggaran (Budgeting)</h3>
-                  <div className="text-sm text-gray-500">Pagu: {formatRupiah(budgetLimit)}</div>
-               </div>
-               {/* Budget Bar */}
-               <div className="w-full bg-gray-200 rounded-full h-6 mb-2">
-                  <div className={`h-6 rounded-full ${totalRealization > budgetLimit ? 'bg-red-600' : 'bg-emerald-600'}`} style={{width: `${Math.min((totalRealization/budgetLimit)*100, 100)}%`}}></div>
-               </div>
-               <div className="flex justify-between text-sm font-bold">
-                  <span className="text-emerald-700">Realisasi: {formatRupiah(totalRealization)} ({(totalRealization/budgetLimit*100).toFixed(1)}%)</span>
-                  <span className="text-gray-600">Sisa: {formatRupiah(budgetLimit - totalRealization)}</span>
-               </div>
-            </div>
+        // --- DATA AWAL (DUMMY DATA) ---
+        const INITIAL_EXPENSES = [
+            { id: 173101, date: '2025-11-01', item: 'Beras Premium', category: 'Bahan Baku (Lauk Protein)', qty: 100, unit: 'kg', price: 13500, total: 1350000, tax: 0, vendor: 'Toko Jaya Abadi', type: 'Stok' },
+            { id: 173102, date: '2025-11-01', item: 'Kompor Mawar High Pressure', category: 'Aset Tetap', qty: 2, unit: 'set', price: 1500000, total: 3000000, tax: 330000, vendor: 'CV Dapur Nusantara', type: 'Aset' }, 
+        ];
 
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="bg-white p-6 rounded-xl border-l-4 border-blue-500 shadow-sm">
-                <p className="text-gray-500 text-sm">Belanja Barang & Jasa</p>
-                <h3 className="text-2xl font-bold">{formatRupiah(lpjData.filter(x=>x.type==='Belanja Barang').reduce((a,b)=>a+b.kredit,0))}</h3>
-              </div>
-              <div className="bg-white p-6 rounded-xl border-l-4 border-purple-500 shadow-sm">
-                <p className="text-gray-500 text-sm">Belanja Pegawai</p>
-                <h3 className="text-2xl font-bold">{formatRupiah(lpjData.filter(x=>x.type==='Belanja Pegawai').reduce((a,b)=>a+b.kredit,0))}</h3>
-              </div>
-              <div className="bg-white p-6 rounded-xl border-l-4 border-orange-500 shadow-sm">
-                <p className="text-gray-500 text-sm">Belanja Modal (Aset)</p>
-                <h3 className="text-2xl font-bold">{formatRupiah(lpjData.filter(x=>x.type==='Belanja Modal (Aset)').reduce((a,b)=>a+b.kredit,0))}</h3>
-                <p className="text-xs text-gray-400 mt-1">Perlu Inventarisasi Aset</p>
-              </div>
-            </div>
-          </div>
-        )}
+        const INITIAL_EMPLOYEES = [
+            { id: 'emp_001', name: 'Budi Santoso', role: 'Kepala Dapur', type: 'Bulanan', basicRate: 4500000, overtimeRate: 25000, taxRate: 5 }, 
+            { id: 'emp_002', name: 'Siti Aminah', role: 'Juru Masak', type: 'Harian', basicRate: 120000, overtimeRate: 15000, taxRate: 0 }, 
+        ];
 
-        {/* TAB LAPORAN LPJ & EXPORT */}
-        {activeTab === 'lpj' && (
-          <div className="space-y-6">
-            <div className="bg-white p-4 rounded-xl shadow-sm border flex justify-between items-center">
-               <div>
-                 <h2 className="font-bold text-lg text-gray-800">Laporan Pertanggungjawaban (LPJ)</h2>
-                 <p className="text-sm text-gray-500">Data siap audit (Expenses + Payroll)</p>
-               </div>
-               <div className="flex gap-3">
-                 <input type="month" value={lpjPeriod} onChange={e=>setLpjPeriod(e.target.value)} className="border rounded p-2 text-sm"/>
-                 <button onClick={downloadCSV} className="bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2 text-sm hover:bg-green-700"><Download size={16}/> Export Excel</button>
-                 <button onClick={()=>window.print()} className="bg-emerald-900 text-white px-4 py-2 rounded flex items-center gap-2 text-sm"><Printer size={16}/> Cetak PDF</button>
-               </div>
-            </div>
+        const INITIAL_ATTENDANCE = [
+            { id: 'att_1', employeeId: 'emp_001', date: '2025-11-01', timeIn: '07:00', status: 'Hadir', overtime: 2 },
+            { id: 'att_2', employeeId: 'emp_002', date: '2025-11-01', timeIn: '07:15', status: 'Hadir', overtime: 0 },
+        ];
 
-            <div className="bg-white rounded-xl shadow-sm border overflow-hidden print:shadow-none print:border-0">
-              <div className="p-8 print:p-0" id="print-area">
-                <div className="text-center mb-6 hidden print:block">
-                   <h2 className="font-bold text-xl uppercase">Laporan Realisasi Anggaran & Pajak</h2>
-                   <p>Program Makan Bergizi Gratis - Periode {lpjPeriod}</p>
-                </div>
+        const INITIAL_STOCK = [
+            { id: 'stk_1', name: 'Beras Premium', unit: 'kg', in: 100, out: 20, current: 80 },
+            { id: 'stk_2', name: 'Minyak Goreng', unit: 'liter', in: 50, out: 5, current: 45 },
+        ];
 
-                <table className="w-full text-sm border-collapse border border-gray-300">
-                  <thead className="bg-gray-100 text-gray-700">
-                    <tr>
-                      <th className="border p-2 text-center w-10">No</th>
-                      <th className="border p-2 text-left">Tanggal</th>
-                      <th className="border p-2 text-left">Uraian Transaksi</th>
-                      <th className="border p-2 text-center">Akun Belanja</th>
-                      <th className="border p-2 text-right">Realisasi (Rp)</th>
-                      <th className="border p-2 text-right bg-red-50 text-red-700">Pajak (Rp)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lpjData.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50">
-                        <td className="border p-2 text-center">{idx+1}</td>
-                        <td className="border p-2">{row.date}</td>
-                        <td className="border p-2">{row.desc}</td>
-                        <td className="border p-2 text-center text-xs font-bold text-gray-600">{row.type}</td>
-                        <td className="border p-2 text-right font-medium">{formatRupiah(row.kredit)}</td>
-                        <td className="border p-2 text-right text-red-600 bg-red-50">{row.tax > 0 ? formatRupiah(row.tax) : '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="font-bold bg-gray-100">
-                    <tr>
-                      <td colSpan="4" className="border p-2 text-right">TOTAL REALISASI:</td>
-                      <td className="border p-2 text-right text-emerald-800">{formatRupiah(lpjData.reduce((a,b)=>a+b.kredit, 0))}</td>
-                      <td className="border p-2 text-right text-red-700">{formatRupiah(lpjData.reduce((a,b)=>a+b.tax, 0))}</td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
+        const INITIAL_BUDGET = 150000000;
 
-        {/* INPUT KEUANGAN + STOK LINKING */}
-        {activeTab === 'keuangan' && (
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="md:col-span-1 bg-white p-5 rounded-xl border shadow-sm">
-              <h3 className="font-bold mb-4 flex items-center gap-2"><PlusCircle size={18}/> Input Belanja</h3>
-              <form onSubmit={handleAddExpense} className="space-y-3 text-sm">
-                <input type="date" required className="w-full border p-2 rounded" value={formData.date} onChange={e=>setFormData({...formData, date:e.target.value})}/>
-                <select className="w-full border p-2 rounded bg-blue-50 font-bold" value={formData.type} onChange={e=>setFormData({...formData, type:e.target.value})}>
-                  <option value="Habis Pakai">Belanja Barang (Habis Pakai)</option>
-                  <option value="Stok">Belanja Persediaan (Masuk Stok)</option>
-                  <option value="Aset">Belanja Modal (Aset Tetap)</option>
-                  <option value="Jasa">Belanja Jasa</option>
-                </select>
-                <input type="text" placeholder="Nama Barang" required className="w-full border p-2 rounded" value={formData.item} onChange={e=>setFormData({...formData, item:e.target.value})}/>
-                <select className="w-full border p-2 rounded" value={formData.category} onChange={e=>setFormData({...formData, category:e.target.value})}>
-                  <option>Bahan Baku (Protein)</option><option>Bahan Baku (Sayur)</option><option>Inventaris</option><option>Operasional</option>
-                </select>
-                <div className="grid grid-cols-2 gap-2">
-                   <input type="number" placeholder="Qty" required className="w-full border p-2 rounded" value={formData.qty} onChange={e=>setFormData({...formData, qty:e.target.value})}/>
-                   <input type="text" placeholder="Satuan (Kg/Ltr)" required className="w-full border p-2 rounded" value={formData.unit} onChange={e=>setFormData({...formData, unit:e.target.value})}/>
-                </div>
-                <input type="number" placeholder="Harga Satuan" required className="w-full border p-2 rounded" value={formData.price} onChange={e=>setFormData({...formData, price:e.target.value})}/>
+        const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+
+        // --- KOMPONEN UTAMA ---
+        function MBGFinalSystem() {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [salaryPeriod, setSalaryPeriod] = useState('2025-11');
+            const [lpjPeriod, setLpjPeriod] = useState('2025-11');
+            const [selectedSlip, setSelectedSlip] = useState(null);
+
+            // --- LOCAL STORAGE CUSTOM HOOK ---
+            const useStickyState = (key, defaultValue) => {
+                const [value, setValue] = useState(() => {
+                    const stickyValue = window.localStorage.getItem(key);
+                    return stickyValue !== null ? JSON.parse(stickyValue) : defaultValue;
+                });
+                useEffect(() => { window.localStorage.setItem(key, JSON.stringify(value)); }, [key, value]);
+                return [value, setValue];
+            };
+
+            const [expenses, setExpenses] = useStickyState('mbg_ent_expenses', INITIAL_EXPENSES);
+            const [employees, setEmployees] = useStickyState('mbg_ent_employees', INITIAL_EMPLOYEES);
+            const [attendanceData, setAttendanceData] = useStickyState('mbg_ent_attendance', INITIAL_ATTENDANCE);
+            const [stockData, setStockData] = useStickyState('mbg_ent_stock', INITIAL_STOCK);
+            const [budgetLimit, setBudgetLimit] = useStickyState('mbg_ent_budget', INITIAL_BUDGET);
+
+            const [formData, setFormData] = useState({
+                item: '', category: 'Bahan Baku (Lauk Protein)', qty: 1, unit: 'kg', price: 0, vendor: '', tax: 0, type: 'Habis Pakai', date: new Date().toISOString().split('T')[0]
+            });
+            
+            const [stockUsageForm, setStockUsageForm] = useState({ id: '', qty: 0 });
+            const [gpsStatus, setGpsStatus] = useState('Siap');
+            const [currentLocation, setCurrentLocation] = useState(null);
+            const [selectedEmpForClockIn, setSelectedEmpForClockIn] = useState('');
+
+            // --- CALCULATIONS ---
+            const calculatedPayroll = useMemo(() => {
+                if (!salaryPeriod) return [];
+                return employees.map(emp => {
+                    const records = attendanceData.filter(r => r.employeeId === emp.id && r.date.startsWith(salaryPeriod));
+                    const days = records.filter(r => r.status === 'Hadir').length;
+                    const otHours = records.reduce((sum, r) => sum + (r.overtime || 0), 0);
+                    
+                    const basic = emp.type === 'Harian' ? days * emp.basicRate : emp.basicRate;
+                    const otPay = otHours * emp.overtimeRate;
+                    const gross = basic + otPay;
+                    const tax = gross * (emp.taxRate / 100); 
+                    
+                    return { ...emp, gross, tax, net: gross - tax, days, otHours };
+                });
+            }, [employees, attendanceData, salaryPeriod]);
+
+            const lpjData = useMemo(() => {
+                const periodExpenses = expenses.filter(e => e.date.startsWith(lpjPeriod)).map(e => ({
+                    date: e.date,
+                    desc: `Belanja: ${e.item} (${e.qty} ${e.unit})`,
+                    debet: 0,
+                    kredit: e.total,
+                    tax: e.tax || 0,
+                    type: e.type === 'Aset' ? 'Belanja Modal (Aset)' : 'Belanja Barang'
+                }));
+
+                const payrollForLpj = employees.map(emp => {
+                    const records = attendanceData.filter(r => r.employeeId === emp.id && r.date.startsWith(lpjPeriod));
+                    const days = records.filter(r => r.status === 'Hadir').length;
+                    if (days === 0 && emp.type === 'Harian') return null;
+
+                    const otHours = records.reduce((sum, r) => sum + (r.overtime || 0), 0);
+                    const basic = emp.type === 'Harian' ? days * emp.basicRate : emp.basicRate;
+                    const gross = basic + (otHours * emp.overtimeRate);
+                    const tax = gross * (emp.taxRate / 100);
+
+                    return {
+                        date: `${lpjPeriod}-28`, 
+                        desc: `Gaji & Tunjangan: ${emp.name}`,
+                        debet: 0,
+                        kredit: gross, 
+                        tax: tax, 
+                        type: 'Belanja Pegawai'
+                    };
+                }).filter(Boolean);
+
+                return [...periodExpenses, ...payrollForLpj].sort((a, b) => new Date(a.date) - new Date(b.date));
+            }, [expenses, employees, attendanceData, lpjPeriod]);
+
+            const totalRealization = useMemo(() => lpjData.reduce((a,b) => a + b.kredit, 0), [lpjData]);
+
+            // --- HANDLERS ---
+            const handleAddExpense = (e) => {
+                e.preventDefault();
+                const total = Number(formData.qty) * Number(formData.price);
+                setExpenses([{ id: Date.now(), ...formData, qty: Number(formData.qty), price: Number(formData.price), tax: Number(formData.tax), total }, ...expenses]);
                 
-                <div className="bg-red-50 p-2 rounded border border-red-100">
-                   <label className="text-xs text-red-600 font-bold flex items-center gap-1"><Calculator size={12}/> Pajak PPN/PPh</label>
-                   <input type="number" placeholder="Nominal Pajak (Rp)" className="w-full border p-1 rounded text-right mt-1" value={formData.tax} onChange={e=>setFormData({...formData, tax:e.target.value})}/>
-                </div>
-                <button className="w-full bg-emerald-700 text-white py-2 rounded hover:bg-emerald-800">Simpan Transaksi</button>
-              </form>
-            </div>
-            <div className="md:col-span-2">
-               <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-100"><tr><th className="p-3">Tanggal</th><th className="p-3">Item</th><th className="p-3">Akun</th><th className="p-3 text-right">Total</th><th className="p-3"></th></tr></thead>
-                    <tbody>
-                      {expenses.map(e => (
-                        <tr key={e.id} className="border-b hover:bg-gray-50">
-                          <td className="p-3">{e.date}</td>
-                          <td className="p-3 font-medium">{e.item}<br/><span className="text-xs text-gray-400">{e.category}</span></td>
-                          <td className="p-3 text-xs font-bold text-gray-500">{e.type}</td>
-                          <td className="p-3 text-right">{formatRupiah(e.total)}</td>
-                          <td className="p-3 text-center"><button onClick={()=>setExpenses(expenses.filter(x=>x.id!==e.id))} className="text-red-400"><Trash2 size={16}/></button></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-               </div>
-            </div>
-          </div>
-        )}
+                if (formData.type === 'Stok') {
+                    const existingStock = stockData.find(s => s.name.toLowerCase() === formData.item.toLowerCase());
+                    if (existingStock) {
+                        setStockData(stockData.map(s => s.id === existingStock.id ? { ...s, in: s.in + Number(formData.qty), current: s.current + Number(formData.qty) } : s));
+                    } else {
+                        setStockData([...stockData, { id: `stk_${Date.now()}`, name: formData.item, unit: formData.unit, in: Number(formData.qty), out: 0, current: Number(formData.qty) }]);
+                    }
+                }
+                setFormData({ ...formData, item: '', qty: 1, price: 0, tax: 0 });
+                alert('Transaksi tersimpan!');
+            };
 
-        {/* STOK GUDANG (INVENTORY) */}
-        {activeTab === 'stok' && (
-           <div className="grid md:grid-cols-3 gap-6">
-              <div className="md:col-span-1 bg-white p-5 rounded-xl border shadow-sm h-fit">
-                 <h3 className="font-bold mb-4 flex items-center gap-2"><Package size={18}/> Catat Pemakaian</h3>
-                 <p className="text-xs text-gray-500 mb-4">Gunakan ini setiap sore untuk mencatat bahan yang dimasak.</p>
-                 <form onSubmit={handleUseStock} className="space-y-3">
-                    <select className="w-full border p-2 rounded" required value={stockUsageForm.id} onChange={e=>setStockUsageForm({...stockUsageForm, id:e.target.value})}>
-                       <option value="">-- Pilih Barang --</option>
-                       {stockData.map(s => <option key={s.id} value={s.id}>{s.name} (Sisa: {s.current} {s.unit})</option>)}
-                    </select>
-                    <input type="number" placeholder="Jumlah Dipakai" required className="w-full border p-2 rounded" value={stockUsageForm.qty} onChange={e=>setStockUsageForm({...stockUsageForm, qty:e.target.value})}/>
-                    <button className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700">Catat Keluar Barang</button>
-                 </form>
-              </div>
-              <div className="md:col-span-2 bg-white rounded-xl border shadow-sm overflow-hidden">
-                 <div className="p-4 bg-gray-50 border-b font-bold text-gray-700">Kartu Stok Gudang</div>
-                 <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-100">
-                       <tr>
-                          <th className="p-3">Nama Barang</th>
-                          <th className="p-3 text-center">Masuk (Beli)</th>
-                          <th className="p-3 text-center">Keluar (Masak)</th>
-                          <th className="p-3 text-center bg-emerald-50">Sisa Stok</th>
-                       </tr>
-                    </thead>
-                    <tbody>
-                       {stockData.map(s => (
-                          <tr key={s.id} className="border-b hover:bg-gray-50">
-                             <td className="p-3 font-medium">{s.name} <span className="text-xs text-gray-400">({s.unit})</span></td>
-                             <td className="p-3 text-center text-green-600">+{s.in}</td>
-                             <td className="p-3 text-center text-red-500">-{s.out}</td>
-                             <td className="p-3 text-center font-bold bg-emerald-50 text-emerald-800">{s.current}</td>
-                          </tr>
-                       ))}
-                    </tbody>
-                 </table>
-              </div>
-           </div>
-        )}
+            const handleUseStock = (e) => {
+                e.preventDefault();
+                const { id, qty } = stockUsageForm;
+                setStockData(stockData.map(s => s.id === id ? { ...s, out: s.out + Number(qty), current: s.current - Number(qty) } : s));
+                setStockUsageForm({ id: '', qty: 0 });
+                alert('Pemakaian stok tercatat!');
+            };
 
-        {/* GPS ABSENSI */}
-        {activeTab === 'absensi' && (
-           <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden text-center">
-              <div className="bg-emerald-800 text-white p-6">
-                 <Clock size={40} className="mx-auto mb-2"/>
-                 <h2 className="text-2xl font-bold">Mesin Absensi GPS</h2>
-                 <p className="text-emerald-200">{new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long'})}</p>
-              </div>
-              <div className="p-6 space-y-4">
-                 <select className="w-full p-3 border rounded text-lg" value={selectedEmpForClockIn} onChange={e=>setSelectedEmpForClockIn(e.target.value)}>
-                    <option value="">-- Pilih Nama Karyawan --</option>
-                    {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                 </select>
-                 
-                 <div className="bg-gray-100 p-4 rounded text-sm">
-                    <p className="mb-2 font-bold text-gray-600">Status Lokasi: {gpsStatus}</p>
-                    {!currentLocation ? (
-                      <button onClick={()=>{
-                        if(!navigator.geolocation) return alert('Browser tidak support GPS');
-                        setGpsStatus('Mencari...');
-                        navigator.geolocation.getCurrentPosition(p => {
-                           setGpsStatus('Terkunci'); setCurrentLocation({lat:p.coords.latitude, lng:p.coords.longitude});
-                        }, () => setGpsStatus('Gagal Ambil Lokasi'));
-                      }} className="bg-blue-600 text-white px-4 py-2 rounded-full flex items-center gap-2 mx-auto"><Navigation size={14}/> Aktifkan GPS</button>
-                    ) : (
-                      <p className="text-green-600 flex items-center justify-center gap-1"><MapPin size={14}/> {currentLocation.lat.toFixed(5)}, {currentLocation.lng.toFixed(5)}</p>
-                    )}
-                 </div>
+            const handleClockIn = () => {
+                if (!selectedEmpForClockIn) return alert('Pilih karyawan!');
+                const today = new Date().toISOString().split('T')[0];
+                if (attendanceData.find(a => a.employeeId === selectedEmpForClockIn && a.date === today)) return alert('Sudah absen!');
+                
+                setAttendanceData([{
+                    id: Date.now(),
+                    employeeId: selectedEmpForClockIn,
+                    date: today,
+                    timeIn: new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}),
+                    location: currentLocation ? `${currentLocation.lat}, ${currentLocation.lng}` : 'No GPS',
+                    status: 'Hadir',
+                    overtime: 0
+                }, ...attendanceData]);
+                alert('Berhasil Absen!');
+                setSelectedEmpForClockIn('');
+            };
 
-                 <button onClick={handleClockIn} disabled={!currentLocation || !selectedEmpForClockIn} className={`w-full py-3 rounded font-bold text-white ${!currentLocation || !selectedEmpForClockIn ? 'bg-gray-300' : 'bg-emerald-600 hover:bg-emerald-700'}`}>ABSEN MASUK</button>
-              </div>
-           </div>
-        )}
+            const downloadCSV = () => {
+                const headers = ["Tanggal", "Uraian", "Jenis", "Nominal", "Pajak"];
+                const rows = lpjData.map(d => [d.date, d.desc, d.type, d.kredit, d.tax]);
+                const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].map(e => e.join(",")).join("\n");
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `Laporan_MBG_${lpjPeriod}.csv`);
+                document.body.appendChild(link);
+                link.click();
+            };
 
-        {/* GAJI & PAJAK (PAYROLL) */}
-        {activeTab === 'gaji' && (
-           <div className="space-y-6">
-              <div className="flex justify-between items-center bg-white p-4 rounded-xl border shadow-sm">
-                 <h3 className="font-bold text-gray-700 flex items-center gap-2"><Banknote/> Payroll & Pajak PPh 21</h3>
-                 <input type="month" value={salaryPeriod} onChange={e=>setSalaryPeriod(e.target.value)} className="border p-2 rounded"/>
-              </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                 {calculatedPayroll.map(emp => (
-                    <div key={emp.id} className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition">
-                       <div className="flex justify-between mb-3">
-                          <div><h4 className="font-bold text-lg">{emp.name}</h4><span className="text-xs bg-gray-100 px-2 py-1 rounded">{emp.role}</span></div>
-                          <div className="text-right"><h4 className="font-bold text-xl text-green-700">{formatRupiah(emp.net)}</h4><p className="text-xs text-gray-400">Gaji Bersih</p></div>
-                       </div>
-                       <div className="space-y-1 text-sm text-gray-600 bg-gray-50 p-3 rounded mb-4">
-                          <div className="flex justify-between"><span>Gaji Bruto:</span> <span>{formatRupiah(emp.gross)}</span></div>
-                          <div className="flex justify-between text-red-500"><span>Potongan PPh 21 ({emp.taxRate}%):</span> <span>- {formatRupiah(emp.tax)}</span></div>
-                       </div>
-                       <button onClick={()=>setSelectedSlip(emp)} className="w-full border border-emerald-600 text-emerald-600 py-2 rounded hover:bg-emerald-50 font-medium">Lihat Slip Gaji</button>
+            return (
+                <div className="min-h-screen bg-gray-50 pb-20">
+                    {/* Header */}
+                    <header className="bg-emerald-900 text-white p-4 sticky top-0 z-30 shadow-md no-print">
+                        <div className="max-w-6xl mx-auto flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-white/10 p-2 rounded">{Icons.FileText}</div>
+                                <div><h1 className="font-bold text-lg">Sistem MBG Enterprise</h1><p className="text-xs text-emerald-300">Akuntansi, Stok & Pajak Terintegrasi</p></div>
+                            </div>
+                            <button onClick={() => {if(confirm("Yakin reset semua data?")) {localStorage.clear(); window.location.reload()}}} className="bg-red-600 px-3 py-1 rounded text-xs hover:bg-red-700 flex items-center gap-1">{Icons.RefreshCw} Reset Data</button>
+                        </div>
+                    </header>
+
+                    {/* Navigasi Tab */}
+                    <div className="bg-white border-b sticky top-[72px] z-20 overflow-x-auto shadow-sm no-print">
+                        <div className="max-w-6xl mx-auto flex">
+                            {[
+                                {id:'dashboard', label:'Dashboard', icon: Icons.Dashboard},
+                                {id:'lpj', label:'Laporan LPJ', icon: Icons.FileText}, 
+                                {id:'keuangan', label:'Input Belanja', icon: Icons.DollarSign},
+                                {id:'stok', label:'Gudang Stok', icon: Icons.Package},
+                                {id:'absensi', label:'Absensi GPS', icon: Icons.MapPin},
+                                {id:'gaji', label:'Payroll', icon: Icons.Banknote},
+                            ].map(t => (
+                                <button key={t.id} onClick={()=>setActiveTab(t.id)} className={`flex items-center gap-2 px-6 py-4 border-b-2 transition-colors whitespace-nowrap ${activeTab===t.id ? 'border-emerald-600 text-emerald-800 font-bold bg-emerald-50' : 'border-transparent text-gray-500 hover:text-emerald-600'}`}>
+                                    {t.icon} {t.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                 ))}
-              </div>
-           </div>
-        )}
 
-      </main>
+                    <main className="max-w-6xl mx-auto p-4 mt-4">
 
-      {/* MODAL SLIP */}
-      {selectedSlip && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-           <div className="bg-white w-full max-w-md rounded-lg overflow-hidden shadow-2xl">
-              <div className="bg-emerald-900 text-white p-4 flex justify-between"><h3>Slip Gaji</h3><button onClick={()=>setSelectedSlip(null)}><XCircle/></button></div>
-              <div className="p-6 text-sm">
-                 <div className="text-center border-b pb-4 mb-4"><h2 className="font-bold text-lg">DAPUR MBG</h2><p>Periode: {selectedSlip.period}</p></div>
-                 <div className="space-y-2 mb-4">
-                    <div className="flex justify-between"><span>Nama:</span> <b>{selectedSlip.name}</b></div>
-                    <div className="flex justify-between"><span>Jabatan:</span> <span>{selectedSlip.role}</span></div>
-                 </div>
-                 <table className="w-full mb-4"><tbody>
-                    <tr><td className="py-1">Gaji Pokok + Lembur</td><td className="text-right">{formatRupiah(selectedSlip.gross)}</td></tr>
-                    <tr className="text-red-600"><td className="py-1">Pajak PPh 21</td><td className="text-right">({formatRupiah(selectedSlip.tax)})</td></tr>
-                    <tr className="font-bold border-t border-dashed"><td className="py-2">DITERIMA (NET)</td><td className="text-right py-2">{formatRupiah(selectedSlip.net)}</td></tr>
-                 </tbody></table>
-                 <button onClick={()=>window.print()} className="w-full bg-emerald-700 text-white py-2 rounded font-bold mt-4">Cetak Slip</button>
-              </div>
-           </div>
-        </div>
-      )}
-    </div>
-  );
-}
+                        {/* DASHBOARD */}
+                        {activeTab === 'dashboard' && (
+                        <div className="space-y-6">
+                            <div className="bg-white p-6 rounded-xl border shadow-sm">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="font-bold text-lg flex items-center gap-2">{Icons.Dashboard} Kontrol Anggaran (Budgeting)</h3>
+                                    <div className="text-sm text-gray-500">Pagu: {formatRupiah(budgetLimit)}</div>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-6 mb-2">
+                                    <div className={`h-6 rounded-full ${totalRealization > budgetLimit ? 'bg-red-600' : 'bg-emerald-600'}`} style={{width: `${Math.min((totalRealization/budgetLimit)*100, 100)}%`}}></div>
+                                </div>
+                                <div className="flex justify-between text-sm font-bold">
+                                    <span className="text-emerald-700">Realisasi: {formatRupiah(totalRealization)} ({(totalRealization/budgetLimit*100).toFixed(1)}%)</span>
+                                    <span className="text-gray-600">Sisa: {formatRupiah(budgetLimit - totalRealization)}</span>
+                                </div>
+                            </div>
+                            <div className="grid md:grid-cols-3 gap-4">
+                                <div className="bg-white p-6 rounded-xl border-l-4 border-blue-500 shadow-sm">
+                                    <p className="text-gray-500 text-sm">Belanja Barang & Jasa</p>
+                                    <h3 className="text-2xl font-bold">{formatRupiah(lpjData.filter(x=>x.type==='Belanja Barang').reduce((a,b)=>a+b.kredit,0))}</h3>
+                                </div>
+                                <div className="bg-white p-6 rounded-xl border-l-4 border-purple-500 shadow-sm">
+                                    <p className="text-gray-500 text-sm">Belanja Pegawai</p>
+                                    <h3 className="text-2xl font-bold">{formatRupiah(lpjData.filter(x=>x.type==='Belanja Pegawai').reduce((a,b)=>a+b.kredit,0))}</h3>
+                                </div>
+                                <div className="bg-white p-6 rounded-xl border-l-4 border-orange-500 shadow-sm">
+                                    <p className="text-gray-500 text-sm">Belanja Modal (Aset)</p>
+                                    <h3 className="text-2xl font-bold">{formatRupiah(lpjData.filter(x=>x.type==='Belanja Modal (Aset)').reduce((a,b)=>a+b.kredit,0))}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        )}
+
+                        {/* LPJ */}
+                        {activeTab === 'lpj' && (
+                        <div className="space-y-6">
+                            <div className="bg-white p-4 rounded-xl shadow-sm border flex justify-between items-center no-print">
+                                <div><h2 className="font-bold text-lg text-gray-800">Laporan Pertanggungjawaban</h2><p className="text-sm text-gray-500">Siap Audit</p></div>
+                                <div className="flex gap-3">
+                                    <input type="month" value={lpjPeriod} onChange={e=>setLpjPeriod(e.target.value)} className="border rounded p-2 text-sm"/>
+                                    <button onClick={downloadCSV} className="bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2 text-sm hover:bg-green-700">{Icons.Download} Excel</button>
+                                    <button onClick={()=>window.print()} className="bg-emerald-900 text-white px-4 py-2 rounded flex items-center gap-2 text-sm">{Icons.Printer} PDF</button>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-xl shadow-sm border overflow-hidden print:shadow-none print:border-0">
+                                <div className="p-8 print:p-0">
+                                    <div className="text-center mb-6 hidden print-only">
+                                        <h2 className="font-bold text-xl uppercase">Laporan Realisasi Anggaran & Pajak</h2>
+                                        <p>Program Makan Bergizi Gratis - Periode {lpjPeriod}</p>
+                                    </div>
+                                    <table className="w-full text-sm border-collapse border border-gray-300">
+                                        <thead className="bg-gray-100 text-gray-700">
+                                            <tr>
+                                                <th className="border p-2 text-center w-10">No</th>
+                                                <th className="border p-2 text-left">Tanggal</th>
+                                                <th className="border p-2 text-left">Uraian Transaksi</th>
+                                                <th className="border p-2 text-center">Akun</th>
+                                                <th className="border p-2 text-right">Realisasi (Rp)</th>
+                                                <th className="border p-2 text-right bg-red-50 text-red-700">Pajak (Rp)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {lpjData.map((row, idx) => (
+                                                <tr key={idx} className="hover:bg-gray-50">
+                                                    <td className="border p-2 text-center">{idx+1}</td>
+                                                    <td className="border p-2">{row.date}</td>
+                                                    <td className="border p-2">{row.desc}</td>
+                                                    <td className="border p-2 text-center text-xs font-bold text-gray-600">{row.type}</td>
+                                                    <td className="border p-2 text-right font-medium">{formatRupiah(row.kredit)}</td>
+                                                    <td className="border p-2 text-right text-red-600 bg-red-50">{row.tax > 0 ? formatRupiah(row.tax) : '-'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                        <tfoot className="font-bold bg-gray-100">
+                                            <tr>
+                                                <td colSpan="4" className="border p-2 text-right">TOTAL REALISASI:</td>
+                                                <td className="border p-2 text-right text-emerald-800">{formatRupiah(lpjData.reduce((a,b)=>a+b.kredit, 0))}</td>
+                                                <td className="border p-2 text-right text-red-700">{formatRupiah(lpjData.reduce((a,b)=>a+b.tax, 0))}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        )}
+
+                        {/* INPUT BELANJA */}
+                        {activeTab === 'keuangan' && (
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <div className="md:col-span-1 bg-white p-5 rounded-xl border shadow-sm">
+                                <h3 className="font-bold mb-4 flex items-center gap-2">{Icons.PlusCircle} Input Belanja</h3>
+                                <form onSubmit={handleAddExpense} className="space-y-3 text-sm">
+                                    <input type="date" required className="w-full border p-2 rounded" value={formData.date} onChange={e=>setFormData({...formData, date:e.target.value})}/>
+                                    <select className="w-full border p-2 rounded bg-blue-50 font-bold" value={formData.type} onChange={e=>setFormData({...formData, type:e.target.value})}>
+                                        <option value="Habis Pakai">Belanja Barang (Habis Pakai)</option>
+                                        <option value="Stok">Belanja Persediaan (Masuk Stok)</option>
+                                        <option value="Aset">Belanja Modal (Aset Tetap)</option>
+                                        <option value="Jasa">Belanja Jasa</option>
+                                    </select>
+                                    <input type="text" placeholder="Nama Barang" required className="w-full border p-2 rounded" value={formData.item} onChange={e=>setFormData({...formData, item:e.target.value})}/>
+                                    <select className="w-full border p-2 rounded" value={formData.category} onChange={e=>setFormData({...formData, category:e.target.value})}>
+                                        <option>Bahan Baku (Protein)</option><option>Bahan Baku (Sayur)</option><option>Inventaris</option><option>Operasional</option>
+                                    </select>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <input type="number" placeholder="Qty" required className="w-full border p-2 rounded" value={formData.qty} onChange={e=>setFormData({...formData, qty:e.target.value})}/>
+                                        <input type="text" placeholder="Satuan" required className="w-full border p-2 rounded" value={formData.unit} onChange={e=>setFormData({...formData, unit:e.target.value})}/>
+                                    </div>
+                                    <input type="number" placeholder="Harga Satuan" required className="w-full border p-2 rounded" value={formData.price} onChange={e=>setFormData({...formData, price:e.target.value})}/>
+                                    <div className="bg-red-50 p-2 rounded border border-red-100">
+                                        <label className="text-xs text-red-600 font-bold flex items-center gap-1">{Icons.Calculator} Pajak PPN/PPh</label>
+                                        <input type="number" placeholder="Nominal Pajak (Rp)" className="w-full border p-1 rounded text-right mt-1" value={formData.tax} onChange={e=>setFormData({...formData, tax:e.target.value})}/>
+                                    </div>
+                                    <button className="w-full bg-emerald-700 text-white py-2 rounded hover:bg-emerald-800">Simpan Transaksi</button>
+                                </form>
+                            </div>
+                            <div className="md:col-span-2">
+                                <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="bg-gray-100"><tr><th className="p-3">Tanggal</th><th className="p-3">Item</th><th className="p-3">Akun</th><th className="p-3 text-right">Total</th><th className="p-3"></th></tr></thead>
+                                        <tbody>
+                                            {expenses.map(e => (
+                                                <tr key={e.id} className="border-b hover:bg-gray-50">
+                                                    <td className="p-3">{e.date}</td>
+                                                    <td className="p-3 font-medium">{e.item}<br/><span className="text-xs text-gray-400">{e.category}</span></td>
+                                                    <td className="p-3 text-xs font-bold text-gray-500">{e.type}</td>
+                                                    <td className="p-3 text-right">{formatRupiah(e.total)}</td>
+                                                    <td className="p-3 text-center"><button onClick={()=>setExpenses(expenses.filter(x=>x.id!==e.id))} className="text-red-400">{Icons.Trash2}</button></td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        )}
+
+                        {/* STOK */}
+                        {activeTab === 'stok' && (
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <div className="md:col-span-1 bg-white p-5 rounded-xl border shadow-sm h-fit">
+                                <h3 className="font-bold mb-4 flex items-center gap-2">{Icons.Package} Catat Pemakaian</h3>
+                                <form onSubmit={handleUseStock} className="space-y-3">
+                                    <select className="w-full border p-2 rounded" required value={stockUsageForm.id} onChange={e=>setStockUsageForm({...stockUsageForm, id:e.target.value})}>
+                                        <option value="">-- Pilih Barang --</option>
+                                        {stockData.map(s => <option key={s.id} value={s.id}>{s.name} (Sisa: {s.current} {s.unit})</option>)}
+                                    </select>
+                                    <input type="number" placeholder="Jumlah Dipakai" required className="w-full border p-2 rounded" value={stockUsageForm.qty} onChange={e=>setStockUsageForm({...stockUsageForm, qty:e.target.value})}/>
+                                    <button className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700">Catat Keluar Barang</button>
+                                </form>
+                            </div>
+                            <div className="md:col-span-2 bg-white rounded-xl border shadow-sm overflow-hidden">
+                                <div className="p-4 bg-gray-50 border-b font-bold text-gray-700">Kartu Stok Gudang</div>
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-gray-100">
+                                        <tr>
+                                            <th className="p-3">Nama Barang</th>
+                                            <th className="p-3 text-center">Masuk</th>
+                                            <th className="p-3 text-center">Keluar</th>
+                                            <th className="p-3 text-center bg-emerald-50">Sisa</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {stockData.map(s => (
+                                            <tr key={s.id} className="border-b hover:bg-gray-50">
+                                                <td className="p-3 font-medium">{s.name} <span className="text-xs text-gray-400">({s.unit})</span></td>
+                                                <td className="p-3 text-center text-green-600">+{s.in}</td>
+                                                <td className="p-3 text-center text-red-500">-{s.out}</td>
+                                                <td className="p-3 text-center font-bold bg-emerald-50 text-emerald-800">{s.current}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        )}
+
+                        {/* ABSENSI GPS */}
+                        {activeTab === 'absensi' && (
+                        <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden text-center">
+                            <div className="bg-emerald-800 text-white p-6">
+                                <div className="mx-auto mb-2 flex justify-center">{Icons.Clock}</div>
+                                <h2 className="text-2xl font-bold">Mesin Absensi GPS</h2>
+                                <p className="text-emerald-200">{new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long'})}</p>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <select className="w-full p-3 border rounded text-lg" value={selectedEmpForClockIn} onChange={e=>setSelectedEmpForClockIn(e.target.value)}>
+                                    <option value="">-- Pilih Nama Karyawan --</option>
+                                    {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                                </select>
+                                <div className="bg-gray-100 p-4 rounded text-sm">
+                                    <p className="mb-2 font-bold text-gray-600">Status Lokasi: {gpsStatus}</p>
+                                    {!currentLocation ? (
+                                    <button onClick={()=>{
+                                        if(!navigator.geolocation) return alert('Browser tidak support GPS');
+                                        setGpsStatus('Mencari...');
+                                        navigator.geolocation.getCurrentPosition(p => {
+                                        setGpsStatus('Terkunci'); setCurrentLocation({lat:p.coords.latitude, lng:p.coords.longitude});
+                                        }, () => setGpsStatus('Gagal Ambil Lokasi'));
+                                    }} className="bg-blue-600 text-white px-4 py-2 rounded-full flex items-center gap-2 mx-auto">{Icons.Navigation} Aktifkan GPS</button>
+                                    ) : (
+                                    <p className="text-green-600 flex items-center justify-center gap-1">{Icons.MapPin} {currentLocation.lat.toFixed(5)}, {currentLocation.lng.toFixed(5)}</p>
+                                    )}
+                                </div>
+                                <button onClick={handleClockIn} disabled={!currentLocation || !selectedEmpForClockIn} className={`w-full py-3 rounded font-bold text-white ${!currentLocation || !selectedEmpForClockIn ? 'bg-gray-300' : 'bg-emerald-600 hover:bg-emerald-700'}`}>ABSEN MASUK</button>
+                            </div>
+                        </div>
+                        )}
+
+                        {/* GAJI */}
+                        {activeTab === 'gaji' && (
+                        <div className="space-y-6">
+                            <div className="flex justify-between items-center bg-white p-4 rounded-xl border shadow-sm">
+                                <h3 className="font-bold text-gray-700 flex items-center gap-2">{Icons.Banknote} Payroll & PPh 21</h3>
+                                <input type="month" value={salaryPeriod} onChange={e=>setSalaryPeriod(e.target.value)} className="border p-2 rounded"/>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                {calculatedPayroll.map(emp => (
+                                    <div key={emp.id} className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition">
+                                        <div className="flex justify-between mb-3">
+                                            <div><h4 className="font-bold text-lg">{emp.name}</h4><span className="text-xs bg-gray-100 px-2 py-1 rounded">{emp.role}</span></div>
+                                            <div className="text-right"><h4 className="font-bold text-xl text-green-700">{formatRupiah(emp.net)}</h4><p className="text-xs text-gray-400">Gaji Bersih</p></div>
+                                        </div>
+                                        <div className="space-y-1 text-sm text-gray-600 bg-gray-50 p-3 rounded mb-4">
+                                            <div className="flex justify-between"><span>Gaji Bruto:</span> <span>{formatRupiah(emp.gross)}</span></div>
+                                            <div className="flex justify-between text-red-500"><span>Potongan PPh 21 ({emp.taxRate}%):</span> <span>- {formatRupiah(emp.tax)}</span></div>
+                                        </div>
+                                        <button onClick={()=>setSelectedSlip(emp)} className="w-full border border-emerald-600 text-emerald-600 py-2 rounded hover:bg-emerald-50 font-medium">Lihat Slip Gaji</button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        )}
+
+                    </main>
+
+                    {/* MODAL SLIP */}
+                    {selectedSlip && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 no-print">
+                            <div className="bg-white w-full max-w-md rounded-lg overflow-hidden shadow-2xl">
+                                <div className="bg-emerald-900 text-white p-4 flex justify-between"><h3>Slip Gaji</h3><button onClick={()=>setSelectedSlip(null)}>{Icons.XCircle}</button></div>
+                                <div className="p-6 text-sm">
+                                    <div className="text-center border-b pb-4 mb-4"><h2 className="font-bold text-lg">DAPUR MBG</h2><p>Periode: {selectedSlip.period}</p></div>
+                                    <div className="space-y-2 mb-4">
+                                        <div className="flex justify-between"><span>Nama:</span> <b>{selectedSlip.name}</b></div>
+                                        <div className="flex justify-between"><span>Jabatan:</span> <span>{selectedSlip.role}</span></div>
+                                    </div>
+                                    <table className="w-full mb-4"><tbody>
+                                        <tr><td className="py-1">Gaji Pokok + Lembur</td><td className="text-right">{formatRupiah(selectedSlip.gross)}</td></tr>
+                                        <tr className="text-red-600"><td className="py-1">Pajak PPh 21</td><td className="text-right">({formatRupiah(selectedSlip.tax)})</td></tr>
+                                        <tr className="font-bold border-t border-dashed"><td className="py-2">DITERIMA (NET)</td><td className="text-right py-2">{formatRupiah(selectedSlip.net)}</td></tr>
+                                    </tbody></table>
+                                    <button onClick={()=>window.print()} className="w-full bg-emerald-700 text-white py-2 rounded font-bold mt-4">Cetak Slip</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ELEMENT KHUSUS CETAK SLIP (Hidden di layar biasa) */}
+                    {selectedSlip && (
+                        <div className="print-only p-8 bg-white text-black">
+                             <div className="text-center border-b-2 border-black pb-4 mb-8">
+                                <h1 className="text-2xl font-bold">SLIP GAJI KARYAWAN</h1>
+                                <p>DAPUR MBG NASIONAL - Periode {selectedSlip.period}</p>
+                             </div>
+                             <table className="w-full mb-8 text-lg">
+                                <tr><td>Nama Karyawan</td><td>: <b>{selectedSlip.name}</b></td></tr>
+                                <tr><td>Jabatan</td><td>: {selectedSlip.role}</td></tr>
+                                <tr><td>Status</td><td>: {selectedSlip.type}</td></tr>
+                             </table>
+                             <table className="w-full border border-black collapse text-lg mb-8">
+                                <tr className="border border-black"><td className="p-2">Penghasilan Bruto</td><td className="p-2 text-right">{formatRupiah(selectedSlip.gross)}</td></tr>
+                                <tr className="border border-black"><td className="p-2">Potongan PPh 21 ({selectedSlip.taxRate}%)</td><td className="p-2 text-right">({formatRupiah(selectedSlip.tax)})</td></tr>
+                                <tr className="border border-black font-bold bg-gray-100"><td className="p-2">TOTAL DITERIMA</td><td className="p-2 text-right">{formatRupiah(selectedSlip.net)}</td></tr>
+                             </table>
+                             <div className="flex justify-between mt-16 text-center">
+                                <div><p>Penerima,</p><br/><br/><br/><p>({selectedSlip.name})</p></div>
+                                <div><p>Bendahara,</p><br/><br/><br/><p>(..........................)</p></div>
+                             </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<MBGFinalSystem />);
+    </script>
+</body>
+</html>
