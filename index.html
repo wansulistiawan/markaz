@@ -3689,7 +3689,7 @@ function findAcademicMonthForDate(referenceDateStr) {
             //{ date: "2025-10-20", title: "Awal Ujian Bulanan III", color: "event-lightblue", },
             { date: "2025-10-20", title: "Awal Materi Bulan IV", color: "event-green" },
 			{ date: "2025-11-17", title: "Pekan Santai (pemberian kisi-kisi)", color: "event-darkblue", span: 6 },
-            { date: "2025-11-24", title: "Awal Ujian UAS Ganjil", color: "event-lightblue", },
+            { date: "2025-11-24", title: "Ujian UAS Ganjil", color: "event-lightblue", span: 6 },
             { date: "2025-12-01", title: "Penilaian Akhir Semester (PAS)", color: "event-darkblue", span: 6 },
 			{ date: "2025-12-8", title: "Pekan Olahraga", color: "event-purple", span: 6},
             { date: "2025-12-13", title: "Penerimaan Rapor", color: "event-darkblue" },
@@ -4414,21 +4414,24 @@ function setupExamListeners() {
             const jenisUjian = e.target.dataset.jenisUjian;
             const materiList = JSON.parse(e.target.dataset.materiList);
             
+            // Simpan data ujian ke variabel global
             currentExamData = { 
                 title: namaUjian, 
                 jenis: jenisUjian, 
                 materiList: materiList 
             };
             
+            // (PERBAIKAN) Tampilkan judul ujian yang benar di modal
             document.getElementById('exam-subject-title').textContent = namaUjian;
+            
+            // Tampilkan modal peringatan
             document.getElementById('exam-warning-modal').style.display = 'block';
         }
         
-        // --- (BARU) EVENT LISTENER UNTUK TOMBOL BANTUAN ---
+        // Listener untuk tombol bantuan (tetap ada)
         if (e.target.classList.contains('help-btn')) {
             handleHelpClick(e.target);
         }
-        // --- AKHIR BLOK BARU ---
     });
 
     // Listener untuk tombol "Batal" di modal peringatan
@@ -4436,19 +4439,20 @@ function setupExamListeners() {
         document.getElementById('exam-warning-modal').style.display = 'none';
     });
 
-    // Listener untuk tombol "Mulai" di modal peringatn
+    // Listener untuk tombol "Mulai" di modal peringatan
     document.getElementById('start-exam-btn').addEventListener('click', () => {
-        document.getElementById('exam-warning-modal').style.display = 'none';
         
+        // "Prime" audio agar bisa diputar nanti
         if (alarmSound.paused) {
             alarmSound.play().then(() => {
                 alarmSound.pause();
                 alarmSound.currentTime = 0;
             }).catch(e => console.warn("Gagal unlock audio"));
         }
-
-        enterFullscreen(document.documentElement);
-        startExam();
+        
+        document.getElementById('exam-warning-modal').style.display = 'none';
+        enterFullscreen(document.documentElement); // Masuk fullscreen
+        startExam(); // Mulai proses ujian
     });
 
     // Listener untuk tombol "Selesai & Kirim Jawaban"
@@ -4457,7 +4461,6 @@ function setupExamListeners() {
             showCustomAlert('Harap jawab semua pertanyaan sebelum mengirim.');
             return;
         }
-        // (PERBAIKAN) Ganti 'confirm' dengan modal kustom
         showCustomConfirm('Konfirmasi Selesai Ujian', 'Apakah Anda yakin ingin mengirim jawaban Anda?', 'Ya, Kirim', 'Batal')
             .then(confirmed => {
                 if (confirmed) {
@@ -4986,70 +4989,67 @@ function calculateAndShowResult() {
     const isForceSubmit = false; 
     let totalPoinSantri = 0;
     let totalPoinMaksimal = 0;
+    
+    // (BARU) Array untuk menyimpan rincian jawaban
+    const detailJawabanUntukDisimpan = [];
 
     currentQuestions.forEach((q, index) => {
         const poinSoal = q.p || 4; 
         totalPoinMaksimal += poinSoal;
 
-        // --- (PERBAIKAN LOGIKA PENALTI) ---
         const questionKey = q.q;
         const jawabanSantri = examAnswers[questionKey] || ""; 
         const kunciJawabanString = q.a || "";
-        const wasHelpUsed = helpUsedOnQuestion[questionKey] === true; // Cek apakah bantuan dipakai
+        const wasHelpUsed = helpUsedOnQuestion[questionKey] === true;
         let poinDidapat = 0;
-        // ---
 
         if (q.j === 'PG') { 
             if (jawabanSantri.toLowerCase().trim() === kunciJawabanString.toLowerCase().trim()) {
-                poinDidapat = poinSoal; // Jawaban benar
+                poinDidapat = poinSoal;
             }
         } else { 
             const jawabanSantriNorm = jawabanSantri.toLowerCase().trim();
-            const kunciList = kunciJawabanString.toLowerCase()
-                                      .split(/[/|()]/)
-                                      .map(s => s.trim())
-                                      .filter(Boolean);
+            const kunciList = kunciJawabanString.toLowerCase().split(/[/|()]/).map(s => s.trim()).filter(Boolean);
             let foundPerfectMatch = false;
             let foundTypoMatch = false;
-            if (kunciList.includes(jawabanSantriNorm)) {
-                foundPerfectMatch = true;
-            }
+            if (kunciList.includes(jawabanSantriNorm)) { foundPerfectMatch = true; }
             if (!foundPerfectMatch) {
                 for (const kunci of kunciList) {
                     if (kunci.length > 3) { 
                         const distance = getLevenshteinDistance(jawabanSantriNorm, kunci);
                         const toleransiTypo = (kunci.length > 8) ? 2 : 1;
-                        if (distance <= toleransiTypo) {
-                            foundTypoMatch = true;
-                            break; 
-                        }
+                        if (distance <= toleransiTypo) { foundTypoMatch = true; break; }
                     }
                 }
             }
-            
-            if (foundPerfectMatch) {
-                poinDidapat = poinSoal; // Benar 100%
-            } else if (foundTypoMatch) {
-                poinDidapat = (poinSoal * 0.75); // Benar 75% (typo)
-            }
+            if (foundPerfectMatch) { poinDidapat = poinSoal; } 
+            else if (foundTypoMatch) { poinDidapat = (poinSoal * 0.75); }
         }
 
-        // --- (PERBAIKAN LOGIKA PENALTI) ---
-        // Jika bantuan dipakai DAN jawabannya benar (poin > 0),
-        // potong poinnya jadi 50%
         if (wasHelpUsed && poinDidapat > 0) {
             poinDidapat = (poinSoal * 0.5); 
         }
         totalPoinSantri += poinDidapat;
-        // --- AKHIR PERBAIKAN ---
+        
+        // (BARU) Simpan detail jawaban ini
+        detailJawabanUntukDisimpan.push({
+            nomorSoal: index + 1,
+            isiSoal: q.q,
+            pilihan: q.j === 'PG' ? q.o : [], // Simpan opsi jika PG
+            jawabanSantri: jawabanSantri,
+            kunciJawaban: kunciJawabanString
+        });
     });
 
-    // (Sisa fungsi ini sama persis seperti sebelumnya)
     const score = totalPoinMaksimal > 0 ? Math.round((totalPoinSantri / totalPoinMaksimal) * 100) : 0;
+    
     let finalScore;
     const previousAttempts = currentAttemptHistory ? currentAttemptHistory.percobaan : 0;
-    const firstScore = currentAttemptHistory ? currentAttemptHistory.skor : score;
+    // Jika remedial, skor awal tetap skor awal. Jika percobaan pertama, skor awal = skor saat ini.
+    const firstScore = (previousAttempts > 0 && currentAttemptHistory) ? currentAttemptHistory.skor : score;
+    
     const isRemedial = previousAttempts === 1;
+
     if (previousAttempts > 0) {
         const highestPreviousScore = currentAttemptHistory.skorAkhir || currentAttemptHistory.skor || 0;
         let remedialScore = score; 
@@ -5058,37 +5058,63 @@ function calculateAndShowResult() {
     } else {
         finalScore = score;
     }
+    
     if(isForceSubmit) {
         logAction('UJIAN_DIAKHIRI_PAKSA', `Pelanggaran ke-${fullscreenExitCount}`);
     } else {
         logAction('UJIAN_SELESAI', `Skor Akhir: ${finalScore}`);
     }
+	
     const resultScoreEl = document.getElementById('result-score');
     const resultMessageEl = document.getElementById('result-message');
     const resultActionsEl = document.getElementById('result-actions');
+    
     const session = getActiveSession();
-    const isGabungan = (currentExamData.jenis === 'UTS' || currentExamData.jenis === 'UAS');
-    if (!isGabungan) {
-        const dataToSave = {
-            action: 'simpanNilaiUjian',
+    
+    // --- (PERBAIKAN UTAMA: PENYIMPANAN) ---
+    
+    // 1. Simpan Rincian Jawaban (Untuk Semua Jenis Ujian)
+    // Agar guru bisa melihat jawaban mana yang salah/benar
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'simpanJawabanAkhir',
             username: session.username,
-            namaSantri: session.userData.profileName,
-            kodeMateri: currentExamData.materiList[0], 
-            judulMateri: currentExamData.title,
-            skor: firstScore,      
-            skorAkhir: finalScore  
-        };
-        fetch(CONFIG.SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify(dataToSave),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        }).then(res => res.json()).then(result => {
-            if (result.status !== 'success') { console.error("Gagal menyimpan nilai:", result.message); }
-        }).catch(err => console.error("Error saat menyimpan nilai:", err));
-    } else {
-        console.log("Ujian Gabungan Selesai (Tidak disimpan ke 'nilai' secara individu):", finalScore);
-    }
+            // Gunakan Nama Ujian sebagai kode materi jika gabungan, atau kode materi asli jika bulanan
+            kodeMateri: (currentExamData.jenis === 'Bulanan') ? currentExamData.materiList[0] : currentExamData.title,
+            jawabanArray: detailJawabanUntukDisimpan
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    }).catch(err => console.error("Gagal menyimpan rincian jawaban:", err));
+
+    // 2. Simpan Skor Akhir (Untuk Semua Jenis Ujian)
+    // (Sebelumnya UTS/UAS dilewatkan, sekarang DISIMPAN)
+    const kodeMateriUntukNilai = (currentExamData.jenis === 'Bulanan') ? currentExamData.materiList[0] : currentExamData.title;
+    const judulMateriUntukNilai = currentExamData.title;
+
+    const dataToSave = {
+        action: 'simpanNilaiUjian',
+        username: session.username,
+        namaSantri: session.userData.profileName,
+        kodeMateri: kodeMateriUntukNilai, // UTS/UAS akan tersimpan dengan nama ujiannya (cth: "UTS Ganjil")
+        judulMateri: judulMateriUntukNilai,
+        skor: firstScore,      
+        skorAkhir: finalScore  
+    };
+    
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(dataToSave),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    }).then(res => res.json()).then(result => {
+        if (result.status !== 'success') {
+            console.error("Gagal menyimpan nilai:", result.message);
+        }
+    }).catch(err => console.error("Error saat menyimpan nilai:", err));
+    // --- AKHIR PERBAIKAN ---
+
     resultScoreEl.textContent = finalScore;
+    
     if (finalScore >= 80) {
         resultScoreEl.className = 'text-8xl font-bold my-8 pass';
         resultMessageEl.textContent = 'Selamat, nilai Anda sangat baik! Nilai akhir Anda akan dicatat di KHS.';
@@ -5114,8 +5140,10 @@ function calculateAndShowResult() {
                                          <button id="result-later-btn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-8 rounded-lg mt-2">Nanti Saja</button>`;
         }
     }
+
     document.getElementById('exam-container').classList.add('hidden');
     document.getElementById('exam-result-modal').style.display = 'block';
+	
 	isExamInProgress = false;
 }
 
@@ -8629,6 +8657,7 @@ function showLoggedInView(userData) {
     ui.attendanceNav.classList.remove('hidden');
     ui.sistemInformasiNav.classList.remove('hidden');
     ui.kalenderPendidikan.classList.remove('hidden');
+    
     if (userData && userData.profileName) {
         ui.userProfileName.textContent = userData.profileName;
         ui.navProfilePic.src = userData.profilePicture || 'https://placehold.co/80x80/e9ecef/343a40?text=F';
@@ -8642,78 +8671,112 @@ function showLoggedInView(userData) {
     const session = getActiveSession();
     if (session && session.loggedIn) {
         const username = session.username;
-        const jabatan = session.userData.jabatan || ''; 
-		const adminPelanggaran = ['wawan', 'aria', 'admin'];
-        const isPengasuh = (jabatan.toLowerCase().includes('pengasuh'));
+        
+        // --- (LOGIKA MULTI-JABATAN) ---
+        // 1. Ambil string jabatan, ubah ke huruf kecil
+        const rawJabatan = (session.userData.jabatan || '').toLowerCase();
+        // 2. Pecah berdasarkan koma menjadi array (list)
+        // Contoh: "Guru, Bendahara" menjadi ['guru', 'bendahara']
+        const userRoles = rawJabatan.split(',').map(r => r.trim());
+
+        // 3. Fungsi pembantu untuk cek apakah punya peran tertentu
+        const hasRole = (roleToCheck) => userRoles.includes(roleToCheck.toLowerCase());
+        // --- AKHIR LOGIKA BARU ---
+
+        // --- DEFINISI HAK AKSES (MENGGUNAKAN MULTI-JABATAN) ---
+        
+        const isAdminSystem = ['wawan', 'mia', 'admin'].includes(username); // Super Admin
+
+        // 1. Akses Pelanggaran (Pengasuh / Admin)
+        const adminPelanggaran = ['wawan', 'aria', 'admin'];
+        // Cek apakah salah satu jabatannya mengandung kata 'pengasuh'
+        const isPengasuh = userRoles.some(r => r.includes('pengasuh')); 
         if (adminPelanggaran.includes(username) || isPengasuh) {
             fetchPelanggaranNotifications();
         }
-		const allowedUsernames = ['wawan', 'mia', 'reza', 'yeni', 'admin'];
-        const isSantri = (jabatan || '').trim().toLowerCase() === 'santri';
-        const isKepalaOrWaka = jabatan === 'Kepala Rumah Anak Yatim' || jabatan === 'Kepala Rumah Tahfidz' || jabatan === 'Waka Kurikulum';
-        const isMusyrif = jabatan === 'Musyrif' || ['wawan', 'admin'].includes(username);
-		const isMusyrifah = jabatan === 'Musyrifah' || ['wawan', 'admin'].includes(username);
+
+        // 2. Akses Santri
+        const isSantri = hasRole('santri');
+
+        // 3. Akses Kepala / Waka (Laporan Harian)
+        const isKepalaOrWaka = hasRole('kepala rumah anak yatim') || 
+                               hasRole('kepala rumah tahfidz') || 
+                               hasRole('waka kurikulum') ||
+                               hasRole('mudir'); // Menambahkan mudir
+
+        // 4. Akses Musyrif/ah
+        const isMusyrif = hasRole('musyrif') || ['wawan', 'admin'].includes(username);
+        const isMusyrifah = hasRole('musyrifah') || ['wawan', 'admin'].includes(username);
+
+        // 5. Akses Bendahara (Keuangan & Kunci Gaji)
         const financeUsers = ['mia', 'wawan', 'aria', 'yeni', 'admin'];
+        const isBendahara = hasRole('bendahara');
+        const canAccessKeuangan = financeUsers.includes(username) || isBendahara;
+
+        // 6. Akses Slip Gaji (Melihat Semua Slip)
         const karyawanUsers = ['wawan', 'admin', 'aria', 'yeni', 'mia', 'zhofri', 'erwan', 'mahadi', 'zaidun', 'yanti', 'ryza', 'reza', 'uswah', 'erma'];
-		fetchAndStartTips(jabatan);
-        const isBendahara = (jabatan.toLowerCase().trim() === 'bendahara');
-        const isGuru = (jabatan || '').trim().toLowerCase() === 'guru' || appData.teachers.some(t => t.name === session.userData.profileName);
-        const canAccessBankSoal = isGuru || userData.username === 'mia' || userData.username === 'wawan' || userData.username === 'admin';
-        const isAdminUjian = ['wawan', 'mia', 'admin'].includes(username);
-		const canSupervise = isGuru || ['wawan', 'mia', 'aria', 'zhofri', 'admin'].includes(username);
-		
-		const lihatNilaiNav = document.getElementById('lihatNilaiNav');
+        const canAccessSlipGaji = karyawanUsers.includes(username) || isBendahara; // Bendahara bisa lihat semua
+
+        // 7. Akses Guru (Bank Soal, Input Nilai)
+        // Cek apakah dia punya jabatan 'guru' ATAU namanya ada di daftar guru statis
+        const isGuru = hasRole('guru') || appData.teachers.some(t => t.name === session.userData.profileName);
+        
+        const canAccessBankSoal = isGuru || isAdminSystem;
+        const isAdminUjian = isAdminSystem; // Hanya admin inti yang bisa buka ujian manual
+        const canSupervise = isGuru || ['wawan', 'mia', 'aria', 'zhofri', 'admin'].includes(username);
+
+        // 8. Akses Lihat Nilai (Waka Kurikulum & Guru)
+        const lihatNilaiNav = document.getElementById('lihatNilaiNav');
         if (lihatNilaiNav) {
-            const isWaka = jabatan === 'Waka Kurikulum';
+            const isWakaKurikulum = hasRole('waka kurikulum');
             const allowedUsernamesNilai = ['wawan', 'mia', 'aria', 'admin'];
-            const canAccessNilai = isGuru || isWaka || allowedUsernamesNilai.includes(username);
+            const canAccessNilai = isGuru || isWakaKurikulum || allowedUsernamesNilai.includes(username);
             lihatNilaiNav.classList.toggle('hidden', !canAccessNilai);
         }
-		
-		if (isGuru) {
+        
+        // Panggil notifikasi jika Guru
+        if (isGuru) {
             fetchAndShowTeacherNotifications();
             fetchGradingNotifications(); 
         }
 
+        // --- PENGATURAN TAMPILAN MENU BERDASARKAN HAK AKSES ---
+
         document.getElementById('attendanceNav').classList.toggle('hidden', isSantri);
         document.getElementById('ujianOnlineNav').classList.toggle('hidden', !isSantri);
+        
         const tabunganNav = document.getElementById('tabunganNav');
         if (tabunganNav) {
-            const canSeeTabungan = allowedUsernames.includes(username) || jabatan === 'santri';
+            const canSeeTabungan = ['wawan', 'mia', 'reza', 'yeni', 'admin'].includes(username) || isSantri;
             tabunganNav.classList.toggle('hidden', !canSeeTabungan);
         }
-		const kasirNav = document.getElementById('kasirNav');
+        const kasirNav = document.getElementById('kasirNav');
         if (kasirNav) {
-            const canSeeKasir = allowedUsernames.includes(username) || jabatan === 'santri' || ['wawan', 'admin'].includes(username) ;
+            const canSeeKasir = ['wawan', 'mia', 'reza', 'yeni', 'admin'].includes(username) || isSantri || ['wawan', 'admin'].includes(username);
             kasirNav.classList.toggle('hidden', !canSeeKasir);
         }
         
-        const canAccessSlipGaji = karyawanUsers.includes(username) || isBendahara;
-        const canAccessKeuangan = financeUsers.includes(username) || isBendahara;
-
-        const showDropdown = isSantri || isKepalaOrWaka || isMusyrif || isMusyrifah || canAccessKeuangan || canAccessSlipGaji || isAdminUjian;
+        // Tampilkan Dropdown jika punya SALAH SATU akses
+        const showDropdown = isSantri || isKepalaOrWaka || isMusyrif || isMusyrifah || canAccessKeuangan || canAccessSlipGaji || isAdminUjian || canAccessBankSoal;
         document.getElementById('sistemInformasiDropdown').classList.toggle('hidden', !showDropdown);
         
         const halamanUjianAdminNav = document.getElementById('halamanUjianAdminNav');
         if(halamanUjianAdminNav) {
             halamanUjianAdminNav.classList.toggle('hidden', !isAdminUjian);
         }
-		const pengawasUjianNav = document.getElementById('pengawasUjianNav');
-		if (pengawasUjianNav) {
-			pengawasUjianNav.classList.toggle('hidden', !canSupervise);
-		}
+        const pengawasUjianNav = document.getElementById('pengawasUjianNav');
+        if (pengawasUjianNav) {
+            pengawasUjianNav.classList.toggle('hidden', !canSupervise);
+        }
         
         document.getElementById('krsNav').classList.toggle('hidden', !isSantri);
         document.getElementById('khsNav').classList.toggle('hidden', !isSantri);
-        
-        // --- (PERUBAHAN DI SINI) ---
         document.getElementById('hafalanNav').classList.toggle('hidden', !isSantri);
-        // --- AKHIR PERUBAHAN ---
 
         document.getElementById('slipGajiNav').classList.toggle('hidden', !canAccessSlipGaji);
         document.getElementById('laporanKeuanganNav').classList.toggle('hidden', !canAccessKeuangan);
-		
-		if (canAccessKeuangan) {
+        
+        if (canAccessKeuangan) {
             const tutupBukuContainer = document.getElementById('tutup-buku-gaji-container');
             if(tutupBukuContainer) tutupBukuContainer.classList.remove('hidden');
             populateMonthYearDropdowns(
@@ -8725,28 +8788,31 @@ function showLoggedInView(userData) {
                 document.getElementById('totalGajiTahun')
             );
         }
-		
+        
         document.getElementById('laporanNav').classList.toggle('hidden', !isKepalaOrWaka);
         document.getElementById('musyrifNav').classList.toggle('hidden', !isMusyrif);
         document.getElementById('musyrifahNav').classList.toggle('hidden', !isMusyrifah);
         document.getElementById('halamanGuruNav').classList.toggle('hidden', !canAccessBankSoal);
         document.getElementById('inputSoalNav').classList.toggle('hidden', !isAdminUjian);
-		
-		const createFundraisingContainer = document.getElementById('create-fundraising-btn-container');
+        
+        const createFundraisingContainer = document.getElementById('create-fundraising-btn-container');
         if (createFundraisingContainer) {
             const canCreate = ['mia', 'wawan', 'admin'].includes(username);
             createFundraisingContainer.classList.toggle('hidden', !canCreate);
         }
-		
+        
         const tugasNav = document.getElementById('tugasNav');
         if (tugasNav) {
-            const canAccessTugas = isSantri || isGuru || ['wawan', 'mia', 'aria', 'admin'].includes(username);
+            const canAccessTugas = isSantri || isGuru || isAdminSystem;
             tugasNav.classList.toggle('hidden', !canAccessTugas);
 
             if (isSantri) {
                 fetchTugasNotifications();
             }
         }
+        
+        // Tips (Pastikan jabatan dikirim apa adanya untuk filter tips yang spesifik jika perlu)
+        fetchAndStartTips(session.userData.jabatan);
     }
     
     if (window.location.hash === '#login') { window.location.hash = '#beranda'; }
