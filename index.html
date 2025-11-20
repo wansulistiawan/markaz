@@ -4990,7 +4990,6 @@ function calculateAndShowResult() {
     let totalPoinSantri = 0;
     let totalPoinMaksimal = 0;
     
-    // (BARU) Array untuk menyimpan rincian jawaban
     const detailJawabanUntukDisimpan = [];
 
     currentQuestions.forEach((q, index) => {
@@ -5031,11 +5030,10 @@ function calculateAndShowResult() {
         }
         totalPoinSantri += poinDidapat;
         
-        // (BARU) Simpan detail jawaban ini
         detailJawabanUntukDisimpan.push({
             nomorSoal: index + 1,
             isiSoal: q.q,
-            pilihan: q.j === 'PG' ? q.o : [], // Simpan opsi jika PG
+            pilihan: q.j === 'PG' ? q.o : [], 
             jawabanSantri: jawabanSantri,
             kunciJawaban: kunciJawabanString
         });
@@ -5045,7 +5043,6 @@ function calculateAndShowResult() {
     
     let finalScore;
     const previousAttempts = currentAttemptHistory ? currentAttemptHistory.percobaan : 0;
-    // Jika remedial, skor awal tetap skor awal. Jika percobaan pertama, skor awal = skor saat ini.
     const firstScore = (previousAttempts > 0 && currentAttemptHistory) ? currentAttemptHistory.skor : score;
     
     const isRemedial = previousAttempts === 1;
@@ -5068,36 +5065,35 @@ function calculateAndShowResult() {
     const resultScoreEl = document.getElementById('result-score');
     const resultMessageEl = document.getElementById('result-message');
     const resultActionsEl = document.getElementById('result-actions');
-    
     const session = getActiveSession();
     
-    // --- (PERBAIKAN UTAMA: PENYIMPANAN) ---
-    
     // 1. Simpan Rincian Jawaban (Untuk Semua Jenis Ujian)
-    // Agar guru bisa melihat jawaban mana yang salah/benar
     fetch(CONFIG.SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({
             action: 'simpanJawabanAkhir',
             username: session.username,
-            // Gunakan Nama Ujian sebagai kode materi jika gabungan, atau kode materi asli jika bulanan
             kodeMateri: (currentExamData.jenis === 'Bulanan') ? currentExamData.materiList[0] : currentExamData.title,
             jawabanArray: detailJawabanUntukDisimpan
         }),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
     }).catch(err => console.error("Gagal menyimpan rincian jawaban:", err));
 
-    // 2. Simpan Skor Akhir (Untuk Semua Jenis Ujian)
-    // (Sebelumnya UTS/UAS dilewatkan, sekarang DISIMPAN)
-    const kodeMateriUntukNilai = (currentExamData.jenis === 'Bulanan') ? currentExamData.materiList[0] : currentExamData.title;
+    // 2. Simpan Skor Akhir (SEKARANG UNTUK SEMUA JENIS UJIAN)
+    // (PERBAIKAN: Kita hapus blok if(!isGabungan) agar UTS/UAS juga tersimpan)
+    
+    const kodeMateriUntukNilai = currentExamData.materiList[0]; // Selalu ambil 1 kode materi
     const judulMateriUntukNilai = currentExamData.title;
+    // (BARU) Ambil jenis ujian untuk dikirim ke backend
+    const jenisUjianUntukNilai = currentExamData.jenis || 'Bulanan'; 
 
     const dataToSave = {
         action: 'simpanNilaiUjian',
         username: session.username,
         namaSantri: session.userData.profileName,
-        kodeMateri: kodeMateriUntukNilai, // UTS/UAS akan tersimpan dengan nama ujiannya (cth: "UTS Ganjil")
+        kodeMateri: kodeMateriUntukNilai,
         judulMateri: judulMateriUntukNilai,
+        jenisUjian: jenisUjianUntukNilai, // (BARU) Kirim jenis ujian
         skor: firstScore,      
         skorAkhir: finalScore  
     };
@@ -5111,7 +5107,7 @@ function calculateAndShowResult() {
             console.error("Gagal menyimpan nilai:", result.message);
         }
     }).catch(err => console.error("Error saat menyimpan nilai:", err));
-    // --- AKHIR PERBAIKAN ---
+
 
     resultScoreEl.textContent = finalScore;
     
