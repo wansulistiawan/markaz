@@ -2553,7 +2553,7 @@
             <p class="text-sm text-gray-500 mb-2">Pastikan setiap soal diawali angka (cth: 1. Soal). Sistem akan otomatis mendeteksi soal PG dan Isian.</p>
             <div id="quill-editor-container" style="height: 350px;"></div>
         </div>
-
+		
         <div class="form-group">
             <h3 class="text-base font-semibold mb-2">4. Pratinjau, Isi Kunci Jawaban, dan Simpan</h3>
             <div id="soal-preview-container" class="border rounded-lg overflow-hidden">
@@ -6011,17 +6011,56 @@ function setupInputSoalPage() {
     const previewContainer = document.getElementById('soal-preview-container');
     const simpanBtn = document.getElementById('simpan-soal-btn');
 
+    // (BARU) Tambahkan input bobot di atas editor secara dinamis
+    const editorContainer = document.getElementById('quill-editor-container');
+    if (!document.getElementById('bobot-inputs-wrapper')) {
+        const wrapper = document.createElement('div');
+        wrapper.id = 'bobot-inputs-wrapper';
+        wrapper.className = 'grid grid-cols-2 gap-4 mb-4';
+        wrapper.innerHTML = `
+            <div>
+                <label class="text-sm font-semibold text-gray-700">Total Bobot Pilihan Ganda (PG)</label>
+                <input type="number" id="input-total-bobot-pg" value="75" class="w-full p-2 border rounded bg-blue-50" placeholder="75">
+                <p class="text-xs text-gray-500">Total ini akan dibagi rata ke semua soal PG</p>
+            </div>
+            <div>
+                <label class="text-sm font-semibold text-gray-700">Total Bobot Isian</label>
+                <input type="number" id="input-total-bobot-isian" value="25" class="w-full p-2 border rounded bg-green-50" placeholder="25">
+                <p class="text-xs text-gray-500">Total ini akan dibagi rata ke semua soal Isian</p>
+            </div>
+        `;
+        editorContainer.parentNode.insertBefore(wrapper, editorContainer);
+        
+        // Listener untuk update realtime saat bobot diubah
+        const updatePreview = () => {
+             if(quillEditor) renderSoalPreview(quillEditor.root.innerHTML, document.getElementById('auto-fill-keys-checkbox')?.checked);
+        };
+        document.getElementById('input-total-bobot-pg').addEventListener('input', updatePreview);
+        document.getElementById('input-total-bobot-isian').addEventListener('input', updatePreview);
+    }
+
+    // Inisialisasi Editor (Kode Lama)
     quillEditor = new Quill('#quill-editor-container', {
         theme: 'snow',
-        modules: { toolbar: [[{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline', 'strike'], ['link', 'image', 'formula'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] },
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                ['link', 'image', 'formula'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['clean']
+            ]
+        },
         placeholder: 'Tempel (paste) soal dari MS. Word di sini...\n\nFORMAT YANG DITERIMA:\n\n1. Soal Pilihan Ganda\n   a. Opsi A\n   b. Opsi B\n   c. Opsi D\n   Kunci Jawaban : B (atau tebalkan opsi B)\n\n2. Soal Isian\n   Pertanyaan soal isian...\n   Kunci Jawaban : Jawaban Benar (Sinonim bisa pakai | atau /)\n   Contoh Kunci: Oksigen (O2) / Oxygen'
     });
     
     imageUploadHandler(quillEditor); 
+
     quillEditor.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
         if (node.tagName === 'IMG' && node.src && node.src.startsWith('data:image/')) {
             const range = quillEditor.getSelection(true) || { index: 0 };
             quillEditor.insertEmbed(range.index, 'image', 'https://placehold.co/100x100/e9ecef/6c757d?text=Uploading...');
+            
             uploadPastedImage(node.src)
                 .then(url => {
                     if (url) {
@@ -6057,7 +6096,7 @@ function setupInputSoalPage() {
             materiSelectBulanan.appendChild(option);
         });
     }
-    jenisUjianSelect.addEventListener('change', (e) => { /* Tidak ada aksi UI */ });
+    jenisUjianSelect.addEventListener('change', (e) => { });
 
     let typingTimer;
     quillEditor.on('text-change', () => {
@@ -6069,6 +6108,7 @@ function setupInputSoalPage() {
             renderSoalPreview(quillEditor.root.innerHTML, isAutoFillChecked);
         }, 300);
     });
+
     previewContainer.addEventListener('change', (event) => {
         if (event.target.id === 'auto-fill-keys-checkbox') {
             renderSoalPreview(quillEditor.root.innerHTML, event.target.checked);
@@ -6076,7 +6116,7 @@ function setupInputSoalPage() {
     });
 
     /**
-     * (PERBAIKAN POIN OTOMATIS ADA DI FUNGSI INI)
+     * (FUNGSI renderSoalPreview DENGAN LOGIKA BOBOT BARU)
      */
     function renderSoalPreview(fullHtml, isAutoFillChecked) {
         const autoFillKeys = isAutoFillChecked;
@@ -6088,9 +6128,35 @@ function setupInputSoalPage() {
             return;
         }
         
-        // --- (PERBAIKAN BUG POIN OTOMATIS) ---
-        const poinPerSoal = Math.round((100 / soalArray.length) * 100) / 100;
-        // --- AKHIR PERBAIKAN ---
+        // --- (BARU) Hitung jumlah soal per tipe ---
+        const keyTextRegex = /<p[^>]*>Kunci Jawaban\s*:\s*(.*?)<\/p>|Kunci Jawaban\s*:\s*(.*?)(?=<br>|$)/i;
+        const boldRegex = /<(strong|b)[^>]*>\s*([A-D])[.)\s]/i;
+        
+        let countPG = 0;
+        let countIsian = 0;
+
+        soalArray.forEach(soalHtml => {
+            let isPG = false;
+            if (autoFillKeys) {
+               const keyMatch = soalHtml.match(keyTextRegex);
+               if (keyMatch) {
+                   let keyText = (keyMatch[1] || keyMatch[2] || '').trim().replace(/<[^>]+>/g, '').trim();
+                   if (/^([A-D])([.)\s]*)?$/i.test(keyText)) isPG = true;
+               } else if (boldRegex.test(soalHtml)) {
+                   isPG = true;
+               }
+            }
+            if (isPG) countPG++; else countIsian++;
+        });
+
+        // --- (BARU) Ambil bobot total dari input manual ---
+        const totalBobotPG = parseFloat(document.getElementById('input-total-bobot-pg').value) || 0;
+        const totalBobotIsian = parseFloat(document.getElementById('input-total-bobot-isian').value) || 0;
+
+        // --- (BARU) Hitung poin per soal (Dibagi rata) ---
+        const poinPerPG = countPG > 0 ? (totalBobotPG / countPG) : 0;
+        const poinPerIsian = countIsian > 0 ? (totalBobotIsian / countIsian) : 0;
+
 
         let tableHTML = `
             <table class="min-w-full divide-y divide-gray-200">
@@ -6109,9 +6175,6 @@ function setupInputSoalPage() {
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">`;
 
-        // (Regex deteksi dan pembersihan sudah benar)
-        const keyTextRegex = /<p[^>]*>Kunci Jawaban\s*:\s*(.*?)<\/p>|Kunci Jawaban\s*:\s*(.*?)(?=<br>|$)/i;
-        const boldRegex = /<(strong|b)[^>]*>\s*([A-D])[.)\s]/i;
         const boldReplaceRegex = /<(strong|b)[^>]*>(\s*[A-D][.)\s])/i;
         const numberRegex = /(<p[^>]*>)(?:Soal\s+)?\s*\d+[.)]\s*/i; 
         const allOptionsRegex = /<p[^>]*>\s*[a-d][.)].*?<\/p>/gi;
@@ -6125,28 +6188,21 @@ function setupInputSoalPage() {
                 if (keyMatch) {
                     let keyText = (keyMatch[1] || keyMatch[2] || '').trim().replace(/<[^>]+>/g, '').trim();
                     const pgMatch = keyText.match(/^([A-D])([.)\s]*)?$/i); 
-                    if (pgMatch) {
-                        kunciJawaban = pgMatch[1].toUpperCase();
-                        isPG = true; 
-                    } else {
-                        kunciJawaban = keyText;
-                    }
+                    if (pgMatch) { kunciJawaban = pgMatch[1].toUpperCase(); isPG = true; } 
+                    else { kunciJawaban = keyText; }
                 }
                 if (!kunciJawaban) {
                     const boldMatch = soalHtml.match(boldRegex);
-                    if (boldMatch) {
-                        kunciJawaban = boldMatch[2].toUpperCase();
-                        isPG = true; 
-                    }
+                    if (boldMatch) { kunciJawaban = boldMatch[2].toUpperCase(); isPG = true; }
                 }
             }
             let cleanedSoalHtml = soalHtml.replace(keyTextRegex, ''); 
-            if (isPG) {
-                cleanedSoalHtml = cleanedSoalHtml.replace(boldReplaceRegex, '$2');
-            } else if (kunciJawaban !== '') {
-                cleanedSoalHtml = cleanedSoalHtml.replace(allOptionsRegex, '');
-            }
+            if (isPG) { cleanedSoalHtml = cleanedSoalHtml.replace(boldReplaceRegex, '$2'); } 
+            else if (kunciJawaban !== '') { cleanedSoalHtml = cleanedSoalHtml.replace(allOptionsRegex, ''); }
             cleanedSoalHtml = cleanedSoalHtml.replace(numberRegex, '$1'); 
+
+            // --- (BARU) Tentukan poin berdasarkan tipe ---
+            const thisPoin = isPG ? poinPerPG : poinPerIsian;
 
             tableHTML += `
                 <tr class="soal-row">
@@ -6156,7 +6212,7 @@ function setupInputSoalPage() {
                         <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md" value="${kunciJawaban}" placeholder="${autoFillKeys ? 'Otomatis...' : 'Isi manual...'}">
                     </td>
                     <td class="px-4 py-3 align-top">
-                        <input type="number" step="0.01" class="poin-soal-input w-full p-2 border rounded-md" value="${poinPerSoal}">
+                        <input type="number" step="0.01" class="poin-soal-input w-full p-2 border rounded-md" value="${thisPoin.toFixed(2)}">
                     </td>
                 </tr>
             `;
@@ -6323,246 +6379,148 @@ let soalGuruData = []; // Untuk menyimpan data soal yang diambil
 async function setupHalamanGuru() {
     const session = getActiveSession();
     if (!session || !session.loggedIn) return;
-	
-    if (['mia', 'wawan', 'admin', 'zhofri'].includes(session.username)) {
-        fetchAndShowAdminNotification();
-    }
-	
+    if (['mia', 'wawan', 'admin', 'zhofri'].includes(session.username)) { fetchAndShowAdminNotification(); }
+    
     const guruMateriSelect = document.getElementById('guru-materi-select');
     const editorWrapper = document.getElementById('guru-editor-container-wrapper');
     const previewWrapper = document.getElementById('guru-preview-wrapper');
     const previewContainer = document.getElementById('soal-preview-guru-container');
     const updateBtn = document.getElementById('update-soal-btn');
     
-    // Inisialisasi editor baru jika belum ada
     if (!quillEditorGuru) {
-        quillEditorGuru = new Quill('#quill-editor-guru-container', {
-            theme: 'snow',
-            modules: { toolbar: [[{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline', 'strike'], ['link', 'image', 'formula'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] },
-            placeholder: 'Soal dari materi yang Anda pilih akan dimuat di sini...'
-        });
+        // (BARU) Tambahkan input bobot di halaman guru
+        if (!document.getElementById('guru-bobot-inputs-wrapper')) {
+            const wrapper = document.createElement('div');
+            wrapper.id = 'guru-bobot-inputs-wrapper';
+            wrapper.className = 'grid grid-cols-2 gap-4 mb-4';
+            wrapper.innerHTML = `
+                <div><label class="text-sm font-semibold text-gray-700">Total Poin PG</label><input type="number" id="guru-total-bobot-pg" value="75" class="w-full p-2 border rounded bg-blue-50"></div>
+                <div><label class="text-sm font-semibold text-gray-700">Total Poin Isian</label><input type="number" id="guru-total-bobot-isian" value="25" class="w-full p-2 border rounded bg-green-50"></div>
+            `;
+            const editorContainer = document.getElementById('quill-editor-guru-container');
+            editorContainer.parentNode.insertBefore(wrapper, editorContainer);
+             
+            // Listener
+            const updateGuruPreview = () => { if(quillEditorGuru) renderSoalPreviewGuru(quillEditorGuru.root.innerHTML, true); };
+            document.getElementById('guru-total-bobot-pg').addEventListener('input', updateGuruPreview);
+            document.getElementById('guru-total-bobot-isian').addEventListener('input', updateGuruPreview);
+        }
+
+        quillEditorGuru = new Quill('#quill-editor-guru-container', { theme: 'snow', modules: { toolbar: [[{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline', 'strike'], ['link', 'image', 'formula'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] }, placeholder: 'Soal...' });
         
-        // Pasang handler paste gambar (Sama seperti halaman input)
         quillEditorGuru.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
             if (node.tagName === 'IMG' && node.src && node.src.startsWith('data:image/')) {
                 const range = quillEditorGuru.getSelection(true) || { index: 0 };
                 quillEditorGuru.insertEmbed(range.index, 'image', 'https://placehold.co/100x100/e9ecef/6c757d?text=Uploading...');
-                uploadPastedImage(node.src)
-                    .then(url => {
-                        if (url) {
-                            quillEditorGuru.deleteText(range.index, 1);
-                            quillEditorGuru.insertEmbed(range.index, 'image', url);
-                            quillEditorGuru.setSelection(range.index + 1);
-                        } else {
-                            quillEditorGuru.deleteText(range.index, 1);
-                        }
-                        renderSoalPreviewGuru(quillEditorGuru.root.innerHTML, true);
-                    });
-            }
-            return delta; 
+                uploadPastedImage(node.src).then(url => { if (url) { quillEditorGuru.deleteText(range.index, 1); quillEditorGuru.insertEmbed(range.index, 'image', url); quillEditorGuru.setSelection(range.index + 1); } else { quillEditorGuru.deleteText(range.index, 1); } renderSoalPreviewGuru(quillEditorGuru.root.innerHTML, true); });
+            } return delta; 
         });
-
-        // Pasang handler tombol gambar toolbar
         imageUploadHandler(quillEditorGuru);
-        
-        // Pasang listener perubahan teks untuk update pratinjau otomatis
         let typingTimer;
-        quillEditorGuru.on('text-change', () => {
-            clearTimeout(typingTimer);
-            typingTimer = setTimeout(() => {
-                renderSoalPreviewGuru(quillEditorGuru.root.innerHTML, true);
-            }, 500);
-        });
+        quillEditorGuru.on('text-change', () => { clearTimeout(typingTimer); typingTimer = setTimeout(() => { renderSoalPreviewGuru(quillEditorGuru.root.innerHTML, true); }, 500); });
     }
     
     previewContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Memuat data soal...</p>';
-    
     try {
-        const response = await fetch(CONFIG.SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'getSoalUntukGuru', namaGuru: session.userData.profileName }),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        });
+        const response = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getSoalUntukGuru', namaGuru: session.userData.profileName }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
         const result = await response.json();
         if (result.status !== 'success') throw new Error(result.message);
-
         soalGuruData = result.soal;
         const materiGuruDariServer = result.materi;
-
         guruMateriSelect.innerHTML = '<option value="all">-- Pilih Materi --</option>';
         for (const kode in materiGuruDariServer) {
             const subjectData = Object.values(appState.processedSchedules).flat().find(item => item.subject.startsWith(kode));
             const namaLengkapMateri = subjectData ? subjectData.subject : kode;
-            const option = document.createElement('option');
-            option.value = kode;
-            option.textContent = namaLengkapMateri;
-            guruMateriSelect.appendChild(option);
+            const option = document.createElement('option'); option.value = kode; option.textContent = namaLengkapMateri; guruMateriSelect.appendChild(option);
         }
-        
         previewContainer.innerHTML = '<p class="p-8 text-center text-gray-400">Silakan pilih materi untuk diedit.</p>';
+    } catch (error) { previewContainer.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat data: ${error.message}</p>`; }
 
-    } catch (error) {
-        previewContainer.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat data: ${error.message}</p>`;
-    }
-
-    guruMateriSelect.addEventListener('change', (e) => {
-        renderSoalUntukGuru(e.target.value);
-    });
-    
-    // Hapus listener lama sebelum menambah yang baru (untuk menghindari duplikasi)
+    guruMateriSelect.addEventListener('change', (e) => { renderSoalUntukGuru(e.target.value); });
     updateBtn.replaceWith(updateBtn.cloneNode(true));
     document.getElementById('update-soal-btn').addEventListener('click', handleUpdateSoal);
 
-    /**
-     * Helper: Rekonstruksi soal ke editor
-     */
     function renderSoalUntukGuru(filterKodeMateri) {
         if (filterKodeMateri === 'all' || !filterKodeMateri) {
-            editorWrapper.classList.add('hidden');
-            previewWrapper.classList.add('hidden');
-            document.getElementById('update-soal-btn').classList.add('hidden');
-            quillEditorGuru.setContents([]);
-            previewContainer.innerHTML = '<p class="p-8 text-center text-gray-400">Silakan pilih materi untuk diedit.</p>';
-            return;
+            editorWrapper.classList.add('hidden'); previewWrapper.classList.add('hidden'); document.getElementById('update-soal-btn').classList.add('hidden'); quillEditorGuru.setContents([]); previewContainer.innerHTML = '<p class="p-8 text-center text-gray-400">Silakan pilih materi.</p>'; return;
         }
-
         const filteredSoal = soalGuruData.filter(s => s.kodemateri === filterKodeMateri);
-        
         if (filteredSoal.length === 0) {
-            quillEditorGuru.setContents([]);
-            previewContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Belum ada soal untuk materi ini. Anda bisa menambahkannya dari halaman "Input Bank Soal".</p>';
-            editorWrapper.classList.remove('hidden');
-            previewWrapper.classList.remove('hidden');
-            document.getElementById('update-soal-btn').classList.remove('hidden');
-            return;
+            quillEditorGuru.setContents([]); previewContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Belum ada soal.</p>'; editorWrapper.classList.remove('hidden'); previewWrapper.classList.remove('hidden'); document.getElementById('update-soal-btn').classList.remove('hidden'); return;
         }
-
-        // Rekonstruksi HTML dari data soal
         let reconstructedHtml = '';
-        filteredSoal
-            .sort((a, b) => a.nomorsoal - b.nomorsoal)
-            .forEach((soal) => {
+        filteredSoal.sort((a, b) => a.nomorsoal - b.nomorsoal).forEach((soal) => {
                 let isiSoal = soal.isisoal;
-                
-                // --- (PERBAIKAN UTAMA DI SINI) ---
-                // Sisipkan nomor soal jika belum ada
-                // Cek apakah paragraf pertama sudah punya angka
-                if (!/^\s*<p[^>]*>\s*\d+[.)]/i.test(isiSoal)) {
-                    // Jika tidak ada, sisipkan nomor di awal tag <p> pertama
-                    isiSoal = isiSoal.replace(/<p([^>]*)>/i, `<p$1>${soal.nomorsoal}. `);
-                }
-                // --- AKHIR PERBAIKAN ---
-
+                if (!/^\s*<p[^>]*>(?:Soal\s+)?\s*\d+[.)]/i.test(isiSoal)) { isiSoal = isiSoal.replace(/<p([^>]*)>/i, `<p$1>${soal.nomorsoal}. `); }
                 reconstructedHtml += isiSoal; 
-                
-                // Tambahkan Kunci Jawaban dengan format yang bisa dibaca parser
-                if (soal.kuncijawaban) {
-                    // Cek apakah kunci jawaban PG (A-D) atau Isian
-                    const isPGKey = /^([A-D])$/i.test(soal.kuncijawaban.trim());
-                    if (isPGKey) {
-                        // Jika PG, kita coba tebalkan opsi di dalam teks soal (opsional, agak rumit di reverse)
-                        // Atau kita cukup tulis eksplisit:
-                        reconstructedHtml += `<p>Kunci Jawaban : ${soal.kuncijawaban}</p>`;
-                    } else {
-                        // Jika Isian
-                        reconstructedHtml += `<p>Kunci Jawaban : ${soal.kuncijawaban}</p>`;
-                    }
-                }
-                
-                reconstructedHtml += `<p><br></p>`; // Spasi antar soal
+                if (soal.kuncijawaban) { reconstructedHtml += `<p>Kunci Jawaban : ${soal.kuncijawaban}</p>`; }
+                reconstructedHtml += `<p><br></p>`;
             });
-
         quillEditorGuru.root.innerHTML = reconstructedHtml;
-        
-        // Panggil pratinjau
         renderSoalPreviewGuru(reconstructedHtml, true);
-        
-        editorWrapper.classList.remove('hidden');
-        previewWrapper.classList.remove('hidden');
-        document.getElementById('update-soal-btn').classList.remove('hidden');
+        editorWrapper.classList.remove('hidden'); previewWrapper.classList.remove('hidden'); document.getElementById('update-soal-btn').classList.remove('hidden');
     }
 
-    /**
-     * Helper: Pratinjau untuk Halaman Guru (Sama persis dengan halaman input)
-     */
     function renderSoalPreviewGuru(fullHtml, isAutoFillChecked) {
         const autoFillKeys = isAutoFillChecked;
         const soalArray = fullHtml.split(/(?=<p[^>]*>(?:Soal\s+)?\s*\d+[.)])/i).map(s => s.trim()).filter(Boolean);
-
-        if (soalArray.length === 0) {
-            previewContainer.innerHTML = `<p class="p-8 text-center text-gray-400">Pratinjau soal akan muncul di sini.</p>`;
-            // Jangan sembunyikan tombol simpan di sini agar user tetap bisa menghapus semua soal jika mau
-            return;
-        }
+        if (soalArray.length === 0) { previewContainer.innerHTML = `<p class="p-8 text-center text-gray-400">Pratinjau soal akan muncul di sini.</p>`; return; }
         
-        const poinPerSoal = Math.round((100 / soalArray.length) * 100) / 100;
-        let tableHTML = `
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Isi Soal</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-48">Kunci Jawaban</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-24">Poin</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">`;
-
+        // (BARU) Hitung jenis soal
         const keyTextRegex = /<p[^>]*>Kunci Jawaban\s*:\s*(.*?)<\/p>|Kunci Jawaban\s*:\s*(.*?)(?=<br>|$)/i;
         const boldRegex = /<(strong|b)[^>]*>\s*([A-D])[.)\s]/i;
-        const boldReplaceRegex = /<(strong|b)[^>]*>(\s*[A-D][.)\s])/i;
+        let countPG = 0; let countIsian = 0;
+        soalArray.forEach(soalHtml => {
+             let isPG = false;
+             if (autoFillKeys) {
+                 const keyMatch = soalHtml.match(keyTextRegex);
+                 if (keyMatch) {
+                    const keyText = (keyMatch[1] || keyMatch[2] || '').trim().replace(/<[^>]+>/g, '').trim();
+                    if (/^([A-D])([.)\s]*)?$/i.test(keyText)) isPG = true;
+                 } else if (boldRegex.test(soalHtml)) {
+                    isPG = true;
+                 }
+             }
+             if (isPG) countPG++; else countIsian++;
+        });
+        
+        // (BARU) Ambil bobot dari input guru
+        const totalBobotPG = parseFloat(document.getElementById('guru-total-bobot-pg').value) || 100;
+        const totalBobotIsian = parseFloat(document.getElementById('guru-total-bobot-isian').value) || 100;
+        
+        // (BARU) Hitung poin per soal
+        const poinPerPG = countPG > 0 ? (totalBobotPG / countPG) : 0;
+        const poinPerIsian = countIsian > 0 ? (totalBobotIsian / countIsian) : 0;
+
+        let tableHTML = `<table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-4 py-2">No</th><th class="px-4 py-2">Isi Soal</th><th class="px-4 py-2 w-48">Kunci</th><th class="px-4 py-2 w-24">Poin</th></tr></thead><tbody class="bg-white divide-y divide-gray-200">`;
         const numberRegex = /(<p[^>]*>)(?:Soal\s+)?\s*\d+[.)]\s*/i; 
         const allOptionsRegex = /<p[^>]*>\s*[a-d][.)].*?<\/p>/gi;
+        const boldReplaceRegex = /<(strong|b)[^>]*>(\s*[A-D][.)\s])/i;
 
         soalArray.forEach((soalHtml, index) => {
-            let kunciJawaban = '';
-            let poin = 4;
-            let isPG = false; 
-
+            let kunciJawaban = ''; let isPG = false;
             if (autoFillKeys) {
                 const keyMatch = soalHtml.match(keyTextRegex);
                 if (keyMatch) {
                     let keyText = (keyMatch[1] || keyMatch[2] || '').trim().replace(/<[^>]+>/g, '').trim();
-                    const pgMatch = keyText.match(/^([A-D])([.)\s]*)?$/i); 
-                    if (pgMatch) {
-                        kunciJawaban = pgMatch[1].toUpperCase();
-                        isPG = true; 
-                    } else {
-                        kunciJawaban = keyText;
-                    }
+                    if (/^([A-D])([.)\s]*)?$/i.test(keyText)) { kunciJawaban = keyText.toUpperCase(); isPG = true; } 
+                    else { kunciJawaban = keyText; }
                 }
-                if (!kunciJawaban) {
-                    const boldMatch = soalHtml.match(boldRegex);
-                    if (boldMatch) {
-                        kunciJawaban = boldMatch[2].toUpperCase();
-                        isPG = true; 
-                    }
-                }
+                if (!kunciJawaban) { if (soalHtml.match(boldRegex)) { kunciJawaban = soalHtml.match(boldRegex)[2].toUpperCase(); isPG = true; } }
             }
-            
             let cleanedSoalHtml = soalHtml.replace(keyTextRegex, ''); 
-            if (isPG) {
-                cleanedSoalHtml = cleanedSoalHtml.replace(boldReplaceRegex, '$2');
-            } else if (kunciJawaban !== '') {
-                cleanedSoalHtml = cleanedSoalHtml.replace(allOptionsRegex, '');
-            }
+            if (isPG) { cleanedSoalHtml = cleanedSoalHtml.replace(boldReplaceRegex, '$2'); } 
+            else if (kunciJawaban !== '') { cleanedSoalHtml = cleanedSoalHtml.replace(allOptionsRegex, ''); }
             cleanedSoalHtml = cleanedSoalHtml.replace(numberRegex, '$1'); 
+            
+            // (BARU) Terapkan poin
+            const thisPoin = isPG ? poinPerPG : poinPerIsian;
 
-            tableHTML += `
-                <tr class="soal-row-guru">
-                    <td class="px-4 py-3 align-top">${index + 1}</td>
-                    <td class="px-4 py-3 text-sm text-gray-800">${cleanedSoalHtml}</td>
-                    <td class="px-4 py-3 align-top">
-                        <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md" value="${kunciJawaban}" placeholder="Otomatis...">
-                    </td>
-                    <td class="px-4 py-3 align-top">
-                        <input type="number" step="0.01" class="poin-soal-input w-full p-2 border rounded-md" value="${poinPerSoal}">
-                    </td>
-                </tr>
-            `;
+            tableHTML += `<tr class="soal-row-guru"><td class="px-4 py-3">${index + 1}</td><td class="px-4 py-3 text-sm">${cleanedSoalHtml}</td><td class="px-4 py-3"><input type="text" class="kunci-jawaban-input w-full p-2 border rounded" value="${kunciJawaban}"></td><td class="px-4 py-3"><input type="number" step="0.01" class="poin-soal-input w-full p-2 border rounded" value="${thisPoin.toFixed(2)}"></td></tr>`;
         });
         tableHTML += `</tbody></table>`;
         previewContainer.innerHTML = tableHTML;
+        updateBtn.classList.remove('hidden');
     }
 }
 
