@@ -4601,23 +4601,41 @@ function applyIsianHelp(index, questionKey) {
                               .map(s => s.trim())   // Hapus spasi
                               .filter(Boolean);     // Hapus yang kosong
     
-    // 2. Ambil jawaban pertama sebagai acuan
+    // 2. Ambil jawaban pertama sebagai acuan utama
     const acuanJawaban = kunciList[0] || "";
     let hintText = "";
+    
+    // Pecah menjadi kata-kata
+    const words = acuanJawaban.split(/\s+/); 
 
-    // 3. Logika Bantuan Baru (3 Huruf + Titik-titik)
-    if (acuanJawaban.length > 3) {
-        const prefix = acuanJawaban.substring(0, 3); // Ambil 3 huruf pertama
-        const sisaPanjang = acuanJawaban.length - 3; // Hitung sisa karakter
-        const suffix = ".".repeat(sisaPanjang);      // Buat titik sebanyak sisa
-        hintText = prefix + suffix;
+    // --- LOGIKA BANTUAN BARU ---
+    if (words.length >= 2) {
+        // KONDISI A: Jika terdiri dari 2 kata atau lebih
+        // Tampilkan kata pertama saja
+        hintText = words[0];
     } else {
-        // Jika jawaban sangat pendek (<= 3 huruf), tampilkan saja
-        hintText = acuanJawaban;
+        // KONDISI B: Jika hanya 1 kata
+        const len = acuanJawaban.length;
+        
+        if (len <= 4) {
+            // Jika 4 karakter atau kurang: Tampilkan setengahnya (min 1 huruf)
+            // Contoh: "O2" (2) -> "O", "Uap" (3) -> "U", "Buku" (4) -> "Bu"
+            const charsToShow = Math.max(1, Math.floor(len / 2));
+            hintText = acuanJawaban.substring(0, charsToShow);
+        } else {
+            // Jika lebih dari 4 karakter: Tampilkan 3 huruf awal (Aturan lama)
+            // Contoh: "Jantung" -> "Jan"
+            hintText = acuanJawaban.substring(0, 3);
+        }
     }
 
+    // 3. Tambahkan titik-titik untuk sisa karakter
+    // Hitung berapa banyak karakter yang belum ditampilkan
+    const sisaPanjang = Math.max(0, acuanJawaban.length - hintText.length);
+    const finalHint = hintText + ".".repeat(sisaPanjang);
+
     // 4. Masukkan ke textarea
-    textarea.value = hintText; 
+    textarea.value = finalHint; 
     
     // (PENTING) Simulasikan event 'input' agar jawaban tersimpan otomatis
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
