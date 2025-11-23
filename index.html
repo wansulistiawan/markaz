@@ -5259,27 +5259,22 @@ function forceExitExamByAdmin() {
 }
 
 function setupExamSecurityListeners() {
+    // 1. Listener Fullscreen & Visibility (Tetap Sama)
     document.addEventListener('fullscreenchange', () => {
         if (document.fullscreenElement) {
-            // Pengguna KEMBALI ke fullscreen
             alarmSound.pause();
             alarmSound.currentTime = 0;
             document.getElementById('fullscreenWarningModal').style.display = 'none';
-            
-            // --- (BARU) KIRIM LOG INI KE PENGAWAS ---
             logAction('AKSES_KEMBALI', 'Santri kembali ke mode layar penuh.');
-            // --- AKHIR KODE BARU ---
-
         } else if (isExamInProgress) {
-            // Pengguna KELUAR dari fullscreen
-			logAction('PELANGGARAN', 'Keluar dari mode layar penuh.');
+            logAction('PELANGGARAN', 'Keluar dari mode layar penuh.');
             playAlarm();
         }
     });
 
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && isExamInProgress) {
-		logAction('PELANGGARAN', 'Pindah tab atau aplikasi lain.');
+            logAction('PELANGGARAN', 'Pindah tab atau aplikasi lain.');
             playAlarm();
         }
     });
@@ -5288,22 +5283,82 @@ function setupExamSecurityListeners() {
         enterFullscreen(document.documentElement);
     });
 
-    // --- BLOK BARU DITAMBAHKAN DI SINI ---
-    // Listener untuk mendeteksi shortcut admin
+    // 2. Listener Shortcut Admin (TANPA PEMBATASAN USER)
     document.addEventListener('keydown', function(e) {
-        const session = getActiveSession();
-        
+        // Cek apakah ujian sedang berlangsung
+        if (!isExamInProgress) return;
 
-        // Cek jika ujian sedang berlangsung DAN user adalah admin
-        if (isExamInProgress) {
-            // Cek kombinasi tombol: CTRL + SHIFT + ALT + X
-            if (e.ctrlKey && e.shiftKey && e.altKey && e.key.toLowerCase() === 'x') {
-                e.preventDefault(); // Mencegah aksi default browser
+        // --- (SHORTCUT 1) Keluar Paksa: CTRL + SHIFT + ALT + X ---
+        if (e.ctrlKey && e.shiftKey && e.altKey && e.key.toLowerCase() === 'x') {
+            e.preventDefault();
+            if (confirm('DEBUG MODE: Keluar paksa dari ujian?')) {
                 forceExitExamByAdmin();
             }
         }
+
+        // --- (SHORTCUT 2) Auto-Answer: CTRL + SHIFT + ALT + J ---
+        if (e.ctrlKey && e.shiftKey && e.altKey && e.key.toLowerCase() === 'j') {
+            e.preventDefault();
+            
+            if (!confirm('DEBUG MODE: Apakah Anda yakin ingin mengisi semua jawaban dengan kunci yang benar?')) return;
+
+            // Loop semua pertanyaan saat ini
+            currentQuestions.forEach((q, index) => {
+                const questionId = `q${index}`;
+                const questionKey = q.q;
+                
+                if (q.j === 'PG') {
+                    // --- Logika Jawab PG (DIPERBAIKI) ---
+                    // Cari radio button yang value-nya SAMA dengan kunci jawaban (q.a)
+                    const correctRadio = document.querySelector(`input[name="${questionId}"][value="${q.a}"]`);
+                    
+                    if (correctRadio) {
+                        // Cukup centang saja, JANGAN SEMBUNYIKAN opsi lain
+                        correctRadio.checked = true;
+                        
+                        // Simpan jawaban ke memori & backend
+                        examAnswers[questionKey] = q.a; 
+                        
+                        // Update visual navigasi jadi hijau
+                        updateNavBoxStatus(index, true);
+
+                        // Kirim ke backend (Auto-save)
+                        const cacheKey = (currentExamData.jenis === 'Bulanan') ? currentExamData.materiList[0] : currentExamData.title;
+                        fetch(CONFIG.SCRIPT_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                action: 'saveTemporaryAnswer',
+                                username: getActiveSession().username,
+                                kodeMateri: cacheKey,
+                                kunciSoal: questionKey,
+                                jawaban: q.a
+                            }),
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            keepalive: true
+                        });
+
+                        // Highlight visual (opsional, agar terlihat mana yang dipilih)
+                        const allLabels = document.querySelectorAll(`label[for^="${questionId}_opt"]`);
+                        allLabels.forEach(label => label.classList.remove('selected'));
+                        const correctLabel = document.querySelector(`label[for="${correctRadio.id}"]`);
+                        if (correctLabel) correctLabel.classList.add('selected');
+                    }
+
+                } else {
+                    // --- Logika Jawab Isian (Tetap Sama) ---
+                    const textarea = document.querySelector(`#${questionId}_block textarea`);
+                    if (textarea) {
+                        const kunciList = (q.a || "").split(/[/|()]/).map(s => s.trim()).filter(Boolean);
+                        const jawabanBersih = kunciList[0] || "";
+                        textarea.value = jawabanBersih;
+                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+            });
+            
+            showMessage('DEBUG: Semua soal telah dijawab otomatis.', 'success');
+        }
     });
-    // --- AKHIR BLOK BARU ---
 }
 
 function timeAgo(date) {
@@ -6282,7 +6337,6 @@ function setupInputSoalPage() {
 // GANTI FUNGSI INI SECARA KESELURUHAN
 async function handleSimpanSoal() {
     const materiKode = document.getElementById('materi-soal-select').value;
-    
     // (BARU) Ambil nilai dari dropdown Jenis Ujian
     const jenisUjian = document.getElementById('input-jenis-ujian').value;
 
@@ -6304,14 +6358,28 @@ async function handleSimpanSoal() {
     const numberRegex = /(<p[^>]*>)(?:Soal\s+)?\s*\d+[.)]\s*/i; 
     const allOptionsRegex = /<p[^>]*>\s*[a-d][.)].*?<\/p>/gi;
 
-    // Parse ulang soal dari editor
     const soalHtmlArray = fullHtmlFromEditor.split(/(?=<p[^>]*>(?:Soal\s+)?\s*\d+[.)])/i)
         .map(s => s.trim())
         .filter(Boolean);
         
     const cleanedSoalHtmlArray = soalHtmlArray.map(soalHtml => {
-        const isPG = boldRegex.test(soalHtml);
-        const isIsian = keyTextRegex.test(soalHtml);
+        // --- (PERBAIKAN DETEKSI PG DI SINI - SAMA DENGAN UPDATE GURU) ---
+        let isPG = false;
+        let isIsian = false;
+
+        const keyMatch = soalHtml.match(keyTextRegex);
+        if (keyMatch) {
+            let keyText = (keyMatch[1] || keyMatch[2] || '').trim().replace(/<[^>]+>/g, '').trim();
+            if (/^([A-D])([.)\s]*)?$/i.test(keyText)) {
+                isPG = true;
+            } else {
+                isIsian = true;
+            }
+        } else if (boldRegex.test(soalHtml)) {
+            isPG = true;
+        }
+        // --- AKHIR PERBAIKAN ---
+        
         let cleanedSoalHtml = soalHtml.replace(keyTextRegex, ''); 
         if (isPG) {
             cleanedSoalHtml = cleanedSoalHtml.replace(boldReplaceRegex, '$2');
@@ -6333,7 +6401,7 @@ async function handleSimpanSoal() {
     rows.forEach((row, index) => {
         dataSoal.push({
             kodeMateri: materiKode,
-            jenisUjian: jenisUjian, // (BARU) Masukkan jenis ujian ke setiap soal
+            jenisUjian: jenisUjian, // Sertakan jenis ujian
             nomorSoal: index + 1,
             isiSoal: cleanedSoalHtmlArray[index], 
             kunciJawaban: row.querySelector('.kunci-jawaban-input').value.toUpperCase() || '',
@@ -6383,7 +6451,6 @@ async function handleSimpanSoal() {
     const processedDataSoal = await Promise.all(uploadPromises);
     hideLoading();
     
-    // Konfirmasi terakhir setelah upload gambar selesai
     if (!confirm('Semua gambar berhasil diproses. Simpan ke database sekarang?')) {
         simpanBtn.disabled = false;
         simpanBtn.textContent = 'Simpan Semua Soal';
@@ -6397,7 +6464,7 @@ async function handleSimpanSoal() {
         body: JSON.stringify({ 
             action: 'simpanBankSoal', 
             soalData: { 
-                soal: processedDataSoal, // Data sudah mengandung 'jenisUjian'
+                soal: processedDataSoal, 
                 usernameGuru: teacherUsername 
             } 
         }),
@@ -6652,7 +6719,7 @@ async function handleUpdateSoal() {
 
     const fullHtmlFromEditor = quillEditorGuru.root.innerHTML;
     
-    // (DEFINISI REGEX - Penting agar tidak error 'boldRegex is not defined')
+    // Regex Definisi
     const keyTextRegex = /<p[^>]*>Kunci Jawaban\s*:\s*(.*?)<\/p>|Kunci Jawaban\s*:\s*(.*?)(?=<br>|$)/i;
     const boldRegex = /<(strong|b)[^>]*>\s*([A-D])[.)\s]/i;
     const boldReplaceRegex = /<(strong|b)[^>]*>(\s*[A-D][.)\s])/i;
@@ -6665,15 +6732,42 @@ async function handleUpdateSoal() {
         .filter(Boolean);
         
     const cleanedSoalHtmlArray = soalHtmlArray.map(soalHtml => {
-        const isPG = boldRegex.test(soalHtml);
-        const isIsian = keyTextRegex.test(soalHtml);
+        // --- (PERBAIKAN DETEKSI PG DI SINI) ---
+        let isPG = false;
+        let isIsian = false;
+
+        // 1. Cek dari Teks Kunci Jawaban (Prioritas Utama)
+        const keyMatch = soalHtml.match(keyTextRegex);
+        if (keyMatch) {
+            // Ambil teks kuncinya (misal: "A" atau "Oksigen")
+            let keyText = (keyMatch[1] || keyMatch[2] || '').trim().replace(/<[^>]+>/g, '').trim();
+            
+            // Jika kuncinya cuma 1 huruf A-D, itu pasti PG
+            if (/^([A-D])([.)\s]*)?$/i.test(keyText)) {
+                isPG = true;
+            } else {
+                isIsian = true;
+            }
+        } 
+        // 2. Cek dari Bold (Fallback)
+        else if (boldRegex.test(soalHtml)) {
+            isPG = true;
+        }
+        // --- AKHIR PERBAIKAN DETEKSI ---
+
         let cleanedSoalHtml = soalHtml.replace(keyTextRegex, ''); 
+        
         if (isPG) {
+            // Jika PG, HANYA hapus bold di opsi (jangan hapus opsinya!)
             cleanedSoalHtml = cleanedSoalHtml.replace(boldReplaceRegex, '$2');
         } else if (isIsian) {
+            // Jika Isian, baru boleh hapus opsi a-d (karena dianggap sampah)
             cleanedSoalHtml = cleanedSoalHtml.replace(allOptionsRegex, '');
         }
+        
+        // Hapus nomor soal (karena akan di-generate ulang saat simpan)
         cleanedSoalHtml = cleanedSoalHtml.replace(numberRegex, '$1'); 
+        
         return cleanedSoalHtml;
     });
 
@@ -6706,7 +6800,6 @@ async function handleUpdateSoal() {
     simpanBtn.textContent = 'Memproses Gambar... (0%)';
     showLoading();
 
-    // (Logika upload gambar yang sama dengan halaman input)
     const base64Regex = /<img src="(data:image\/[^"]+)"/g;
     let totalImages = 0;
     let imagesProcessed = 0;
@@ -6754,7 +6847,6 @@ async function handleUpdateSoal() {
     .then(result => {
         if (result.status === 'success') {
             showMessage(result.message, 'success');
-            // Muat ulang data soal guru setelah menyimpan agar tampilan sinkron
             setupHalamanGuru();
         } else {
             throw new Error(result.message);
