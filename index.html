@@ -4239,23 +4239,19 @@ async function renderExamSchedule() {
         const now = new Date();
         const groupedExams = new Map(); 
 
-        // 1. Proses Ujian yang Dibuka Manual (UTS/UAS/Bulanan)
+        // 1. Proses Ujian yang Dibuka Manual (Prioritas Tinggi)
         unlockedExamsData.forEach(exam => {
             const krsData = krsInfoMap.get(exam.kodeMateri);
             if (!krsData) return; 
 
-            // (PERBAIKAN BUG JUDUL) Kunci grup selalu 'nama' (cth: "UAS")
-            const key = exam.nama; 
+            const key = (exam.jenis === 'Bulanan') ? exam.kodeMateri : exam.nama;
             
             if (!groupedExams.has(key)) {
-                // (PERBAIKAN BUG JUDUL) Nama Tampilan adalah 'nama' dari backend
-                const displayName = exam.nama;
-                
-                // (PERBAIKAN BUG JUDUL) 'jenis' diambil dari backend
+                const displayName = (exam.jenis === 'Bulanan') ? krsData.subject : exam.nama;
                 groupedExams.set(key, {
                     nama: displayName, 
                     jenis: exam.jenis,
-                    materi: [krsData], // Selalu 1 materi
+                    materi: [krsData],
                     krsInfo: krsData,
                     isManuallyUnlocked: true,
                     isScheduled: false
@@ -4263,33 +4259,61 @@ async function renderExamSchedule() {
             }
         });
 
-        // 2. (LOGIKA DIKEMBALIKAN) Proses Ujian Bulanan Terjadwal
+        // 2. Proses Ujian Terjadwal (Otomatis dari Kalender)
+        // --- (PERBAIKAN LOGIKA DETEKSI KALENDER) ---
+        let activeCalendarExam = null;
+        let activeExamType = 'Bulanan'; // Default
+        let activeExamTitlePrefix = 'Ujian Bulanan';
+
+        // Cari event kalender yang aktif HARI INI dan mengandung kata kunci ujian
+        const todayTime = now.getTime();
+        const activeEvent = appData.calendarEvents.find(event => {
+            const title = event.title.toLowerCase();
+            // Kata kunci: ujian, uts, uas, pas, pat
+            if (!title.includes('ujian') && !title.includes('uts') && !title.includes('uas') && !title.includes('pas') && !title.includes('pat')) return false;
+            
+            const startDate = new Date(event.date + 'T00:00:00');
+            const span = event.span || 7; // Default durasi ujian 7 hari jika tidak ada span
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + span);
+            // Set akhir hari untuk endDate
+            endDate.setHours(23, 59, 59, 999);
+
+            return now >= startDate && now <= endDate;
+        });
+
+        if (activeEvent) {
+            activeCalendarExam = true;
+            const title = activeEvent.title.toLowerCase();
+            if (title.includes('uts')) {
+                activeExamType = 'UTS';
+                activeExamTitlePrefix = 'Ujian Tengah Semester';
+            } else if (title.includes('uas') || title.includes('pas')) {
+                activeExamType = 'UAS';
+                activeExamTitlePrefix = 'Ujian Akhir Semester';
+            } else if (title.includes('pat')) {
+                activeExamType = 'UAS'; // PAT dianggap UAS Genap
+                activeExamTitlePrefix = 'Penilaian Akhir Tahun';
+            }
+        }
+        // --- (AKHIR PERBAIKAN) ---
+
         savedKrsSubjects.forEach(item => {
             const subjectCode = item.code;
             if (!availableExams.includes(subjectCode)) return;
-            if (groupedExams.has(subjectCode)) return; 
+            if (groupedExams.has(subjectCode)) return; // Jangan duplikat jika sudah dibuka manual
             
-            const academicMonth = subjectToMonthMap[subjectCode] || 0;
-            if (!academicMonth) return;
+            // Cek apakah jadwal hari & jam cocok
+            const isDayTimeMatch = days[now.getDay()] === item.day && isTimeInSlot(now, item.time);
 
-            const { examWeekStart, examWeekEnd } = getAcademicMonthInfo(academicMonth);
-            
-            const utsEvent = appData.calendarEvents.find(e => e.title.includes("UTS") && e.span);
-            const uasEvent = appData.calendarEvents.find(e => e.title.includes("UAS") && e.span);
-            let examTypeOverride = 'Bulanan'; // Default
-            
-            if(utsEvent && now >= new Date(utsEvent.date) && now <= new Date(new Date(utsEvent.date).setDate(new Date(utsEvent.date).getDate() + utsEvent.span))) {
-                examTypeOverride = 'UTS';
-            } else if (uasEvent && now >= new Date(uasEvent.date) && now <= new Date(new Date(uasEvent.date).setDate(new Date(uasEvent.date).getDate() + uasEvent.span))) {
-                examTypeOverride = 'UAS';
-            }
+            // Buka ujian JIKA: (Ada event kalender aktif DAN Jadwal Cocok) ATAU (Admin)
+            if ((activeCalendarExam && isDayTimeMatch) || (isAdmin && !isDayTimeMatch)) {
+                 // Tentukan judul tampilan
+                 const displayTitle = `${activeExamTitlePrefix}: ${item.subject}`;
 
-            const isExamWindowActive = (now >= examWeekStart && now <= examWeekEnd) && days[now.getDay()] === item.day && isTimeInSlot(now, item.time);
-
-            if (isExamWindowActive || (isAdmin && !isExamWindowActive)) {
                  groupedExams.set(subjectCode, {
-                    nama: item.subject, 
-                    jenis: examTypeOverride,
+                    nama: displayTitle, 
+                    jenis: activeExamType, // 'Bulanan', 'UTS', atau 'UAS'
                     materi: [item],     
                     krsInfo: item,
                     isManuallyUnlocked: false,
@@ -4355,20 +4379,16 @@ async function renderExamSchedule() {
                 statusColor = 'bg-purple-600 hover:bg-purple-700';
             }
 
-            // --- (PERBAIKAN BUG JUDUL) ---
-            let displayTitle = '';
+            // Tampilan Kartu
+            const displayTitle = examGroup.nama; 
             let subTitle = '';
             
-            if (examGroup.jenis === 'Bulanan') {
-                // Jika Bulanan (baik manual atau terjadwal)
-                displayTitle = `Ujian Bulanan: ${examGroup.nama}`;
-                subTitle = `<p class="text-sm text-slate-600 mt-2">Pengajar: ${examGroup.krsInfo.teacher}</p>`;
-            } else {
-                // Jika UTS atau UAS
-                displayTitle = examGroup.nama; // Cth: "UAS Ganjil 2025"
-                subTitle = `<p class="text-sm text-slate-600 mt-2">Materi: ${examGroup.materi[0].name}</p>`;
+            // Jika judul sudah mengandung nama materi (seperti "UAS: IPA..."), tidak perlu subtitle materi
+            if (!displayTitle.includes(examGroup.materi[0].name)) {
+                 subTitle = `<p class="text-sm text-slate-600 mt-2">Materi: ${examGroup.materi[0].name}</p>`;
             }
-            // --- AKHIR PERBAIKAN ---
+            // Tampilkan pengajar
+            subTitle += `<p class="text-sm text-slate-600 mt-1">Pengajar: ${examGroup.krsInfo.teacher}</p>`;
 
             const jadwalInfoHtml = examGroup.isScheduled
                 ? `<p class="text-xs italic mt-1">Jadwal: ${examGroup.krsInfo.day}, ${examGroup.krsInfo.time}</p>`
@@ -4377,7 +4397,7 @@ async function renderExamSchedule() {
             const card = document.createElement('div');
             card.className = 'schedule-cell p-4 border rounded-lg flex flex-col';
             card.innerHTML = `
-                <div class="subject flex-grow font-bold text-teal-900">${displayTitle}</div>
+                <div class="subject flex-grow font-bold text-teal-900 text-lg">${displayTitle}</div>
                 ${subTitle}
                 ${jadwalInfoHtml}
                 <button class="start-exam-trigger w-full mt-4 py-2 px-4 rounded-md font-semibold ${statusColor} ${textColorClass} ${isDisabled ? 'cursor-not-allowed' : ''}" 
@@ -5094,12 +5114,11 @@ function calculateAndShowResult() {
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
     }).catch(err => console.error("Gagal menyimpan rincian jawaban:", err));
 
-    // 2. Simpan Skor Akhir (SEKARANG UNTUK SEMUA JENIS UJIAN)
-    // (PERBAIKAN: Kita hapus blok if(!isGabungan) agar UTS/UAS juga tersimpan)
+    // 2. Simpan Skor Akhir (PERBAIKAN: DIJALANKAN UNTUK SEMUA JENIS UJIAN)
+    // (Kita menghapus blok if (!isGabungan) agar UAS pun tersimpan nilainya)
     
-    const kodeMateriUntukNilai = currentExamData.materiList[0]; // Selalu ambil 1 kode materi
+    const kodeMateriUntukNilai = currentExamData.materiList[0]; // Selalu simpan ke kode materi (misal: IPA-204)
     const judulMateriUntukNilai = currentExamData.title;
-    // (BARU) Ambil jenis ujian untuk dikirim ke backend
     const jenisUjianUntukNilai = currentExamData.jenis || 'Bulanan'; 
 
     const dataToSave = {
@@ -5108,7 +5127,7 @@ function calculateAndShowResult() {
         namaSantri: session.userData.profileName,
         kodeMateri: kodeMateriUntukNilai,
         judulMateri: judulMateriUntukNilai,
-        jenisUjian: jenisUjianUntukNilai, // (BARU) Kirim jenis ujian
+        jenisUjian: jenisUjianUntukNilai, 
         skor: firstScore,      
         skorAkhir: finalScore  
     };
