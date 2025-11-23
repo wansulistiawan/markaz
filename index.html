@@ -4575,19 +4575,34 @@ function applyIsianHelp(index, questionKey) {
     const textarea = questionBlock.querySelector('textarea');
     const kunciJawabanString = currentQuestions[index].a || "";
 
-    // Ambil kunci jawaban pertama yang valid
-    const kunciList = kunciJawabanString.toLowerCase()
-                              .split(/[/|()]/)
-                              .map(s => s.trim())
-                              .filter(Boolean);
+    // 1. Ambil daftar jawaban yang valid (tanpa lowercase agar format asli terjaga)
+    const kunciList = kunciJawabanString
+                              .split(/[/|()]/)      // Pecah berdasarkan pemisah
+                              .map(s => s.trim())   // Hapus spasi
+                              .filter(Boolean);     // Hapus yang kosong
     
-    const firstHint = kunciList[0] ? kunciList[0].substring(0, 2) : '??';
+    // 2. Ambil jawaban pertama sebagai acuan
+    const acuanJawaban = kunciList[0] || "";
+    let hintText = "";
 
-    textarea.value = firstHint; // Tampilkan petunjuk
+    // 3. Logika Bantuan Baru (3 Huruf + Titik-titik)
+    if (acuanJawaban.length > 3) {
+        const prefix = acuanJawaban.substring(0, 3); // Ambil 3 huruf pertama
+        const sisaPanjang = acuanJawaban.length - 3; // Hitung sisa karakter
+        const suffix = ".".repeat(sisaPanjang);      // Buat titik sebanyak sisa
+        hintText = prefix + suffix;
+    } else {
+        // Jika jawaban sangat pendek (<= 3 huruf), tampilkan saja
+        hintText = acuanJawaban;
+    }
+
+    // 4. Masukkan ke textarea
+    textarea.value = hintText; 
     
-    // (PENTING) Simulasikan event 'input' agar jawaban tersimpan
+    // (PENTING) Simulasikan event 'input' agar jawaban tersimpan otomatis
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    // (PENTING) Update juga kotak navigasi
+    
+    // (PENTING) Update juga status kotak navigasi menjadi hijau (terjawab)
     updateNavBoxStatus(index, true); 
 }
 
