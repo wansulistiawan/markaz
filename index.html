@@ -4795,7 +4795,7 @@ async function startExam() {
     const startTheExamProcess = async () => {
         examContainer.classList.remove('hidden');
         
-        const loadingHTML = `... (Loading HTML Anda tetap sama) ...`;
+        const loadingHTML = `... (tunggu sebentar, sistem sedang menampilkan soal) ...`;
         questionsContainer.innerHTML = loadingHTML;
 
         try {
@@ -5259,27 +5259,22 @@ function forceExitExamByAdmin() {
 }
 
 function setupExamSecurityListeners() {
+    // 1. Listener Fullscreen & Visibility (Tetap Sama)
     document.addEventListener('fullscreenchange', () => {
         if (document.fullscreenElement) {
-            // Pengguna KEMBALI ke fullscreen
             alarmSound.pause();
             alarmSound.currentTime = 0;
             document.getElementById('fullscreenWarningModal').style.display = 'none';
-            
-            // --- (BARU) KIRIM LOG INI KE PENGAWAS ---
             logAction('AKSES_KEMBALI', 'Santri kembali ke mode layar penuh.');
-            // --- AKHIR KODE BARU ---
-
         } else if (isExamInProgress) {
-            // Pengguna KELUAR dari fullscreen
-			logAction('PELANGGARAN', 'Keluar dari mode layar penuh.');
+            logAction('PELANGGARAN', 'Keluar dari mode layar penuh.');
             playAlarm();
         }
     });
 
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && isExamInProgress) {
-		logAction('PELANGGARAN', 'Pindah tab atau aplikasi lain.');
+            logAction('PELANGGARAN', 'Pindah tab atau aplikasi lain.');
             playAlarm();
         }
     });
@@ -5288,22 +5283,82 @@ function setupExamSecurityListeners() {
         enterFullscreen(document.documentElement);
     });
 
-    // --- BLOK BARU DITAMBAHKAN DI SINI ---
-    // Listener untuk mendeteksi shortcut admin
+    // 2. Listener Shortcut Admin (TANPA PEMBATASAN USER)
     document.addEventListener('keydown', function(e) {
-        const session = getActiveSession();
-        
+        // Cek apakah ujian sedang berlangsung
+        if (!isExamInProgress) return;
 
-        // Cek jika ujian sedang berlangsung DAN user adalah admin
-        if (isExamInProgress) {
-            // Cek kombinasi tombol: CTRL + SHIFT + ALT + X
-            if (e.ctrlKey && e.shiftKey && e.altKey && e.key.toLowerCase() === 'x') {
-                e.preventDefault(); // Mencegah aksi default browser
+        // --- (SHORTCUT 1) Keluar Paksa: CTRL + SHIFT + ALT + X ---
+        if (e.ctrlKey && e.shiftKey && e.altKey && e.key.toLowerCase() === 'x') {
+            e.preventDefault();
+            if (confirm('DEBUG MODE: Keluar paksa dari ujian?')) {
                 forceExitExamByAdmin();
             }
         }
+
+        // --- (SHORTCUT 2) Auto-Answer: CTRL + SHIFT + ALT + J ---
+        if (e.ctrlKey && e.shiftKey && e.altKey && e.key.toLowerCase() === 'j') {
+            e.preventDefault();
+            
+            if (!confirm('DEBUG MODE: Apakah Anda yakin ingin mengisi semua jawaban dengan kunci yang benar?')) return;
+
+            // Loop semua pertanyaan saat ini
+            currentQuestions.forEach((q, index) => {
+                const questionId = `q${index}`;
+                const questionKey = q.q;
+                
+                if (q.j === 'PG') {
+                    // --- Logika Jawab PG (DIPERBAIKI) ---
+                    // Cari radio button yang value-nya SAMA dengan kunci jawaban (q.a)
+                    const correctRadio = document.querySelector(`input[name="${questionId}"][value="${q.a}"]`);
+                    
+                    if (correctRadio) {
+                        // Cukup centang saja, JANGAN SEMBUNYIKAN opsi lain
+                        correctRadio.checked = true;
+                        
+                        // Simpan jawaban ke memori & backend
+                        examAnswers[questionKey] = q.a; 
+                        
+                        // Update visual navigasi jadi hijau
+                        updateNavBoxStatus(index, true);
+
+                        // Kirim ke backend (Auto-save)
+                        const cacheKey = (currentExamData.jenis === 'Bulanan') ? currentExamData.materiList[0] : currentExamData.title;
+                        fetch(CONFIG.SCRIPT_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                action: 'saveTemporaryAnswer',
+                                username: getActiveSession().username,
+                                kodeMateri: cacheKey,
+                                kunciSoal: questionKey,
+                                jawaban: q.a
+                            }),
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            keepalive: true
+                        });
+
+                        // Highlight visual (opsional, agar terlihat mana yang dipilih)
+                        const allLabels = document.querySelectorAll(`label[for^="${questionId}_opt"]`);
+                        allLabels.forEach(label => label.classList.remove('selected'));
+                        const correctLabel = document.querySelector(`label[for="${correctRadio.id}"]`);
+                        if (correctLabel) correctLabel.classList.add('selected');
+                    }
+
+                } else {
+                    // --- Logika Jawab Isian (Tetap Sama) ---
+                    const textarea = document.querySelector(`#${questionId}_block textarea`);
+                    if (textarea) {
+                        const kunciList = (q.a || "").split(/[/|()]/).map(s => s.trim()).filter(Boolean);
+                        const jawabanBersih = kunciList[0] || "";
+                        textarea.value = jawabanBersih;
+                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+            });
+            
+            showMessage('DEBUG: Semua soal telah dijawab otomatis.', 'success');
+        }
     });
-    // --- AKHIR BLOK BARU ---
 }
 
 function timeAgo(date) {
@@ -6072,12 +6127,12 @@ function setupInputSoalPage() {
         wrapper.innerHTML = `
             <div>
                 <label class="text-sm font-semibold text-gray-700">Total Bobot Pilihan Ganda (PG)</label>
-                <input type="number" id="input-total-bobot-pg" value="75" class="w-full p-2 border rounded bg-blue-50" placeholder="75">
+                <input type="number" id="input-total-bobot-pg" value="200" class="w-full p-2 border rounded bg-blue-50" placeholder="200">
                 <p class="text-xs text-gray-500">Total ini akan dibagi rata ke semua soal PG</p>
             </div>
             <div>
                 <label class="text-sm font-semibold text-gray-700">Total Bobot Isian</label>
-                <input type="number" id="input-total-bobot-isian" value="25" class="w-full p-2 border rounded bg-green-50" placeholder="25">
+                <input type="number" id="input-total-bobot-isian" value="100" class="w-full p-2 border rounded bg-green-50" placeholder="100">
                 <p class="text-xs text-gray-500">Total ini akan dibagi rata ke semua soal Isian</p>
             </div>
         `;
@@ -6091,7 +6146,6 @@ function setupInputSoalPage() {
         document.getElementById('input-total-bobot-isian').addEventListener('input', updatePreview);
     }
 
-    // Inisialisasi Editor (Kode Lama)
     quillEditor = new Quill('#quill-editor-container', {
         theme: 'snow',
         modules: {
@@ -6105,8 +6159,7 @@ function setupInputSoalPage() {
         },
         placeholder: 'Tempel (paste) soal dari MS. Word di sini...\n\nFORMAT YANG DITERIMA:\n\n1. Soal Pilihan Ganda\n   a. Opsi A\n   b. Opsi B\n   c. Opsi D\n   Kunci Jawaban : B (atau tebalkan opsi B)\n\n2. Soal Isian\n   Pertanyaan soal isian...\n   Kunci Jawaban : Jawaban Benar (Sinonim bisa pakai | atau /)\n   Contoh Kunci: Oksigen (O2) / Oxygen'
     });
-    
-    imageUploadHandler(quillEditor); 
+    imageUploadHandler(quillEditor);
 
     quillEditor.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
         if (node.tagName === 'IMG' && node.src && node.src.startsWith('data:image/')) {
@@ -6134,18 +6187,12 @@ function setupInputSoalPage() {
         Object.values(appState.processedSchedules).flat().forEach(item => {
             if (item.subject && item.subject.includes(':')) {
                 const code = item.subject.split(':')[0].trim();
-                if (!uniqueSubjects[code]) {
-                    uniqueSubjects[code] = item.subject;
-                }
+                if (!uniqueSubjects[code]) uniqueSubjects[code] = item.subject;
             }
         });
         materiSelectBulanan.innerHTML = '<option value="">Pilih Materi...</option>';
-        const sortedSubjects = Object.entries(uniqueSubjects).sort((a,b) => a[1].localeCompare(b[1]));
-        sortedSubjects.forEach(([code, subject]) => {
-            const option = document.createElement('option');
-            option.value = code;
-            option.textContent = subject;
-            materiSelectBulanan.appendChild(option);
+        Object.entries(uniqueSubjects).sort((a,b) => a[1].localeCompare(b[1])).forEach(([code, subject]) => {
+            const option = document.createElement('option'); option.value = code; option.textContent = subject; materiSelectBulanan.appendChild(option);
         });
     }
     jenisUjianSelect.addEventListener('change', (e) => { });
@@ -6154,9 +6201,7 @@ function setupInputSoalPage() {
     quillEditor.on('text-change', () => {
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
-            const isAutoFillChecked = document.getElementById('auto-fill-keys-checkbox') 
-                ? document.getElementById('auto-fill-keys-checkbox').checked 
-                : true;
+            const isAutoFillChecked = document.getElementById('auto-fill-keys-checkbox') ? document.getElementById('auto-fill-keys-checkbox').checked : true;
             renderSoalPreview(quillEditor.root.innerHTML, isAutoFillChecked);
         }, 300);
     });
@@ -6167,9 +6212,6 @@ function setupInputSoalPage() {
         }
     });
 
-    /**
-     * (FUNGSI renderSoalPreview DENGAN LOGIKA BOBOT BARU)
-     */
     function renderSoalPreview(fullHtml, isAutoFillChecked) {
         const autoFillKeys = isAutoFillChecked;
         const soalArray = fullHtml.split(/(?=<p[^>]*>(?:Soal\s+)?\s*\d+[.)])/i).map(s => s.trim()).filter(Boolean);
@@ -6180,7 +6222,6 @@ function setupInputSoalPage() {
             return;
         }
         
-        // --- (BARU) Hitung jumlah soal per tipe ---
         const keyTextRegex = /<p[^>]*>Kunci Jawaban\s*:\s*(.*?)<\/p>|Kunci Jawaban\s*:\s*(.*?)(?=<br>|$)/i;
         const boldRegex = /<(strong|b)[^>]*>\s*([A-D])[.)\s]/i;
         
@@ -6201,11 +6242,10 @@ function setupInputSoalPage() {
             if (isPG) countPG++; else countIsian++;
         });
 
-        // --- (BARU) Ambil bobot total dari input manual ---
+        // (BARU) Ambil bobot total dari input manual (Default sudah di set ke 200 & 100 di HTML)
         const totalBobotPG = parseFloat(document.getElementById('input-total-bobot-pg').value) || 0;
         const totalBobotIsian = parseFloat(document.getElementById('input-total-bobot-isian').value) || 0;
 
-        // --- (BARU) Hitung poin per soal (Dibagi rata) ---
         const poinPerPG = countPG > 0 ? (totalBobotPG / countPG) : 0;
         const poinPerIsian = countIsian > 0 ? (totalBobotIsian / countIsian) : 0;
 
@@ -6253,7 +6293,6 @@ function setupInputSoalPage() {
             else if (kunciJawaban !== '') { cleanedSoalHtml = cleanedSoalHtml.replace(allOptionsRegex, ''); }
             cleanedSoalHtml = cleanedSoalHtml.replace(numberRegex, '$1'); 
 
-            // --- (BARU) Tentukan poin berdasarkan tipe ---
             const thisPoin = isPG ? poinPerPG : poinPerIsian;
 
             tableHTML += `
@@ -6261,7 +6300,7 @@ function setupInputSoalPage() {
                     <td class="px-4 py-3 align-top">${index + 1}</td>
                     <td class="px-4 py-3 text-sm text-gray-800">${cleanedSoalHtml}</td>
                     <td class="px-4 py-3 align-top">
-                        <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md" value="${kunciJawaban}" placeholder="${autoFillKeys ? 'Otomatis...' : 'Isi manual...'}">
+                        <input type="text" class="kunci-jawaban-input w-full p-2 border rounded-md" value="${kunciJawaban}" placeholder="Otomatis...">
                     </td>
                     <td class="px-4 py-3 align-top">
                         <input type="number" step="0.01" class="poin-soal-input w-full p-2 border rounded-md" value="${thisPoin.toFixed(2)}">
@@ -6282,7 +6321,6 @@ function setupInputSoalPage() {
 // GANTI FUNGSI INI SECARA KESELURUHAN
 async function handleSimpanSoal() {
     const materiKode = document.getElementById('materi-soal-select').value;
-    
     // (BARU) Ambil nilai dari dropdown Jenis Ujian
     const jenisUjian = document.getElementById('input-jenis-ujian').value;
 
@@ -6304,14 +6342,28 @@ async function handleSimpanSoal() {
     const numberRegex = /(<p[^>]*>)(?:Soal\s+)?\s*\d+[.)]\s*/i; 
     const allOptionsRegex = /<p[^>]*>\s*[a-d][.)].*?<\/p>/gi;
 
-    // Parse ulang soal dari editor
     const soalHtmlArray = fullHtmlFromEditor.split(/(?=<p[^>]*>(?:Soal\s+)?\s*\d+[.)])/i)
         .map(s => s.trim())
         .filter(Boolean);
         
     const cleanedSoalHtmlArray = soalHtmlArray.map(soalHtml => {
-        const isPG = boldRegex.test(soalHtml);
-        const isIsian = keyTextRegex.test(soalHtml);
+        // --- (PERBAIKAN DETEKSI PG DI SINI - SAMA DENGAN UPDATE GURU) ---
+        let isPG = false;
+        let isIsian = false;
+
+        const keyMatch = soalHtml.match(keyTextRegex);
+        if (keyMatch) {
+            let keyText = (keyMatch[1] || keyMatch[2] || '').trim().replace(/<[^>]+>/g, '').trim();
+            if (/^([A-D])([.)\s]*)?$/i.test(keyText)) {
+                isPG = true;
+            } else {
+                isIsian = true;
+            }
+        } else if (boldRegex.test(soalHtml)) {
+            isPG = true;
+        }
+        // --- AKHIR PERBAIKAN ---
+        
         let cleanedSoalHtml = soalHtml.replace(keyTextRegex, ''); 
         if (isPG) {
             cleanedSoalHtml = cleanedSoalHtml.replace(boldReplaceRegex, '$2');
@@ -6333,7 +6385,7 @@ async function handleSimpanSoal() {
     rows.forEach((row, index) => {
         dataSoal.push({
             kodeMateri: materiKode,
-            jenisUjian: jenisUjian, // (BARU) Masukkan jenis ujian ke setiap soal
+            jenisUjian: jenisUjian, // Sertakan jenis ujian
             nomorSoal: index + 1,
             isiSoal: cleanedSoalHtmlArray[index], 
             kunciJawaban: row.querySelector('.kunci-jawaban-input').value.toUpperCase() || '',
@@ -6383,7 +6435,6 @@ async function handleSimpanSoal() {
     const processedDataSoal = await Promise.all(uploadPromises);
     hideLoading();
     
-    // Konfirmasi terakhir setelah upload gambar selesai
     if (!confirm('Semua gambar berhasil diproses. Simpan ke database sekarang?')) {
         simpanBtn.disabled = false;
         simpanBtn.textContent = 'Simpan Semua Soal';
@@ -6397,7 +6448,7 @@ async function handleSimpanSoal() {
         body: JSON.stringify({ 
             action: 'simpanBankSoal', 
             soalData: { 
-                soal: processedDataSoal, // Data sudah mengandung 'jenisUjian'
+                soal: processedDataSoal, 
                 usernameGuru: teacherUsername 
             } 
         }),
@@ -6432,7 +6483,6 @@ async function setupHalamanGuru() {
     const session = getActiveSession();
     if (!session || !session.loggedIn) return;
     if (['mia', 'wawan', 'admin', 'zhofri'].includes(session.username)) { fetchAndShowAdminNotification(); }
-    
     const guruMateriSelect = document.getElementById('guru-materi-select');
     const editorWrapper = document.getElementById('guru-editor-container-wrapper');
     const previewWrapper = document.getElementById('guru-preview-wrapper');
@@ -6440,14 +6490,14 @@ async function setupHalamanGuru() {
     const updateBtn = document.getElementById('update-soal-btn');
     
     if (!quillEditorGuru) {
-        // (BARU) Tambahkan input bobot di halaman guru
+        // (BARU) Tambahkan input bobot di halaman guru dengan default 200 dan 100
         if (!document.getElementById('guru-bobot-inputs-wrapper')) {
             const wrapper = document.createElement('div');
             wrapper.id = 'guru-bobot-inputs-wrapper';
             wrapper.className = 'grid grid-cols-2 gap-4 mb-4';
             wrapper.innerHTML = `
-                <div><label class="text-sm font-semibold text-gray-700">Total Poin PG</label><input type="number" id="guru-total-bobot-pg" value="75" class="w-full p-2 border rounded bg-blue-50"></div>
-                <div><label class="text-sm font-semibold text-gray-700">Total Poin Isian</label><input type="number" id="guru-total-bobot-isian" value="25" class="w-full p-2 border rounded bg-green-50"></div>
+                <div><label class="text-sm font-semibold text-gray-700">Bobot PG</label><input type="number" id="guru-total-bobot-pg" value="200" class="w-full p-2 border rounded bg-blue-50"></div>
+                <div><label class="text-sm font-semibold text-gray-700">Bobot Isian</label><input type="number" id="guru-total-bobot-isian" value="100" class="w-full p-2 border rounded bg-green-50"></div>
             `;
             const editorContainer = document.getElementById('quill-editor-guru-container');
             editorContainer.parentNode.insertBefore(wrapper, editorContainer);
@@ -6518,7 +6568,7 @@ async function setupHalamanGuru() {
         const soalArray = fullHtml.split(/(?=<p[^>]*>(?:Soal\s+)?\s*\d+[.)])/i).map(s => s.trim()).filter(Boolean);
         if (soalArray.length === 0) { previewContainer.innerHTML = `<p class="p-8 text-center text-gray-400">Pratinjau soal akan muncul di sini.</p>`; return; }
         
-        // (BARU) Hitung jenis soal
+        // Hitung jenis soal
         const keyTextRegex = /<p[^>]*>Kunci Jawaban\s*:\s*(.*?)<\/p>|Kunci Jawaban\s*:\s*(.*?)(?=<br>|$)/i;
         const boldRegex = /<(strong|b)[^>]*>\s*([A-D])[.)\s]/i;
         let countPG = 0; let countIsian = 0;
@@ -6536,11 +6586,9 @@ async function setupHalamanGuru() {
              if (isPG) countPG++; else countIsian++;
         });
         
-        // (BARU) Ambil bobot dari input guru
-        const totalBobotPG = parseFloat(document.getElementById('guru-total-bobot-pg').value) || 100;
-        const totalBobotIsian = parseFloat(document.getElementById('guru-total-bobot-isian').value) || 100;
+        const totalBobotPG = parseFloat(document.getElementById('guru-total-bobot-pg').value) || 0;
+        const totalBobotIsian = parseFloat(document.getElementById('guru-total-bobot-isian').value) || 0;
         
-        // (BARU) Hitung poin per soal
         const poinPerPG = countPG > 0 ? (totalBobotPG / countPG) : 0;
         const poinPerIsian = countIsian > 0 ? (totalBobotIsian / countIsian) : 0;
 
@@ -6565,7 +6613,6 @@ async function setupHalamanGuru() {
             else if (kunciJawaban !== '') { cleanedSoalHtml = cleanedSoalHtml.replace(allOptionsRegex, ''); }
             cleanedSoalHtml = cleanedSoalHtml.replace(numberRegex, '$1'); 
             
-            // (BARU) Terapkan poin
             const thisPoin = isPG ? poinPerPG : poinPerIsian;
 
             tableHTML += `<tr class="soal-row-guru"><td class="px-4 py-3">${index + 1}</td><td class="px-4 py-3 text-sm">${cleanedSoalHtml}</td><td class="px-4 py-3"><input type="text" class="kunci-jawaban-input w-full p-2 border rounded" value="${kunciJawaban}"></td><td class="px-4 py-3"><input type="number" step="0.01" class="poin-soal-input w-full p-2 border rounded" value="${thisPoin.toFixed(2)}"></td></tr>`;
@@ -6652,7 +6699,7 @@ async function handleUpdateSoal() {
 
     const fullHtmlFromEditor = quillEditorGuru.root.innerHTML;
     
-    // (DEFINISI REGEX - Penting agar tidak error 'boldRegex is not defined')
+    // Regex Definisi
     const keyTextRegex = /<p[^>]*>Kunci Jawaban\s*:\s*(.*?)<\/p>|Kunci Jawaban\s*:\s*(.*?)(?=<br>|$)/i;
     const boldRegex = /<(strong|b)[^>]*>\s*([A-D])[.)\s]/i;
     const boldReplaceRegex = /<(strong|b)[^>]*>(\s*[A-D][.)\s])/i;
@@ -6665,15 +6712,42 @@ async function handleUpdateSoal() {
         .filter(Boolean);
         
     const cleanedSoalHtmlArray = soalHtmlArray.map(soalHtml => {
-        const isPG = boldRegex.test(soalHtml);
-        const isIsian = keyTextRegex.test(soalHtml);
+        // --- (PERBAIKAN DETEKSI PG DI SINI) ---
+        let isPG = false;
+        let isIsian = false;
+
+        // 1. Cek dari Teks Kunci Jawaban (Prioritas Utama)
+        const keyMatch = soalHtml.match(keyTextRegex);
+        if (keyMatch) {
+            // Ambil teks kuncinya (misal: "A" atau "Oksigen")
+            let keyText = (keyMatch[1] || keyMatch[2] || '').trim().replace(/<[^>]+>/g, '').trim();
+            
+            // Jika kuncinya cuma 1 huruf A-D, itu pasti PG
+            if (/^([A-D])([.)\s]*)?$/i.test(keyText)) {
+                isPG = true;
+            } else {
+                isIsian = true;
+            }
+        } 
+        // 2. Cek dari Bold (Fallback)
+        else if (boldRegex.test(soalHtml)) {
+            isPG = true;
+        }
+        // --- AKHIR PERBAIKAN DETEKSI ---
+
         let cleanedSoalHtml = soalHtml.replace(keyTextRegex, ''); 
+        
         if (isPG) {
+            // Jika PG, HANYA hapus bold di opsi (jangan hapus opsinya!)
             cleanedSoalHtml = cleanedSoalHtml.replace(boldReplaceRegex, '$2');
         } else if (isIsian) {
+            // Jika Isian, baru boleh hapus opsi a-d (karena dianggap sampah)
             cleanedSoalHtml = cleanedSoalHtml.replace(allOptionsRegex, '');
         }
+        
+        // Hapus nomor soal (karena akan di-generate ulang saat simpan)
         cleanedSoalHtml = cleanedSoalHtml.replace(numberRegex, '$1'); 
+        
         return cleanedSoalHtml;
     });
 
@@ -6706,7 +6780,6 @@ async function handleUpdateSoal() {
     simpanBtn.textContent = 'Memproses Gambar... (0%)';
     showLoading();
 
-    // (Logika upload gambar yang sama dengan halaman input)
     const base64Regex = /<img src="(data:image\/[^"]+)"/g;
     let totalImages = 0;
     let imagesProcessed = 0;
@@ -6754,7 +6827,6 @@ async function handleUpdateSoal() {
     .then(result => {
         if (result.status === 'success') {
             showMessage(result.message, 'success');
-            // Muat ulang data soal guru setelah menyimpan agar tampilan sinkron
             setupHalamanGuru();
         } else {
             throw new Error(result.message);
