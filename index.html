@@ -3367,7 +3367,7 @@ async function setupLihatNilaiPage() {
     const materiSelect = document.getElementById('guru-nilai-materi-select');
     const nilaiContainer = document.getElementById('guru-nilai-container');
 
-    // 1. Ambil daftar materi yang diajar guru
+    // 1. Ambil daftar materi
     try {
         const response = await fetch(CONFIG.SCRIPT_URL, {
             method: 'POST',
@@ -3391,7 +3391,7 @@ async function setupLihatNilaiPage() {
         console.error(error);
     }
 
-    // 2. Tambahkan event listener untuk menampilkan nilai saat materi dipilih
+    // 2. Event Listener saat materi dipilih
     materiSelect.addEventListener('change', async (e) => {
         const kodeMateri = e.target.value;
         if (!kodeMateri) {
@@ -3399,7 +3399,8 @@ async function setupLihatNilaiPage() {
             return;
         }
 
-        nilaiContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Mengambil data nilai...</p>';
+        nilaiContainer.innerHTML = '<div class="flex justify-center p-8"><div class="loader"></div></div>';
+        
         try {
             const response = await fetch(CONFIG.SCRIPT_URL, {
                 method: 'POST',
@@ -3414,43 +3415,173 @@ async function setupLihatNilaiPage() {
                 return;
             }
 
-            // 3. Buat dan tampilkan tabel nilai
-            // 3. Buat dan tampilkan tabel nilai
-let tableHTML = `<table class="min-w-full divide-y divide-gray-200">
-    <thead class="bg-gray-50">
-        <tr>
-            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No</th>
-            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nama Santri</th>
-            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Skor Ujian</th>
-            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Poin Tugas</th>
-            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Nilai KHS</th>
-            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Jml. Coba</th>
-        </tr>
-    </thead>
-    <tbody class="bg-white divide-y divide-gray-200">`;
+            // --- STRUKTUR TABEL ---
+            let tableHTML = `
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase w-10">No</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Santri</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Skor Ujian</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-blue-600 uppercase bg-blue-50 border-b-2 border-blue-200">Nilai Praktek</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Poin Tugas</th>
+                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-100">Nilai KHS</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">`;
 
-result.scores.forEach((item, index) => {
-    // Lakukan perhitungan di frontend
-    const skorUjian = parseFloat(item.skorAkhir) || 0;
-    const poinTugas = 0.08 * (parseFloat(item.totalNilaiTugas) || 0);
-    const nilaiKHS = Math.min(100, skorUjian + poinTugas);
-	const poinTugasBulat = Math.ceil(poinTugas);
-    const nilaiKHSBulat = Math.ceil(nilaiKHS);
-	
-    tableHTML += `
-        <tr>
-            <td class="px-4 py-3">${index + 1}</td>
-            <td class="px-4 py-3 font-medium">${item.namaSantri}</td>
-            <td class="px-4 py-3 text-center">${skorUjian}</td>
-            <td class="px-4 py-3 text-center text-blue-600">+${poinTugasBulat}</td>
-            <td class="px-4 py-3 text-center font-bold ${nilaiKHSBulat >= 75 ? 'text-green-600' : 'text-red-600'}">${nilaiKHSBulat}</td>
-            <td class="px-4 py-3 text-center">${item.percobaan}</td>
-        </tr>
-    `;
-});
+            result.scores.forEach((item, index) => {
+                // Data Mentah
+                const skorUjian = parseFloat(item.skorAkhir) || 0;
+                const nilaiPraktek = parseFloat(item.praktek) || 0; // Pastikan float
+                const totalNilaiTugas = parseFloat(item.totalNilaiTugas) || 0;
+                
+                // Hitung Poin Tugas (8% dari total tugas)
+                const poinTugas = Math.ceil(0.08 * totalNilaiTugas);
 
-tableHTML += `</tbody></table>`;
-nilaiContainer.innerHTML = tableHTML;
+                // === LOGIKA BARU: Hitung Rata-rata Dinamis ===
+                let pembagi = 0;
+                if (skorUjian > 0) pembagi++;
+                if (nilaiPraktek > 0) pembagi++;
+
+                let rataRataNilai = 0;
+                if (pembagi > 0) {
+                    rataRataNilai = (skorUjian + nilaiPraktek) / pembagi;
+                }
+
+                // Hitung Nilai KHS: Rata-rata + Poin Tugas
+                let nilaiKHS = rataRataNilai + poinTugas;
+                
+                // Cap maksimal 100
+                if (nilaiKHS > 100) nilaiKHS = 100;
+                const nilaiKHSBulat = Math.round(nilaiKHS);
+
+                // Warna Nilai KHS
+                const warnaNilai = nilaiKHSBulat >= 75 ? 'text-green-600' : 'text-red-600';
+
+                tableHTML += `
+                    <tr>
+                        <td class="px-4 py-3 text-center">${index + 1}</td>
+                        <td class="px-4 py-3 font-medium text-gray-800">${item.namaSantri}</td>
+                        
+                        <td class="px-4 py-3 text-center">
+                            <span class="skor-ujian-val font-semibold">${skorUjian}</span>
+                        </td>
+                        
+                        <td class="px-4 py-2 text-center bg-blue-50">
+                            <input type="number" 
+                                   class="input-praktek w-20 p-1 text-center border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 outline-none font-bold text-blue-700" 
+                                   data-username="${item.username}" 
+                                   value="${nilaiPraktek}" 
+                                   min="0" max="100"
+                                   placeholder="0">
+                        </td>
+
+                        <td class="px-4 py-3 text-center text-sm text-gray-600">
+                            <span class="poin-tugas-val" data-val="${poinTugas}">+${poinTugas}</span>
+                        </td>
+
+                        <td class="px-4 py-3 text-center font-bold text-lg bg-gray-50">
+                            <span class="nilai-khs-preview ${warnaNilai}">${nilaiKHSBulat}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `</tbody></table></div>
+            
+            <div class="mt-4 text-right p-4 bg-gray-50 border-t">
+                <button id="simpan-praktek-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow flex items-center gap-2 ml-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
+                    </svg>
+                    Simpan Nilai Praktek
+                </button>
+            </div>`;
+
+            nilaiContainer.innerHTML = tableHTML;
+
+            // 3. LOGIKA TOMBOL SIMPAN
+            document.getElementById('simpan-praktek-btn').addEventListener('click', async function() {
+                const btn = this;
+                const inputs = document.querySelectorAll('.input-praktek');
+                const nilaiData = [];
+
+                inputs.forEach(input => {
+                    nilaiData.push({
+                        username: input.dataset.username,
+                        nilai: parseFloat(input.value) || 0
+                    });
+                });
+
+                btn.disabled = true;
+                btn.textContent = 'Menyimpan...';
+
+                try {
+                    const saveResp = await fetch(CONFIG.SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            action: 'simpanNilaiPraktek', 
+                            kodeMateri: kodeMateri,
+                            nilaiData: nilaiData 
+                        }),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    });
+                    const saveResult = await saveResp.json();
+                    
+                    if (saveResult.status === 'success') {
+                        showMessage('Nilai praktek berhasil disimpan!', 'success');
+                    } else {
+                        throw new Error(saveResult.message);
+                    }
+                } catch (err) {
+                    showMessage('Gagal menyimpan: ' + err.message, 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = `Simpan Nilai Praktek`;
+                }
+            });
+
+            // 4. UPDATE NILAI KHS REALTIME (LOGIKA BARU JUGA DI SINI)
+            document.querySelectorAll('.input-praktek').forEach(input => {
+                input.addEventListener('input', function() {
+                    const row = this.closest('tr');
+                    
+                    // Ambil nilai-nilai
+                    const skorTulis = parseFloat(row.querySelector('.skor-ujian-val').textContent) || 0;
+                    const poinTugas = parseFloat(row.querySelector('.poin-tugas-val').dataset.val) || 0;
+                    let skorPraktek = parseFloat(this.value);
+                    
+                    if (isNaN(skorPraktek)) skorPraktek = 0;
+
+                    // === LOGIKA HITUNG REALTIME ===
+                    let pembagi = 0;
+                    if (skorTulis > 0) pembagi++;
+                    if (skorPraktek > 0) pembagi++;
+
+                    let rataRata = 0;
+                    if (pembagi > 0) {
+                        rataRata = (skorTulis + skorPraktek) / pembagi;
+                    }
+
+                    let nilaiAkhir = rataRata + poinTugas;
+                    if (nilaiAkhir > 100) nilaiAkhir = 100;
+                    const hasilBulat = Math.round(nilaiAkhir);
+
+                    // Update Tampilan & Warna
+                    const khsEl = row.querySelector('.nilai-khs-preview');
+                    khsEl.textContent = hasilBulat;
+                    
+                    if (hasilBulat >= 75) {
+                        khsEl.classList.remove('text-red-600');
+                        khsEl.classList.add('text-green-600');
+                    } else {
+                        khsEl.classList.remove('text-green-600');
+                        khsEl.classList.add('text-red-600');
+                    }
+                });
+            });
 
         } catch (error) {
             nilaiContainer.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat nilai: ${error.message}</p>`;
@@ -4193,15 +4324,17 @@ async function renderExamSchedule() {
     const container = document.getElementById('ujian-schedule-container');
     if (!container) return;
     
-    container.innerHTML = '<p class="p-8 text-center text-gray-500">Memuat KRS dan status ujian...</p>';
+    container.innerHTML = '<div class="flex flex-col items-center justify-center p-8"><div class="loader mb-4"></div><p class="text-gray-500">Memuat daftar ujian...</p></div>';
+    
     const session = getActiveSession();
     if (!session || !session.loggedIn || !session.userData.jabatan || session.userData.jabatan.toLowerCase().trim() !== 'santri') {
         container.innerHTML = '<p class="p-8 text-center text-gray-500">Halaman ini hanya untuk santri.</p>';
         return;
     }
+    
     const isAdmin = ['wawan', 'mia', 'admin'].includes(session.username);
 
-    const krsInfoMap = new Map();
+    // Data Variables
     let savedKrsSubjects = [], availableExams = [], nilaiUjian = {};
     let unlockedExamsData = []; 
     
@@ -4214,10 +4347,8 @@ async function renderExamSchedule() {
         ]);
         
         const krsResult = await krsResponse.json();
-        if (krsResult.status === 'success') {
-            savedKrsSubjects = krsResult.data;
-            savedKrsSubjects.forEach(item => krsInfoMap.set(item.code, item)); 
-        } else throw new Error(krsResult.message);
+        if (krsResult.status === 'success') savedKrsSubjects = krsResult.data; 
+        else throw new Error(krsResult.message);
 
         const examsResult = await examsResponse.json();
         if (examsResult.status === 'success') availableExams = examsResult.availableExams; else throw new Error(examsResult.message);
@@ -4235,193 +4366,199 @@ async function renderExamSchedule() {
 
     const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
     
+    // Fungsi Update Tampilan (Looping)
     const updateExamGrid = () => {
         const now = new Date();
-        const groupedExams = new Map(); 
-
-        // 1. Proses Ujian yang Dibuka Manual (Prioritas Tinggi)
-        unlockedExamsData.forEach(exam => {
-            const krsData = krsInfoMap.get(exam.kodeMateri);
-            if (!krsData) return; 
-
-            const key = (exam.jenis === 'Bulanan') ? exam.kodeMateri : exam.nama;
-            
-            if (!groupedExams.has(key)) {
-                const displayName = (exam.jenis === 'Bulanan') ? krsData.subject : exam.nama;
-                groupedExams.set(key, {
-                    nama: displayName, 
-                    jenis: exam.jenis,
-                    materi: [krsData],
-                    krsInfo: krsData,
-                    isManuallyUnlocked: true,
-                    isScheduled: false
-                });
-            }
-        });
-
-        // 2. Proses Ujian Terjadwal (Otomatis dari Kalender)
-        // --- (PERBAIKAN LOGIKA DETEKSI KALENDER) ---
+        
+        // 1. Cek Event Kalender
         let activeCalendarExam = null;
-        let activeExamType = 'Bulanan'; // Default
+        let activeExamType = 'Bulanan'; 
         let activeExamTitlePrefix = 'Ujian Bulanan';
 
-        // Cari event kalender yang aktif HARI INI dan mengandung kata kunci ujian
-        const todayTime = now.getTime();
         const activeEvent = appData.calendarEvents.find(event => {
             const title = event.title.toLowerCase();
-            // Kata kunci: ujian, uts, uas, pas, pat
             if (!title.includes('ujian') && !title.includes('uts') && !title.includes('uas') && !title.includes('pas') && !title.includes('pat')) return false;
-            
             const startDate = new Date(event.date + 'T00:00:00');
-            const span = event.span || 7; // Default durasi ujian 7 hari jika tidak ada span
+            const span = event.span || 7; 
             const endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + span);
-            // Set akhir hari untuk endDate
             endDate.setHours(23, 59, 59, 999);
-
             return now >= startDate && now <= endDate;
         });
 
         if (activeEvent) {
             activeCalendarExam = true;
             const title = activeEvent.title.toLowerCase();
-            if (title.includes('uts')) {
-                activeExamType = 'UTS';
-                activeExamTitlePrefix = 'Ujian Tengah Semester';
-            } else if (title.includes('uas') || title.includes('pas')) {
-                activeExamType = 'UAS';
-                activeExamTitlePrefix = 'Ujian Akhir Semester';
-            } else if (title.includes('pat')) {
-                activeExamType = 'UAS'; // PAT dianggap UAS Genap
-                activeExamTitlePrefix = 'Penilaian Akhir Tahun';
-            }
+            if (title.includes('uts')) { activeExamType = 'UTS'; activeExamTitlePrefix = 'Ujian Tengah Semester'; }
+            else if (title.includes('uas') || title.includes('pas')) { activeExamType = 'UAS'; activeExamTitlePrefix = 'Ujian Akhir Semester'; }
+            else if (title.includes('pat')) { activeExamType = 'UAS'; activeExamTitlePrefix = 'Penilaian Akhir Tahun'; }
         }
-        // --- (AKHIR PERBAIKAN) ---
 
-        savedKrsSubjects.forEach(item => {
+        // 2. Proses Data: Mapping
+        const processedExams = savedKrsSubjects.map(item => {
             const subjectCode = item.code;
-            if (!availableExams.includes(subjectCode)) return;
-            if (groupedExams.has(subjectCode)) return; // Jangan duplikat jika sudah dibuka manual
+            const isBankSoalReady = availableExams.includes(subjectCode);
             
-            // Cek apakah jadwal hari & jam cocok
+            // Cek status Aktif (Jadwal / Manual)
+            const manualUnlockData = unlockedExamsData.find(ex => ex.kodeMateri === subjectCode);
+            const isManuallyUnlocked = !!manualUnlockData;
             const isDayTimeMatch = days[now.getDay()] === item.day && isTimeInSlot(now, item.time);
+            const isScheduledActive = (activeCalendarExam && isDayTimeMatch);
+            
+            const isActive = (isManuallyUnlocked || isScheduledActive || isAdmin);
 
-            // Buka ujian JIKA: (Ada event kalender aktif DAN Jadwal Cocok) ATAU (Admin)
-            if ((activeCalendarExam && isDayTimeMatch) || (isAdmin && !isDayTimeMatch)) {
-                 // Tentukan judul tampilan
-                 const displayTitle = `${activeExamTitlePrefix}: ${item.subject}`;
+            // Parsing Kode untuk Sorting
+            const parts = subjectCode.split('-');
+            const prefix = parts[0] || subjectCode;
+            const fullNumber = parseInt(parts[1]) || 0;
+            
+            // === LOGIKA BARU: Ambil digit terakhir ===
+            // Contoh: 103 -> 3, 202 -> 2
+            const lastDigit = fullNumber % 10; 
 
-                 groupedExams.set(subjectCode, {
-                    nama: displayTitle, 
-                    jenis: activeExamType, // 'Bulanan', 'UTS', atau 'UAS'
-                    materi: [item],     
-                    krsInfo: item,
-                    isManuallyUnlocked: false,
-                    isScheduled: true 
-                });
-            }
+            return {
+                ...item,
+                isBankSoalReady,
+                isManuallyUnlocked,
+                isScheduledActive,
+                isActive,
+                manualUnlockData,
+                prefix,
+                fullNumber,
+                lastDigit // Simpan digit terakhir untuk sorting
+            };
         });
 
-        // 3. Render Kartu Ujian
+        // 3. SORTING (Logika Pengurutan Diperbarui)
+        processedExams.sort((a, b) => {
+            // Prioritas 1: Yang sedang AKTIF (Jadwal/Manual) naik paling atas
+            if (a.isActive !== b.isActive) return b.isActive - a.isActive;
+
+            // Prioritas 2: Yang soalnya SUDAH ADA naik ke atas
+            if (a.isBankSoalReady !== b.isBankSoalReady) return b.isBankSoalReady - a.isBankSoalReady;
+
+            // Prioritas 3: DIGIT TERAKHIR (Descending: 3 > 2 > 1)
+            // Ini akan membuat 103 naik di atas 202
+            if (a.lastDigit !== b.lastDigit) return b.lastDigit - a.lastDigit;
+
+            // Prioritas 4: Jika digit terakhir sama (misal 103 vs 203), urutkan berdasarkan Level (Descending)
+            if (a.fullNumber !== b.fullNumber) return b.fullNumber - a.fullNumber;
+
+            // Prioritas 5: Abjad Prefix (Ascending: ARB > THI)
+            return a.prefix.localeCompare(b.prefix);
+        });
+
+        // 4. Render HTML
         container.innerHTML = '';
-        if (groupedExams.size === 0) {
-            container.innerHTML = '<p class="p-8 text-center text-gray-500">Tidak ada ujian yang tersedia untuk Anda saat ini.</p>';
+        if (processedExams.length === 0) {
+            container.innerHTML = '<p class="p-8 text-center text-gray-500">Anda belum mengambil materi di KRS.</p>';
             return;
         }
 
         const grid = document.createElement('div');
         grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
-        const activeCardsFragment = document.createDocumentFragment();
-        const inactiveCardsFragment = document.createDocumentFragment();
 
-        groupedExams.forEach((examGroup, key) => {
-            const riwayat = nilaiUjian[examGroup.materi[0].code] || null;
-            let statusText = 'Ujian belum tersedia';
-            let statusColor = 'bg-gray-400';
-            let isDisabled = true;
-            let textColorClass = 'text-white';
+        processedExams.forEach(item => {
+            const subjectCode = item.code;
             
-            const isManuallyUnlocked = examGroup.isManuallyUnlocked;
-            const isScheduledActive = examGroup.isScheduled;
+            let displayTitle = `${item.subject}`;
+            let examType = 'Bulanan'; 
 
-            if (riwayat) {
+            if (item.isManuallyUnlocked) {
+                displayTitle = item.manualUnlockData.nama || `${activeExamTitlePrefix}: ${item.subject}`;
+                examType = item.manualUnlockData.jenis;
+            } else if (item.isScheduledActive) {
+                displayTitle = `${activeExamTitlePrefix}: ${item.subject}`;
+                examType = activeExamType;
+            }
+
+            // LOGIKA TOMBOL & STATUS VISUAL
+            let statusText = 'Belum Tersedia';
+            let statusColor = 'bg-gray-400'; 
+            let isDisabled = true;
+            let cardOpacity = 'opacity-100';
+
+            const riwayat = nilaiUjian[subjectCode];
+
+            if (!item.isBankSoalReady) {
+                statusText = 'Soal Belum Diinput';
+                statusColor = 'bg-gray-300 text-gray-600';
+                isDisabled = true;
+                cardOpacity = 'opacity-60'; 
+            } else if (riwayat) {
                 const nilaiToShow = riwayat.skorAkhir ?? riwayat.skor;
+                
                 if (nilaiToShow >= 75 && !isAdmin) {
-                    statusText = `Lulus (Nilai Akhir: ${nilaiToShow})`;
+                    statusText = `Lulus (Nilai: ${nilaiToShow})`;
                     statusColor = 'bg-green-600';
                     isDisabled = true;
                 } else if (riwayat.percobaan >= 3 && !isAdmin) {
-                    statusText = `Batas Coba Habis (Nilai: ${nilaiToShow})`;
-                    statusColor = 'bg-gray-500';
+                    statusText = `GAGAL (Nilai: ${nilaiToShow})`;
+                    statusColor = 'bg-red-600';
                     isDisabled = true;
-                } else if (isManuallyUnlocked || isScheduledActive || isAdmin) { 
-                    statusText = `Mulai Remedial (Nilai: ${nilaiToShow})`; 
-                    statusColor = 'bg-yellow-500 hover:bg-yellow-600';
-                    isDisabled = false;
-                } else { 
-                    statusText = `Waktu Habis (Nilai: ${nilaiToShow})`;
-                    statusColor = 'bg-gray-500';
-                    isDisabled = true;
+                } else {
+                    statusText = `Remedial (Nilai: ${nilaiToShow})`;
+                    statusColor = 'bg-yellow-500';
+                    
+                    if (item.isActive) {
+                        statusText = `Mulai Remedial (Nilai: ${nilaiToShow})`;
+                        statusColor = 'bg-yellow-500 hover:bg-yellow-600';
+                        isDisabled = false; 
+                    } else {
+                        isDisabled = true;
+                    }
                 }
             } else {
-                if (isManuallyUnlocked || isScheduledActive || isAdmin) {
+                if (item.isActive) {
                     statusText = 'Mulai Ujian';
                     statusColor = 'bg-blue-600 hover:bg-blue-700';
                     isDisabled = false;
                 } else {
-                    statusText = 'Terlewat'; 
-                    statusColor = 'bg-gray-500';
+                    statusText = 'Belum Jadwalnya';
+                    statusColor = 'bg-gray-400';
                     isDisabled = true;
+                    cardOpacity = 'opacity-80';
                 }
             }
-            if (isAdmin) {
+
+            if (isAdmin && item.isBankSoalReady) {
                 isDisabled = false;
-                statusColor = 'bg-purple-600 hover:bg-purple-700';
+                if (statusColor.includes('gray') || statusColor.includes('red')) {
+                    statusColor = 'bg-purple-600 hover:bg-purple-700';
+                }
             }
 
-            // Tampilan Kartu
-            const displayTitle = examGroup.nama; 
-            let subTitle = '';
+            let subTitle = `<p class="text-sm text-slate-600 mt-2">Pengajar: ${item.teacher}</p>`;
             
-            // Jika judul sudah mengandung nama materi (seperti "UAS: IPA..."), tidak perlu subtitle materi
-            if (!displayTitle.includes(examGroup.materi[0].name)) {
-                 subTitle = `<p class="text-sm text-slate-600 mt-2">Materi: ${examGroup.materi[0].name}</p>`;
+            let jadwalInfoHtml = '';
+            if (item.isManuallyUnlocked) {
+                jadwalInfoHtml = `<p class="text-xs italic mt-1 text-green-600 font-bold">Akses Dibuka Manual (24 Jam)</p>`;
+            } else {
+                jadwalInfoHtml = `<p class="text-xs italic mt-1 text-gray-500">Jadwal: ${item.day}, ${item.time}</p>`;
             }
-            // Tampilkan pengajar
-            subTitle += `<p class="text-sm text-slate-600 mt-1">Pengajar: ${examGroup.krsInfo.teacher}</p>`;
-
-            const jadwalInfoHtml = examGroup.isScheduled
-                ? `<p class="text-xs italic mt-1">Jadwal: ${examGroup.krsInfo.day}, ${examGroup.krsInfo.time}</p>`
-                : `<p class="text-xs italic mt-1 text-green-600 font-bold">Akses Dibuka Manual (24 Jam)</p>`;
 
             const card = document.createElement('div');
-            card.className = 'schedule-cell p-4 border rounded-lg flex flex-col';
+            card.className = `schedule-cell p-4 border rounded-lg flex flex-col transition-all duration-300 ${item.isActive ? 'shadow-lg border-blue-400 ring-1 ring-blue-200' : 'bg-gray-50 border-gray-200'} ${cardOpacity}`;
             card.innerHTML = `
                 <div class="subject flex-grow font-bold text-teal-900 text-lg">${displayTitle}</div>
                 ${subTitle}
                 ${jadwalInfoHtml}
-                <button class="start-exam-trigger w-full mt-4 py-2 px-4 rounded-md font-semibold ${statusColor} ${textColorClass} ${isDisabled ? 'cursor-not-allowed' : ''}" 
+                <button class="start-exam-trigger w-full mt-4 py-2 px-4 rounded-md font-semibold text-white shadow-sm transition-colors ${statusColor} ${isDisabled ? 'cursor-not-allowed opacity-70' : ''}" 
                         data-nama-ujian="${displayTitle}" 
-                        data-jenis-ujian="${examGroup.jenis}"
-                        data-materi-list='${JSON.stringify(examGroup.materi.map(m => m.code))}'
+                        data-jenis-ujian="${examType}"
+                        data-materi-list='${JSON.stringify([subjectCode])}'
                         ${isDisabled ? 'disabled' : ''}>
                     ${statusText}
                 </button>
             `;
-
-            if (isDisabled) {
-                inactiveCardsFragment.appendChild(card);
-            } else {
-                activeCardsFragment.appendChild(card);
-            }
+            grid.appendChild(card);
         });
 
-        grid.appendChild(activeCardsFragment);
-        grid.appendChild(inactiveCardsFragment);
         container.appendChild(grid);
     };
 
     updateExamGrid();
+    
     examInterval = setInterval(updateExamGrid, 30000);
 }
 
