@@ -2436,6 +2436,41 @@
 </div>
 
 <!-- === AKHIR HALAMAN MUSYRIFAH === -->
+
+<div id="settings-page" class="page-section hidden container section">
+    <h2 class="text-3xl font-bold text-gray-800 mb-6">Pengaturan Kurikulum & Mapel</h2>
+    <p class="mb-6 text-gray-600">Atur pengelompokan Induk Mapel, Mata Pelajaran, dan Materi Ujian di sini. Perubahan akan berdampak pada rekap nilai.</p>
+
+    <div class="flex gap-4 mb-8">
+        <button id="btn-add-induk" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow">
+            + Tambah Induk Mapel
+        </button>
+        <button id="btn-save-settings" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded shadow ml-auto">
+            Simpan Perubahan
+        </button>
+    </div>
+
+    <div id="settings-container" class="space-y-6">
+        <p class="text-center text-gray-500">Memuat pengaturan...</p>
+    </div>
+</div>
+
+<div id="modal-pilih-materi" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <span class="close-button text-gray-500 text-2xl font-bold cursor-pointer float-right">&times;</span>
+        <h3 class="text-xl font-bold mb-4">Pilih Materi</h3>
+        <p class="text-sm text-gray-500 mb-4">Materi yang sudah dipilih di mapel lain tidak akan muncul di sini.</p>
+        
+        <input type="text" id="search-materi-input" placeholder="Cari kode materi..." class="w-full p-2 border rounded mb-3">
+        
+        <div id="list-materi-available" class="max-h-60 overflow-y-auto border rounded p-2 space-y-2">
+            </div>
+
+        <div class="mt-6 text-right">
+            <button id="btn-confirm-materi" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Tambahkan</button>
+        </div>
+    </div>
+</div>
     
     <!-- AREA TAMPILAN LAPORAN HARI INI -->
      
@@ -8777,6 +8812,10 @@ tabMurajaah.addEventListener('click', (e) => {
 				 else if (targetHash === '#pengawas-ujian') {
             setupPengawasUjianPage();
         }
+		else if (targetHash === '#settings-page') {
+        // Pastikan fungsi inisialisasi dipanggil saat halaman dibuka/direload
+        initSettingsPage();
+    }
 		} else if (targetHash === '#ujian-online') {
             const section = document.querySelector(targetHash);
             if (section) {
@@ -9138,6 +9177,33 @@ function showLoggedInView(userData) {
         
         // Tips (Pastikan jabatan dikirim apa adanya untuk filter tips yang spesifik jika perlu)
         fetchAndStartTips(session.userData.jabatan);
+		
+		// LOGIKA MENU SETTING
+        const settingNav = document.createElement('a');
+        settingNav.href = "#settings-page";
+        settingNav.textContent = "Pengaturan";
+        settingNav.id = "settingNav";
+        settingNav.className = "hidden"; 
+
+        // Cek Hak Akses
+        const userJabatan = (session.userData.jabatan || "").toLowerCase();
+        const usernameAccount = (session.username || "").toLowerCase();
+        const allowedUsersSetting = ['wawan', 'admin'];
+        const allowedRolesSetting = ['tu', 'tata usaha'];
+
+        if (allowedUsersSetting.includes(usernameAccount) || allowedRolesSetting.some(r => userJabatan.includes(r))) {
+            const oldNav = document.getElementById('settingNav');
+            if (oldNav) oldNav.remove();
+            
+            document.querySelector('#mainNav .nav-container').appendChild(settingNav);
+            settingNav.classList.remove('hidden');
+            
+            settingNav.addEventListener('click', () => {
+                showPage('#settings-page');
+                initSettingsPage(); 
+            });
+        }
+		
     }
     
     if (window.location.hash === '#login') { window.location.hash = '#beranda'; }
@@ -12587,8 +12653,264 @@ function setupAdvancedDropdown() {
     // Tambahkan event listener untuk menutup menu jika mengklik di tempat lain
     window.addEventListener('click', closeMenu);
 	
-	
 }
+
+// === LOGIKA HALAMAN PENGATURAN ===
+
+let globalSettingsData = [];
+let globalAllMateriCodes = [];
+let currentEditingMapelIndex = { induk: -1, mapel: -1 }; 
+
+// 1. Perbaikan: Hapus duplikasi deklarasi fungsi
+async function initSettingsPage() {
+    const container = document.getElementById('settings-container');
+    container.innerHTML = '<div class="flex justify-center p-4"><div class="loader"></div></div>';
+
+    try {
+        // Ambil Data Config & Data Master Materi secara paralel
+        const [configResp, materiResp] = await Promise.all([
+            fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getMapelConfig' }) }),
+            fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllMateriCodes' }) })
+        ]);
+
+        const configResult = await configResp.json();
+        const materiResult = await materiResp.json();
+
+        if (configResult.status === 'success') globalSettingsData = configResult.data;
+        if (materiResult.status === 'success') globalAllMateriCodes = materiResult.codes;
+
+        renderSettingsUI();
+
+    } catch (e) {
+        container.innerHTML = `<p class="text-red-500 text-center">Error: ${e.message}</p>`;
+    }
+}
+
+function renderSettingsUI() {
+    const container = document.getElementById('settings-container');
+    container.innerHTML = '';
+
+    if (globalSettingsData.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-500">Belum ada pengaturan Induk Mapel. Klik "Tambah Induk Mapel" untuk memulai.</p>';
+        return;
+    }
+
+    globalSettingsData.forEach((induk, indukIdx) => {
+        // Card Induk
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-lg shadow p-4 border border-gray-200 mb-4';
+        
+        // Header Induk
+        card.innerHTML = `
+            <div class="flex justify-between items-center border-b pb-2 mb-4">
+                <input type="text" class="font-bold text-lg text-indigo-800 border-b border-transparent hover:border-gray-300 focus:border-indigo-500 focus:outline-none px-2 w-full mr-4" 
+                       value="${induk.nama}" 
+                       onchange="window.updateIndukName(${indukIdx}, this.value)" placeholder="Nama Induk Mapel">
+                <button onclick="window.deleteInduk(${indukIdx})" class="text-red-500 hover:text-red-700 text-sm whitespace-nowrap font-semibold">Hapus Induk</button>
+            </div>
+            <div class="space-y-4" id="mapel-container-${indukIdx}"></div>
+            <div class="mt-4 pt-2 border-t border-dashed text-center sm:text-left">
+                <button onclick="window.addMapel(${indukIdx})" class="text-sm text-blue-600 hover:text-blue-800 font-bold py-1 px-2 rounded hover:bg-blue-50">+ Tambah Mapel</button>
+            </div>
+        `;
+
+        const mapelContainer = card.querySelector(`#mapel-container-${indukIdx}`);
+
+        // Render Mapel di dalam Induk
+        if (induk.mapel && induk.mapel.length > 0) {
+            induk.mapel.forEach((mapel, mapelIdx) => {
+                const mapelRow = document.createElement('div');
+                mapelRow.className = 'bg-gray-50 p-3 rounded border border-gray-200 mb-2';
+                
+                // Chips Materi
+                let materiChips = '';
+                if (mapel.materi && mapel.materi.length > 0) {
+                    mapel.materi.forEach((kode, matIdx) => {
+                        materiChips += `
+                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-white border border-blue-200 text-blue-800 mr-2 mb-1 shadow-sm">
+                                ${kode}
+                                <button onclick="window.removeMateri(${indukIdx}, ${mapelIdx}, ${matIdx})" class="ml-1.5 text-red-400 hover:text-red-600 font-bold text-sm">&times;</button>
+                            </span>
+                        `;
+                    });
+                } else {
+                    materiChips = '<span class="text-xs text-gray-400 italic">Belum ada materi dipilih</span>';
+                }
+
+                mapelRow.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <input type="text" class="font-semibold text-gray-700 bg-transparent border-b border-transparent hover:border-gray-400 focus:border-blue-500 focus:outline-none w-full mr-2" 
+                               value="${mapel.nama}" 
+                               onchange="window.updateMapelName(${indukIdx}, ${mapelIdx}, this.value)" placeholder="Nama Mata Pelajaran">
+                        <button onclick="window.deleteMapel(${indukIdx}, ${mapelIdx})" class="text-gray-400 hover:text-red-500 text-xs transition-colors">Hapus</button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1">
+                        ${materiChips}
+                        <button onclick="window.openMateriModal(${indukIdx}, ${mapelIdx})" class="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-blue-100 text-blue-700 hover:bg-blue-200 cursor-pointer border border-blue-200 ml-1">
+                            + Pilih Materi
+                        </button>
+                    </div>
+                `;
+                mapelContainer.appendChild(mapelRow);
+            });
+        } else {
+            mapelContainer.innerHTML = '<p class="text-xs text-gray-400 italic text-center py-2">Belum ada mata pelajaran di kelompok ini.</p>';
+        }
+
+        container.appendChild(card);
+    });
+}
+
+// --- CRUD FUNCTIONS (Exposed to Window) ---
+
+window.addInduk = function() {
+    globalSettingsData.push({ nama: "Induk Baru", mapel: [] });
+    renderSettingsUI();
+}
+
+window.deleteInduk = function(idx) {
+    if(confirm("Hapus Induk Mapel ini beserta isinya?")) {
+        globalSettingsData.splice(idx, 1);
+        renderSettingsUI();
+    }
+}
+
+window.updateIndukName = function(idx, val) { 
+    globalSettingsData[idx].nama = val; 
+    // Tidak perlu render ulang agar fokus input tidak hilang
+}
+
+window.addMapel = function(indukIdx) {
+    globalSettingsData[indukIdx].mapel.push({ nama: "Mapel Baru", materi: [] });
+    renderSettingsUI();
+}
+
+window.deleteMapel = function(indukIdx, mapelIdx) {
+    if(confirm("Hapus Mapel ini?")) {
+        globalSettingsData[indukIdx].mapel.splice(mapelIdx, 1);
+        renderSettingsUI();
+    }
+}
+
+window.updateMapelName = function(indukIdx, mapelIdx, val) { 
+    globalSettingsData[indukIdx].mapel[mapelIdx].nama = val; 
+}
+
+window.removeMateri = function(indukIdx, mapelIdx, matIdx) {
+    globalSettingsData[indukIdx].mapel[mapelIdx].materi.splice(matIdx, 1);
+    renderSettingsUI();
+}
+
+window.openMateriModal = function(indukIdx, mapelIdx) {
+    currentEditingMapelIndex = { induk: indukIdx, mapel: mapelIdx };
+    
+    // 1. Kumpulkan semua materi yang SUDAH dipakai di Mapel LAIN
+    const usedInOtherMapels = new Set();
+
+    globalSettingsData.forEach((induk, iIdx) => {
+        if (induk.mapel) {
+            induk.mapel.forEach((mapel, mIdx) => {
+                // PENTING: Jangan hitung materi milik Mapel yang sedang diedit saat ini
+                // Kita hanya ingin menyembunyikan materi milik ORANG LAIN
+                if (iIdx === indukIdx && mIdx === mapelIdx) return; 
+
+                if (mapel.materi) {
+                    mapel.materi.forEach(code => usedInOtherMapels.add(code));
+                }
+            });
+        }
+    });
+
+    const listContainer = document.getElementById('list-materi-available');
+    listContainer.innerHTML = '';
+
+    // 2. Filter Daftar Materi
+    // Tampilkan materi HANYA JIKA materi tersebut TIDAK ada di mapel lain.
+    const available = globalAllMateriCodes.filter(code => !usedInOtherMapels.has(code));
+
+    if (available.length === 0) {
+        listContainer.innerHTML = '<p class="text-gray-500 italic p-2">Semua materi sudah habis dipilih oleh mapel lain.</p>';
+    } else {
+        available.forEach(code => {
+            // Cek apakah materi ini milik Mapel yang sedang kita edit?
+            const currentMateriList = globalSettingsData[indukIdx].mapel[mapelIdx].materi || [];
+            const isChecked = currentMateriList.includes(code);
+
+            const div = document.createElement('div');
+            div.className = 'flex items-center hover:bg-gray-50 p-2 border-b last:border-b-0';
+            div.innerHTML = `
+                <input type="checkbox" id="chk-${code}" value="${code}" class="mr-3 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" ${isChecked ? 'checked' : ''}>
+                <label for="chk-${code}" class="text-sm text-gray-700 cursor-pointer flex-1 select-none font-medium">${code}</label>
+            `;
+            listContainer.appendChild(div);
+        });
+    }
+
+    document.getElementById('modal-pilih-materi').style.display = 'block';
+    document.getElementById('search-materi-input').value = '';
+    document.getElementById('search-materi-input').focus();
+}
+
+// Search filter di modal
+document.getElementById('search-materi-input')?.addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    const items = document.querySelectorAll('#list-materi-available div');
+    items.forEach(item => {
+        const text = item.innerText.toLowerCase();
+        item.style.display = text.includes(term) ? 'flex' : 'none';
+    });
+});
+
+document.getElementById('btn-confirm-materi')?.addEventListener('click', () => {
+    const checked = document.querySelectorAll('#list-materi-available input:checked');
+    const { induk, mapel } = currentEditingMapelIndex;
+    
+    checked.forEach(chk => {
+        globalSettingsData[induk].mapel[mapel].materi.push(chk.value);
+    });
+
+    document.getElementById('modal-pilih-materi').style.display = 'none';
+    renderSettingsUI();
+});
+
+// --- FUNGSI SIMPAN KE SERVER ---
+
+document.getElementById('btn-save-settings')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-save-settings');
+    const originalText = btn.textContent;
+    btn.textContent = 'Menyimpan...';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: 'saveMapelConfig', 
+                config: globalSettingsData 
+            })
+        });
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            showMessage('Pengaturan berhasil disimpan!', 'success');
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (e) {
+        showMessage('Gagal menyimpan: ' + e.message, 'error');
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+});
+
+// Listener global untuk halaman setting (Perbaikan Referensi Window)
+// Perbaikan 2: Gunakan window.addInduk karena fungsinya ditempel di window
+document.getElementById('btn-add-induk')?.addEventListener('click', window.addInduk);
+
+document.querySelector('#modal-pilih-materi .close-button')?.addEventListener('click', () => {
+    document.getElementById('modal-pilih-materi').style.display = 'none';
+});
     
 
 
