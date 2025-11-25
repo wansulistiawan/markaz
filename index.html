@@ -4434,35 +4434,28 @@ function setupExamListeners() {
             const jenisUjian = e.target.dataset.jenisUjian;
             const materiList = JSON.parse(e.target.dataset.materiList);
             
-            // Simpan data ujian ke variabel global
             currentExamData = { 
                 title: namaUjian, 
                 jenis: jenisUjian, 
                 materiList: materiList 
             };
             
-            // (PERBAIKAN) Tampilkan judul ujian yang benar di modal
             document.getElementById('exam-subject-title').textContent = namaUjian;
-            
-            // Tampilkan modal peringatan
             document.getElementById('exam-warning-modal').style.display = 'block';
         }
         
-        // Listener untuk tombol bantuan (tetap ada)
         if (e.target.classList.contains('help-btn')) {
             handleHelpClick(e.target);
         }
     });
 
-    // Listener untuk tombol "Batal" di modal peringatan
+    // Listener tombol Batal & Mulai di Modal Peringatan
     document.getElementById('cancel-exam-btn').addEventListener('click', () => {
         document.getElementById('exam-warning-modal').style.display = 'none';
     });
 
-    // Listener untuk tombol "Mulai" di modal peringatan
     document.getElementById('start-exam-btn').addEventListener('click', () => {
-        
-        // "Prime" audio agar bisa diputar nanti
+        // Unlock Audio
         if (alarmSound.paused) {
             alarmSound.play().then(() => {
                 alarmSound.pause();
@@ -4471,21 +4464,59 @@ function setupExamListeners() {
         }
         
         document.getElementById('exam-warning-modal').style.display = 'none';
-        enterFullscreen(document.documentElement); // Masuk fullscreen
-        startExam(); // Mulai proses ujian
+        enterFullscreen(document.documentElement);
+        startExam();
     });
 
-    // Listener untuk tombol "Selesai & Kirim Jawaban"
+    // === BAGIAN YANG DIPERBAIKI ===
     document.getElementById('submit-exam-btn').addEventListener('click', () => {
+        // 1. Validasi
         if (Object.keys(examAnswers).length < currentQuestions.length) {
             showCustomAlert('Harap jawab semua pertanyaan sebelum mengirim.');
             return;
         }
+
+        // 2. Konfirmasi
         showCustomConfirm('Konfirmasi Selesai Ujian', 'Apakah Anda yakin ingin mengirim jawaban Anda?', 'Ya, Kirim', 'Batal')
             .then(confirmed => {
                 if (confirmed) {
-                    exitFullscreen();
-                    calculateAndShowResult();
+                    // A. Matikan status ujian agar alarm tidak bunyi
+                    // (Kita simpan status asli dulu untuk keperluan Log jika diperlukan)
+                    const wasInProgress = isExamInProgress; 
+                    isExamInProgress = false; 
+                    
+                    // B. Keluar Fullscreen dengan aman (Cek dulu apakah sedang fullscreen)
+                    if (document.fullscreenElement || document.webkitFullscreenElement) {
+                        exitFullscreen();
+                    }
+
+                    // C. Gunakan setTimeout agar transisi layar selesai dulu, baru hitung nilai
+                    setTimeout(() => {
+                        try {
+                            // Panggil fungsi hitung nilai
+                            calculateAndShowResult();
+                            
+                            // Paksa kirim log "Ujian Selesai" manual di sini
+                            // karena isExamInProgress sudah false, log di dalam calculateAndShowResult mungkin skip
+                            const session = getActiveSession();
+                            if (session && wasInProgress) {
+                                fetch(CONFIG.SCRIPT_URL, {
+                                    method: 'POST',
+                                    body: JSON.stringify({
+                                        action: 'logUserActivity',
+                                        username: session.username,
+                                        profileName: session.userData.profileName,
+                                        actionType: 'UJIAN_SELESAI',
+                                        actionDetail: 'Santri menyelesaikan ujian secara normal.'
+                                    }),
+                                    keepalive: true
+                                });
+                            }
+                        } catch (error) {
+                            console.error("Error saat menghitung nilai:", error);
+                            alert("Terjadi kesalahan saat memproses nilai. Silakan panggil pengawas.");
+                        }
+                    }, 300); // Jeda 300ms (0.3 detik)
                 }
             });
     });
@@ -4759,27 +4790,26 @@ function updateNavBoxStatus(index, isAnswered) {
 
 async function startExam() {
     isExamInProgress = true;
-	showLoading();
+    showLoading();
+    
     const examContainer = document.getElementById('exam-container');
     const questionsContainer = document.getElementById('exam-questions');
     
-    // (PERBAIKAN) Judul diambil dari data global
+    // Set judul ujian
     document.getElementById('exam-subtitle').textContent = currentExamData.title; 
  
     let temporaryAnswers = {};
     const session = getActiveSession();
-
-    // (PERBAIKAN) Kunci cache adalah NAMA UJIAN (cth: "UAS Ganjil 2025")
     const cacheKey = currentExamData.title;
 
-    // Langkah 1: Cek progres tersimpan
+    // --- Langkah 1: Ambil Jawaban Sementara dari Server ---
     try {
         const tempAnswersResponse = await fetch(CONFIG.SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({
                 action: 'getTemporaryAnswers',
                 username: session.username,
-                kodeMateri: cacheKey // Menggunakan kunci cache baru
+                kodeMateri: cacheKey 
             }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
@@ -4788,20 +4818,17 @@ async function startExam() {
             temporaryAnswers = tempAnswersResult.answers;
         }
     } catch (e) {
-        console.warn("Gagal mengambil jawaban sementara, memulai sesi baru:", e);
+        console.warn("Gagal mengambil jawaban sementara:", e);
     }
 
-    // Fungsi inti yang akan menjalankan ujian
+    // --- Langkah 2: Proses Utama ---
     const startTheExamProcess = async () => {
         examContainer.classList.remove('hidden');
-        
-        const loadingHTML = `... (tunggu sebentar, sistem sedang menampilkan soal) ...`;
-        questionsContainer.innerHTML = loadingHTML;
+        questionsContainer.innerHTML = `... (sedang memuat soal) ...`;
 
         try {
-            // (PERBAIKAN) Mengirim 1 kode materi
+            // Ambil Soal
             let dataForSoal = { action: 'getBankSoal', kodeMateri: currentExamData.materiList[0] };
-
             const [soalResponse, nilaiResponse] = await Promise.all([
                 fetch(CONFIG.SCRIPT_URL, {
                     method: 'POST',
@@ -4817,36 +4844,41 @@ async function startExam() {
 
             const soalResult = await soalResponse.json();
             const nilaiResult = await nilaiResponse.json();
+            
             if (soalResult.status !== 'success') throw new Error(soalResult.message);
             if (nilaiResult.status !== 'success') throw new Error(nilaiResult.message);
             
             currentQuestions = soalResult.questions;
             currentAttemptHistory = nilaiResult.nilai[currentExamData.materiList[0]] || null;
             
-            if (currentQuestions.length === 0) {
-                throw new Error("Tidak ada soal yang ditemukan untuk materi ini.");
-            }
-
+            // Gabungkan jawaban server ke lokal
             examAnswers = temporaryAnswers; 
             if(Object.keys(examAnswers).length > 0) {
-                showMessage('Progres sebelumnya berhasil dipulihkan.', 'success');
+                showMessage('Jawaban tersimpan berhasil dipulihkan.', 'success');
             }
         } catch (error) {
             questionsContainer.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat soal: ${error.message}</p>`;
             isExamInProgress = false; 
+            hideLoading();
             return;
         }
         
+        // Reset tampilan
         questionsContainer.innerHTML = '';
         restoreHelpState(examAnswers, currentQuestions);
         renderExamNavGrid(currentQuestions, examAnswers);
 
-        // Render soal (PG dan Isian)
+        // ============================================================
+        // TAHAP 1: BUAT HTML (RENDER) - AMAN DARI TANDA KUTIP
+        // ============================================================
+        let fullExamHTML = '';
+
         currentQuestions.forEach((q, index) => {
             const questionId = `q${index}`;
             const questionKey = q.q; 
             let answerInputHtml = ''; 
             
+            // --- Logika Tombol Bantuan ---
             let helpButtonHtml = '';
             const isHelpUsed = helpUsedOnQuestion[questionKey] === true;
             let helpState = isHelpUsed ? 'disabled' : 'available';
@@ -4855,104 +4887,140 @@ async function startExam() {
             if (!isHelpUsed) { 
                 if (q.j === 'PG' && helpPgUsedCount >= HELP_PG_LIMIT) {
                     helpState = 'disabled';
-                    helpTooltip = 'Bantuan 50/50 Habis';
+                    helpTooltip = 'Bantuan Habis';
                 }
                 if (q.j === 'Isian' && helpIsianUsedCount >= HELP_ISIAN_LIMIT) {
                     helpState = 'disabled';
-                    helpTooltip = 'Bantuan Petunjuk Habis';
+                    helpTooltip = 'Bantuan Habis';
                 }
             }
+            
             helpButtonHtml = `
                 <div class="help-button-container">
                     <button class="help-btn help-btn-${helpState}" 
                             data-type="${q.j}" 
                             data-index="${index}" 
-                            data-question-key="${questionKey}"
+                            data-question-key="${questionKey.replace(/"/g, '&quot;')}" 
                             ${isHelpUsed ? 'disabled' : ''}>
-                        💡
-                        <span class="help-tooltip">${helpTooltip}</span>
+                        💡 <span class="help-tooltip">${helpTooltip}</span>
                     </button>
-                </div>
-            `;
+                </div>`;
 
+            // --- Logika Input Jawaban (Safe Render) ---
             if (q.j === 'PG') {
+                // Acak opsi
                 const shuffledOptions = [...q.o].sort(() => Math.random() - 0.5);
+                
                 shuffledOptions.forEach((option, i) => {
                     const optionId = `q${index}_opt${i}`;
-                    answerInputHtml += `<label for="${optionId}" class="answer-option"><input type="radio" name="${questionId}" id="${optionId}" value="${option}"><span>${String.fromCharCode(65 + i)}. ${option}</span></label>`;
+                    // PENTING: Aman dari tanda kutip agar HTML tidak pecah
+                    const safeValue = String(option).replace(/"/g, '&quot;'); 
+                    
+                    answerInputHtml += `
+                    <label for="${optionId}" class="answer-option">
+                        <input type="radio" name="${questionId}" id="${optionId}" value="${safeValue}">
+                        <span>${String.fromCharCode(65 + i)}. ${option}</span>
+                    </label>`;
                 });
             } else {
                 answerInputHtml = `<textarea class="answer-isian w-full p-3 border rounded-md" rows="4" placeholder="Ketik jawaban Anda di sini..."></textarea>`;
             }
-            questionsContainer.innerHTML += `
+
+            fullExamHTML += `
                 <div class="question-block" id="${questionId}_block">
-                    ${helpButtonHtml} 
+                    ${helpButtonHtml}
                     <div class="flex justify-between items-start">
                         <p class="text-lg font-semibold mb-4 flex-1">${index + 1}. ${q.q}</p>
                         <span class="text-sm font-bold text-gray-500 ml-4">${q.p || 4} Poin</span>
                     </div>
                     <div class="answer-options">${answerInputHtml}</div> 
-                </div>
-            `;
-            
+                </div>`;
+        });
+
+        // Masukkan ke layar SEKALI SAJA
+        questionsContainer.innerHTML = fullExamHTML;
+
+        // ============================================================
+        // TAHAP 2: RESTORE NILAI & LISTENER (ANTI-CRASH)
+        // ============================================================
+        currentQuestions.forEach((q, index) => {
+            const questionId = `q${index}`;
+            const questionKey = q.q;
+            const questionBlock = document.getElementById(`${questionId}_block`);
+            if (!questionBlock) return;
+
+            // A. RESTORE JAWABAN (Metode Aman Anti-Crash)
             const savedAnswerForThisQuestion = examAnswers[questionKey];
-            if (savedAnswerForThisQuestion) {
+            
+            if (savedAnswerForThisQuestion !== undefined && savedAnswerForThisQuestion !== null) {
                 if (q.j === 'PG') {
-                    const radioToCheck = document.querySelector(`input[name="q${index}"][value="${savedAnswerForThisQuestion}"]`);
-                    if (radioToCheck) { radioToCheck.checked = true; document.querySelector(`label[for="${radioToCheck.id}"]`).classList.add('selected'); }
+                    // Ambil semua radio button di soal ini
+                    const radios = questionBlock.querySelectorAll(`input[name="${questionId}"]`);
+                    
+                    // Loop manual (ini jauh lebih aman daripada querySelector value)
+                    radios.forEach(radio => {
+                        // Bandingkan sebagai String untuk keamanan maksimal
+                        if (String(radio.value) === String(savedAnswerForThisQuestion)) {
+                            radio.checked = true;
+                            // Update visual (warna biru)
+                            const label = questionBlock.querySelector(`label[for="${radio.id}"]`);
+                            if (label) label.classList.add('selected');
+                        }
+                    });
                 } else {
-                    const textarea = document.querySelector(`#${questionId}_block textarea`);
+                    // Untuk soal isian
+                    const textarea = questionBlock.querySelector('textarea');
                     if (textarea) textarea.value = savedAnswerForThisQuestion;
                 }
             }
             
-            if (isHelpUsed && q.j === 'PG') {
+            // B. RESTORE EFEK BANTUAN (Jika pernah dipakai)
+            if (helpUsedOnQuestion[questionKey] === true && q.j === 'PG') {
                 applyPgHelp(index);
             }
-        });
-        
-        // (Listener auto-save)
-        currentQuestions.forEach((q, index) => {
-            const questionBlock = document.getElementById(`q${index}_block`);
-            if (!questionBlock) return;
-            const questionTextKey = q.q; 
+
+            // C. PASANG EVENT LISTENER (Auto-save)
             if (q.j === 'PG') {
                 const radioButtons = questionBlock.querySelectorAll('input[type="radio"]');
                 radioButtons.forEach(radio => {
                     radio.addEventListener('change', (e) => {
-                        examAnswers[questionTextKey] = e.target.value; 
+                        examAnswers[questionKey] = e.target.value; 
                         logAction('JAWAB_SOAL', `Menjawab soal no. ${index + 1}`);
                         updateNavBoxStatus(index, true); 
+                        
                         fetch(CONFIG.SCRIPT_URL, {
                             method: 'POST',
                             body: JSON.stringify({
                                 action: 'saveTemporaryAnswer',
                                 username: session.username,
                                 kodeMateri: cacheKey, 
-                                kunciSoal: questionTextKey, 
+                                kunciSoal: questionKey, 
                                 jawaban: e.target.value
                             }),
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                             keepalive: true
                         });
-                        document.querySelectorAll(`label[for^="q${index}_opt"]`).forEach(label => label.classList.remove('selected'));
-                        document.querySelector(`label[for="${e.target.id}"]`).classList.add('selected');
+
+                        const allLabels = questionBlock.querySelectorAll('.answer-option');
+                        allLabels.forEach(label => label.classList.remove('selected'));
+                        const selectedLabel = questionBlock.querySelector(`label[for="${e.target.id}"]`);
+                        if(selectedLabel) selectedLabel.classList.add('selected');
                     });
                 });
             } else {
                 const textarea = questionBlock.querySelector('textarea');
                 if (textarea) {
                     textarea.addEventListener('input', (e) => { 
-                        examAnswers[questionTextKey] = e.target.value; 
-                        logAction('JAWAB_SOAL', `Mengetik jawaban soal no. ${index + 1} (Isian)`);
+                        examAnswers[questionKey] = e.target.value; 
                         updateNavBoxStatus(index, e.target.value.trim() !== '');
+                        
                         fetch(CONFIG.SCRIPT_URL, {
                             method: 'POST',
                             body: JSON.stringify({
                                 action: 'saveTemporaryAnswer',
                                 username: session.username,
                                 kodeMateri: cacheKey, 
-                                kunciSoal: questionTextKey, 
+                                kunciSoal: questionKey, 
                                 jawaban: e.target.value
                             }),
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -4962,30 +5030,31 @@ async function startExam() {
                 }
             }
         });
+        
+        hideLoading();
     };
 
-    // (Logika kata sandi - tetap sama)
+    // --- Logika Kata Sandi (Resume Ujian) ---
     if (Object.keys(temporaryAnswers).length > 0) {
         const password = String(Math.floor(10000 + Math.random() * 90000));
-        logAction('AKSES_LANJUTAN', `Santri mencoba melanjutkan ujian. Kata sandi: ${password}`);
+        logAction('AKSES_LANJUTAN', `Melanjutkan ujian. Sandi: ${password}`);
         
         const modal = document.getElementById('teacherPasswordModal');
         const input = document.getElementById('teacherPasswordInput');
         const submitBtn = document.getElementById('submitTeacherPasswordBtn');
         const cancelBtn = document.getElementById('cancelTeacherPasswordBtn');
         input.value = '';
-		hideLoading(); 
+        
+        hideLoading(); 
         modal.style.display = 'block';
 
         const submitHandler = () => {
             if (input.value === password) {
                 modal.style.display = 'none';
-                logAction('AKSES_DIBERIKAN', `Kata sandi benar.`);
                 startTheExamProcess(); 
                 cleanupListeners(); 
             } else {
-                logAction('AKSES_DITOLAK', `Santri salah memasukkan kata sandi.`);
-                showMessage('Kata sandi salah. Silakan minta lagi dari pengawas.', 'error');
+                showMessage('Kata sandi salah.', 'error');
             }
         };
         const cancelHandler = () => {
@@ -4997,11 +5066,18 @@ async function startExam() {
             submitBtn.removeEventListener('click', submitHandler);
             cancelBtn.removeEventListener('click', cancelHandler);
         };
-        submitBtn.addEventListener('click', submitHandler);
-        cancelBtn.addEventListener('click', cancelHandler);
+        
+        // Clone button agar event listener tidak menumpuk
+        let newSubmitBtn = submitBtn.cloneNode(true);
+        let newCancelBtn = cancelBtn.cloneNode(true);
+        submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        
+        newSubmitBtn.addEventListener('click', submitHandler);
+        newCancelBtn.addEventListener('click', cancelHandler);
         
     } else {
-		hideLoading(); 
+        hideLoading(); 
         logAction('UJIAN_DIMULAI', currentExamData.title);
         startTheExamProcess();
     }
@@ -5034,7 +5110,7 @@ function getLevenshteinDistance(a, b) {
 }
 
 function calculateAndShowResult() {
-    
+    // 1. Bersihkan UI & Audio
     document.getElementById('exam-nav-grid-container').innerHTML = '';
     alarmSound.pause();
     alarmSound.currentTime = 0;
@@ -5045,82 +5121,112 @@ function calculateAndShowResult() {
     
     const detailJawabanUntukDisimpan = [];
 
+    // 2. Loop Perhitungan Nilai
     currentQuestions.forEach((q, index) => {
-        const poinSoal = q.p || 4; 
+        const poinSoal = parseFloat(q.p) || 4; 
         totalPoinMaksimal += poinSoal;
 
         const questionKey = q.q;
-        const jawabanSantri = examAnswers[questionKey] || ""; 
-        const kunciJawabanString = q.a || "";
+        
+        // === PERBAIKAN UTAMA DI SINI (String Casting) ===
+        // Paksa ubah ke String agar fungsi .toLowerCase() tidak error pada angka
+        const jawabanSantri = String(examAnswers[questionKey] || ""); 
+        const kunciJawabanString = String(q.a || ""); 
+        
         const wasHelpUsed = helpUsedOnQuestion[questionKey] === true;
         let poinDidapat = 0;
 
         if (q.j === 'PG') { 
+            // Logika PG (Case Insensitive & Trimmed)
             if (jawabanSantri.toLowerCase().trim() === kunciJawabanString.toLowerCase().trim()) {
                 poinDidapat = poinSoal;
             }
         } else { 
+            // Logika Isian (Fuzzy Match / Typo Tolerance)
             const jawabanSantriNorm = jawabanSantri.toLowerCase().trim();
-            const kunciList = kunciJawabanString.toLowerCase().split(/[/|()]/).map(s => s.trim()).filter(Boolean);
+            
+            // Pecah kunci jawaban berdasarkan pemisah / atau | atau ()
+            const kunciList = kunciJawabanString.toLowerCase().split(/[/|()]+/).map(s => s.trim()).filter(Boolean);
+            
             let foundPerfectMatch = false;
             let foundTypoMatch = false;
-            if (kunciList.includes(jawabanSantriNorm)) { foundPerfectMatch = true; }
+
+            // Cek Perfect Match
+            if (kunciList.includes(jawabanSantriNorm)) { 
+                foundPerfectMatch = true; 
+            }
+            
+            // Cek Typo (Levenshtein) jika tidak perfect match
             if (!foundPerfectMatch) {
                 for (const kunci of kunciList) {
+                    // Hanya toleransi typo jika kunci jawaban lebih dari 3 huruf
                     if (kunci.length > 3) { 
                         const distance = getLevenshteinDistance(jawabanSantriNorm, kunci);
+                        // Toleransi: 2 huruf untuk kata panjang (>8), 1 huruf untuk kata pendek
                         const toleransiTypo = (kunci.length > 8) ? 2 : 1;
-                        if (distance <= toleransiTypo) { foundTypoMatch = true; break; }
+                        
+                        if (distance <= toleransiTypo) { 
+                            foundTypoMatch = true; 
+                            break; 
+                        }
                     }
                 }
             }
-            if (foundPerfectMatch) { poinDidapat = poinSoal; } 
-            else if (foundTypoMatch) { poinDidapat = (poinSoal * 0.75); }
+
+            if (foundPerfectMatch) { 
+                poinDidapat = poinSoal; 
+            } else if (foundTypoMatch) { 
+                poinDidapat = (poinSoal * 0.75); // Diskon 25% jika typo
+            }
         }
 
+        // Kurangi poin jika menggunakan bantuan
         if (wasHelpUsed && poinDidapat > 0) {
             poinDidapat = (poinSoal * 0.5); 
         }
+        
         totalPoinSantri += poinDidapat;
         
+        // Siapkan data untuk disimpan ke database detail
         detailJawabanUntukDisimpan.push({
             nomorSoal: index + 1,
             isiSoal: q.q,
-            pilihan: q.j === 'PG' ? q.o : [], 
+            pilihan: q.j === 'PG' ? "" : "", // Hemat memori (opsional)
             jawabanSantri: jawabanSantri,
             kunciJawaban: kunciJawabanString
         });
     });
 
+    // 3. Hitung Skor Akhir (Skala 100)
     const score = totalPoinMaksimal > 0 ? Math.round((totalPoinSantri / totalPoinMaksimal) * 100) : 0;
     
+    // 4. Logika Remedial / Percobaan
     let finalScore;
     const previousAttempts = currentAttemptHistory ? currentAttemptHistory.percobaan : 0;
     const firstScore = (previousAttempts > 0 && currentAttemptHistory) ? currentAttemptHistory.skor : score;
-    
     const isRemedial = previousAttempts === 1;
 
     if (previousAttempts > 0) {
         const highestPreviousScore = currentAttemptHistory.skorAkhir || currentAttemptHistory.skor || 0;
         let remedialScore = score; 
+        // Batas nilai maksimal remedial adalah 80 (Kecuali kebijakan lain)
         if (remedialScore > 80) { remedialScore = 80; }
-		finalScore = Math.max(highestPreviousScore, remedialScore);
+        finalScore = Math.max(highestPreviousScore, remedialScore);
     } else {
         finalScore = score;
     }
     
+    // 5. Kirim Log Aktivitas
     if(isForceSubmit) {
         logAction('UJIAN_DIAKHIRI_PAKSA', `Pelanggaran ke-${fullscreenExitCount}`);
     } else {
         logAction('UJIAN_SELESAI', `Skor Akhir: ${finalScore}`);
     }
-	
-    const resultScoreEl = document.getElementById('result-score');
-    const resultMessageEl = document.getElementById('result-message');
-    const resultActionsEl = document.getElementById('result-actions');
+    
+    // 6. Simpan ke Server (Apps Script)
     const session = getActiveSession();
     
-    // 1. Simpan Rincian Jawaban (Untuk Semua Jenis Ujian)
+    // A. Simpan Detail Jawaban (Background Process)
     fetch(CONFIG.SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({
@@ -5132,10 +5238,8 @@ function calculateAndShowResult() {
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
     }).catch(err => console.error("Gagal menyimpan rincian jawaban:", err));
 
-    // 2. Simpan Skor Akhir (PERBAIKAN: DIJALANKAN UNTUK SEMUA JENIS UJIAN)
-    // (Kita menghapus blok if (!isGabungan) agar UAS pun tersimpan nilainya)
-    
-    const kodeMateriUntukNilai = currentExamData.materiList[0]; // Selalu simpan ke kode materi (misal: IPA-204)
+    // B. Simpan Nilai Akhir (Penting)
+    const kodeMateriUntukNilai = currentExamData.materiList[0]; 
     const judulMateriUntukNilai = currentExamData.title;
     const jenisUjianUntukNilai = currentExamData.jenis || 'Bulanan'; 
 
@@ -5160,6 +5264,10 @@ function calculateAndShowResult() {
         }
     }).catch(err => console.error("Error saat menyimpan nilai:", err));
 
+    // 7. Tampilkan Hasil ke UI (Modal)
+    const resultScoreEl = document.getElementById('result-score');
+    const resultMessageEl = document.getElementById('result-message');
+    const resultActionsEl = document.getElementById('result-actions');
 
     resultScoreEl.textContent = finalScore;
     
@@ -5189,10 +5297,12 @@ function calculateAndShowResult() {
         }
     }
 
+    // Sembunyikan ujian, tampilkan hasil
     document.getElementById('exam-container').classList.add('hidden');
     document.getElementById('exam-result-modal').style.display = 'block';
-	
-	isExamInProgress = false;
+    
+    // Matikan status ujian secara lokal
+    isExamInProgress = false;
 }
 
 function closeResultModal() {
