@@ -22,23 +22,742 @@
 
     <!-- Bagian CSS untuk Styling -->
     <style>
-        :root {
-            --primary-color: #2c5e2e;
-            --secondary-color: #ffc107;
-            --light-gray: #f8f9fa;
-            --dark-gray: #343a40;
-            --success-color: #28a745;
-            --error-color: #dc3545;
-            --info-color: #0d6efd; 
-            --info-color-hover: #0b5ed7;
-			/* Variabel CSS dari jadwalsholat.html */
-            --sky-day: linear-gradient(to top, #87CEEB 0%, #3a94c4 100%);
-            --sky-night: linear-gradient(to top, #465270 0%, #191d2e 100%);
-            --danger-color: #dc3545;
-            --highlight-bg: #e6ffed;
-            --highlight-border: #a3d9b1;
-            --highlight-text: #28a745;
-        }
+	@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+	@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
+	@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
+	
+        /* --- VARIABEL TEMA (DEFAULT / LIGHT) --- */
+:root {
+    --primary-color: #2c5e2e;       /* Hijau Tua */
+    --secondary-color: #ffc107;     /* Kuning Emas */
+    --bg-color: #f8f9fa;            /* Abu-abu sangat muda (Background utama) */
+    --text-color: #343a40;          /* Hitam keabuan (Teks utama) */
+    --card-bg: #ffffff;             /* Putih (Kartu/Kontainer) */
+    --border-color: #e9ecef;        /* Garis batas halus */
+    --success-color: #28a745;
+    --error-color: #dc3545;
+    --info-color: #0d6efd;
+    --info-color-hover: #0b5ed7;
+    /* Header Background Pattern (Opsional untuk tema khusus) */
+    --header-bg-image: none; 
+}
+
+/* --- TEMA DARK MODE --- */
+[data-theme="dark"] {
+    /* Warna Utama: Hijau Tua (Sesuai permintaan) */
+    --primary-color: #15803d;       
+    --secondary-color: #b45309;     
+    
+    /* Background Total Hitam */
+    --bg-color: #000000;            
+    --card-bg: #121212; /* Sedikit lebih terang dari hitam agar kartu terlihat */
+    
+    /* Teks: Putih */
+    --text-color: #e5e7eb;          
+    
+    /* Border: Abu-abu gelap */
+    --border-color: #27272a;        
+    
+    --info-color: #1d4ed8;
+    --info-color-hover: #1e40af;
+    --header-bg-image: none;
+}
+
+/* === ATURAN KHUSUS MODE GELAP (OVERRIDES) === */
+
+/* 1. MENGATASI BAGIAN PUTIH DI KANAN KIRI (Background HTML) */
+[data-theme="dark"] html, 
+[data-theme="dark"] body {
+    background-color: #000000 !important;
+    color: var(--text-color);
+    min-height: 100vh;
+}
+
+/* 2. MENGUBAH WARNA BACKGROUND CARD/HEADER/NAV/FORM/DLL */
+[data-theme="dark"] .card, 
+[data-theme="dark"] .section, 
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] header, 
+[data-theme="dark"] footer,
+[data-theme="dark"] .nav-wrapper,
+[data-theme="dark"] .custom-form,       /* INI YANG LEWAT KEMARIN (Formulir) */
+[data-theme="dark"] .fundraising-card,  /* Kartu Donasi */
+[data-theme="dark"] .calendar-month,    /* Kotak Kalender */
+[data-theme="dark"] .santri-proctor-card, /* Kartu Pengawas */
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] .bg-gray-50,
+[data-theme="dark"] .bg-gray-100,
+[data-theme="dark"] .bg-blue-50,        /* Background kebiruan */
+[data-theme="dark"] .bg-yellow-50,      /* Background kekuningan */
+[data-theme="dark"] .bg-red-50          /* Background kemerahan */
+{
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+    box-shadow: none !important; /* Hilangkan bayangan putih jika ada */
+    border: 1px solid var(--border-color) !important; /* Pastikan ada garis tepi */
+}
+
+/* Perbaikan khusus untuk Role Selector (Pilihan Guru/Staf/Rapat) agar garisnya tidak terang */
+[data-theme="dark"] .role-selector {
+    border-color: var(--border-color) !important;
+}
+
+/* 3. PERBAIKAN TABEL (MENGUBAH KOLOM 'PUTIH' JADI GELAP) */
+/* Mengubah .bg-blue-50 (kolom Nilai Praktek) menjadi Biru Gelap/Hitam */
+[data-theme="dark"] .bg-blue-50 {
+    background-color: #172554 !important; /* Biru Gelap */
+    color: #ffffff !important;
+    border-color: #1e3a8a !important;
+}
+
+/* Mengubah header tabel agar tidak belang */
+[data-theme="dark"] table thead th {
+    background-color: #18181b !important; /* Abu Gelap */
+    color: #ffffff !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Memastikan semua sel tabel teksnya putih */
+[data-theme="dark"] table td {
+    color: #e5e7eb !important;
+    border-color: var(--border-color) !important;
+}
+
+/* 4. PERBAIKAN INPUT FORM (AGAR TIDAK SILAU) */
+[data-theme="dark"] input, 
+[data-theme="dark"] select, 
+[data-theme="dark"] textarea {
+    background-color: #000000 !important; /* Hitam Pekat */
+    color: #ffffff !important;
+    border: 1px solid #52525b !important;
+}
+
+/* Input Nilai Praktek di Tabel (Biasanya putih, kita ubah hitam) */
+[data-theme="dark"] input.input-praktek {
+    background-color: #000000 !important;
+    color: #4ade80 !important; /* Teks hijau terang agar jelas */
+    font-weight: bold;
+    border: 1px solid #15803d !important;
+}
+
+/* 5. TOMBOL & ELEMEN LAIN */
+[data-theme="dark"] .submit-btn,
+[data-theme="dark"] button.bg-blue-600,
+[data-theme="dark"] button.bg-green-600 {
+    background-color: var(--primary-color) !important; 
+    color: white !important;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+[data-theme="dark"] button.bg-gray-500,
+[data-theme="dark"] button.bg-gray-400 {
+    background-color: #27272a !important; /* Tombol abu-abu jadi gelap */
+    border: 1px solid #52525b;
+}
+
+/* Nilai KHS (Angka Hijau/Merah) agar lebih terang di background hitam */
+[data-theme="dark"] .text-green-600,
+[data-theme="dark"] .text-green-700 { color: #4ade80 !important; } /* Hijau Neon */
+[data-theme="dark"] .text-red-600,
+[data-theme="dark"] .text-red-700 { color: #f87171 !important; } /* Merah Muda */
+[data-theme="dark"] .text-blue-600,
+[data-theme="dark"] .text-blue-700 { color: #60a5fa !important; } /* Biru Muda */
+
+/* --- TEMA FREE PALESTINE --- */
+[data-theme="palestine"] {
+    /* Warna Bendera */
+    --primary-color: #000000;       /* Hitam (Navigasi) */
+    --secondary-color: #E4312b;     /* Merah (Tombol) */
+    --accent-color: #009736;        /* Hijau (Aksen) */
+    
+    --bg-color: #ffffff;            
+    --card-bg: #f8f9fa;             
+    --text-color: #212529;          
+    --border-color: #dee2e6;        
+    
+    --info-color: #009736;          
+    --info-color-hover: #007a2b;
+    
+    /* Gambar Header Baru (Dari Link Anda) */
+    --header-bg-image: url('https://www.shutterstock.com/image-photo/palestine-flag-blue-sky-horizontal-260nw-1853430658.jpg');
+}
+
+/* === KUSTOMISASI KHUSUS TEMA PALESTINE === */
+
+/* 1. Mengubah Font Menjadi 'Cairo' Khusus Tema Ini */
+[data-theme="palestine"] body {
+    font-family: 'Cairo', sans-serif !important;
+}
+
+/* 2. Pengaturan Header Gambar agar Pas */
+[data-theme="palestine"] header {
+    background-image: var(--header-bg-image) !important;
+    background-size: cover !important;   /* Memenuhi area header */
+    background-position: center 50% !important; /* Mengatur posisi fokus gambar */
+    background-repeat: no-repeat !important;
+    border-bottom: 5px solid var(--accent-color) !important; /* Garis Hijau Tebal */
+    color: #fff !important; /* Teks di header jadi putih agar terbaca di atas gambar */
+    text-shadow: 0 2px 4px rgba(0,0,0,0.9); /* Bayangan teks agar kontras */
+}
+
+/* Memastikan teks di dalam header (judul & subjudul) berwarna putih */
+[data-theme="palestine"] header h1,
+[data-theme="palestine"] header p {
+    color: #ffffff !important;
+}
+
+/* 3. Navbar & Footer (Tetap Nuansa Bendera) */
+[data-theme="palestine"] .nav-wrapper {
+    background-color: #000000 !important; 
+    border-top: 4px solid #E4312b !important; 
+}
+
+[data-theme="palestine"] footer {
+    background-color: #000000 !important; 
+    color: #ffffff !important;
+    border-top: 5px solid #E4312b !important; 
+    position: relative;
+}
+[data-theme="palestine"] footer::after {
+    content: '';
+    display: block;
+    height: 6px;
+    background-color: #009736; 
+    width: 100%;
+    position: absolute;
+    bottom: 0; left: 0;
+}
+
+/* 4. Tombol-Tombol */
+[data-theme="palestine"] .submit-btn,
+[data-theme="palestine"] #loginButton,
+[data-theme="palestine"] .auth-button {
+    background-color: var(--secondary-color) !important; /* Merah */
+    color: white !important;
+    border-radius: 4px; 
+}
+
+/* 5. Kartu (Border Merah di Kiri) */
+[data-theme="palestine"] .card,
+[data-theme="palestine"] .section {
+    border-left: 5px solid var(--secondary-color) !important; 
+}
+
+/* 6. Judul Halaman dengan Ikon Semangka */
+[data-theme="palestine"] h2 {
+    color: #000000 !important;
+    border-bottom-color: var(--accent-color) !important; 
+}
+[data-theme="palestine"] h2::before {
+    content: '✊ ';    /* Tangan Mengepal */
+    font-size: 1.2em;
+    margin-right: 8px;
+    color: var(--secondary-color); /* Mengikuti warna Merah tema */
+    /* Atau ubah color jadi #000000 untuk tangan hitam */
+    vertical-align: middle;
+}
+
+/* --- TEMA IDUL FITRI (Hijau Ketupat & Emas) --- */
+[data-theme="idul-fitri"] {
+    /* Palet Warna Mewah */
+    --primary-color: #064e3b;       /* Hijau Zamrud Gelap (Emerald) */
+    --secondary-color: #d4af37;     /* Emas Metalik (Gold) */
+    --accent-color: #000000;        /* Hitam untuk kontras */
+    
+    /* Latar Belakang dengan Nuansa Krem/Emas Sangat Muda */
+    --bg-color: #fdfcf5;            
+    --card-bg: #ffffff;             
+    
+    /* Teks */
+    --text-color: #1a1a1a;          
+    --border-color: #d4af37;        /* Border Emas */
+    
+    --info-color: #059669;
+    --info-color-hover: #047857;
+    
+    /* Gambar Header Baru (Lantern) */
+    --header-bg-image: url('https://cdn.vectorstock.com/i/500p/87/35/luxury-white-golden-mandala-and-hanging-lamps-eid-vector-55868735.jpg');
+}
+
+/* === KUSTOMISASI KHUSUS TEMA IDUL FITRI === */
+
+/* 1. Font & Ornamen Body */
+[data-theme="idul-fitri"] body {
+    font-family: 'Amiri', serif !important;
+    font-size: 1.05rem; /* Font ini agak kecil, jadi kita besarkan sedikit */
+    
+    /* Menambahkan Pola Ornamen Arab Halus di Background Body */
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* 2. Header Mewah dengan Emas */
+[data-theme="idul-fitri"] header {
+    background-image: var(--header-bg-image) !important;
+    background-size: cover !important;
+    background-position: center bottom !important;
+    background-repeat: no-repeat !important;
+    border-bottom: 4px double var(--secondary-color) !important; /* Garis ganda emas */
+    color: #ffffff !important; /* Teks Putih agar terbaca di background gelap gambar */
+    text-shadow: 2px 2px 4px #000000; /* Bayangan hitam agar teks menonjol */
+}
+
+/* Memastikan teks judul putih & berbayang emas */
+[data-theme="idul-fitri"] header h1 {
+    color: #ffffff !important;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.8), 2px 2px 4px #000000;
+}
+
+/* 3. Navbar Hijau & Emas */
+[data-theme="idul-fitri"] .nav-wrapper {
+    background-color: var(--primary-color) !important; /* Hijau Zamrud */
+    border-top: 2px solid var(--secondary-color) !important;
+    border-bottom: 2px solid var(--secondary-color) !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* Menu Aktif/Hover jadi Emas */
+[data-theme="idul-fitri"] nav a:hover,
+[data-theme="idul-fitri"] nav a.active {
+    background-color: var(--secondary-color) !important;
+    color: #000000 !important;
+    font-weight: bold;
+}
+
+/* 4. Footer Hitam dengan Ornamen Emas */
+[data-theme="idul-fitri"] footer {
+    background-color: #000000 !important; /* Hitam */
+    color: var(--secondary-color) !important; /* Teks Emas */
+    border-top: 4px double var(--secondary-color) !important;
+}
+
+/* 5. Tombol-Tombol Elegan */
+[data-theme="idul-fitri"] .submit-btn,
+[data-theme="idul-fitri"] #loginButton,
+[data-theme="idul-fitri"] .auth-button {
+    background-color: var(--primary-color) !important; /* Hijau */
+    color: var(--secondary-color) !important; /* Teks Emas */
+    border: 1px solid var(--secondary-color);
+    font-family: 'Amiri', serif;
+    letter-spacing: 1px;
+}
+
+[data-theme="idul-fitri"] .submit-btn:hover,
+[data-theme="idul-fitri"] #loginButton:hover {
+    background-color: var(--secondary-color) !important; /* Hover jadi Emas */
+    color: var(--primary-color) !important; /* Teks jadi Hijau */
+}
+
+/* 6. Kartu dengan Sudut Ornamen */
+[data-theme="idul-fitri"] .card,
+[data-theme="idul-fitri"] .section {
+    border: 1px solid var(--secondary-color) !important;
+    border-radius: 8px 8px 0 0; /* Atas melengkung, bawah tajam */
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15); /* Bayangan Emas Halus */
+}
+
+/* Dekorasi Judul Halaman (Kubah Masjid Kecil) */
+[data-theme="idul-fitri"] h2 {
+    color: var(--primary-color) !important;
+    border-bottom: 2px solid var(--secondary-color) !important;
+    text-align: center; /* Judul di tengah agar ornamen simetris */
+    position: relative;
+    padding-bottom: 15px;
+}
+
+/* Ikon Bulan Sabit di atas Judul */
+[data-theme="idul-fitri"] h2::before {
+    content: '☪'; 
+    display: block;
+    font-size: 1.5rem;
+    color: var(--secondary-color);
+    margin-bottom: 5px;
+}
+
+/* --- TEMA IDUL ADHA (Coklat Tanah & Krem) --- */
+[data-theme="idul-adha"] {
+    /* Palet Warna Bumi & Sakral */
+    --primary-color: #5d4037;       /* Coklat Kopi (Coffee Brown) */
+    --secondary-color: #b45309;     /* Emas Tembaga (Dark Amber) */
+    --accent-color: #ffecb3;        /* Krem Kekuningan */
+    
+    /* Latar Belakang Krem Lembut */
+    --bg-color: #fff8e1;            
+    --card-bg: #ffffff;             
+    
+    /* Teks Coklat Gelap */
+    --text-color: #3e2723;          
+    --border-color: #d7ccc8;        
+    
+    --info-color: #8d6e63;
+    --info-color-hover: #6d4c41;
+    
+    /* Gambar Header Baru (Sapi/Kambing/Nuansa Islami) */
+    --header-bg-image: url('https://t3.ftcdn.net/jpg/08/40/29/82/360_F_840298298_qg5jQohBcgK8HBehRDWzDbWsaYA4tOTb.jpg');
+}
+
+/* === KUSTOMISASI KHUSUS TEMA IDUL ADHA === */
+
+/* 1. Font & Pola Background */
+[data-theme="idul-adha"] body {
+    font-family: 'Amiri', serif !important; /* Menggunakan font Arab-Latin yang sama dg Idul Fitri */
+    font-size: 1.05rem;
+    
+    /* Pola Belah Ketupat / Geometris Islam Coklat Transparan */
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%235d4037' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M0 20L20 0l20 20-20 20z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* 2. Header Gambar */
+[data-theme="idul-adha"] header {
+    background-image: var(--header-bg-image) !important;
+    background-size: cover !important;
+    background-position: center 80% !important; /* Fokus tengah */
+    background-repeat: no-repeat !important;
+    border-bottom: 5px solid var(--secondary-color) !important; /* Garis Tembaga Tebal */
+    color: #ffffff !important;
+    text-shadow: 2px 2px 8px #000000; /* Bayangan kuat agar teks putih terbaca di gambar terang */
+}
+
+/* Memastikan Judul Terlihat Jelas */
+[data-theme="idul-adha"] header h1 {
+    color: #ffffff !important;
+    text-shadow: 0 0 10px rgba(0,0,0,0.8), 2px 2px 4px #3e2723;
+}
+
+/* 3. Navbar Coklat Elegan */
+[data-theme="idul-adha"] .nav-wrapper {
+    background-color: var(--primary-color) !important; /* Coklat Tua */
+    border-top: 2px solid var(--secondary-color) !important; /* Garis Emas di atas */
+    border-bottom: 1px solid #3e2723 !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+/* Menu Aktif jadi Tembaga */
+[data-theme="idul-adha"] nav a:hover,
+[data-theme="idul-adha"] nav a.active {
+    background-color: var(--secondary-color) !important;
+    color: #ffffff !important;
+    font-weight: bold;
+}
+
+/* 4. Footer Coklat Sangat Gelap */
+[data-theme="idul-adha"] footer {
+    background-color: #3e2723 !important; 
+    color: #ffecb3 !important; /* Teks Krem */
+    border-top: 4px solid var(--secondary-color) !important;
+}
+
+/* 5. Tombol-Tombol */
+[data-theme="idul-adha"] .submit-btn,
+[data-theme="idul-adha"] #loginButton,
+[data-theme="idul-adha"] .auth-button {
+    background-color: var(--primary-color) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--secondary-color);
+    font-family: 'Amiri', serif;
+    letter-spacing: 0.5px;
+}
+
+[data-theme="idul-adha"] .submit-btn:hover,
+[data-theme="idul-adha"] #loginButton:hover {
+    background-color: var(--secondary-color) !important; /* Hover jadi Tembaga */
+}
+
+/* 6. Kartu dengan Aksen Atas */
+[data-theme="idul-adha"] .card,
+[data-theme="idul-adha"] .section {
+    border: 1px solid var(--border-color) !important;
+    border-top: 4px solid var(--primary-color) !important; /* Garis Coklat di atas kartu */
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(93, 64, 55, 0.15); /* Bayangan Coklat Halus */
+}
+
+/* Dekorasi Judul Halaman (Ikon Ka'bah) */
+[data-theme="idul-adha"] h2 {
+    color: var(--primary-color) !important;
+    border-bottom: 2px dashed var(--secondary-color) !important; /* Garis putus-putus */
+    text-align: center;
+    position: relative;
+    padding-bottom: 12px;
+}
+
+/* Menambahkan Ikon Ka'bah di atas Judul */
+[data-theme="idul-adha"] h2::before {
+    content: '🕋'; 
+    display: block;
+    font-size: 2rem;
+    margin-bottom: 5px;
+    filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.1));
+}
+
+/* --- TEMA 17 AGUSTUS (Merah Putih) --- */
+[data-theme="merah-putih"] {
+    /* Palet Warna Patriotik */
+    --primary-color: #c62828;       /* Merah Darah Yang Kuat (Strong Red) */
+    --secondary-color: #ffffff;     /* Putih Bersih */
+    --accent-color: #b71c1c;        /* Merah yang lebih gelap untuk hover/aksen */
+    
+    /* Latar Belakang */
+    --bg-color: #fffafa;            /* Putih salju (sedikit hangat agar tidak silau) */
+    --card-bg: #ffffff;             /* Putih Murni */
+    
+    /* Teks */
+    --text-color: #212121;          /* Hitam pekat agar kontras dengan putih */
+    --border-color: #ffcdd2;        /* Garis merah sangat muda */
+    
+    --info-color: #d32f2f;          /* Info jadi merah */
+    --info-color-hover: #b71c1c;
+    
+    /* Gambar Header Baru (Bendera Bertekstur) */
+    --header-bg-image: url('https://i.pinimg.com/736x/e0/ae/65/e0ae6597899306b84d1d3197070778fb.jpg');
+}
+
+/* === KUSTOMISASI KHUSUS TEMA 17 AGUSTUS === */
+
+/* 1. Font Tegas & Background Bertekstur Halus */
+[data-theme="merah-putih"] body {
+    font-family: 'Montserrat', sans-serif !important;
+    font-weight: 600; /* Membuat semua teks standar menjadi agak tebal */
+    
+    /* Pola Garis Diagonal Halus Merah Putih di Background Body (Opsional, agar tidak terlalu polos) */
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(198, 40, 40, 0.03),
+        rgba(198, 40, 40, 0.03) 10px,
+        transparent 10px,
+        transparent 20px
+    );
+}
+
+/* 2. Header Patriotik */
+[data-theme="merah-putih"] header {
+    background-image: var(--header-bg-image) !important;
+    background-size: cover !important;
+    background-position: center center !important; /* Geser sedikit ke atas */
+    border-bottom: 6px solid #ffffff !important;
+    box-shadow: 0 4px 10px rgba(198, 40, 40, 0.3);
+    color: #ffffff !important;
+}
+
+/* JUDUL UTAMA: Bayangan Tebal Berlapis */
+[data-theme="merah-putih"] header h1 {
+    color: #ffffff !important;
+    text-transform: uppercase;
+    font-weight: 900 !important; /* Paling Tebal */
+    letter-spacing: 1.5px;
+    /* Kombinasi Stroke Hitam + Bayangan Merah + Blur Hitam */
+    text-shadow: 
+        2px 2px 0px #000000,      /* Lapisan 1: Garis tepi hitam tegas */
+        4px 4px 0px #8b0000,      /* Lapisan 2: Bayangan merah darah */
+        5px 5px 10px rgba(0,0,0,0.9) !important; /* Lapisan 3: Blur gelap */
+}
+
+/* SUB-JUDUL: Wajib Putih dengan Outline Hitam */
+[data-theme="merah-putih"] header p {
+    color: #ffffff !important;    /* Paksa Putih (di gambar terlihat abu/hitam) */
+    font-weight: 700 !important;  /* Tebalkan */
+    font-size: 1rem !important;
+    /* Efek Outline Hitam agar terbaca di area putih bendera */
+    text-shadow: 
+        -1px -1px 0 #000,  
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        2px 2px 4px #000000 !important;
+}
+
+/* INFO TANGGAL & PROFIL: Tambahkan bayangan juga */
+[data-theme="merah-putih"] #date-display,
+[data-theme="merah-putih"] #userProfileName,
+[data-theme="merah-putih"] .hijri-date {
+    color: #ffffff !important;
+    text-shadow: 1px 1px 3px #000000, 0 0 5px #b71c1c !important;
+    font-weight: 600;
+}
+
+/* 3. Navbar Merah Berani */
+[data-theme="merah-putih"] .nav-wrapper {
+    background-color: var(--primary-color) !important; /* Merah Kuat */
+    border-top: 2px solid #ffffff !important; /* Garis Putih di atas */
+    border-bottom: 2px solid #ffffff !important; /* Garis Putih di bawah */
+    box-shadow: 0 4px 12px rgba(198, 40, 40, 0.4);
+}
+
+/* Menu Aktif: Putih dengan teks Merah */
+[data-theme="merah-putih"] nav a:hover,
+[data-theme="merah-putih"] nav a.active {
+    background-color: #ffffff !important;
+    color: var(--primary-color) !important;
+    font-weight: 800;
+    border-radius: 4px;
+}
+
+/* 4. Footer Merah */
+[data-theme="merah-putih"] footer {
+    background-color: var(--primary-color) !important; 
+    color: #ffffff !important;
+    border-top: 4px solid #ffffff !important;
+    font-weight: bold;
+}
+
+/* 5. Tombol-Tombol Semangat */
+[data-theme="merah-putih"] .submit-btn,
+[data-theme="merah-putih"] #loginButton,
+[data-theme="merah-putih"] .auth-button {
+    background-color: var(--primary-color) !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff; /* Border putih pada tombol merah */
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+[data-theme="merah-putih"] .submit-btn:hover,
+[data-theme="merah-putih"] #loginButton:hover {
+    background-color: #ffffff !important; /* Hover jadi Putih */
+    color: var(--primary-color) !important; /* Teks jadi Merah */
+    border-color: var(--primary-color) !important;
+}
+
+/* 6. Kartu dengan Border Atas Merah */
+[data-theme="merah-putih"] .card,
+[data-theme="merah-putih"] .section {
+    border: 1px solid var(--border-color) !important;
+    border-top: 5px solid var(--primary-color) !important; /* Garis Merah Tebal di atas kartu */
+    border-radius: 0 0 8px 8px; /* Sudut atas tajam, bawah melengkung */
+}
+
+/* Dekorasi Judul Halaman (Bendera & Garis Merah) */
+[data-theme="merah-putih"] h2 {
+    color: var(--primary-color) !important;
+    text-transform: uppercase;
+    font-weight: 800;
+    border-bottom: 3px solid var(--primary-color) !important;
+    padding-bottom: 10px;
+}
+
+/* Ikon Bendera di depan Judul */
+[data-theme="merah-putih"] h2::before {
+    content: '🇮🇩 '; 
+    font-size: 1.2em;
+    margin-right: 5px;
+}
+
+/* Implementasi Variabel ke Elemen */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.5s, color 0.5s; /* Efek transisi halus */
+}
+
+.card, .section, .modal-content,  .bg-white {
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color);
+}
+
+
+/* Khusus Navbar agar mengikuti tema */
+.nav-wrapper {
+    background-color: var(--primary-color) !important;
+}
+
+/* Tombol agar mengikuti tema */
+.submit-btn, .auth-button, .cta-button, #loginButton {
+    background-color: var(--primary-color) !important;
+    color: #ffffff !important;
+}
+.submit-btn:hover, .auth-button:hover {
+    filter: brightness(90%);
+}
+
+/* Widget Pemilih Tema */
+.theme-widget-header {
+    position: relative;
+    display: inline-block;
+    margin-left: 15px;
+    vertical-align: middle;
+}
+
+#theme-toggle-btn {
+    background-color: rgba(255,255,255,0.2); /* Transparan sedikit */
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+#theme-toggle-btn:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+    transform: rotate(15deg);
+}
+
+#theme-options {
+    display: none;
+    position: absolute;
+    top: 50px; /* Muncul di bawah tombol */
+    right: -50px; /* Geser sedikit agar rapi */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    padding: 10px;
+    width: 180px;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9999;
+}
+
+#theme-options.show {
+    display: flex;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.theme-option-btn {
+    background: none;
+    border: none;
+    text-align: left;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.2s;
+}
+
+.theme-option-btn:hover {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.theme-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
         html { scroll-behavior: smooth; }
         body {
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -1408,6 +2127,27 @@
     border-radius: 8px;
 }
 
+/* Aturan Dasar Footer (Berlaku untuk Light/Standar) */
+footer {
+    background-color: var(--primary-color) !important; /* Hijau Tua */
+    color: #ffffff !important; /* Teks Putih */
+    border-top: 1px solid rgba(0,0,0,0.1) !important;
+}
+
+/* Pastikan Link di Footer (seperti email) warnanya kontras (Kuning Emas) */
+footer a {
+    color: var(--secondary-color) !important;
+    text-decoration: none;
+}
+
+/* === KOREKSI UNTUK MODE GELAP (Agar Footer Tetap Gelap saat Dark Mode) === */
+/* Kita perlu memastikan aturan ini MENIMPA aturan hijau di atas saat mode gelap aktif */
+[data-theme="dark"] footer {
+    background-color: var(--card-bg) !important; /* Kembali ke Abu-abu Gelap/Hitam */
+    border-top: 1px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
     </style>
 </head>
 <body>
@@ -1464,6 +2204,31 @@
                     <h1>Yayasan Markaz Yatim Duafa Qurani</h1>
                     <p>Berdasarkan Al-Qur'an dan Sunnah Sesuai Pemahaman Salafush Shalih</p>
                 </div>
+				<div class="theme-widget-header">
+        <button id="theme-toggle-btn" title="Ganti Tampilan" onclick="toggleThemeMenu(event)">
+            🎨
+        </button>
+        <div id="theme-options">
+            <button class="theme-option-btn" onclick="window.setTheme('light')">
+                <span class="theme-dot" style="background-color: #2c5e2e;"></span> Standar
+            </button>
+            <button class="theme-option-btn" onclick="window.setTheme('dark')">
+                <span class="theme-dot" style="background-color: #333;"></span> Gelap
+            </button>
+            <button class="theme-option-btn" onclick="window.setTheme('palestine')">
+                <span class="theme-dot" style="background: linear-gradient(to right, black, white, green, red);"></span> Palestine
+            </button>
+            <button class="theme-option-btn" onclick="window.setTheme('idul-fitri')">
+                <span class="theme-dot" style="background-color: #059669;"></span> Idul Fitri
+            </button>
+            <button class="theme-option-btn" onclick="window.setTheme('idul-adha')">
+                <span class="theme-dot" style="background-color: #78350f;"></span> Idul Adha
+            </button>
+            <button class="theme-option-btn" onclick="window.setTheme('merah-putih')">
+                <span class="theme-dot" style="background: linear-gradient(to right, red 50%, white 50%); border: 1px solid #ddd;"></span> 17 Agt
+            </button>
+        </div>
+		</div>
             </div>
             <div class="header-right-items">
                 <div class="text-right"> <div id="date-display"></div>
@@ -1485,9 +2250,13 @@
             <nav id="mainNav">
                 <div class="nav-container">
                     <a href="#beranda" class="active">Beranda</a>
-					<a href="#jadwal-sholat">Jadwal Sholat</a>
-                    <a href="#lembaga">Lembaga</a>
-                    <a href="#tentang">Tentang</a>
+					<div id="tentangDropdown" class="dropdown">
+                        <a href="#" class="dropbtn" style="background-color: transparent;"><span class="nav-link-wrapper">Tentang &#9662;</span></a>
+                        <div class="dropdown-content">
+                            <a href="#tentang">Profil Yayasan</a>
+                            <a href="#lembaga">Lembaga</a>
+                            </div>
+                    </div>
 					<a href="digilib.html" style="background-color: #8B5CF6;">Digilib</a>
 					<div id="sistemInformasiDropdown" class="dropdown hidden">
 					<a href="#" id="sistemInformasiNav" class="dropbtn"><span class="nav-link-wrapper">Sistem Informasi &#9662;</span></a>
@@ -1514,9 +2283,21 @@
 					<a href="tugas.html" id="tugasNav" class="hidden" style="background-color: #F59E0B;"><span class="nav-link-wrapper">Tugas</span></a>
 					<a href="#ujian-online" id="ujianOnlineNav" class="hidden" style="background-color: #ff69b4;">Ujian Online</a>
 					<a href="#penerimaan">Penerimaan</a>
-                    <a href="#kegiatan">Kegiatan</a>
-                    <a href="#legalitas">Legalitas</a>
-                    <a href="#mitra">Mitra</a>
+                    <div id="kegiatanDropdown" class="dropdown">
+                        <a href="#" class="dropbtn" style="background-color: transparent;"><span class="nav-link-wrapper">Kegiatan &#9662;</span></a>
+                        <div class="dropdown-content">
+                            <a href="#kegiatan">Galeri Kegiatan</a>
+                            <a href="#jadwal-sholat">Jadwal Sholat</a>
+                        </div>
+                    </div>
+
+                    <div id="legalitasDropdown" class="dropdown">
+                        <a href="#" class="dropbtn" style="background-color: transparent;"><span class="nav-link-wrapper">Legalitas &#9662;</span></a>
+                        <div class="dropdown-content">
+                            <a href="#legalitas">Akreditas & Legalitas</a>
+                            <a href="#mitra">Mitra Kebaikan</a>
+                        </div>
+                    </div>
                 </div>
             </nav>
             <div id="nav-arrow-left" class="nav-arrow"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></div>
@@ -9183,7 +9964,7 @@ function showLoggedInView(userData) {
         settingNav.href = "#settings-page";
         settingNav.textContent = "Pengaturan";
         settingNav.id = "settingNav";
-        settingNav.className = "hidden"; 
+        // Tidak perlu class hidden, kita kontrol append-nya saja
 
         // Cek Hak Akses
         const userJabatan = (session.userData.jabatan || "").toLowerCase();
@@ -9191,21 +9972,24 @@ function showLoggedInView(userData) {
         const allowedUsersSetting = ['wawan', 'admin'];
         const allowedRolesSetting = ['tu', 'tata usaha'];
 
+        // Hapus menu lama jika ada (untuk refresh)
+        const oldNav = document.getElementById('settingNav');
+        if (oldNav) oldNav.remove();
+
         if (allowedUsersSetting.includes(usernameAccount) || allowedRolesSetting.some(r => userJabatan.includes(r))) {
-            const oldNav = document.getElementById('settingNav');
-            if (oldNav) oldNav.remove();
+            // PERUBAHAN: Masukkan ke dalam konten Dropdown Tentang
+            const tentangDropdownContent = document.querySelector('#tentangDropdown .dropdown-content');
             
-            document.querySelector('#mainNav .nav-container').appendChild(settingNav);
-            settingNav.classList.remove('hidden');
-            
-            settingNav.addEventListener('click', () => {
-                showPage('#settings-page');
-                initSettingsPage(); 
-            });
+            if (tentangDropdownContent) {
+                tentangDropdownContent.appendChild(settingNav);
+                
+                settingNav.addEventListener('click', () => {
+                    showPage('#settings-page');
+                    initSettingsPage(); 
+                });
+            }
         }
-		
     }
-    
     if (window.location.hash === '#login') { window.location.hash = '#beranda'; }
 }
 
@@ -12519,6 +13303,7 @@ addKrsRowBtn.addEventListener('click', async () => {
     }
 
     async function initializeApp() {
+		loadSavedTheme();
         updateDateTime();
         setTodayDate();
 		
@@ -12598,61 +13383,74 @@ addKrsRowBtn.addEventListener('click', async () => {
 
 // HAPUS FUNGSI LAMA setupDropdownMobile() DAN GANTI DENGAN INI
 function setupAdvancedDropdown() {
-    const dropbtn = document.querySelector('#sistemInformasiDropdown .dropbtn');
-    const dropdownContent = document.querySelector('#sistemInformasiDropdown .dropdown-content');
-    
-    // Jika elemen tidak ditemukan, hentikan fungsi
-    if (!dropbtn || !dropdownContent) return;
+    // Ambil semua elemen dengan class .dropdown
+    const allDropdowns = document.querySelectorAll('.dropdown');
 
-    const originalParent = dropdownContent.parentElement; // Simpan "rumah" asli dari submenu
+    allDropdowns.forEach(dropdownWrapper => {
+        const dropbtn = dropdownWrapper.querySelector('.dropbtn');
+        const dropdownContent = dropdownWrapper.querySelector('.dropdown-content');
 
-    // Fungsi untuk menutup menu
-    const closeMenu = () => {
-        if (dropdownContent.classList.contains('dropdown-content-show')) {
-            dropdownContent.classList.remove('dropdown-content-show');
-            dropbtn.classList.remove('active');
-            // Kembalikan submenu ke "rumah" aslinya setelah animasi selesai
-            setTimeout(() => {
-                originalParent.appendChild(dropdownContent);
-                // Hapus style posisi agar tidak bentrok nanti
-                dropdownContent.style.left = '';
-                dropdownContent.style.top = '';
-                dropdownContent.style.width = '';
-            }, 150);
-        }
-    };
+        if (!dropbtn || !dropdownContent) return;
 
-    // Saat tombol "Sistem Informasi" di-klik
-    dropbtn.addEventListener('click', function(event) {
-        event.preventDefault();
-        event.stopPropagation(); // Mencegah klik menyebar ke window
+        const originalParent = dropdownContent.parentElement; // Simpan "rumah" asli
 
-        const isMenuOpen = dropdownContent.classList.contains('dropdown-content-show');
+        // Fungsi tutup menu spesifik ini
+        const closeThisMenu = () => {
+            if (dropdownContent.classList.contains('dropdown-content-show')) {
+                dropdownContent.classList.remove('dropdown-content-show');
+                dropbtn.classList.remove('active');
+                
+                setTimeout(() => {
+                    originalParent.appendChild(dropdownContent);
+                    dropdownContent.style.left = '';
+                    dropdownContent.style.top = '';
+                    dropdownContent.style.width = '';
+                }, 150);
+            }
+        };
 
-        if (isMenuOpen) {
-            closeMenu();
-        } else {
-            // "Bebaskan" submenu dengan memindahkannya ke <body>
-            document.body.appendChild(dropdownContent);
+        // Klik Tombol
+        dropbtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
 
-            // Hitung posisi tombol di layar
-            const btnRect = dropbtn.getBoundingClientRect();
+            // Tutup dropdown LAIN yang sedang terbuka (jika ada)
+            document.querySelectorAll('.dropdown-content-show').forEach(otherContent => {
+                if (otherContent !== dropdownContent) {
+                    // Kita paksa tutup manual dengan menghapus class, 
+                    // logika pemindahan DOM akan ditangani oleh listener 'click' window global
+                    otherContent.classList.remove('dropdown-content-show');
+                }
+            });
 
-            // Atur posisi submenu tepat di bawah tombol
-            dropdownContent.style.left = `${btnRect.left}px`;
-            dropdownContent.style.top = `${btnRect.bottom}px`;
-            // Samakan lebar submenu dengan tombolnya agar rapi
-            dropdownContent.style.width = `${btnRect.width}px`;
+            const isMenuOpen = dropdownContent.classList.contains('dropdown-content-show');
 
-            // Tampilkan submenu
-            dropdownContent.classList.add('dropdown-content-show');
-            dropbtn.classList.add('active');
-        }
+            if (isMenuOpen) {
+                closeThisMenu();
+            } else {
+                // Pindahkan ke body agar tidak terpotong overflow nav
+                document.body.appendChild(dropdownContent);
+
+                const btnRect = dropbtn.getBoundingClientRect();
+                dropdownContent.style.left = `${btnRect.left}px`;
+                dropdownContent.style.top = `${btnRect.bottom}px`;
+                
+                // Atur lebar minimal sesuai tombolnya
+                dropdownContent.style.minWidth = `${btnRect.width}px`;
+
+                dropdownContent.classList.add('dropdown-content-show');
+                dropbtn.classList.add('active');
+            }
+        });
+
+        // Tutup jika klik di luar
+        window.addEventListener('click', (e) => {
+            // Jika yang diklik bukan bagian dari dropdown content ini dan bukan tombolnya
+            if (!dropdownContent.contains(e.target) && !dropbtn.contains(e.target)) {
+                closeThisMenu();
+            }
+        });
     });
-
-    // Tambahkan event listener untuk menutup menu jika mengklik di tempat lain
-    window.addEventListener('click', closeMenu);
-	
 }
 
 // === LOGIKA HALAMAN PENGATURAN ===
@@ -12912,11 +13710,51 @@ document.querySelector('#modal-pilih-materi .close-button')?.addEventListener('c
     document.getElementById('modal-pilih-materi').style.display = 'none';
 });
     
+// === LOGIKA PENGATURAN TEMA TAMPILAN (PERBAIKAN) ===
 
+// 1. Fungsi Toggle Menu (Dipanggil dari HTML onclick)
+window.toggleThemeMenu = function(e) {
+    e.stopPropagation();
+    const options = document.getElementById('theme-options');
+    options.classList.toggle('show');
+}
+
+// 2. Menutup menu jika klik di luar area
+document.addEventListener('click', (e) => {
+    const options = document.getElementById('theme-options');
+    const btn = document.getElementById('theme-toggle-btn');
+    if (options && options.classList.contains('show')) {
+        if (!options.contains(e.target) && e.target !== btn) {
+            options.classList.remove('show');
+        }
+    }
+});
+
+// 3. Fungsi Inti untuk Mengubah Tema (Global Window)
+window.setTheme = function(themeName) {
+    // Simpan atribut ke <html>
+    document.documentElement.setAttribute('data-theme', themeName);
+    
+    // Simpan pilihan user
+    localStorage.setItem('selectedTheme', themeName);
+    
+    // Tutup menu
+    const options = document.getElementById('theme-options');
+    if (options) options.classList.remove('show');
+}
+
+// 4. Fungsi Load Tema
+window.loadSavedTheme = function() {
+    const savedTheme = localStorage.getItem('selectedTheme');
+    if (savedTheme) {
+        window.setTheme(savedTheme);
+    }
+}
 
     // --- MULAI APLIKASI ---
     initializeApp();
 });
 </script>
+
 </body>
 </html>
