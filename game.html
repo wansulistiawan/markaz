@@ -11,7 +11,9 @@
             --dark: #064e3b;
             --accent: #f59e0b;
             --bg: #ecfdf5;
-            --matched-bg: #059669;
+            
+            /* PERUBAHAN WARNA DI SINI */
+            --matched-bg: #2563eb; /* Biru (Royal Blue) saat cocok */
             --sidebar-bg: #ffffff;
         }
         * { box-sizing: border-box; }
@@ -22,7 +24,8 @@
             margin: 0;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            height: 100vh; 
+            overflow: hidden; 
             user-select: none;
         }
         
@@ -31,88 +34,87 @@
             background: var(--dark);
             color: white;
             width: 100%;
-            padding: 15px 20px;
+            padding: 8px 20px; 
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex-shrink: 0; 
             z-index: 50;
         }
-        .header h1 { margin: 0; font-size: 1.4rem; display: flex; align-items: center; gap: 10px; }
-        .user-info { font-size: 0.95rem; background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); }
+        .header h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        .user-info { font-size: 0.9rem; background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); }
 
-        /* --- MAIN LAYOUT (SPLIT SCREEN) --- */
+        /* --- MAIN LAYOUT --- */
         .main-container {
             display: flex;
             flex: 1;
             width: 100%;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
-            gap: 20px;
-            align-items: flex-start; 
+            padding: 10px; 
+            gap: 15px;
+            overflow: hidden; 
         }
 
         .game-area {
-            flex: 2;
+            flex: 3; 
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: flex-start;
+            height: 100%;
         }
 
         .sidebar {
             flex: 1;
             background: var(--sidebar-bg);
-            border-radius: 15px;
-            padding: 20px;
+            border-radius: 10px;
+            padding: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             border: 1px solid #e5e7eb;
-            position: sticky;
-            top: 20px;
-            max-height: 90vh;
-            overflow-y: auto;
+            height: 100%; 
+            overflow-y: auto; 
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Game Controls */
+        /* --- CONTROLS --- */
         .controls-bar {
-            background: white;
             width: 100%;
-            max-width: 800px;
-            padding: 10px;
-            border-radius: 10px;
             display: flex;
             justify-content: center;
-            gap: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
         }
         
         .status-bar {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             justify-content: center;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
+            margin-bottom: 8px;
+            font-size: 1rem;
             font-weight: bold;
             color: var(--dark);
+            flex-shrink: 0;
         }
         .badge {
             background: white;
-            padding: 5px 20px;
-            border-radius: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 2px 15px;
+            border-radius: 15px;
             border: 1px solid var(--primary);
+            font-size: 0.9rem;
         }
 
         .timer-container {
             width: 100%;
-            max-width: 800px;
-            height: 12px;
+            height: 8px; 
             background: #e5e7eb;
-            border-radius: 6px;
+            border-radius: 4px;
             overflow: hidden;
-            margin-bottom: 20px;
-            border: 1px solid #d1d5db;
+            margin-bottom: 10px;
+            flex-shrink: 0;
         }
         .timer-bar {
             height: 100%;
@@ -121,25 +123,31 @@
             transition: width 0.1s linear;
         }
 
+        /* --- GAME BOARD --- */
         .game-board {
             display: grid;
-            gap: 10px;
+            gap: 8px; 
             width: 100%;
-            max-width: 800px;
-            margin-bottom: 30px;
+            height: 100%;
+            max-height: calc(100vh - 160px); 
+            align-content: center; 
+            justify-content: center;
             perspective: 1000px;
         }
 
-        /* Card Styles */
+        /* --- CARD STYLING --- */
         .card {
             background-color: transparent;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: transform 0.4s;
             aspect-ratio: 1 / 1;
+            max-width: 120px; 
+            max-height: 120px;
         }
+        
         .card.flipped { transform: rotateY(180deg); }
         .card.matched { transform: rotateY(180deg); cursor: default; }
 
@@ -151,120 +159,99 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            border-radius: 10px;
+            border-radius: 8px;
             font-weight: bold;
-            padding: 5px;
+            padding: 2px; 
             box-sizing: border-box;
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
         }
-        .front { background: linear-gradient(135deg, var(--primary), var(--dark)); color: white; font-size: 2rem; border: 2px solid white; }
-        .back { background: white; transform: rotateY(180deg); border: 2px solid var(--primary); color: var(--dark); font-size: 1rem; word-wrap: break-word; }
-        .card.matched .back { background-color: var(--matched-bg) !important; color: white !important; border-color: #a7f3d0; animation: pulse 0.5s ease-in-out; }
-        .arabic-text { font-family: 'Amiri', serif; font-size: 1.8rem !important; font-weight: bold; }
+
+        .front { 
+            background: linear-gradient(135deg, var(--primary), var(--dark)); 
+            color: white; 
+            font-size: 2.5rem; 
+            border: 2px solid white; 
+        }
+        
+        .back { 
+            background: white; 
+            transform: rotateY(180deg); 
+            border: 2px solid var(--primary); 
+            color: var(--dark); 
+            font-size: 1.2rem; 
+            line-height: 1.1;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* PERUBAHAN WARNA BORDER SAAT COCOK */
+        .card.matched .back { 
+            background-color: var(--matched-bg) !important; 
+            color: white !important; 
+            border-color: #93c5fd; /* Biru Muda (Light Blue) */
+            animation: pulse 0.5s ease-in-out; 
+        }
+
+        .arabic-text { 
+            font-family: 'Amiri', serif; 
+            font-size: 2.2rem !important; 
+            font-weight: 900;
+            line-height: 1;
+            margin-top: -5px; 
+        }
+
         @keyframes pulse { 0% { transform: rotateY(180deg) scale(1); } 50% { transform: rotateY(180deg) scale(1.1); } 100% { transform: rotateY(180deg) scale(1); } }
 
         /* Buttons */
         .btn {
-            padding: 8px 16px;
+            padding: 6px 12px;
             border: none;
             border-radius: 6px;
             font-family: 'Fredoka', sans-serif;
             font-weight: 600;
+            font-size: 0.9rem;
             cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+            transition: background 0.3s;
         }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--dark); }
         .btn-accent { background: var(--accent); color: white; }
-        .btn-accent:hover { background: #d97706; }
+        .btn-blue { background: #3b82f6; color: white; }
         .btn:disabled { background: #ccc; cursor: not-allowed; }
 
-        /* Leaderboard Styles */
-        .sidebar h2 { margin-top: 0; color: var(--dark); border-bottom: 2px solid #eee; padding-bottom: 10px; font-size: 1.2rem; }
-        .lb-item {
-            display: flex;
-            flex-direction: column;
-            padding: 10px;
-            border-bottom: 1px solid #f3f4f6;
-            margin-bottom: 5px;
-        }
-        .lb-item:last-child { border-bottom: none; }
-        .lb-header { display: flex; justify-content: space-between; font-weight: bold; color: #374151; }
-        .lb-details { display: flex; justify-content: space-between; font-size: 0.85rem; color: #6b7280; margin-top: 4px; }
-        .lb-rank { width: 25px; height: 25px; background: var(--dark); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; margin-right: 8px; }
-        .lb-name-wrap { display: flex; align-items: center; }
-        .my-rank-item { background-color: #d1fae5; border-radius: 8px; border: 1px solid #10b981; }
+        /* Leaderboard */
+        .sidebar h2 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 5px; font-size: 1.1rem; margin-bottom: 10px; }
+        .lb-item { padding: 8px; border-bottom: 1px solid #f3f4f6; margin-bottom: 4px; }
+        .lb-rank { width: 20px; height: 20px; font-size: 0.7rem; }
+        .rank-badge { font-size: 0.65rem; padding: 1px 5px; }
         
-        .rank-badge {
-            display: inline-block;
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border-radius: 10px;
-            margin-top: 2px;
-            font-weight: bold;
-            text-transform: uppercase;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-        
-        /* === WARNA GELAR LEVEL === */
         .rank-new { background: #e5e7eb; color: #374151; }
         .rank-mid { background: #bfdbfe; color: #1e40af; }
         .rank-high { background: #fef08a; color: #854d0e; }
         .rank-master { background: #fbcfe8; color: #9d174d; }
         .rank-legend { background: linear-gradient(45deg, #f59e0b, #b45309); color: white; }
-
-        /* === WARNA GELAR JUARA (TOP 3) === */
-        .rank-1 { 
-            background: linear-gradient(45deg, #FFD700, #FDB931); 
-            color: #5c4004; 
-            border: 1px solid #b8860b;
-        }
-        .rank-2 { 
-            background: linear-gradient(45deg, #E0E0E0, #BDBDBD); 
-            color: #424242; 
-            border: 1px solid #9e9e9e;
-        }
-        .rank-3 { 
-            background: linear-gradient(45deg, #CD7F32, #A0522D); 
-            color: #fff; 
-            border: 1px solid #8b4513;
-        }
+        .rank-1 { background: linear-gradient(45deg, #FFD700, #FDB931); color: #5c4004; border: 1px solid #b8860b; }
+        .rank-2 { background: linear-gradient(45deg, #E0E0E0, #BDBDBD); color: #424242; border: 1px solid #9e9e9e; }
+        .rank-3 { background: linear-gradient(45deg, #CD7F32, #A0522D); color: #fff; border: 1px solid #8b4513; }
 
         /* Modal */
-        .modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            max-width: 90%;
-            width: 400px;
-            animation: popIn 0.3s ease;
-        }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; padding: 20px; border-radius: 15px; text-align: center; width: 90%; max-width: 350px; animation: popIn 0.3s ease; }
         @keyframes popIn { from {transform: scale(0.8); opacity: 0;} to {transform: scale(1); opacity: 1;} }
 
         /* Loading Overlay */
-        #loadingOverlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.8); z-index: 200; justify-content: center; align-items: center; flex-direction: column; }
-        .loader { border: 5px solid #f3f3f3; border-top: 5px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        #loadingOverlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.9); z-index: 200; justify-content: center; align-items: center; flex-direction: column; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 900px) {
-            .main-container { flex-direction: column; }
-            .game-area { width: 100%; }
-            .sidebar { width: 100%; max-height: 400px; }
+            .main-container { flex-direction: column; padding: 5px; }
+            .game-area { width: 100%; height: 65vh; }
+            .sidebar { display: none; }
+            .mobile-lb-btn { display: block; }
+            .game-board { max-height: none; } 
         }
     </style>
 </head>
@@ -272,7 +259,7 @@
 
     <div id="loadingOverlay">
         <div class="loader"></div>
-        <p>Memproses data...</p>
+        <p>Memproses...</p>
     </div>
 
     <div class="header">
@@ -284,12 +271,13 @@
         
         <div class="game-area">
             <div class="controls-bar">
-                <button class="btn btn-accent" id="btnSave" onclick="saveProgress()" disabled>💾 Simpan Progres</button>
-                <button class="btn btn-primary" id="btnLoad" onclick="loadProgress()" disabled>📂 Lanjutkan Level</button>
+                <button class="btn btn-blue" onclick="fetchLeaderboard(true)">🏆 Peringkat</button>
+                <button class="btn btn-accent" id="btnSave" onclick="saveProgress()" disabled>💾 Simpan</button>
+                <button class="btn btn-primary" id="btnLoad" onclick="loadProgress()" disabled>📂 Muat Ulang</button>
             </div>
 
             <div class="status-bar">
-                <div class="badge">Level: <span id="levelDisplay">1</span></div>
+                <div class="badge">Lv: <span id="levelDisplay">1</span></div>
                 <div class="badge">Skor: <span id="scoreDisplay">0</span></div>
             </div>
 
@@ -301,36 +289,45 @@
         </div>
 
         <div class="sidebar">
-            <h2>🏆 Papan Peringkat Top 10</h2>
+            <h2>🏆 Papan Peringkat</h2>
             <div id="leaderboardList">
-                <p style="text-align:center; color:#999;">Memuat data...</p>
+                <p style="text-align:center; color:#999;">Memuat...</p>
             </div>
-            <div style="margin-top:15px; text-align:center;">
-                <button class="btn btn-blue" onclick="fetchLeaderboard()" style="width:100%; background:#3b82f6; color:white; padding:8px; border-radius:6px; font-size:0.9rem; border:none; cursor:pointer;">🔄 Refresh Data</button>
+            <div style="margin-top:10px; text-align:center;">
+                <button class="btn btn-blue" onclick="fetchLeaderboard()" style="width:100%;">🔄 Refresh</button>
             </div>
         </div>
 
     </div>
 
+    <div class="modal" id="leaderboardModal">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <h2 style="color: var(--dark); margin-top:0;">🏆 Top 10</h2>
+            <div id="modalLbContent">Memuat...</div>
+            <button class="btn btn-primary" style="margin-top: 15px; width: 100%;" onclick="document.getElementById('leaderboardModal').style.display='none'">Tutup</button>
+        </div>
+    </div>
+
     <div class="modal" id="levelModal">
         <div class="modal-content">
-            <h2 style="color: var(--primary);">Ahlan Wa Sahlan! 🎉</h2>
-            <p>Level <span id="nextLevelNum"></span> Terbuka!</p>
-            <p>Bonus Waktu: +<span id="timeBonus"></span> Poin</p>
+            <h2 style="color: var(--primary); margin-top:0;">Ahlan Wa Sahlan! 🎉</h2>
+            <p>Level <span id="nextLevelNum" style="font-weight:bold; font-size:1.5rem;"></span> Terbuka!</p>
+            <p>Bonus: +<span id="timeBonus"></span> Poin</p>
             <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
-                <button class="btn btn-primary" onclick="nextLevel()">Lanjut Main</button>
-                <button class="btn btn-accent" onclick="saveAndExit()">Simpan & Keluar</button>
+                <button class="btn btn-primary" onclick="nextLevel()">Lanjut</button>
+                <button class="btn btn-accent" onclick="document.getElementById('levelModal').style.display='none'">Tutup</button>
             </div>
         </div>
     </div>
 
     <div class="modal" id="gameOverModal">
         <div class="modal-content">
-            <h2 style="color: #ef4444;">Waktu Habis! ⏳</h2>
-            <p>Jangan menyerah, coba lagi ya!</p>
-            <p>Skor Akhir: <span id="finalScore" style="font-weight:bold;"></span></p>
-            <button class="btn btn-primary" onclick="restartLevel()">Ulangi Level Ini</button>
-            <button class="btn btn-accent" onclick="restartGame()">Reset ke Level 1</button>
+            <h2 style="color: #ef4444; margin-top:0;">Waktu Habis! ⏳</h2>
+            <p>Skor Akhir: <span id="finalScore" style="font-weight:bold; font-size:1.5rem;"></span></p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
+                <button class="btn btn-primary" onclick="restartLevel()">Ulangi</button>
+                <button class="btn btn-accent" onclick="restartGame()">Reset</button>
+            </div>
         </div>
     </div>
 
@@ -409,8 +406,9 @@
     const levelDisplay = document.getElementById('levelDisplay');
     const scoreDisplay = document.getElementById('scoreDisplay');
     const loadingOverlay = document.getElementById('loadingOverlay');
+    const btnLoad = document.getElementById('btnLoad');
 
-    // === SESI & DATA ===
+    // === INITIALIZATION & SESSION ===
     function checkSession() {
         const sessionStr = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
         if (sessionStr) {
@@ -419,15 +417,19 @@
                 currentUser = session.userData;
                 document.getElementById('userStatus').innerHTML = `<b>👤 ${currentUser.profileName}</b>`;
                 document.getElementById('btnSave').disabled = false;
-                document.getElementById('btnLoad').disabled = false;
-                fetchLeaderboard();
+                btnLoad.disabled = false;
+                
+                // PENTING: Langsung ambil data & sync saat login
+                // Parameter: showModal=false, syncGameData=true
+                fetchLeaderboard(false, true); 
             }
         } else {
-            fetchLeaderboard();
+            // Tamu: Load leaderboard, mulai Level 1
+            fetchLeaderboard(false, false);
+            startLevel(); 
         }
     }
 
-    // === SISTEM GELAR LEVEL (DEFAULT) ===
     function getRankInfo(level) {
         if (level >= 46) return { title: "👑 Syaikhul 'Ilmi", class: "rank-legend" };
         if (level >= 31) return { title: "⚔️ Farisul Lughah", class: "rank-master" };
@@ -436,14 +438,30 @@
         return { title: "🌱 Thalib Jadid", class: "rank-new" };
     }
 
-    // === API BACKEND ===
     function showLoading(show) {
         loadingOverlay.style.display = show ? 'flex' : 'none';
     }
 
-    function saveProgress() {
-        if (!currentUser) return alert("Login dulu untuk menyimpan!");
-        showLoading(true);
+    // === API ACTIONS ===
+
+    // Fungsi Load Progress (Manual Click)
+    function loadProgress() {
+        if (!currentUser) return alert("Login dulu!");
+        
+        // Panggil fetch dengan mode SYNC = true
+        fetchLeaderboard(false, true);
+    }
+
+    function saveProgress(silent = false) {
+        if (!currentUser) {
+            if(!silent) alert("Login dulu untuk menyimpan!");
+            return;
+        }
+        
+        if(!silent) showLoading(true);
+        const btnSave = document.getElementById('btnSave');
+        const originalBtnText = btnSave.innerText;
+        if(silent) btnSave.innerText = "⏳ Menyimpan...";
         
         const data = {
             action: 'saveGameProgress',
@@ -460,46 +478,34 @@
         })
         .then(res => res.json())
         .then(result => {
-            showLoading(false);
+            if(!silent) showLoading(false);
             if(result.status === 'success') {
-                alert("Tersimpan!");
-                document.getElementById('levelModal').style.display = 'none';
-                fetchLeaderboard(); 
-            } else alert("Gagal simpan: " + result.message);
-        })
-        .catch(err => { showLoading(false); alert("Error koneksi."); });
-    }
-
-    function loadProgress() {
-        if (!currentUser) return alert("Login dulu!");
-        showLoading(true);
-        
-        fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ 
-                action: 'getGameLeaderboardAndProgress', 
-                username: currentUser.username 
-            }),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        })
-        .then(res => res.json())
-        .then(result => {
-            showLoading(false);
-            if(result.status === 'success' && result.myProgress) {
-                currentLevel = result.myProgress.level;
-                score = result.myProgress.skor;
-                alert(`Data dimuat! Level ${currentLevel}, Skor ${score}`);
-                startLevel();
+                if(!silent) {
+                    alert("Tersimpan!");
+                    document.getElementById('levelModal').style.display = 'none';
+                } else {
+                    btnSave.innerText = "✅ Tersimpan";
+                    setTimeout(() => btnSave.innerText = "💾 Simpan", 2000);
+                }
+                fetchLeaderboard(); // Refresh sidebar
+                
+                // Update tombol Lanjut agar sesuai data terbaru
+                btnLoad.innerText = `📂 Muat Ulang (Lv ${currentLevel})`;
             } else {
-                alert("Belum ada data tersimpan.");
+                if(!silent) alert("Gagal: " + result.message);
+                if(silent) btnSave.innerText = "❌ Gagal";
             }
         })
-        .catch(err => { showLoading(false); alert("Error load."); });
+        .catch(err => { 
+            if(!silent) showLoading(false); 
+            if(silent) btnSave.innerText = "❌ Error";
+        });
     }
 
-    function fetchLeaderboard() {
+    // Fungsi Multi-guna: Ambil Leaderboard + Sync Data User
+    function fetchLeaderboard(showModal = false, syncGameData = false) {
         const lbContainer = document.getElementById('leaderboardList');
-        lbContainer.innerHTML = '<p style="text-align:center; color:#999;">Mengambil data...</p>';
+        if(!showModal && !syncGameData) lbContainer.innerHTML = '<p style="text-align:center; color:#999;">...</p>';
 
         fetch(SCRIPT_URL, {
             method: 'POST',
@@ -512,32 +518,53 @@
         .then(res => res.json())
         .then(result => {
             if(result.status === 'success') {
-                renderSidebarLeaderboard(result.leaderboard, result.myProgress);
-            } else {
-                lbContainer.innerHTML = '<p style="text-align:center; color:red;">Gagal memuat.</p>';
+                // 1. Render Leaderboard
+                const html = generateLeaderboardHTML(result.leaderboard, result.myProgress);
+                lbContainer.innerHTML = html;
+                
+                if(showModal) {
+                    document.getElementById('modalLbContent').innerHTML = html;
+                    document.getElementById('leaderboardModal').style.display = 'flex';
+                }
+
+                // 2. LOGIKA AUTO-SYNC (LANJUTKAN LEVEL)
+                if (syncGameData) {
+                    if(result.myProgress) {
+                        // Update State Lokal
+                        currentLevel = result.myProgress.level;
+                        score = result.myProgress.skor;
+                        
+                        // Update UI
+                        levelDisplay.innerText = currentLevel;
+                        scoreDisplay.innerText = score;
+                        
+                        // Update Tombol Lanjut
+                        btnLoad.innerText = `📂 Muat Ulang (Lv ${currentLevel})`;
+                        
+                        // Mulai Game di Level Tersebut
+                        startLevel();
+                    } else {
+                        // Jika belum ada data (New User), mulai level 1
+                        startLevel();
+                    }
+                }
             }
         })
-        .catch(err => lbContainer.innerHTML = '<p style="text-align:center; color:red;">Error koneksi.</p>');
+        .catch(err => {
+            console.error(err);
+            lbContainer.innerHTML = '<p style="text-align:center; color:red;">Offline.</p>';
+            // Fallback: jika error saat sync, tetap mulai level 1
+            if(syncGameData) startLevel();
+        });
     }
 
-    function renderSidebarLeaderboard(data, myData) {
-        const lbContainer = document.getElementById('leaderboardList');
+    function generateLeaderboardHTML(data, myData) {
         let html = '';
-
-        // Render Top 10
         data.forEach((item, index) => {
-            // --- LOGIKA BARU: TENTUKAN GELAR (Rank vs Level) ---
-            let rankInfo = getRankInfo(item.level); // Default (berdasarkan level)
-            
-            // Timpa dengan gelar khusus jika masuk 3 besar
-            if (index === 0) {
-                rankInfo = { title: "🥇 The Champion", class: "rank-1" };
-            } else if (index === 1) {
-                rankInfo = { title: "🥈 Runner Up", class: "rank-2" };
-            } else if (index === 2) {
-                rankInfo = { title: "🥉 3rd Place", class: "rank-3" };
-            }
-            // --- AKHIR LOGIKA BARU ---
+            let rankInfo = getRankInfo(item.level); 
+            if (index === 0) { rankInfo = { title: "🥇 The Champion", class: "rank-1" }; } 
+            else if (index === 1) { rankInfo = { title: "🥈 Runner Up", class: "rank-2" }; } 
+            else if (index === 2) { rankInfo = { title: "🥉 3rd Place", class: "rank-3" }; }
 
             const isMe = (myData && item.username === myData.username) ? 'my-rank-item' : '';
             
@@ -546,7 +573,7 @@
                 <div class="lb-header">
                     <div class="lb-name-wrap">
                         <span class="lb-rank">${index + 1}</span>
-                        <span>${item.nama}</span>
+                        <span>${item.username}</span> 
                     </div>
                     <span>${item.skor}</span>
                 </div>
@@ -557,11 +584,9 @@
             </div>`;
         });
 
-        // Render Posisi Saya (Jika di luar top 10)
         if(myData) {
             const myRankInfo = getRankInfo(myData.level);
             const inTop10 = data.some(d => d.username === myData.username);
-            
             if(!inTop10) {
                 html += `
                 <div style="margin-top:10px; border-top:2px dashed #ccc; padding-top:10px;">
@@ -569,7 +594,7 @@
                         <div class="lb-header">
                             <div class="lb-name-wrap">
                                 <span class="lb-rank">?</span>
-                                <span>Anda (${myData.nama})</span>
+                                <span>Anda (${myData.username})</span>
                             </div>
                             <span>${myData.skor}</span>
                         </div>
@@ -581,14 +606,12 @@
                 </div>`;
             }
         }
-
-        lbContainer.innerHTML = html || '<p style="text-align:center;">Belum ada data.</p>';
+        return html || '<p style="text-align:center;">Belum ada data.</p>';
     }
 
     // === GAMEPLAY UTAMA ===
     function getLevelConfig(level) {
         let tierData, gridCols, pairs, timePerPair;
-        
         if (level <= 15) { tierData = tier1; gridCols = 3; timePerPair = 15; } 
         else if (level <= 30) { tierData = [...tier1, ...tier2]; gridCols = 4; timePerPair = 12; } 
         else if (level <= 40) { tierData = [...tier2, ...tier3]; gridCols = 4; timePerPair = 10; } 
@@ -606,7 +629,6 @@
         lockBoard = false; matchesFound = 0;
         isPaused = false;
 
-        // Update UI
         levelDisplay.innerText = currentLevel;
         scoreDisplay.innerText = score;
 
@@ -713,17 +735,23 @@
         lockBoard = false;
     }
 
+    // --- MODIFIED: LEVEL COMPLETE WITH AUTO SAVE ---
     function levelComplete() {
         clearInterval(timerInterval);
         const bonus = Math.floor(timeLeft * 5);
         score += bonus;
         scoreDisplay.innerText = score;
+        
+        // SAVE OTOMATIS (SILENT)
+        saveProgress(true);
+
         document.getElementById('nextLevelNum').innerText = currentLevel + 1;
         document.getElementById('timeBonus').innerText = bonus;
         document.getElementById('levelModal').style.display = 'flex';
     }
 
     function saveAndExit() {
+        // Ini untuk tombol manual di modal (jika user ingin memastikan)
         saveProgress();
     }
 
@@ -754,9 +782,8 @@
         startLevel();
     }
 
-    // === INIT ===
+    // === JALANKAN SAAT LOAD ===
     checkSession();
-    startLevel();
 
 </script>
 </body>
