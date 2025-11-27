@@ -146,57 +146,6 @@
             .sidebar { display: none; }
             .game-board-mufrodat { max-height: none; }
         }
-		
-		/* --- TAJWID GAME --- */
-        .tajwid-container { width: 100%; max-width: 700px; display: flex; flex-direction: column; gap: 20px; align-items: center; }
-        .tajwid-question { 
-            text-align: center; font-size: 1.3rem; font-weight: bold; color: var(--dark); 
-            background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            width: 100%; border-left: 5px solid var(--accent);
-        }
-        .quran-display {
-            font-family: 'Amiri', serif;
-            font-size: 2.2rem;
-            line-height: 2.2;
-            text-align: center;
-            direction: rtl; /* Arab kanan ke kiri */
-            background: white;
-            padding: 30px 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            width: 100%;
-            border: 1px solid #e5e7eb;
-        }
-        
-        /* Kata-kata dalam ayat bisa diklik */
-        .tajwid-word {
-            cursor: pointer;
-            padding: 2px 5px;
-            border-radius: 5px;
-            transition: all 0.2s;
-            display: inline-block; /* Agar padding bekerja */
-        }
-        .tajwid-word:hover {
-            background-color: #f3f4f6;
-            transform: scale(1.1);
-        }
-        .tajwid-word.correct {
-            background-color: #d1fae5;
-            color: #065f46;
-            border: 1px solid #10b981;
-        }
-        .tajwid-word.wrong {
-            background-color: #fee2e2;
-            color: #ef4444;
-            animation: shake 0.5s;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-		
     </style>
 </head>
 <body>
@@ -222,10 +171,8 @@
                 <div class="status-ready">MAIN SEKARANG</div>
             </div>
             <div class="game-card" onclick="selectGame('tajwid')">
-                <div style="font-size:3rem;">🔍</div>
-                <div style="font-weight:bold; font-size:1.2rem;">Detektif Tajwid</div>
-                <div style="font-size:0.9rem; color:#666;">Temukan hukum bacaan dalam ayat.</div>
-                <div class="status-ready">MAIN SEKARANG</div> </div>
+                <div style="font-size:3rem;">🔍</div><div style="font-weight:bold;">Detektif Tajwid</div><div class="status-soon">SEGERA HADIR</div>
+            </div>
             <div class="game-card" onclick="selectGame('tahfidz')">
                 <div style="font-size:3rem;">📖</div><div style="font-weight:bold;">Sambung Ayat</div><div class="status-soon">SEGERA HADIR</div>
             </div>
@@ -269,14 +216,6 @@
                     <div class="pieces-area" id="fiqihPieces"></div>
                     <button class="btn btn-primary" id="checkFiqihBtn" style="width:100%; padding:12px;" onclick="checkFiqihAnswer()">✅ Cek Jawaban</button>
                 </div>
-				<div class="tajwid-container" id="gameBoardTajwid" style="display:none;">
-                    <div class="tajwid-question" id="tajwidQuestText">Pertanyaan akan muncul di sini...</div>
-                    
-                    <div class="quran-display" id="quranTextDisplay">
-                        </div>
-
-                    <div id="tajwidFeedback" style="height: 20px; font-weight:bold; text-align:center;"></div>
-                </div>
             </div>
 
             <div class="sidebar">
@@ -300,7 +239,7 @@
     <div class="modal" id="levelModal">
         <div class="modal-content">
             <h2 style="color: var(--primary); margin-top:0;">Ahlan Wa Sahlan! 🎉</h2>
-            <p>Level <span id="nextLevelNum" style="font-weight:bold; font-size:1.5rem;"></span> TerTbuka!</p>
+            <p>Level <span id="nextLevelNum" style="font-weight:bold; font-size:1.5rem;"></span> Terbuka!</p>
             <p>Bonus: +<span id="timeBonus"></span> Poin</p>
             <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
                 <button class="btn btn-primary" onclick="nextLevel()">Lanjut</button>
@@ -319,18 +258,6 @@
             </div>
         </div>
     </div>
-
-<div class="modal" id="guestModal" style="z-index: 2000;">
-        <div class="modal-content" style="max-width: 350px;">
-            <h2 style="color: var(--dark); margin-top:0;">Siapa Nama Antum?</h2>
-            <p style="color:#666; font-size:0.9rem;">Masukkan nama panggilan untuk dicatat di Papan Peringkat.</p>
-            
-            <input type="text" id="guestNameInput" placeholder="Contoh: Abdullah" 
-                   style="width:100%; padding:12px; margin:15px 0; border:2px solid #ddd; border-radius:8px; font-size:1.1rem; text-align:center; font-weight:bold;">
-            
-            <button class="btn btn-primary" style="width:100%;" onclick="submitGuestName()">Mulai Bermain 🚀</button>
-        </div>
-    </div>g
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec"; 
@@ -446,126 +373,11 @@
         { title: "Urutan Peristiwa Kiamat", steps: ["Sangkakala Kematian", "Kebangkitan", "Padang Mahsyar", "Hisab/Mizan", "Sirat", "Surga/Neraka"] },
         { title: "Tanda Baligh (Urutan Bebas)", steps: ["Mimpi Basah (Ihtilam)", "Haid (Perempuan)", "Berumur 15 Tahun"], mode: 'unordered' }
     ];
-	
-	// === DATA TAJWID (20 LEVEL) ===
-    // Format: text (Ayat dipisah spasi), question (Hukum yg dicari), targetIndex (Urutan kata ke-berapa yg benar, mulai dari 0 dari Kanan)
-    const tajwidData = [
-        // LEVEL 1-5: HUKUM NUN SUKUN / TANWIN DASAR
-        { 
-            text: "مِنْ شَرِّ مَا خَلَقَ", 
-            question: "Temukan Ikhfa Haqiqi (Nun Mati bertemu Syin)", 
-            targetIndex: [0] // "Min"
-        },
-        { 
-            text: "وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ", 
-            question: "Temukan Izhar Halqi (Tanwin bertemu Alif)", 
-            targetIndex: [2] // "Ghasiqin"
-        },
-        { 
-            text: "كَلَّا لَيُنْبَذَنَّ فِي الْحُطَمَةِ", 
-            question: "Temukan Iqlab (Nun Mati bertemu Ba)", 
-            targetIndex: [1] // "Layumbazanna"
-        },
-        { 
-            text: "فِي جِيدِهَا حَبْلٌ مِنْ مَسَدٍ", 
-            question: "Temukan Idgham Bighunnah (Tanwin bertemu Mim)", 
-            targetIndex: [2] // "Hablun"
-        },
-        { 
-            text: "مِنْ لَدُنْكَ رَحْمَةً", 
-            question: "Temukan Idgham Bilaghunnah (Nun Mati bertemu Lam)", 
-            targetIndex: [0] // "Min"
-        },
 
-        // LEVEL 6-10: HUKUM MIM SUKUN & QALQALAH
-        { 
-            text: "لَهُمْ مَا يَشَاءُونَ", 
-            question: "Temukan Idgham Mimi (Mim Mati bertemu Mim)", 
-            targetIndex: [0] // "Lahum"
-        },
-        { 
-            text: "تَرْمِيهِمْ بِحِجَارَةٍ", 
-            question: "Temukan Ikhfa Syafawi (Mim Mati bertemu Ba)", 
-            targetIndex: [0] // "Tarmihim"
-        },
-        { 
-            text: "أَلَمْ تَرَ كَيْفَ", 
-            question: "Temukan Izhar Syafawi (Mim Mati bertemu Ta)", 
-            targetIndex: [0] // "Alam"
-        },
-        { 
-            text: "قُلْ هُوَ اللَّهُ أَحَدٌ", 
-            question: "Temukan Qalqalah Kubra (Diwaqafkan)", 
-            targetIndex: [3] // "Ahad"
-        },
-        { 
-            text: "وَالْعَادِيَاتِ ضَبْحًا", 
-            question: "Temukan Qalqalah Sugra (Di tengah)", 
-            targetIndex: [1] // "Dhabha"
-        },
-
-        // LEVEL 11-15: HUKUM LAM & RA
-        { 
-            text: "اَلْحَمْدُ لِلّٰهِ رَبِّ الْعٰلَمِيْنَ", 
-            question: "Temukan Alif Lam Qamariyah (Al-Qamar)", 
-            targetIndex: [0, 3] // "Alhamdu" atau "Al-'Alamin" (Bisa pilih salah satu)
-        },
-        { 
-            text: "مَالِكِ يَوْمِ الدِّينِ", 
-            question: "Temukan Alif Lam Syamsiyah (Al-Syams)", 
-            targetIndex: [2] // "Ad-Din"
-        },
-        { 
-            text: "غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ", 
-            question: "Temukan Ra Tarqiq (Tipis)", 
-            targetIndex: [0] // "Ghairi" (Kasrah)
-        },
-        { 
-            text: "نَصْرُ اللَّهِ وَالْفَتْحُ", 
-            question: "Temukan Lafzul Jalalah Tafkhim (Tebal)", 
-            targetIndex: [1] // "Allah" (didahului dhommah)
-        },
-        { 
-            text: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", 
-            question: "Temukan Lafzul Jalalah Tarqiq (Tipis)", 
-            targetIndex: [1] // "Allah" (didahului kasrah)
-        },
-
-        // LEVEL 16-20: MAD (PANJANG)
-        { 
-            text: "إِنَّا أَعْطَيْنَاكَ الْكَوْثَرَ", 
-            question: "Temukan Mad Jaiz Munfasil", 
-            targetIndex: [0] // "Innaaa"
-        },
-        { 
-            text: "إِذَا جَاءَ نَصْرُ اللَّهِ", 
-            question: "Temukan Mad Wajib Muttasil", 
-            targetIndex: [1] // "Jaaa-a"
-        },
-        { 
-            text: "أَرَأَيْتَ الَّذِي يُكَذِّبُ بِالدِّينِ", 
-            question: "Temukan Mad Arid Lissukun (Jika waqaf)", 
-            targetIndex: [3] // "Biddiiin"
-        },
-        { 
-            text: "وَلَا الضَّالِّينَ", 
-            question: "Temukan Mad Lazim Kilmi Mutsaqqal (6 Harakat)", 
-            targetIndex: [1] // "Dhaaaallin"
-        },
-        { 
-            text: "نُوحيِهَا", 
-            question: "Temukan Mad Thabi'i (Asli)", 
-            targetIndex: [0] // "Nuuhuuhaa"
-        }
-    ];
-	
-	
     function showLoading(show) { document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none'; }
     
     function selectGame(gameId) {
-        // 1. Filter Game yang Belum Siap
-        if (gameId === 'nahwu') { 
-            // Tajwid dihapus dari daftar alert karena sudah siap
+        if (gameId === 'tajwid' || gameId === 'nahwu') {
             alert("Game ini sedang dalam pengembangan.");
             return;
         } else if (gameId === 'tahfidz') {
@@ -573,58 +385,26 @@
             return;
         }
 
-        // 2. Simpan Mode Game
         currentGameMode = gameId;
-
-        // 3. CEK USER: Apakah sudah ada user (Login Yayasan atau Tamu)?
-        if (!currentUser) {
-            // Jika belum ada, STOP di sini dan munculkan Modal Nama
-            document.getElementById('guestModal').style.display = 'flex';
-            document.getElementById('guestNameInput').focus();
-            return; 
-        }
-		
-        // 4. Jika user sudah ada, lanjut ke Tampilan Game
-        startGameSequence();
-    }
-
-    // Fungsi helper untuk memulai game (dipisahkan agar rapi)
-    function startGameSequence() {
-        // 1. Sembunyikan Menu, Tampilkan Game UI
         document.getElementById('gameMenu').style.display = 'none';
         document.getElementById('gameUI').style.display = 'flex';
 
-        // 2. Reset Score & Level
-        currentLevel = 1; 
-        score = 0;
+        // Reset
+        currentLevel = 1; score = 0;
 
-        // 3. Sembunyikan SEMUA Papan Game terlebih dahulu (Reset Tampilan)
-        document.getElementById('gameBoardMufrodat').style.display = 'none';
-        document.getElementById('mufrodatTimerContainer').style.display = 'none'; 
-        document.getElementById('gameBoardFiqih').style.display = 'none';
-        document.getElementById('gameBoardTajwid').style.display = 'none'; // Board Baru
-
-        // 4. Tampilkan Papan Game sesuai Mode
-        if (currentGameMode === 'mufrodat') {
+        if (gameId === 'mufrodat') {
             document.getElementById('gameTitleDisplay').textContent = "🎮 Master Mufrodat";
             document.getElementById('gameBoardMufrodat').style.display = 'grid';
             document.getElementById('mufrodatTimerContainer').style.display = 'block';
-            
-        } else if (currentGameMode === 'fiqih') {
+            document.getElementById('gameBoardFiqih').style.display = 'none';
+        } else if (gameId === 'fiqih') {
             document.getElementById('gameTitleDisplay').textContent = "🧩 Puzzle Fiqih";
+            document.getElementById('gameBoardMufrodat').style.display = 'none';
+            document.getElementById('mufrodatTimerContainer').style.display = 'none'; 
             document.getElementById('gameBoardFiqih').style.display = 'flex';
-            
-        } else if (currentGameMode === 'tajwid') {
-            // --- LOGIKA BARU UNTUK TAJWID ---
-            document.getElementById('gameTitleDisplay').textContent = "🔍 Detektif Tajwid";
-            document.getElementById('gameBoardTajwid').style.display = 'flex';
         }
-
-        // 5. Sinkronisasi Data User (Ambil Level Terakhir dari Server)
-        fetchLeaderboard(false, true);
+        checkSession();
     }
-	
-	
 
     function backToMenu() {
         clearInterval(mufrodatInterval);
@@ -633,74 +413,20 @@
     }
 
     function checkSession() {
-        // 1. Cek Login Utama (User Yayasan)
         const sessionStr = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
         if (sessionStr) {
-            try {
-                const session = JSON.parse(sessionStr);
-                if (session.loggedIn) {
-                    currentUser = session.userData;
-                    updateUserUI();
-                    return; // Selesai, user ditemukan
-                }
-            } catch (e) { console.error("Error parsing user session"); }
-        }
-
-        // 2. Cek Login Tamu (Jika tidak ada login utama)
-        const guestStr = sessionStorage.getItem('guestSession');
-        if (guestStr) {
-            try {
-                currentUser = JSON.parse(guestStr);
-                updateUserUI();
-            } catch (e) { console.error("Error parsing guest session"); }
+            const session = JSON.parse(sessionStr);
+            if (session.loggedIn) {
+                currentUser = session.userData;
+                document.getElementById('userStatus').innerHTML = `<b>👤 ${currentUser.profileName}</b>`;
+                document.getElementById('btnSave').disabled = false;
+                document.getElementById('btnLoad').disabled = false;
+                fetchLeaderboard(false, true); // Sync user data
+            }
         } else {
-            // 3. Belum ada user sama sekali
-            currentUser = null;
-            document.getElementById('userStatus').innerHTML = `Tamu`;
-            document.getElementById('btnSave').disabled = true;
-            document.getElementById('btnLoad').disabled = true;
-            // Load leaderboard umum (tanpa data user)
-            fetchLeaderboard(false, false);
+            fetchLeaderboard(false, false); // Guest
+            startGameLevel();
         }
-    }
-
-    function updateUserUI() {
-        document.getElementById('userStatus').innerHTML = `<b>👤 ${currentUser.profileName}</b>`;
-        document.getElementById('btnSave').disabled = false;
-        document.getElementById('btnLoad').disabled = false;
-		
-		fetchLeaderboard(false, true);
-    }
-
-	function submitGuestName() {
-        const nameInput = document.getElementById('guestNameInput');
-        const name = nameInput.value.trim();
-
-        if (name.length < 3) {
-            alert("Nama terlalu pendek (min 3 huruf).");
-            return;
-        }
-
-        // Buat ID unik untuk tamu agar tidak menimpa data orang lain di server
-        // Format: guest_TIMESTAMP_ACAK
-        const uniqueId = 'guest_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-
-        const guestUser = {
-            username: uniqueId,     // ID Unik untuk database
-            profileName: name + " (Tamu)", // Nama Tampilan
-            isGuest: true
-        };
-
-        // Simpan ke Session Storage (Hilang kalau tutup browser, tapi tahan refresh)
-        sessionStorage.setItem('guestSession', JSON.stringify(guestUser));
-        
-        // Set global user
-        currentUser = guestUser;
-        updateUserUI();
-
-        // Tutup modal dan mulai game
-        document.getElementById('guestModal').style.display = 'none';
-        startGameSequence();
     }
 
     function getRankInfo(level) {
@@ -714,7 +440,6 @@
     function startGameLevel() {
         if (currentGameMode === 'mufrodat') startMufrodatLevel();
         else if (currentGameMode === 'fiqih') startFiqihLevel();
-		else if (currentGameMode === 'tajwid') startTajwidLevel();
     }
 
     // === SAVE/LOAD ===
@@ -1060,76 +785,6 @@
         }
     }
 
-	// ============================================
-    // === LOGIKA GAME 3: DETEKTIF TAJWID ===
-    // ============================================
-    let tajwidTargetIndices = [];
-
-    function startTajwidLevel() {
-        document.getElementById('levelDisplay').innerText = currentLevel;
-        document.getElementById('scoreDisplay').innerText = score;
-        document.getElementById('tajwidFeedback').innerText = ""; // Reset feedback
-
-        // Ambil data soal (Looping jika level > jumlah soal)
-        const idx = (currentLevel - 1) % tajwidData.length;
-        const data = tajwidData[idx];
-        
-        tajwidTargetIndices = data.targetIndex; // Array kunci jawaban
-
-        document.getElementById('tajwidQuestText').innerText = data.question;
-
-        const quranContainer = document.getElementById('quranTextDisplay');
-        quranContainer.innerHTML = '';
-
-        // Pecah ayat menjadi kata-kata berdasarkan spasi
-        const words = data.text.split(" ");
-
-        words.forEach((word, index) => {
-            const span = document.createElement('span');
-            span.className = 'tajwid-word';
-            span.innerText = word;
-            span.dataset.index = index;
-            
-            span.addEventListener('click', function() {
-                checkTajwidAnswer(this, parseInt(this.dataset.index));
-            });
-
-            quranContainer.appendChild(span);
-            // Tambah spasi visual antar kata
-            quranContainer.appendChild(document.createTextNode(" "));
-        });
-    }
-
-    function checkTajwidAnswer(element, clickedIndex) {
-        // Cek apakah indeks yang diklik ada di dalam kunci jawaban
-        if (tajwidTargetIndices.includes(clickedIndex)) {
-            // BENAR
-            element.classList.add('correct');
-            document.getElementById('tajwidFeedback').style.color = "#10b981";
-            document.getElementById('tajwidFeedback').innerText = "Benar! Mumtaz!";
-            
-            // Poin & Lanjut
-            score += 20;
-            setTimeout(() => {
-                showLevelComplete(0); // Tidak ada bonus waktu
-            }, 1000);
-        } else {
-            // SALAH
-            element.classList.add('wrong');
-            score = Math.max(0, score - 5);
-            document.getElementById('scoreDisplay').innerText = score;
-            
-            document.getElementById('tajwidFeedback').style.color = "#ef4444";
-            document.getElementById('tajwidFeedback').innerText = "Kurang tepat, coba lagi.";
-            
-            // Hapus warna merah setelah sebentar
-            setTimeout(() => {
-                element.classList.remove('wrong');
-            }, 500);
-        }
-    }
-
-
     // === SHARED LOGIC ===
     function showLevelComplete(bonus) {
         clearInterval(mufrodatInterval);
@@ -1165,3 +820,4 @@
 </script>
 </body>
 </html>
+
