@@ -11,9 +11,7 @@
             --dark: #064e3b;
             --accent: #f59e0b;
             --bg: #ecfdf5;
-            
-            /* PERUBAHAN WARNA DI SINI */
-            --matched-bg: #2563eb; /* Biru (Royal Blue) saat cocok */
+            --matched-bg: #2563eb; /* Biru saat cocok */
             --sidebar-bg: #ffffff;
         }
         * { box-sizing: border-box; }
@@ -135,14 +133,17 @@
             perspective: 1000px;
         }
 
-        /* --- CARD STYLING --- */
+        /* --- CARD STYLING (ANIMASI DIPERCEPAT) --- */
         .card {
             background-color: transparent;
             border-radius: 8px;
             cursor: pointer;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.4s;
+            
+            /* PERUBAHAN: Durasi transisi diubah dari 0.6s menjadi 0.3s */
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            
             aspect-ratio: 1 / 1;
             max-width: 120px; 
             max-height: 120px;
@@ -185,11 +186,10 @@
             overflow-wrap: break-word;
         }
 
-        /* PERUBAHAN WARNA BORDER SAAT COCOK */
         .card.matched .back { 
             background-color: var(--matched-bg) !important; 
             color: white !important; 
-            border-color: #93c5fd; /* Biru Muda (Light Blue) */
+            border-color: #93c5fd; 
             animation: pulse 0.5s ease-in-out; 
         }
 
@@ -447,7 +447,6 @@
     // Fungsi Load Progress (Manual Click)
     function loadProgress() {
         if (!currentUser) return alert("Login dulu!");
-        
         // Panggil fetch dengan mode SYNC = true
         fetchLeaderboard(false, true);
     }
@@ -718,6 +717,18 @@
         matchesFound++;
         firstCard.classList.add('matched');
         secondCard.classList.add('matched');
+
+        // --- UPDATE LOGIC: ADD TIME BONUS ---
+        let bonusTime = 0;
+        if (currentLevel < 20) {
+            bonusTime = 3;
+        } else if (currentLevel < 40) {
+            bonusTime = 4;
+        } else {
+            bonusTime = 5;
+        }
+        timeLeft += bonusTime;
+
         resetBoard();
         if (matchesFound === pairsNeeded) levelComplete();
     }
@@ -727,7 +738,7 @@
             firstCard.classList.remove('flipped');
             secondCard.classList.remove('flipped');
             resetBoard();
-        }, 1500);
+        }, 1000); // Adjusted to 1s to match faster pace
     }
 
     function resetBoard() {
