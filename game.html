@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Mufrodat - Yayasan Markaz Yatim Duafa Qurani</title>
+    <title>Arcade Santri - Yayasan Markaz Yatim Duafa Qurani</title>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -11,7 +11,7 @@
             --dark: #064e3b;
             --accent: #f59e0b;
             --bg: #ecfdf5;
-            --matched-bg: #2563eb; /* Biru saat cocok */
+            --matched-bg: #2563eb;
             --sidebar-bg: #ffffff;
         }
         * { box-sizing: border-box; }
@@ -26,8 +26,74 @@
             overflow: hidden; 
             user-select: none;
         }
+
+        /* --- GAME MENU (HALAMAN AWAL) --- */
+        #gameMenu {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 20px;
+        }
         
-        /* --- HEADER --- */
+        .menu-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--dark);
+        }
+        .menu-title h1 { font-size: 2.5rem; margin: 0; }
+        .menu-title p { font-size: 1.1rem; color: #555; }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            border-color: var(--primary);
+        }
+        .game-icon { font-size: 3rem; margin-bottom: 10px; }
+        .game-title { font-size: 1.3rem; font-weight: bold; color: var(--dark); }
+        .game-desc { font-size: 0.9rem; color: #666; }
+        .game-status { 
+            font-size: 0.8rem; padding: 4px 10px; border-radius: 10px; margin-top: auto; 
+            font-weight: bold;
+        }
+        .status-ready { background: #d1fae5; color: #065f46; }
+        .status-soon { background: #f3f4f6; color: #6b7280; }
+
+        /* --- GAME UI (SEMBUNYI DI AWAL) --- */
+        #gameUI {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        /* --- HEADER GAME --- */
         .header {
             background: var(--dark);
             color: white;
@@ -40,7 +106,10 @@
             flex-shrink: 0; 
             z-index: 50;
         }
+        .header-left { display: flex; align-items: center; gap: 15px; }
         .header h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        .home-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .home-btn:hover { background: rgba(255,255,255,0.3); }
         .user-info { font-size: 0.9rem; background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); }
 
         /* --- MAIN LAYOUT --- */
@@ -133,17 +202,14 @@
             perspective: 1000px;
         }
 
-        /* --- CARD STYLING (ANIMASI DIPERCEPAT) --- */
+        /* --- CARD STYLING --- */
         .card {
             background-color: transparent;
             border-radius: 8px;
             cursor: pointer;
             position: relative;
             transform-style: preserve-3d;
-            
-            /* PERUBAHAN: Durasi transisi diubah dari 0.6s menjadi 0.3s */
-            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-            
+            transition: transform 0.4s;
             aspect-ratio: 1 / 1;
             max-width: 120px; 
             max-height: 120px;
@@ -262,42 +328,90 @@
         <p>Memproses...</p>
     </div>
 
-    <div class="header">
-        <h1>🎮 Master Mufrodat</h1>
-        <div class="user-info" id="userStatus">Tamu</div>
+    <div id="gameMenu">
+        <div class="menu-title">
+            <h1>🎮 Arcade Santri</h1>
+            <p>Belajar sambil bermain, asah otak kanan dan kiri!</p>
+        </div>
+
+        <div class="menu-grid">
+            <div class="game-card" onclick="selectGame('mufrodat')">
+                <div class="game-icon">🧠</div>
+                <div class="game-title">Master Mufrodat</div>
+                <div class="game-desc">Hafalan kosakata Arab dengan kartu memori cepat.</div>
+                <div class="game-status status-ready">MAIN SEKARANG</div>
+            </div>
+
+            <div class="game-card" onclick="selectGame('fiqih')">
+                <div class="game-icon">🧩</div>
+                <div class="game-title">Puzzle Fiqih</div>
+                <div class="game-desc">Urutkan tata cara wudhu dan sholat dengan benar.</div>
+                <div class="game-status status-soon">SEGERA HADIR</div>
+            </div>
+
+            <div class="game-card" onclick="selectGame('tajwid')">
+                <div class="game-icon">🔍</div>
+                <div class="game-title">Detektif Tajwid</div>
+                <div class="game-desc">Temukan hukum bacaan tersembunyi dalam ayat.</div>
+                <div class="game-status status-soon">SEGERA HADIR</div>
+            </div>
+
+            <div class="game-card" onclick="selectGame('tahfidz')">
+                <div class="game-icon">📖</div>
+                <div class="game-title">Sambung Ayat</div>
+                <div class="game-desc">Uji hafalanmu! Lanjutkan potongan ayat dengan cepat.</div>
+                <div class="game-status status-soon">SEGERA HADIR</div>
+            </div>
+             <div class="game-card" onclick="selectGame('nahwu')">
+                <div class="game-icon">🏗️</div>
+                <div class="game-title">Juragan Nahwu</div>
+                <div class="game-desc">Susun kalimat Arab yang sempurna sesuai kaidah.</div>
+                <div class="game-status status-soon">SEGERA HADIR</div>
+            </div>
+        </div>
     </div>
 
-    <div class="main-container">
-        
-        <div class="game-area">
-            <div class="controls-bar">
-                <button class="btn btn-blue" onclick="fetchLeaderboard(true)">🏆 Peringkat</button>
-                <button class="btn btn-accent" id="btnSave" onclick="saveProgress()" disabled>💾 Simpan</button>
-                <button class="btn btn-primary" id="btnLoad" onclick="loadProgress()" disabled>📂 Muat Ulang</button>
+    <div id="gameUI">
+        <div class="header">
+            <div class="header-left">
+                <button class="home-btn" onclick="backToMenu()">🏠 Home</button>
+                <h1>🎮 Master Mufrodat</h1>
             </div>
-
-            <div class="status-bar">
-                <div class="badge">Lv: <span id="levelDisplay">1</span></div>
-                <div class="badge">Skor: <span id="scoreDisplay">0</span></div>
-            </div>
-
-            <div class="timer-container">
-                <div class="timer-bar" id="timerBar"></div>
-            </div>
-
-            <div class="game-board" id="gameBoard"></div>
+            <div class="user-info" id="userStatus">Tamu</div>
         </div>
 
-        <div class="sidebar">
-            <h2>🏆 Papan Peringkat</h2>
-            <div id="leaderboardList">
-                <p style="text-align:center; color:#999;">Memuat...</p>
-            </div>
-            <div style="margin-top:10px; text-align:center;">
-                <button class="btn btn-blue" onclick="fetchLeaderboard()" style="width:100%;">🔄 Refresh</button>
-            </div>
-        </div>
+        <div class="main-container">
+            
+            <div class="game-area">
+                <div class="controls-bar">
+                    <button class="btn btn-blue" onclick="fetchLeaderboard(true)">🏆 Peringkat</button>
+                    <button class="btn btn-accent" id="btnSave" onclick="saveProgress()" disabled>💾 Simpan</button>
+                    <button class="btn btn-primary" id="btnLoad" onclick="loadProgress()" disabled>📂 Muat Ulang</button>
+                </div>
 
+                <div class="status-bar">
+                    <div class="badge">Lv: <span id="levelDisplay">1</span></div>
+                    <div class="badge">Skor: <span id="scoreDisplay">0</span></div>
+                </div>
+
+                <div class="timer-container">
+                    <div class="timer-bar" id="timerBar"></div>
+                </div>
+
+                <div class="game-board" id="gameBoard"></div>
+            </div>
+
+            <div class="sidebar">
+                <h2>🏆 Papan Peringkat</h2>
+                <div id="leaderboardList">
+                    <p style="text-align:center; color:#999;">Memuat...</p>
+                </div>
+                <div style="margin-top:10px; text-align:center;">
+                    <button class="btn btn-blue" onclick="fetchLeaderboard()" style="width:100%;">🔄 Refresh</button>
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <div class="modal" id="leaderboardModal">
@@ -385,6 +499,39 @@
         {a:"مَنْ جَدَّ وَجَدَ", i:"Siapa bersungguh dapat"}, {a:"الصَّبْرُ ضِيَاءٌ", i:"Sabar itu cahaya"}
     ];
 
+    // Tier 5: Profesi & Keluarga
+    const tier5 = [
+        {a:"طَبِيْبٌ", i:"Dokter"}, {a:"مُهَنْدِسٌ", i:"Insinyur"}, {a:"تَاجِرٌ", i:"Pedagang"},
+        {a:"فَلَّاحٌ", i:"Petani"}, {a:"شُرْطِيٌّ", i:"Polisi"}, {a:"جُنْدِيٌّ", i:"Tentara"},
+        {a:"سَائِقٌ", i:"Sopir"}, {a:"طَبَّاخٌ", i:"Koki"}, {a:"أَبٌ", i:"Ayah"},
+        {a:"أُمٌّ", i:"Ibu"}, {a:"أَخٌ", i:"Saudara (Lk)"}, {a:"أُخْتٌ", i:"Saudari (Pr)"},
+        {a:"جَدٌّ", i:"Kakek"}, {a:"جَدَّةٌ", i:"Nenek"}, {a:"عَمٌّ", i:"Paman (Ayah)"},
+        {a:"عَمَّةٌ", i:"Bibi (Ayah)"}, {a:"خَالٌ", i:"Paman (Ibu)"}, {a:"خَالَةٌ", i:"Bibi (Ibu)"},
+        {a:"وَلَدٌ", i:"Anak (Lk)"}, {a:"بِنْتٌ", i:"Anak (Pr)"}, {a:"زَوْجٌ", i:"Suami"},
+        {a:"زَوْجَةٌ", i:"Istri"}, {a:"قَاضٍ", i:"Hakim"}, {a:"صَيَّادٌ", i:"Nelayan"}, {a:"مُمَرِّضٌ", i:"Perawat"}
+    ];
+
+    // Tier 6: Waktu, Arah & Transportasi
+    const tier6 = [
+        {a:"صَبَاحٌ", i:"Pagi"}, {a:"نَهَارٌ", i:"Siang"}, {a:"مَسَاءٌ", i:"Sore"}, {a:"لَيْلٌ", i:"Malam"},
+        {a:"يَوْمٌ", i:"Hari"}, {a:"أُسْبُوْعٌ", i:"Minggu"}, {a:"شَهْرٌ", i:"Bulan"}, {a:"سَنَةٌ", i:"Tahun"},
+        {a:"سَاعَةٌ", i:"Jam"}, {a:"دَقِيْقَةٌ", i:"Menit"}, {a:"ثَانِيَةٌ", i:"Detik"},
+        {a:"أَمَامَ", i:"Depan"}, {a:"وَرَاءَ", i:"Belakang"}, {a:"فَوْقَ", i:"Atas"}, {a:"تَحْتَ", i:"Bawah"},
+        {a:"يَمِيْنَ", i:"Kanan"}, {a:"يَسَارَ", i:"Kiri"}, {a:"سَيَّارَةٌ", i:"Mobil"},
+        {a:"طَائِرَةٌ", i:"Pesawat"}, {a:"قِطَارٌ", i:"Kereta Api"}, {a:"دَرَّاجَةٌ", i:"Sepeda"},
+        {a:"سَفِيْنَةٌ", i:"Kapal"}, {a:"حَافِلَةٌ", i:"Bus"}, {a:"شَارِعٌ", i:"Jalan"}, {a:"مَطَارٌ", i:"Bandara"}
+    ];
+
+    // Tier 7: Hewan Ternak, Warna & Sifat Lanjutan
+    const tier7 = [
+        {a:"أَحْمَرُ", i:"Merah"}, {a:"أَبْيَضُ", i:"Putih"}, {a:"أَسْوَدُ", i:"Hitam"}, {a:"أَخْضَرُ", i:"Hijau"},
+        {a:"أَزْرَقُ", i:"Biru"}, {a:"أَصْفَرُ", i:"Kuning"}, {a:"جَمَلٌ", i:"Unta"}, {a:"حِصَانٌ", i:"Kuda"},
+        {a:"غَنَمٌ", i:"Kambing"}, {a:"بَقَرَةٌ", i:"Sapi"}, {a:"دَجَاجَةٌ", i:"Ayam"}, {a:"بَطَّةٌ", i:"Bebek"},
+        {a:"أَرْنَبٌ", i:"Kelinci"}, {a:"نَمْلَةٌ", i:"Semut"}, {a:"نَحْلَةٌ", i:"Lebah"}, {a:"بَعُوْضَةٌ", i:"Nyamuk"},
+        {a:"ذُبَابٌ", i:"Lalat"}, {a:"نَشِيْطٌ", i:"Rajin"}, {a:"كَسْلَانُ", i:"Malas"}, {a:"مَاهِرٌ", i:"Pintar"},
+        {a:"جَاهِلٌ", i:"Bodoh"}, {a:"سَمِيْنٌ", i:"Gemuk"}, {a:"نَحِيْفٌ", i:"Kurus"}, {a:"غَالٍ", i:"Mahal"}, {a:"رَخِيْصٌ", i:"Murah"}
+    ];
+
     // === GAME STATE ===
     let currentLevel = 1;
     let score = 0;
@@ -408,6 +555,29 @@
     const loadingOverlay = document.getElementById('loadingOverlay');
     const btnLoad = document.getElementById('btnLoad');
 
+    // === MENU NAVIGATION ===
+    function selectGame(gameId) {
+        if (gameId === 'mufrodat') {
+            // Hide Menu, Show Game
+            document.getElementById('gameMenu').style.display = 'none';
+            document.getElementById('gameUI').style.display = 'flex';
+            
+            // Initialize Mufrodat Game
+            checkSession();
+        } else {
+            alert("Qadarullah, game ini belum tersedia. Mohon bersabar ya! 🚧");
+        }
+    }
+
+    function backToMenu() {
+        // Stop timer if running
+        clearInterval(timerInterval);
+        
+        // Hide Game, Show Menu
+        document.getElementById('gameUI').style.display = 'none';
+        document.getElementById('gameMenu').style.display = 'flex';
+    }
+
     // === INITIALIZATION & SESSION ===
     function checkSession() {
         const sessionStr = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
@@ -419,12 +589,9 @@
                 document.getElementById('btnSave').disabled = false;
                 btnLoad.disabled = false;
                 
-                // PENTING: Langsung ambil data & sync saat login
-                // Parameter: showModal=false, syncGameData=true
                 fetchLeaderboard(false, true); 
             }
         } else {
-            // Tamu: Load leaderboard, mulai Level 1
             fetchLeaderboard(false, false);
             startLevel(); 
         }
@@ -447,7 +614,6 @@
     // Fungsi Load Progress (Manual Click)
     function loadProgress() {
         if (!currentUser) return alert("Login dulu!");
-        // Panggil fetch dengan mode SYNC = true
         fetchLeaderboard(false, true);
     }
 
@@ -517,7 +683,6 @@
         .then(res => res.json())
         .then(result => {
             if(result.status === 'success') {
-                // 1. Render Leaderboard
                 const html = generateLeaderboardHTML(result.leaderboard, result.myProgress);
                 lbContainer.innerHTML = html;
                 
@@ -526,24 +691,16 @@
                     document.getElementById('leaderboardModal').style.display = 'flex';
                 }
 
-                // 2. LOGIKA AUTO-SYNC (LANJUTKAN LEVEL)
                 if (syncGameData) {
                     if(result.myProgress) {
-                        // Update State Lokal
                         currentLevel = result.myProgress.level;
                         score = result.myProgress.skor;
                         
-                        // Update UI
                         levelDisplay.innerText = currentLevel;
                         scoreDisplay.innerText = score;
-                        
-                        // Update Tombol Lanjut
                         btnLoad.innerText = `📂 Muat Ulang (Lv ${currentLevel})`;
-                        
-                        // Mulai Game di Level Tersebut
                         startLevel();
                     } else {
-                        // Jika belum ada data (New User), mulai level 1
                         startLevel();
                     }
                 }
@@ -552,7 +709,6 @@
         .catch(err => {
             console.error(err);
             lbContainer.innerHTML = '<p style="text-align:center; color:red;">Offline.</p>';
-            // Fallback: jika error saat sync, tetap mulai level 1
             if(syncGameData) startLevel();
         });
     }
@@ -611,10 +767,28 @@
     // === GAMEPLAY UTAMA ===
     function getLevelConfig(level) {
         let tierData, gridCols, pairs, timePerPair;
-        if (level <= 15) { tierData = tier1; gridCols = 3; timePerPair = 15; } 
-        else if (level <= 30) { tierData = [...tier1, ...tier2]; gridCols = 4; timePerPair = 12; } 
-        else if (level <= 40) { tierData = [...tier2, ...tier3]; gridCols = 4; timePerPair = 10; } 
-        else { tierData = [...tier3, ...tier4]; gridCols = 5; timePerPair = 8; } 
+        
+        if (level <= 10) { 
+            tierData = tier1; gridCols = 3; timePerPair = 15; 
+        } 
+        else if (level <= 20) { 
+            tierData = [...tier1, ...tier2]; gridCols = 4; timePerPair = 12; 
+        } 
+        else if (level <= 30) { 
+            tierData = [...tier2, ...tier3]; gridCols = 4; timePerPair = 10; 
+        } 
+        else if (level <= 35) { 
+            tierData = [...tier3, ...tier4]; gridCols = 4; timePerPair = 10; 
+        }
+        else if (level <= 40) { 
+            tierData = [...tier4, ...tier5]; gridCols = 5; timePerPair = 9; 
+        }
+        else if (level <= 45) { 
+            tierData = [...tier5, ...tier6]; gridCols = 5; timePerPair = 8; 
+        }
+        else { 
+            tierData = [...tier6, ...tier7]; gridCols = 5; timePerPair = 8; 
+        } 
 
         pairs = Math.min(4 + Math.floor(level / 3), 15); 
         if (window.innerWidth < 600 && gridCols > 4) gridCols = 4;
@@ -718,15 +892,10 @@
         firstCard.classList.add('matched');
         secondCard.classList.add('matched');
 
-        // --- UPDATE LOGIC: ADD TIME BONUS ---
         let bonusTime = 0;
-        if (currentLevel < 20) {
-            bonusTime = 3;
-        } else if (currentLevel < 40) {
-            bonusTime = 4;
-        } else {
-            bonusTime = 5;
-        }
+        if (currentLevel < 20) { bonusTime = 3; } 
+        else if (currentLevel < 40) { bonusTime = 4; } 
+        else { bonusTime = 5; }
         timeLeft += bonusTime;
 
         resetBoard();
@@ -738,7 +907,7 @@
             firstCard.classList.remove('flipped');
             secondCard.classList.remove('flipped');
             resetBoard();
-        }, 1000); // Adjusted to 1s to match faster pace
+        }, 1000);
     }
 
     function resetBoard() {
@@ -762,7 +931,6 @@
     }
 
     function saveAndExit() {
-        // Ini untuk tombol manual di modal (jika user ingin memastikan)
         saveProgress();
     }
 
@@ -792,9 +960,6 @@
         document.getElementById('gameOverModal').style.display = 'none';
         startLevel();
     }
-
-    // === JALANKAN SAAT LOAD ===
-    checkSession();
 
 </script>
 </body>
