@@ -2148,6 +2148,47 @@ footer a {
     color: var(--text-color) !important;
 }
 
+/* === GAYA TOMBOL GAME CONSOLE === */
+#game-console-btn {
+    position: fixed;
+    bottom: 90px; /* Posisi: 20px (tombol sholat) + 50px (tinggi tombol) + 20px (jarak) */
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--secondary-color); /* Warna Sekunder (Kuning/Merah/Emas) agar kontras */
+    color: #ffffff;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 998; /* Di bawah modal, di atas konten */
+    font-size: 1.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Efek membal */
+    animation: floatGame 3s ease-in-out infinite;
+}
+
+/* Efek Hover */
+#game-console-btn:hover {
+    transform: scale(1.15) rotate(15deg);
+    box-shadow: 0 0 20px var(--secondary-color);
+}
+
+/* Animasi Melayang Halus */
+@keyframes floatGame {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+/* Penyesuaian Mode Gelap untuk Modal Game */
+[data-theme="dark"] #game-console-btn {
+    border-color: var(--primary-color);
+    color: var(--bg-color);
+}
+
     </style>
 </head>
 <body>
@@ -13751,10 +13792,57 @@ window.loadSavedTheme = function() {
     }
 }
 
+// === LOGIKA TOMBOL GAME CONSOLE ===
+
+const gameBtn = document.getElementById('game-console-btn');
+const gameModal = document.getElementById('game-modal-window');
+const gameFrame = document.getElementById('game-frame');
+const gameCloseBtn = gameModal.querySelector('.close-button');
+
+// 1. Buka Game
+gameBtn.addEventListener('click', () => {
+    gameModal.style.display = 'flex'; // Tampilkan modal
+    gameModal.style.alignItems = 'center';
+    gameModal.style.justifyContent = 'center';
+    
+    // Lazy Load: Hanya muat game.html jika belum dimuat (agar hemat data)
+    if (gameFrame.getAttribute('src') === "") {
+        gameFrame.setAttribute('src', 'game.html');
+    }
+});
+
+// 2. Tutup Game
+gameCloseBtn.addEventListener('click', () => {
+    gameModal.style.display = 'none';
+    // Opsional: Jangan reset src agar progress game tidak hilang saat ditutup sementara
+    // Jika ingin reset game setiap tutup, tambahkan: gameFrame.setAttribute('src', '');
+});
+
+// 3. Tutup jika klik di luar area game
+window.addEventListener('click', (e) => {
+    if (e.target === gameModal) {
+        gameModal.style.display = 'none';
+    }
+});
+
     // --- MULAI APLIKASI ---
     initializeApp();
 });
 </script>
+<button id="game-console-btn" title="Main Game Edukasi">
+    🎮
+</button>
 
+<div id="game-modal-window" class="modal" style="z-index: 10000;">
+    <div class="modal-content" style="width: 95%; height: 90vh; max-width: 1200px; padding: 0; background-color: #000; overflow: hidden; display: flex; flex-direction: column;">
+        
+        <div style="padding: 10px 20px; background: var(--primary-color); display: flex; justify-content: space-between; align-items: center; color: white;">
+            <span style="font-weight: bold; font-size: 1.1em;">🎮 Arena Belajar & Bermain</span>
+            <span class="close-button" style="position: static; color: white; line-height: 1;">&times;</span>
+        </div>
+
+        <iframe src="" id="game-frame" style="width: 100%; flex: 1; border: none; background-color: #ecfdf5;"></iframe>
+    </div>
+</div>
 </body>
 </html>
