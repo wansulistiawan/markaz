@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arcade Santri - Yayasan Markaz Yatim Duafa Qurani</title>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
-    <style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<style>
         :root {
             --primary: #10b981;
             --dark: #064e3b;
@@ -49,10 +52,18 @@
         #gameUI { display: none; flex-direction: column; height: 100%; }
         
         .header {
-            background: var(--dark); color: white; width: 100%; padding: 8px 20px; 
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink: 0; z-index: 50;
-        }
+    background: var(--dark); 
+    color: white; 
+    width: 100%; 
+    padding: 8px 15px; 
+    display: flex; 
+    justify-content: space-between; /* Kiri dan Kanan mentok */
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+    flex-shrink: 0; 
+    z-index: 50;
+    position: relative; /* Penting untuk centering judul */
+}
         .header h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
         .home-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .user-info {
@@ -267,7 +278,247 @@
                 transform: translate(-50%, -80px) scale(1); 
             }
         }
-    </style>
+		
+		/* --- LCC GAME STYLES --- */
+        .lcc-lobby {
+            display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 500px;
+            background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .lcc-arena {
+            display: flex; flex-direction: column; width: 100%; height: 100%;
+        }
+
+        /* Scoreboard LCC */
+        .lcc-scoreboard {
+            display: flex; justify-content: space-around; padding: 10px;
+            background: var(--dark); color: white; border-radius: 0 0 15px 15px;
+            margin-bottom: 15px;
+        }
+        .team-score {
+            text-align: center; position: relative; padding: 5px 15px; border-radius: 10px;
+            transition: all 0.3s;
+        }
+        .team-score.active {
+            background: rgba(255,255,255,0.2); box-shadow: 0 0 15px var(--accent); border: 2px solid var(--accent);
+        }
+        .team-score h3 { margin: 0; font-size: 0.9rem; opacity: 0.8; }
+        .team-score span { font-size: 1.5rem; font-weight: bold; }
+        
+        /* Indikator Lampu Bel */
+        .buzzer-light {
+            width: 15px; height: 15px; border-radius: 50%; background: #555;
+            margin: 5px auto; border: 2px solid #fff; transition: background 0.2s;
+        }
+        .active .buzzer-light { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+
+        /* Area Pertanyaan */
+        .question-display {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            text-align: center; padding: 20px; font-size: 1.4rem; font-weight: bold;
+            color: var(--dark); min-height: 150px;
+        }
+
+        /* Tombol Bel Besar */
+        .buzzer-btn {
+            width: 120px; height: 120px; border-radius: 50%;
+            background: radial-gradient(circleAt 30% 30%, #ff6b6b, #c0392b);
+            border: 5px solid #fff;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 0 5px 10px rgba(255,255,255,0.3);
+            color: white; font-size: 1.5rem; font-weight: bold; cursor: pointer;
+            margin: 0 auto 20px; transition: transform 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .buzzer-btn:active { transform: scale(0.95); box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
+        .buzzer-btn:disabled { filter: grayscale(1); cursor: not-allowed; }
+
+        /* Mode User vs User Lobby */
+        .room-code { font-size: 2rem; letter-spacing: 5px; font-weight: bold; color: var(--primary); margin: 10px 0; }
+        .player-list { list-style: none; padding: 0; text-align: left; }
+        .player-list li { padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+    
+	.category-badge {
+    align-self: center;
+    background-color: #f3f4f6;
+    color: #374151;
+    font-size: 0.9rem;
+    font-weight: bold;
+    padding: 8px 25px;
+    border-radius: 50px;
+    margin-top: 15px;    /* Jarak dari skor */
+    margin-bottom: 10px; /* Jarak dari soal */
+    border: 1px solid #d1d5db;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    display: none; /* Sembunyikan default, muncul via JS */
+}
+
+/* Efek visual untuk pemain yang sudah salah jawab di ronde ini */
+.eliminated {
+    opacity: 0.5;
+    filter: grayscale(100%);
+    pointer-events: none; /* Tidak bisa diklik */
+    transition: all 0.3s;
+}
+
+/* Agar buzzer mati total bagi yang tereliminasi */
+.eliminated .buzzer-btn {
+    background: #555 !important;
+    cursor: not-allowed;
+}
+	
+	.window-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.win-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+}
+
+.win-btn:hover { background: rgba(255,255,255,0.3); transform: translateY(-2px); }
+.win-btn.btn-close { background: rgba(239, 68, 68, 0.8); border-color: #ef4444; }
+.win-btn.btn-close:hover { background: #dc2626; }
+
+/* --- MODE MAXIMIZE (Menyembunyikan Sidebar) --- */
+body.maximize-mode .sidebar {
+    display: none !important; /* Hilangkan sidebar */
+}
+body.maximize-mode .game-area {
+    flex: 1; /* Area game ambil semua ruang */
+    width: 100%;
+}
+	/* --- LCC TIMER BAR --- */
+.lcc-timer-wrapper {
+    width: 100%;
+    height: 6px;
+    background-color: #e5e7eb;
+    margin-top: 10px;
+    border-radius: 3px;
+    overflow: hidden;
+    display: none; /* Sembunyikan default */
+}
+
+.lcc-timer-progress {
+    height: 100%;
+    width: 100%;
+    background-color: #f59e0b; /* Warna Kuning/Emas */
+    transition: width 0.1s linear;
+}
+
+/* Warna merah jika waktu mau habis */
+.lcc-timer-progress.critical {
+    background-color: #ef4444; 
+}
+
+.timer-clock {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: conic-gradient(var(--color) var(--deg), #e5e7eb 0deg);
+    display: none; /* Sembunyi default */
+    justify-content: center;
+    align-items: center;
+    margin: 10px auto;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: --deg 0.1s linear; /* Animasi halus */
+}
+
+/* Lingkaran dalam agar jadi cincin (Donut Chart) */
+.timer-clock::after {
+    content: "";
+    position: absolute;
+    width: 65px; 
+    height: 65px;
+    background: white;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* Angka di tengah */
+.timer-text {
+    z-index: 2;
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: var(--dark);
+    font-family: 'Fredoka', sans-serif;
+}
+
+/* Indikator Babak */
+.stage-indicator {
+    background: var(--dark);
+    color: #fbbf24;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    display: inline-block;
+}
+
+/* --- SETTINGS FORM DI LOBBY --- */
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 15px 0;
+    text-align: left;
+    background: #f9fafb;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.setting-item label {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #555;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.setting-item input, .setting-item select {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.role-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.role-option {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 0.9rem;
+}
+.role-option.selected {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+	</style>
 </head>
 <body>
 
@@ -302,18 +553,40 @@
             <div class="game-card" onclick="selectGame('nahwu')">
                 <div style="font-size:3rem;">🏗️</div><div style="font-weight:bold;">Juragan Nahwu</div><div class="status-soon">SEGERA HADIR</div>
             </div>
+			<div class="game-card" onclick="selectGame('lcc')">
+                <div style="font-size:3rem;">🔔</div>
+                <div class="game-title">LCC Cerdas Cermat</div>
+                <div class="game-desc">Adu kecepatan & ketepatan! Lawan Bot atau Teman.</div>
+                <div class="status-ready">MULTIPLAYER</div>
+            </div>
         </div>
     </div>
 
     <div id="gameUI">
-        <div class="header">
-            <div style="display:flex; align-items:center; gap:15px;">
-                <button class="home-btn" onclick="backToMenu()">🏠 Home</button>
-                <h1 id="gameTitleDisplay">🎮 Game</h1>
-            </div>
-			<button id="muteBtn" class="home-btn" onclick="toggleMute()">🔊 On</button>
-            <div class="user-info" id="userStatus">Tamu</div>
+        <div class="header" style="position: relative;"> <div style="display:flex; align-items:center; gap:15px; z-index:10;">
+        <button class="home-btn" onclick="confirmExit()">🏠 Home</button>
+        <button id="muteBtn" class="home-btn" onclick="toggleMute()">🔊 On</button>
+    </div>
+
+    <h1 id="gameTitleDisplay" style="
+        position: absolute; 
+        left: 50%; 
+        transform: translateX(-50%); 
+        font-size: 1.1rem; 
+        margin: 0; 
+        white-space: nowrap;
+        pointer-events: none;">
+        🎮 Game
+    </h1>
+
+    <div style="display:flex; align-items:center; gap:10px; z-index:10;">
+        <div class="window-controls">
+            <button class="win-btn" onclick="toggleMaximize()" title="Perlebar Tampilan">↔️</button>
+            <button class="win-btn" onclick="toggleFullscreen()" title="Layar Penuh">📺</button>
         </div>
+        <div class="user-info" id="userStatus">Tamu</div>
+    </div>
+</div>
 
         <div class="main-container">
             <div class="game-area">
@@ -340,6 +613,98 @@
                     <div class="pieces-area" id="fiqihPieces"></div>
                     <button class="btn btn-primary" id="checkFiqihBtn" style="width:100%; padding:12px;" onclick="checkFiqihAnswer()">✅ Cek Jawaban</button>
                 </div>
+				
+				<div id="lccLobby" class="lcc-lobby" style="display:none;">
+    <h2 style="text-align:center; color:var(--dark);">LCC Multiplayer</h2>
+    
+    <input type="text" id="playerNameInput" placeholder="Nama Kamu / Tim" class="w-full p-2 border rounded mb-2" style="width:100%; padding:10px; margin-bottom:10px;">
+
+    <div id="hostRoleSection" style="display:none; animation: popIn 0.3s ease;">
+        <p style="font-size:0.9rem; font-weight:bold; margin-bottom:5px;">Peran Host:</p>
+        <div class="role-selector">
+            <div id="rolePlayer" class="role-option selected" onclick="setHostRole('player')">🎮 Ikut Main</div>
+            <div id="roleReferee" class="role-option" onclick="setHostRole('referee')">⚖️ Juri (Wasit)</div>
+        </div>
+
+        <p style="font-size:0.9rem; font-weight:bold; margin-bottom:5px;">Aturan Permainan:</p>
+        <div class="settings-grid">
+            <div class="setting-item">
+                <label>Jml Babak</label>
+                <input type="number" id="confStages" value="3" min="1" max="5">
+            </div>
+            <div class="setting-item">
+                <label>Soal / Babak</label>
+                <input type="number" id="confQuestions" value="5" min="1" max="20">
+            </div>
+            <div class="setting-item">
+                <label>Waktu Rebutan (dtk)</label>
+                <input type="number" id="confTimerBuzz" value="7" min="3" max="20">
+            </div>
+            <div class="setting-item">
+                <label>Waktu Jawab (dtk)</label>
+                <input type="number" id="confTimerAns" value="10" min="5" max="30">
+            </div>
+        </div>
+
+        <button class="btn btn-accent" style="width:100%; margin-top:10px;" onclick="createRoom()">🚀 Konfirmasi & Buat Room</button>
+        <button class="btn" style="width:100%; margin-top:5px; background:#ccc;" onclick="cancelHostSetup()">Batal</button>
+    </div>
+
+    <div id="lobbyButtons">
+        <div class="flex gap-2" style="display:flex; gap:10px; margin-top:10px;">
+            <button class="btn btn-accent" style="flex:1" onclick="showHostSetup()">Buat Room</button>
+            <button class="btn btn-blue" style="flex:1" onclick="joinRoomPrompt()">Gabung</button>
+        </div>
+        <button class="btn btn-primary" onclick="startLccBotMode()" style="width:100%; margin-top:10px;">🤖 Latihan vs Bot</button>
+    </div>
+
+    <div id="waitingRoom" class="hidden mt-4 text-center" style="display:none; margin-top:20px; text-align:center; border-top:1px dashed #ccc; padding-top:10px;">
+        <p>Kode Room:</p>
+        <div id="displayRoomCode" class="room-code">---</div>
+        <p class="text-sm text-gray-500">Menunggu pemain lain...</p>
+        <ul id="lobbyPlayerList" class="player-list"></ul>
+        <button id="btnStartMulti" class="btn btn-primary w-full mt-2 hidden" style="display:none; width:100%;" onclick="startMultiplayerGame()">Mulai Game</button>
+    </div>
+</div>
+                
+
+                <div id="lccArena" class="lcc-arena" style="display:none;">
+    
+    <div style="text-align:center; margin-top:10px;">
+        <span id="stageDisplay" class="stage-indicator">BABAK 1: PENYISIHAN</span>
+    </div>
+
+    <div class="lcc-scoreboard">
+        <div class="team-score" id="teamA">
+             <div class="buzzer-light"></div>
+             <h3 id="nameA">Kamu</h3><span id="scoreA">0</span>
+        </div>
+        <div class="team-score" id="teamB">
+             <div class="buzzer-light"></div>
+             <h3 id="nameB">Lawan 1</h3><span id="scoreB">0</span>
+        </div>
+        <div class="team-score" id="teamC">
+             <div class="buzzer-light"></div>
+             <h3 id="nameC">Lawan 2</h3><span id="scoreC">0</span>
+        </div>
+    </div>
+
+    <div id="lccCategoryBadge" class="category-badge"></div>
+
+    <div class="question-display" id="lccQuestionText">
+        Persiapan...
+    </div>
+
+    <div id="lccTimerClock" class="timer-clock" style="--deg: 0deg; --color: #10b981;">
+        <span id="lccTimerText" class="timer-text">0</span>
+    </div>
+
+    <div style="padding:20px; text-align:center;">
+        <button id="buzzerBtn" class="buzzer-btn" onclick="pressBuzzer()">BEL</button>
+        <div id="answerOptions" class="hidden grid grid-cols-2 gap-2 mt-4"></div>
+    </div>
+</div>
+				
 				<div class="tajwid-container" id="gameBoardTajwid" style="display:none;">
                     <div class="tajwid-question" id="tajwidQuestText">Pertanyaan akan muncul di sini...</div>
                     
@@ -460,10 +825,109 @@
         }
     };
 	
+	const firebaseConfig = {
+  apiKey: "AIzaSyC4t1Gya_QHDzTkYsF7U-pw1Uo1oQUABpM",
+  authDomain: "websitemarkaz.firebaseapp.com",
+  databaseURL: "https://websitemarkaz-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  projectId: "websitemarkaz",
+  storageBucket: "websitemarkaz.firebasestorage.app",
+  messagingSenderId: "5529883980",
+  appId: "1:5529883980:web:792ce6d869070e9a79ebe9"
+};
+
+    // Inisialisasi Firebase (Cek agar tidak error jika config kosong)
+    let db;
+    try {
+        if(firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+    } catch(e) {
+        console.warn("Firebase belum dikonfigurasi. Multiplayer tidak aktif.");
+    }
+	
+	
+	// === DATABASE SOAL LCC (DARI FIREBASE) ===
+    // === DATABASE SOAL LCC (TERPISAH) ===
+    let lccData = {
+        umum: [],
+        diniyah: []
+    };
+
+    // Fungsi untuk mengambil soal dari Firebase
+    function fetchLccQuestionsFromFirebase() {
+        if (!db) return console.error("Firebase belum siap.");
+        
+        showLoading(true); 
+        
+        // Ambil seluruh node 'soal_lcc' yang berisi 'umum' dan 'diniyah'
+        db.ref('soal_lcc').once('value')
+            .then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    
+                    // Simpan ke variabel terpisah & pastikan formatnya Array
+                    lccData.umum = Array.isArray(data.umum) ? data.umum : Object.values(data.umum || {});
+                    lccData.diniyah = Array.isArray(data.diniyah) ? data.diniyah : Object.values(data.diniyah || {});
+                    
+                    console.log(`Soal Umum: ${lccData.umum.length}, Soal Diniyah: ${lccData.diniyah.length}`);
+                    
+                    if (lccData.umum.length === 0 && lccData.diniyah.length === 0) {
+                        alert("Database soal kosong!");
+                        backToMenu();
+                    } else {
+                        initLccGame(); 
+                    }
+                } else {
+                    alert("Database soal LCC belum dibuat di Firebase!");
+                    backToMenu();
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+                alert("Gagal mengambil soal. Periksa koneksi/konfigurasi.");
+                backToMenu();
+            })
+            .finally(() => {
+                showLoading(false);
+            });
+    }
+	
+	let lccMode = ''; // 'bot' or 'multi'
+    let lccRound = 0;
+    let lccScores = { A: 0, B: 0, C: 0 };
+    let lccCurrentQ = null;
+    let lccBuzzerLocked = false;
+    let lccTimer = null;
+    let lccTypeInterval = null;
+	let lccBotTimer = null;
+	let lccRoomId = null;
+    let lccMyPlayerId = null; // p1, p2, p3, p4
+    let lccDbRef = null;
+	let lccCurrentStage = 1; // 1: Penyisihan, 2: Semifinal, 3: Final
+    let MAX_STAGES = 3;
+    let QUESTIONS_PER_STAGE = 9;
+    let TIMER_BUZZER_DURATION = 7; // Waktu rebutan
+    let TIMER_ANSWER_DURATION = 10; // Waktu menjawab
+    
+    let isHostReferee = false; // Status apakah saya juri
+    let hostRoleSelection = 'player'; // Ubah jadi 10 jika ingin lebih lama
+	let lccSessionScore = 0; // Menyimpan total poin sesi ini (misal: 1100)
+    let lccSessionLevel = 0; // Menyimpan total babak sesi ini (misal: 6)
+    
+    // Variabel Timer
+    let lccGameTimer = null;
+    // Variabel untuk melacak posisi huruf
+    let lccCharIndex = 0; 
+    let lccFullText = ""; // Menyimpan teks soal lengkap
+    // Variabel baru untuk melacak posisi teks
+    let lccWordIndex = 0; 
+    let lccCurrentWords = [];
+	let lccAttemptedPlayers = []; // Menyimpan 'A', 'B', atau 'C' yang sudah salah
+	
     let currentGameMode = ''; 
     let currentLevel = 1;
     let score = 0;
     let currentUser = null;
+	
 
     // === DATA MUFRODAT LENGKAP (7 TIER) ===
     // Tier 1: Benda Sehari-hari
@@ -659,10 +1123,31 @@
             alert("Game Sambung Ayat sedang disiapkan!");
             return;
         }
-
+        
         // 2. Simpan Mode Game
         currentGameMode = gameId;
+        
+        // TAMBAHAN KHUSUS LCC
+        if (gameId === 'lcc') {
+            document.getElementById('gameTitleDisplay').textContent = "🔔 LCC Cerdas Cermat";
+            lccSessionScore = 0;
+            lccSessionLevel = 0;
+            // Sembunyikan board lain
+            document.getElementById('gameBoardMufrodat').style.display = 'none';
+            document.getElementById('mufrodatTimerContainer').style.display = 'none'; 
+            document.getElementById('gameBoardFiqih').style.display = 'none';
+            document.getElementById('gameBoardTajwid').style.display = 'none';
+            
+            // Tampilkan LCC Lobby
+            document.getElementById('lccLobby').style.display = 'flex';
+            document.getElementById('lccArena').style.display = 'none';
 
+            // LOGIKA BARU: Hanya download soal jika main LCC dan soal belum ada
+            if (lccData.umum.length === 0 && lccData.diniyah.length === 0) {
+                 setTimeout(() => fetchLccQuestionsFromFirebase(), 500);
+            }
+        } 
+        
         // 3. CEK USER DENGAN TELITI
         // Panggil checkSession() dulu untuk memastikan data terbaru terbaca
         const isLoggedIn = checkSession();
@@ -680,7 +1165,7 @@
 
     // Fungsi helper untuk memulai game (dipisahkan agar rapi)
     function startGameSequence() {
-        // 1. Sembunyikan Menu, Tampilkan Game UI
+        // 1. Sembunyikan Menu Utama & Tampilkan UI Game
         document.getElementById('gameMenu').style.display = 'none';
         document.getElementById('gameUI').style.display = 'flex';
 
@@ -688,15 +1173,20 @@
         currentLevel = 1; 
         score = 0;
 
-        // 3. Sembunyikan SEMUA Papan Game terlebih dahulu (Reset Tampilan)
+        // 3. HARD RESET: Sembunyikan SEMUA Papan Game & Lobby
+        // Ini memastikan tidak ada game yang saling tumpuk
         document.getElementById('gameBoardMufrodat').style.display = 'none';
         document.getElementById('mufrodatTimerContainer').style.display = 'none'; 
         document.getElementById('gameBoardFiqih').style.display = 'none';
-        document.getElementById('gameBoardTajwid').style.display = 'none'; // Board Baru
+        document.getElementById('gameBoardTajwid').style.display = 'none';
+        
+        // PENTING: Sembunyikan Elemen LCC juga!
+        document.getElementById('lccLobby').style.display = 'none';
+        document.getElementById('lccArena').style.display = 'none';
 
-        // 4. Tampilkan Papan Game sesuai Mode
+        // 4. Tampilkan Papan Game sesuai Mode yang dipilih
         if (currentGameMode === 'mufrodat') {
-            document.getElementById('gameTitleDisplay').textContent = "🎮 Master Mufrodat";
+            document.getElementById('gameTitleDisplay').textContent = "🧠 Master Mufrodat";
             document.getElementById('gameBoardMufrodat').style.display = 'grid';
             document.getElementById('mufrodatTimerContainer').style.display = 'block';
             
@@ -705,12 +1195,21 @@
             document.getElementById('gameBoardFiqih').style.display = 'flex';
             
         } else if (currentGameMode === 'tajwid') {
-            // --- LOGIKA BARU UNTUK TAJWID ---
             document.getElementById('gameTitleDisplay').textContent = "🔍 Detektif Tajwid";
             document.getElementById('gameBoardTajwid').style.display = 'flex';
+        
+        } else if (currentGameMode === 'lcc') {
+            document.getElementById('gameTitleDisplay').textContent = "🔔 LCC Cerdas Cermat";
+            // Khusus LCC, tampilkan Lobby dulu
+            document.getElementById('lccLobby').style.display = 'flex';
+            
+            // Cek apakah perlu download soal
+            if (lccData.umum.length === 0 && lccData.diniyah.length === 0) {
+                 setTimeout(() => fetchLccQuestionsFromFirebase(), 500);
+            }
         }
 
-        // 5. Sinkronisasi Data User (Ambil Level Terakhir dari Server)
+        // 5. Update Leaderboard lokal
         fetchLeaderboard(false, true);
     }
 	
@@ -774,6 +1273,1058 @@
         fetchLeaderboard(false, true);
     }
 
+	// --- MODE LAWAN BOT (LATIHAN) ---
+    function initLccGame() {
+        // Fungsi ini kosongkan saja atau isi logika reset jika perlu
+        // Karena user masih di Lobby LCC menunggu klik tombol "Lawan Bot"
+    }
+	
+	// --- FUNGSI UI HOST ---
+    function showHostSetup() {
+        // Sembunyikan tombol awal, Munculkan settingan
+        document.getElementById('lobbyButtons').style.display = 'none';
+        document.getElementById('hostRoleSection').style.display = 'block';
+    }
+
+    function cancelHostSetup() {
+        // Balik ke tampilan awal
+        document.getElementById('hostRoleSection').style.display = 'none';
+        document.getElementById('lobbyButtons').style.display = 'block';
+    }
+
+    function setHostRole(role) {
+        hostRoleSelection = role;
+        document.getElementById('rolePlayer').className = role === 'player' ? 'role-option selected' : 'role-option';
+        document.getElementById('roleReferee').className = role === 'referee' ? 'role-option selected' : 'role-option';
+    }
+
+    // --- UPDATE: CREATE ROOM DENGAN ERROR HANDLING ---
+    function createRoom() {
+        // 1. Cek Koneksi Firebase
+        if (!db) {
+            Swal.fire('Error', 'Koneksi Database Gagal. Cek internet/config.', 'error');
+            return;
+        }
+
+        const name = document.getElementById('playerNameInput').value || "Host";
+        if (!name.trim()) {
+            Swal.fire('Peringatan', 'Masukkan nama dulu!', 'warning');
+            return;
+        }
+
+        const roomId = Math.floor(1000 + Math.random() * 9000).toString();
+        
+        // 2. Tampilkan Loading
+        Swal.fire({
+            title: 'Membuat Room...',
+            text: 'Mohon tunggu sebentar',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        // Ambil Config
+        const config = {
+            stages: parseInt(document.getElementById('confStages').value) || 3,
+            qPerStage: parseInt(document.getElementById('confQuestions').value) || 5,
+            tBuzz: parseInt(document.getElementById('confTimerBuzz').value) || 7,
+            tAns: parseInt(document.getElementById('confTimerAns').value) || 10
+        };
+
+        // Set Global Var
+        MAX_STAGES = config.stages;
+        QUESTIONS_PER_STAGE = config.qPerStage;
+        TIMER_BUZZER_DURATION = config.tBuzz;
+        TIMER_ANSWER_DURATION = config.tAns;
+        isHostReferee = (hostRoleSelection === 'referee');
+        
+        lccRoomId = roomId;
+        lccMyPlayerId = 'p1';
+        lccMode = 'multi';
+        
+        const roomData = {
+            status: 'waiting',
+            host: name,
+            config: config,
+            currentRound: -1, 
+            buzzer: null,     
+            scores: { p1: 0, p2: 0, p3: 0, p4: 0 },
+            players: {
+                p1: { name: name, role: hostRoleSelection, ready: true }
+            }
+        };
+
+        // 3. COBA SIMPAN KE FIREBASE
+        db.ref('rooms/' + roomId).set(roomData)
+            .then(() => {
+                // BERHASIL
+                Swal.close(); // Tutup loading
+                
+                // Sembunyikan form setup
+                document.getElementById('hostRoleSection').style.display = 'none';
+                
+                // Masuk Waiting Room
+                showWaitingRoom(roomId, true);
+                watchGameRoom(roomId);
+            })
+            .catch((error) => {
+                // GAGAL
+                console.error("Firebase Error:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Membuat Room',
+                    text: 'Kemungkinan Database Rules terkunci. ' + error.message
+                });
+            });
+    }
+
+
+    function startLccBotMode() {
+        // PERBAIKAN: Cek ke lccData (umum & diniyah), bukan lccQuestions
+        if (lccData.umum.length === 0 && lccData.diniyah.length === 0) {
+            alert("Sedang memuat soal dari server...");
+            fetchLccQuestionsFromFirebase();
+            return;
+        }
+
+        lccMode = 'bot';
+        document.getElementById('lccLobby').style.display = 'none';
+        document.getElementById('lccArena').style.display = 'flex';
+        
+        // Reset Skor
+        lccScores = { A: 0, B: 0, C: 0 };
+		lccCurrentStage = 1; // Reset Babak
+        lccRound = 0;
+		
+		document.getElementById('stageDisplay').innerText = "BABAK 1: PENYISIHAN";
+        updateScoreUI();
+		
+        document.getElementById('nameA').innerText = currentUser ? currentUser.profileName.split(' ')[0] : "Kamu";
+        document.getElementById('nameB').innerText = "Bot Alfa";
+        document.getElementById('nameC').innerText = "Bot Beta";
+        
+        nextLccQuestion();
+    }
+
+    function nextLccQuestion() {
+        // Cek apakah soal dalam babak ini sudah habis?
+        if (lccRound >= QUESTIONS_PER_STAGE) {
+            handleStageTransition();
+            return;
+        }
+
+        // 1. Reset State Ronde
+        lccAttemptedPlayers = []; // Kosongkan daftar penjahat (eh, penjawab salah)
+        lccBuzzerLocked = false;
+        clearTimeout(lccBotTimer);
+        clearInterval(lccTypeInterval);
+		stopLccTimer(); // Pastikan timer mati
+
+        // 2. Reset UI (Hilangkan efek eliminated & active)
+        document.querySelectorAll('.team-score').forEach(el => {
+            el.classList.remove('active', 'eliminated');
+        });
+
+        document.getElementById('buzzerBtn').disabled = false;
+        document.getElementById('buzzerBtn').style.background = "radial-gradient(circleAt 30% 30%, #ff6b6b, #c0392b)";
+        document.getElementById('buzzerBtn').innerText = "BEL";
+		
+        const optionsDiv = document.getElementById('answerOptions');
+        optionsDiv.classList.add('hidden');
+        
+        // 3. Logika Pilih Soal (Sama seperti sebelumnya)
+        let selectedCategory;
+        const umumAda = lccData.umum.length > 0;
+        const diniyahAda = lccData.diniyah.length > 0;
+
+        if (umumAda && diniyahAda) {
+            selectedCategory = Math.random() < 0.5 ? 'umum' : 'diniyah';
+        } else if (umumAda) {
+            selectedCategory = 'umum';
+        } else {
+            selectedCategory = 'diniyah';
+        }
+
+        const sourceArray = lccData[selectedCategory];
+        lccCurrentQ = sourceArray[Math.floor(Math.random() * sourceArray.length)];
+        
+        // Update Label & Teks
+        const labelEl = document.getElementById('lccCategoryBadge');
+        labelEl.innerText = selectedCategory === 'umum' ? "🌍 Pengetahuan Umum" : "☪️ Pengetahuan Diniyah";
+        labelEl.style.display = 'block';
+
+        const qText = document.getElementById('lccQuestionText');
+        qText.innerHTML = ""; 
+        lccFullText = lccCurrentQ.q; 
+        lccCharIndex = 0;           
+
+        resumeReadingQuestion();
+    }
+	
+	// --- FUNGSI BARU: TRANSISI BABAK & SAVE ---
+    function handleStageTransition() {
+        if (lccCurrentStage < MAX_STAGES) {
+            // Lanjut ke Babak Berikutnya
+            lccCurrentStage++;
+            lccRound = 0; // Reset hitungan soal
+            
+            // Nama Babak
+            let stageName = "";
+            if (lccCurrentStage === 2) stageName = "SEMIFINAL";
+            if (lccCurrentStage === 3) stageName = "FINAL";
+
+            // Update UI
+            document.getElementById('stageDisplay').innerText = `BABAK ${lccCurrentStage}: ${stageName}`;
+
+            Swal.fire({
+                title: 'Babak Selesai!',
+                text: `Selamat! Lanjut ke Babak ${lccCurrentStage}: ${stageName}`,
+                icon: 'success',
+                confirmButtonText: 'Lanjut Main 🚀'
+            }).then(() => {
+                nextLccQuestion();
+            });
+
+        } else {
+            // GAME OVER (Sudah Babak Terakhir)
+            finishLccGame();
+        }
+    }
+
+    function finishLccGame() {
+        // Stop semua aktivitas
+        stopAllGameLogic();
+		
+		// 1. AKUMULASI KE DATA SESI
+        // Tambahkan skor pertandingan ini ke total sesi
+        lccSessionScore += lccScores.A; 
+        
+        // Tambahkan jumlah babak yang dimainkan (biasanya 3 jika tamat) ke total sesi
+        lccSessionLevel += lccCurrentStage;
+
+        let title, subtext, icon;
+        // Cek Menang/Kalah (Misal user harus Top 1)
+        if (lccScores.A > lccScores.B && lccScores.A > lccScores.C) {
+            title = "🏆 JUARA 1! 🏆";
+            subtext = "Masya Allah! Performa yang luar biasa.";
+            icon = "success";
+            if(typeof sfx !== 'undefined') sfx.win();
+        } else if (lccScores.A >= lccScores.B || lccScores.A >= lccScores.C) {
+            title = "Runner Up! 🥈"; // Juara 2 atau 3
+            subtext = "Bagus! Sedikit lagi jadi juara.";
+            icon = "info";
+        } else {
+            title = "Jangan Menyerah! 💪";
+            subtext = "Teruslah belajar dan coba lagi.";
+            icon = "warning";
+        }
+
+        Swal.fire({
+            title: title,
+            html: `
+                <div style="margin-bottom:10px; font-size:0.9rem; color:#666;">
+                    Total Poin Sesi Ini (Hari Ini):
+                </div>
+                
+                <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 15px; padding: 20px; margin: 10px 0;">
+                    <div style="font-size: 3.5rem; font-weight: 900; color: #10b981; line-height: 1;">
+                        ${lccSessionScore}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #065f46; margin-top:5px;">
+                        (+${lccSessionLevel} Babak)
+                    </div>
+                </div>
+
+                <div style="font-size:0.8rem; color:#888;">
+                    Skor Match Terakhir: ${lccScores.A}
+                </div>
+
+                <div style="display:flex; justify-content:space-around; font-size:0.9rem; color:#666;">
+                    <span>🤖 Bot Alfa: <b>${lccScores.B}</b></span>
+                    <span>🤖 Bot Beta: <b>${lccScores.C}</b></span>
+                </div>
+            `,
+            icon: icon,
+            showDenyButton: true,       // Mengaktifkan tombol kedua
+            confirmButtonText: '🔄 Lanjut Main',
+            denyButtonText: '🏠 Selesai',
+            confirmButtonColor: '#3b82f6', // Biru untuk Lanjut
+            denyButtonColor: '#6b7280',    // Abu-abu untuk Selesai
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // TOMBOL LANJUT -> Restart Game dari awal
+                startLccBotMode();
+            } else if (result.isDenied) {
+			// SIMPAN KE SHEET OTOMATIS
+        
+        // Simpan dengan nama game 'lcc' dan level = Total Babak yang diselesaikan
+        saveLccToSheet(); 
+                // TOMBOL SELESAI -> Kembali ke Menu Utama
+                backToMenu();
+            }
+        });
+    }
+
+    // Fungsi Khusus Simpan LCC
+    function saveLccToSheet() {
+        if (!currentUser) return;
+        
+        // Tampilkan notifikasi kecil
+        const Toast = Swal.mixin({
+            toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
+        });
+        Toast.fire({ icon: 'info', title: 'Menyimpan skor...' });
+		
+		// --- LOGIKA PERHITUNGAN BARU (AKUMULASI) ---
+        // currentLevel = Level total dari database (Global)
+        // lccCurrentStage = Babak yang baru saja dimainkan (1, 2, atau 3)
+        const finalLevel = currentLevel + lccSessionLevel;
+
+        // score = Skor total dari database (Global)
+        // lccScores.A = Poin yang didapat di sesi LCC ini
+        const finalScore = score + lccSessionScore;
+
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: 'saveGameProgress', 
+                username: currentUser.username, 
+                nama: currentUser.profileName,
+                level: finalLevel, 
+                skor: finalScore,      // Simpan Skor total
+                namaGame: 'lcc' 
+            })
+        }).then(r=>r.json()).then(res => {
+            Toast.fire({ icon: 'success', title: 'Skor LCC tersimpan!' });
+			currentLevel = finalLevel;
+            score = finalScore;
+            fetchLeaderboard(false, false); // Refresh leaderboard
+        });
+    }
+	
+	// --- FUNGSI BARU: MENANGANI JAWABAN SALAH ---
+    function handleWrongAnswer(teamId) {
+        // 1. Pastikan tombol jawaban HILANG TOTAL jika user (A) yang salah
+        if (teamId === 'A') {
+            const optionsDiv = document.getElementById('answerOptions');
+            optionsDiv.classList.add('hidden');
+            optionsDiv.innerHTML = ''; 
+        }
+
+        // 2. Masukkan ke daftar pemain yang sudah mencoba (jika belum ada)
+        if (!lccAttemptedPlayers.includes(teamId)) {
+            lccAttemptedPlayers.push(teamId);
+        }
+        
+        // 3. Tandai visual (Redupkan skor pemain tsb & bunyikan suara salah)
+        const teamEl = document.getElementById(`team${teamId}`);
+        if(teamEl) {
+            teamEl.classList.remove('active');
+            teamEl.classList.add('eliminated');
+        }
+        if(typeof sfx !== 'undefined') sfx.wrong();
+
+        // 4. Update Skor (Kurangi poin)
+        updateLccScore(teamId, -50);
+
+        // ============================================================
+        // 5. CEK: Apakah SEMUA sudah salah? (Jumlah pemain = 3)
+        // ============================================================
+        if (lccAttemptedPlayers.length >= 3) {
+            // Hentikan semua timer bot agar tidak tumpang tindih
+            clearTimeout(lccBotTimer);
+            clearInterval(lccTypeInterval);
+            
+            // Tampilkan Jawaban Benar & Lanjut
+            showCorrectAnswer("Semua Salah!");
+        
+        } else {
+            // JIKA BELUM SEMUA SALAH -> Oper Giliran
+            
+            // Pesan singkat
+            Swal.fire({
+                icon: 'error',
+                title: 'Salah!',
+                text: 'Kesempatan dilempar ke pemain lain...',
+                timer: 1000,
+                showConfirmButton: false
+            }).then(() => {
+                resumeGameAfterWrong();
+            });
+        }
+    }
+
+// --- FUNGSI BARU: TAMPILKAN JAWABAN BENAR ---
+    function showCorrectAnswer(titleMsg) {
+        // Ambil teks jawaban benar berdasarkan index kunci (correct)
+        // lccCurrentQ.a adalah array pilihan jawaban, lccCurrentQ.correct adalah index jawaban benar (0-3)
+        const correctAnswerText = lccCurrentQ.a[lccCurrentQ.correct];
+        
+        // Tampilkan Info
+        Swal.fire({
+            icon: 'info',
+            title: titleMsg,
+            html: `Jawaban yang benar adalah:<br><br><b style="font-size:1.2rem; color:#10b981;">${correctAnswerText}</b>`,
+            timer: 4000, // Tampil selama 4 detik
+            showConfirmButton: false,
+            backdrop: `rgba(0,0,0,0.8)` // Gelapkan background biar fokus
+        });
+
+        // Lanjut ke soal berikutnya setelah popup hilang
+        setTimeout(() => {
+            lccRound++;
+            nextLccQuestion();
+        }, 4000);
+    }
+
+    // --- FUNGSI BARU: MELANJUTKAN GAME SETELAH SALAH ---
+    function resumeGameAfterWrong() {
+        // Buka kunci buzzer (global)
+        lccBuzzerLocked = false;
+        
+        // Jika User ('A') belum tereliminasi, nyalakan tombol Bel-nya
+        if (!lccAttemptedPlayers.includes('A')) {
+            document.getElementById('buzzerBtn').disabled = false;
+            document.getElementById('buzzerBtn').innerText = "BEL";
+        } else {
+            // Jika User sudah salah, tombol tetap mati (biar cuma bisa nonton bot)
+            document.getElementById('buzzerBtn').disabled = true;
+            document.getElementById('buzzerBtn').innerText = "🚫";
+        }
+
+        // PENTING: Trigger Bot untuk mikir lagi (jika bot belum tereliminasi)
+        // Cek apakah teks soal sudah selesai diketik?
+        if (lccCharIndex >= lccFullText.length) {
+            // Teks sudah selesai. 
+            // Kita nyalakan timer visual (7 detik) TAPI callbacknya biarkan kosong atau handling timeout standar
+            // Tujuannya memberi tekanan waktu, tapi membiarkan Bot mengambil keputusan sendiri
+            
+            startLccTimer(7, function() {
+                // Jika waktu habis beneran (bot gak mau jawab & user gak jawab), baru paksa random
+                handleNoBuzzerTimeout(); 
+            });
+            triggerBotThinking(); // Suruh bot mikir langsung
+        } else {
+            resumeReadingQuestion(); // Lanjut ketik soal
+        }
+    }
+
+    // --- FUNGSI BARU: TAMPILKAN JAWABAN BENAR ---
+    function showCorrectAnswer(msgTitle) {
+        // Ambil teks jawaban benar dari array opsi
+        const correctAnswerText = lccCurrentQ.a[lccCurrentQ.correct];
+        
+        Swal.fire({
+            icon: 'info',
+            title: msgTitle,
+            html: `Jawaban yang benar adalah:<br><b>${correctAnswerText}</b>`,
+            timer: 3000,
+            showConfirmButton: false
+        });
+
+        // Lanjut soal setelah 2 detik
+        lccRound++;
+        setTimeout(nextLccQuestion, 3000);
+    }
+
+
+    // Fungsi Terpisah: Melanjutkan Pembacaan Soal
+    function resumeReadingQuestion() {
+        const qText = document.getElementById('lccQuestionText');
+        
+        clearInterval(lccTypeInterval);
+        
+        // Animasi Huruf per Huruf (40ms = Cukup halus & cepat)
+        lccTypeInterval = setInterval(() => {
+            if (lccCharIndex < lccFullText.length) {
+                // Tambahkan satu huruf
+                qText.innerHTML += lccFullText.charAt(lccCharIndex);
+                lccCharIndex++;
+            } else {
+                // --- KETIK SELESAI ---
+                clearInterval(lccTypeInterval);
+                
+				if (!lccBuzzerLocked) {
+                    startLccTimer(7, function() {
+                        handleNoBuzzerTimeout(); // Aksi jika tidak ada yang tekan bel
+                    });
+                }
+                // --- PERBAIKAN 3: BOT BARU MIKIR SETELAH SELESAI KETIK ---
+                if (!lccBuzzerLocked && lccMode === 'bot') {
+                    // Beri jeda "berpikir" acak antara 1 sampai 3 detik setelah soal selesai
+                    const thinkingTime = Math.random() * 2000 + 1000; 
+                    
+                    lccBotTimer = setTimeout(() => {
+                        if (!lccBuzzerLocked) {
+                            // Bot menekan bel (Peluang bot nekan 50% agar tidak selalu bot yg main)
+                            if(Math.random() < 0.5) {
+                                const botId = Math.random() > 0.5 ? 'B' : 'C';
+                                botPressBuzzer(botId);
+                            }
+                        }
+                    }, thinkingTime);
+                }
+            }
+        }, 50); 
+    }
+	
+	function handleNoBuzzerTimeout() {
+        if (lccBuzzerLocked) return;
+
+        // Cari siapa saja yang BELUM tereliminasi
+        let activePlayers = ['A', 'B', 'C'].filter(id => !lccAttemptedPlayers.includes(id));
+        
+        if (activePlayers.length === 0) return; // Harusnya tidak terjadi
+
+        // Pilih satu secara acak
+        const randomVictim = activePlayers[Math.floor(Math.random() * activePlayers.length)];
+
+        Swal.fire({
+            icon: 'warning',
+            title: 'Waktu Habis!',
+            text: `Sistem menunjuk ${randomVictim === 'A' ? 'KAMU' : 'Bot ' + randomVictim} untuk menjawab!`,
+            timer: 1500,
+            showConfirmButton: false
+        }).then(() => {
+            // Paksa tekan bel buat dia
+            if (randomVictim === 'A') {
+                pressBuzzer(); 
+            } else {
+                botPressBuzzer(randomVictim);
+            }
+        });
+    }
+	
+    // --- FUNGSI BARU: LOGIKA BOT BERPIKIR (DIPISAH) ---
+    function triggerBotThinking() {
+        if (lccBuzzerLocked || lccMode !== 'bot') return;
+
+        // Tentukan Bot mana yang masih boleh main
+        // Filter bot (B atau C) yang TIDAK ada di lccAttemptedPlayers
+        let eligibleBots = ['B', 'C'].filter(id => !lccAttemptedPlayers.includes(id));
+
+        if (eligibleBots.length === 0) return; // Semua bot sudah salah/gugur
+
+        const thinkingTime = Math.random() * 2000 + 1000; 
+        
+        clearTimeout(lccBotTimer);
+        lccBotTimer = setTimeout(() => {
+            if (!lccBuzzerLocked) {
+                // Pilih satu bot secara acak dari yang tersisa
+                const randomBot = eligibleBots[Math.floor(Math.random() * eligibleBots.length)];
+                
+                // Peluang menekan bel (bisa diatur)
+                if(Math.random() < 0.75) { 
+                    botPressBuzzer(randomBot);
+                }
+            }
+        }, thinkingTime);
+    }
+
+    function pressBuzzer() {
+		if (lccBuzzerLocked && document.getElementById('buzzerBtn').innerText !== 'BEL') return;
+
+        // 1. Matikan Timer Rebutan
+        stopLccTimer();
+        // --- LOGIKA BOT (LAMA) ---
+        clearInterval(lccTypeInterval); 
+        clearTimeout(lccBotTimer);      
+        if(typeof sfx !== 'undefined') sfx.correct();
+		
+		if (lccBuzzerLocked) return;
+
+        // --- LOGIKA MULTIPLAYER ---
+        if (lccMode === 'multi') {
+            // Gunakan Transaction agar rebutan bel adil (siapa cepat dia dapat di server)
+            lccDbRef.child('buzzer').transaction((currentVal) => {
+                // Jika kosong (null), berarti belum ada yang tekan -> Saya yang tekan
+                return currentVal === null ? lccMyPlayerId : undefined; 
+            }, (error, committed, snapshot) => {
+                if (committed) {
+                    // Saya berhasil menekan bel pertama!
+                    sfx.correct();
+                } else {
+                    // Telat, orang lain sudah tekan
+                    console.log("Keduluan orang lain!");
+                }
+            });
+            return; 
+        }
+		
+        // LOGIKA SINGLE PLAYER
+        lccBuzzerLocked = true;
+        document.getElementById('buzzerBtn').disabled = true;
+        document.getElementById('buzzerBtn').innerText = "A";
+        document.getElementById(`teamA`).classList.add('active');
+
+        // Tampilkan Tombol Jawaban
+        handleBuzzerWin('A'); 
+
+        // 2. MULAI TIMER MENJAWAB (Misal 10 Detik)
+        // Jika habis -> Anggap Salah
+        startLccTimer(10, function() {
+            // Waktu jawab habis!
+            handleWrongAnswer('A'); 
+        });
+    }
+
+    function botPressBuzzer(teamId) {
+		stopLccTimer();
+        // Hentikan timer & ketikan
+        clearInterval(lccTypeInterval); 
+        clearTimeout(lccBotTimer);
+        
+        if(typeof sfx !== 'undefined') sfx.flip();
+        
+        // Tampilkan full text
+        document.getElementById('lccQuestionText').innerText = lccCurrentQ.q;
+        
+        // Kunci bel & Highlight Bot
+        lccBuzzerLocked = true;
+        document.getElementById('buzzerBtn').disabled = true;
+        document.getElementById('buzzerBtn').innerText = teamId;
+        document.getElementById(`team${teamId}`).classList.add('active');
+
+        startLccTimer(5, null);
+		// Bot Menjawab (Delay 1.5 detik seolah mikir)
+        setTimeout(() => {
+            // Logika Bot Menjawab Benar/Salah
+            const isCorrect = Math.random() < 0.5; // 50% Peluang Benar
+            
+            if (isCorrect) {
+                updateLccScore(teamId, 100);
+                if(typeof sfx !== 'undefined') sfx.win();
+                Swal.fire({ icon: 'success', title: `Bot ${teamId} Benar!`, timer: 1500, showConfirmButton:false });
+                showAnswerAndNext(true, `Bot ${teamId}`);
+				lccRound++;
+                setTimeout(nextLccQuestion, 2000);
+            } else {
+                // BOT SALAH -> Lempar ke handleWrongAnswer
+                Swal.fire({ icon: 'error', title: `Bot ${teamId} Salah!`, timer: 1000, showConfirmButton:false }).then(() => {
+                    handleWrongAnswer(teamId);
+                });
+            }
+        }, 1500);
+    }
+	
+	function handleMultiBuzzerWin(winnerId) {
+        lccBuzzerLocked = true;
+        document.getElementById('buzzerBtn').disabled = true;
+        
+        // Tampilkan siapa yang menekan
+        // Mapping ID: p1->A, p2->B, p3->C
+        let uiId = 'A';
+        if (winnerId === 'p2') uiId = 'B';
+        if (winnerId === 'p3') uiId = 'C';
+
+        document.getElementById('buzzerBtn').innerText = document.getElementById('name'+uiId).innerText;
+        document.getElementById(`team${uiId}`).classList.add('active');
+        if(typeof sfx !== 'undefined') sfx.flip();
+
+        // Jika SAYA yang menang, tampilkan tombol jawaban
+        if (winnerId === lccMyPlayerId) {
+            const optionsDiv = document.getElementById('answerOptions');
+            optionsDiv.innerHTML = '';
+            optionsDiv.classList.remove('hidden');
+            
+            // Shuffle opsi jawaban
+            let shuffledOptions = lccCurrentQ.a.map((text, index) => ({ text, index }));
+            shuffledOptions.sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-primary';
+                btn.style.fontSize = '0.9rem';
+                btn.innerText = opt.text;
+                btn.onclick = () => checkLccAnswer(opt.index); // Kirim jawaban
+                optionsDiv.appendChild(btn);
+            });
+        }
+    }
+
+    function handleBuzzerWin(teamId) {
+        lccBuzzerLocked = true;
+        document.getElementById('buzzerBtn').disabled = true;
+        document.getElementById('buzzerBtn').innerText = teamId;
+        document.getElementById(`team${teamId}`).classList.add('active');
+
+        if (teamId === 'A') {
+            // Tampilkan Opsi Jawaban User
+            const optionsDiv = document.getElementById('answerOptions');
+            optionsDiv.innerHTML = '';
+            optionsDiv.classList.remove('hidden');
+            
+            // --- LOGIKA BARU: SHUFFLE (ACAK) POSISI TOMBOL ---
+            
+            // 1. Buat array objek yang menyimpan teks dan index aslinya
+            let shuffledOptions = lccCurrentQ.a.map((text, index) => ({
+                text: text,
+                originalIndex: index
+            }));
+
+            // 2. Acak urutan array tersebut
+            shuffledOptions.sort(() => Math.random() - 0.5);
+
+            // 3. Render tombol berdasarkan urutan yang sudah diacak
+            shuffledOptions.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-primary';
+                btn.style.fontSize = '0.9rem';
+                btn.innerText = opt.text;
+                
+                // Saat diklik, kita kirim index ASLI-nya untuk dicek
+                btn.onclick = () => checkLccAnswer(opt.originalIndex);
+                
+                optionsDiv.appendChild(btn);
+            });
+        }
+    }
+
+    function checkLccAnswer(idx) {
+        const optionsDiv = document.getElementById('answerOptions');
+
+        // PROTEKSI 1: Cek apakah tombol jawaban seharusnya TERSEMBUNYI?
+        // Jika class 'hidden' ada, berarti user mencoba klik tombol hantu/ilegal.
+        if (optionsDiv.classList.contains('hidden')) {
+            return; // Abaikan klik sepenuhnya
+        }
+
+        // PROTEKSI 2: Cek apakah BEL SUDAH DITEKAN oleh TIM A (User)?
+        const isMyTurn = document.getElementById('teamA').classList.contains('active');
+        if (!lccBuzzerLocked || !isMyTurn) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Tekan Bel Dulu!',
+                text: 'Anda tidak bisa menjawab sebelum menekan bel.',
+                timer: 1000,
+                showConfirmButton: false
+            });
+            // Paksa sembunyikan tombol jika muncul ilegal
+            optionsDiv.classList.add('hidden');
+            optionsDiv.innerHTML = ''; 
+            return;
+        }
+
+        // PROTEKSI 3: Cek apakah sudah pernah salah jawab
+        if (lccAttemptedPlayers.includes('A')) return;
+		
+		stopLccTimer();
+
+        // --- VALIDASI LOLOS, PROSES JAWABAN ---
+        
+        // Hilangkan tombol segera
+        optionsDiv.classList.add('hidden');
+        optionsDiv.innerHTML = ''; 
+
+        // Cek Jawaban Benar/Salah
+        if (idx === lccCurrentQ.correct) {
+            if(typeof sfx !== 'undefined') sfx.win();
+            updateLccScore('A', 100);
+            Swal.fire({ icon: 'success', title: 'Benar!', timer: 1500, showConfirmButton:false });
+			showAnswerAndNext(true, "Kamu");
+            lccRound++;
+            setTimeout(nextLccQuestion, 2000);
+        } else {
+            handleWrongAnswer('A');
+        }
+    }
+
+    function updateLccScore(team, amount) {
+        lccScores[team] += amount;
+		// --- TAMBAHAN PENTING ---
+        // Jika yang dapat poin adalah Tim A (User), update juga variabel global 'score'
+        // agar bisa disimpan ke database dan masuk leaderboard.
+        
+        updateScoreUI();
+    }
+
+    function updateScoreUI() {
+        document.getElementById('scoreA').innerText = lccScores.A;
+        document.getElementById('scoreB').innerText = lccScores.B;
+        document.getElementById('scoreC').innerText = lccScores.C;
+    }
+
+	function startLccTimer(durationSeconds, onTimeoutCallback) {
+        clearInterval(lccGameTimer);
+        
+        const clockEl = document.getElementById('lccTimerClock');
+        const textEl = document.getElementById('lccTimerText');
+        
+        clockEl.style.display = 'flex';
+        clockEl.style.setProperty('--deg', '360deg'); // Mulai penuh
+        clockEl.style.setProperty('--color', '#10b981'); // Hijau
+        
+        let timeLeft = durationSeconds;
+        const totalTime = durationSeconds;
+        
+        // Update tampilan awal
+        textEl.innerText = Math.ceil(timeLeft);
+
+        lccGameTimer = setInterval(() => {
+            timeLeft -= 0.1; 
+            
+            // Hitung Derajat (360 derajat = 100%)
+            const percentage = (timeLeft / totalTime);
+            const degrees = percentage * 360;
+            
+            clockEl.style.setProperty('--deg', `${degrees}deg`);
+            textEl.innerText = Math.ceil(timeLeft);
+
+            // Ubah Warna: Kuning di 50%, Merah di 20%
+            if (percentage < 0.2) clockEl.style.setProperty('--color', '#ef4444');
+            else if (percentage < 0.5) clockEl.style.setProperty('--color', '#f59e0b');
+
+            if (timeLeft <= 0) {
+                clearInterval(lccGameTimer);
+                clockEl.style.display = 'none';
+                if (onTimeoutCallback) onTimeoutCallback();
+            }
+        }, 100);
+    }
+
+    function stopLccTimer() {
+        clearInterval(lccGameTimer);
+        document.getElementById('lccTimerClock').style.display = 'none';
+    }
+	
+    // --- MODE MULTIPLAYER (FIREBASE) ---
+    // Ini adalah kerangka dasar. User perlu memasukkan Config Firebase di atas.
+    
+    
+    
+    function joinRoomPrompt() {
+        if (!db) return alert("Firebase belum siap.");
+        const name = document.getElementById('playerNameInput').value || "Player 2";
+        const roomId = prompt("Masukkan Kode Room (4 Digit):");
+        
+        if (roomId) {
+            const roomRef = db.ref('rooms/' + roomId);
+            roomRef.get().then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (data.status !== 'waiting') return alert("Game sudah berjalan!");
+                    
+                    // Cari slot kosong (p2, p3, p4)
+                    let myId = null;
+                    for(let i=2; i<=4; i++) {
+                        if(!data.players || !data.players['p'+i]) {
+                            myId = 'p'+i;
+                            break;
+                        }
+                    }
+
+                    if (!myId) return alert("Room penuh (Maks 4 orang)!");
+
+                    // Simpan info & Update Firebase
+                    lccRoomId = roomId;
+                    lccMyPlayerId = myId;
+                    lccMode = 'multi';
+                    
+                    roomRef.child('players/' + myId).set({ name: name, score: 0 });
+                    
+                    showWaitingRoom(roomId, false);
+                    watchGameRoom(roomId);
+                } else {
+                    alert("Room tidak ditemukan.");
+                }
+            });
+        }
+    }
+
+    function showWaitingRoom(roomId, isHost) {
+        // 1. Sembunyikan elemen input & tombol lobi agar bersih
+        document.getElementById('playerNameInput').style.display = 'none';
+        document.getElementById('lobbyButtons').style.display = 'none';
+        document.getElementById('hostRoleSection').style.display = 'none';
+
+        // 2. Tampilkan Area Menunggu (Paksa display block)
+        const waitingDiv = document.getElementById('waitingRoom');
+        waitingDiv.style.display = 'block';
+        waitingDiv.classList.remove('hidden');
+
+        // 3. Set Kode Room
+        document.getElementById('displayRoomCode').innerText = roomId;
+
+        // 4. Tampilkan Tombol Mulai (Hanya untuk Host)
+        if (isHost) {
+            const startBtn = document.getElementById('btnStartMulti');
+            startBtn.style.display = 'inline-block'; // Munculkan tombol
+            startBtn.classList.remove('hidden');
+        }
+    }
+
+    // FUNGSI YANG HILANG SEBELUMNYA
+    function startMultiplayerGame() {
+        // 1. Pastikan soal sudah siap
+        if (lccData.umum.length === 0 && lccData.diniyah.length === 0) {
+            alert("Sedang memuat soal...");
+            fetchLccQuestionsFromFirebase();
+            return;
+        }
+
+        // 2. Generate Soal Acak untuk Sesi Ini (10 Soal)
+        // Kita simpan index kategori dan index soalnya agar sinkron semua pemain
+        let gameQuestions = [];
+        for(let i=0; i<10; i++) {
+            // Pilih kategori (50:50 logic)
+            const cat = (Math.random() < 0.5 && lccData.umum.length > 0) ? 'umum' : 'diniyah';
+            // Pilih index soal
+            const qIndex = Math.floor(Math.random() * lccData[cat].length);
+            gameQuestions.push({ cat: cat, idx: qIndex });
+        }
+
+        // 3. Update Firebase untuk Memulai Game
+        db.ref('rooms/' + lccRoomId).update({
+            status: 'playing',
+            questionList: gameQuestions,
+            currentRound: 0,
+            buzzer: null
+        });
+    }
+	
+	function watchGameRoom(roomId) {
+        lccDbRef = db.ref('rooms/' + roomId);
+
+        lccDbRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return; 
+
+            // 1. SYNC ATURAN MAIN (PENTING BAGI YANG JOIN)
+            if (data.config) {
+                MAX_STAGES = data.config.stages;
+                QUESTIONS_PER_STAGE = data.config.qPerStage;
+                TIMER_BUZZER_DURATION = data.config.tBuzz;
+                TIMER_ANSWER_DURATION = data.config.tAns;
+            }
+
+            // 2. Update List Pemain
+            const list = document.getElementById('lobbyPlayerList');
+            list.innerHTML = '';
+            for (let pid in data.players) {
+                let roleLabel = "";
+                if(data.players[pid].role === 'referee') roleLabel = " (JURI ⚖️)";
+                list.innerHTML += `<li>${data.players[pid].name} ${roleLabel}</li>`;
+            }
+
+            // 3. Deteksi Game Mulai
+            if (data.status === 'playing') {
+                document.getElementById('lccLobby').style.display = 'none';
+                document.getElementById('lccArena').style.display = 'flex';
+                
+                // CEK APAKAH SAYA JURI?
+                // Jika saya p1 dan role di DB adalah referee
+                if (lccMyPlayerId === 'p1' && data.players.p1.role === 'referee') {
+                    isHostReferee = true;
+                    // Sembunyikan Tombol Bel Total
+                    document.getElementById('buzzerBtn').style.display = 'none';
+                    // Tampilkan pesan Juri
+                    const badge = document.createElement('div');
+                    badge.innerHTML = "<b>ANDA ADALAH JURI</b><br>Mengawasi Pertandingan";
+                    badge.style.cssText = "background:#333; color:white; padding:10px; border-radius:8px; margin-bottom:10px;";
+                    document.querySelector('#lccArena').prepend(badge);
+                }
+
+                // ... (Sisa logika update skor sama seperti sebelumnya) ...
+                for(let i=1; i<=3; i++) { 
+                     if(data.players['p'+i]) {
+                         document.getElementById('name'+ String.fromCharCode(64+i)).innerText = data.players['p'+i].name;
+                         document.getElementById('score'+ String.fromCharCode(64+i)).innerText = data.scores['p'+i] || 0;
+                     }
+                }
+                
+                if (!window.multiQuestions && data.questionList) {
+                    window.multiQuestions = data.questionList;
+                }
+
+                if (data.currentRound !== lccRound) {
+                    lccRound = data.currentRound;
+                    // Cek batas soal menggunakan variabel dynamic
+                    if (lccRound < (QUESTIONS_PER_STAGE * MAX_STAGES)) { // Logic simpel total soal
+                        displayMultiQuestion(data.currentRound);
+                    } else {
+                        // Game Over logic
+                    }
+                }
+
+                if (data.buzzer) {
+                    handleMultiBuzzerWin(data.buzzer);
+                } else {
+                    if (document.getElementById('buzzerBtn').innerText !== "BEL" && !isHostReferee) {
+                        resetBuzzerUI(); 
+                    }
+                }
+            }
+        });
+    }
+	
+	// --- FUNGSI BARU: TAMPILKAN HASIL JAWABAN (USER/BOT/LAWAN) ---
+    function showAnswerAndNext(isCorrect, winnerName) {
+        // Ambil jawaban benar
+        const correctAnswerText = lccCurrentQ.a[lccCurrentQ.correct];
+        
+        let title, icon, htmlContent;
+
+        if (isCorrect) {
+            title = `Benar! 🎉`;
+            icon = 'success';
+            htmlContent = `${winnerName} menjawab dengan tepat.<br><br>Jawaban: <b>${correctAnswerText}</b>`;
+        } else {
+            title = `Salah! ❌`;
+            icon = 'error';
+            htmlContent = `Jawaban kurang tepat.<br><br>Yang benar adalah: <b style="color:#10b981;">${correctAnswerText}</b>`;
+        }
+
+        // Tampilkan Popup selama 3 detik
+        Swal.fire({
+            title: title,
+            html: htmlContent,
+            timer: 3000,
+            showConfirmButton: false,
+            backdrop: `rgba(0,0,0,0.5)`
+        }).then(() => {
+            // Setelah popup, lanjut ke soal berikutnya
+            // Jika Multiplayer: Host update firebase
+            // Jika Single: Panggil nextLccQuestion
+            if (lccMode === 'multi') {
+                 // Di Multiplayer, biarkan listener yang handle perubahan ronde
+                 // Kecuali saya Host, maka saya yang update ronde
+                 if (lccMyPlayerId === 'p1') {
+                     // Host mengupdate ronde setelah delay tampil jawaban
+                     lccDbRef.update({
+                        buzzer: null,
+                        currentRound: lccRound + 1
+                    });
+                 }
+            } else {
+                lccRound++;
+                nextLccQuestion();
+            }
+        });
+    }
+
+    function displayMultiQuestion(roundIdx) {
+        // Reset UI
+        resetBuzzerUI();
+        
+        // Ambil Soal dari Cache
+        const qData = window.multiQuestions[roundIdx];
+        lccCurrentQ = lccData[qData.cat][qData.idx];
+
+        // Tampilkan Teks (Langsung full text biar adil masalah koneksi)
+        document.getElementById('lccQuestionText').innerHTML = 
+            `<div style="font-size:0.8rem;color:#666;">Soal ${roundIdx+1}/10</div>` + lccCurrentQ.q;
+    }
+
+    function resetBuzzerUI() {
+        lccBuzzerLocked = false;
+        document.getElementById('buzzerBtn').disabled = false;
+        document.getElementById('buzzerBtn').style.background = "";
+        document.getElementById('buzzerBtn').innerText = "BEL";
+        document.getElementById('answerOptions').classList.add('hidden');
+        document.querySelectorAll('.team-score').forEach(el => el.classList.remove('active'));
+    }
+
 	function submitGuestName() {
         const nameInput = document.getElementById('guestNameInput');
         const name = nameInput.value.trim();
@@ -785,10 +2336,10 @@
 
         // Buat ID unik untuk tamu agar tidak menimpa data orang lain di server
         // Format: guest_TIMESTAMP_ACAK
-        const uniqueId = 'guest_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+        const formattedName = `${name} (Tamu)`;
 
         const guestUser = {
-            username: uniqueId,     // ID Unik untuk database
+            username: formattedName,     // ID Unik untuk database
             profileName: name + " (Tamu)", // Nama Tampilan
             isGuest: true
         };
@@ -1347,6 +2898,91 @@
         document.getElementById('gameOverModal').style.display = 'none';
         startGameLevel();
     }
+	
+	// --- FITUR BARU: KONFIRMASI KELUAR ---
+    function confirmExit() {
+        // Tampilkan peringatan
+        Swal.fire({
+            title: 'Keluar Permainan?',
+            text: "Progres level ini akan hilang.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Keluar',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                stopAllGameLogic(); // Matikan semua mesin game
+                backToMenu();       // Kembali ke menu
+            }
+        });
+    }
+
+    // --- FUNGSI BARU: MEMATIKAN SEMUA LOGIKA GAME ---
+    function stopAllGameLogic() {
+        // 1. Matikan Timer Mufrodat
+        clearInterval(mufrodatInterval);
+        
+        // 2. Matikan Timer LCC (Penting!)
+        clearInterval(lccTypeInterval); // Stop animasi mengetik
+        clearTimeout(lccBotTimer);      // Stop bot berpikir
+        clearTimeout(lccTimer);         // Stop timer lain jika ada
+		clearInterval(lccGameTimer);    // Stop Timer Lingkaran
+        const clockEl = document.getElementById('lccTimerClock');
+        if(clockEl) clockEl.style.display = 'none';
+        
+        // 3. Matikan Koneksi Multiplayer (Firebase)
+        if (lccDbRef) {
+            lccDbRef.off(); // Putus hubungan dengan room agar tidak update di background
+            lccDbRef = null;
+        }
+
+        // 4. Reset State Global
+        lccBuzzerLocked = false;
+        lccMode = '';
+		lccAttemptedPlayers = [];
+        
+        // 5. Matikan Audio (Opsional, agar tidak ada sisa suara)
+        if(sfx && sfx.ctx && sfx.ctx.state === 'running') {
+            sfx.ctx.suspend();
+            setTimeout(() => sfx.ctx.resume(), 1000); // Resume nanti saat masuk game lagi
+        }
+
+        console.log("Semua game engine dimatikan.");
+    }
+
+    // --- UPDATE FUNGSI backToMenu ---
+    // Pastikan fungsi backToMenu Anda isinya seperti ini:
+    function backToMenu() {
+        // Panggil stop logic untuk jaga-jaga
+        stopAllGameLogic(); 
+
+        document.getElementById('gameUI').style.display = 'none';
+        document.getElementById('gameMenu').style.display = 'flex';
+        
+        // Reset tampilan Header
+        document.getElementById('gameTitleDisplay').textContent = "🎮 Game";
+    }
+	
+	// --- FITUR WINDOW CONTROLS ---
+    function toggleMaximize() {
+        // Tambah/Hapus class 'maximize-mode' di body
+        document.body.classList.toggle('maximize-mode');
+    }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                alert(`Error: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+	
 </script>
 </body>
 </html>
