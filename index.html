@@ -9936,17 +9936,19 @@ function showLoggedInView(userData) {
 
             raportNav.classList.toggle('hidden', !canAccessRaport);
 
-            // KASUS 1: SANTRI (Langsung buka file)
+            // KASUS 1: JIKA SANTRI
             if (isSantri) {
+                // Langsung buka raport miliknya sendiri
                 raportNav.href = `raport.html?username=${session.username}`;
-                raportNav.onclick = null; // Pastikan tidak ada handler lain
+                raportNav.setAttribute('target', '_blank'); // Buka di tab baru
+                raportNav.onclick = null;
             } 
-            // KASUS 2: ADMIN/GURU (Arahkan ke Tabel Santri)
+            // KASUS 2: JIKA GURU / ADMIN / PENGASUH (WAWAN)
             else if (canAccessRaport) {
-                // Arahkan ke Roster bagian Santri agar bisa memilih orangnya
-                raportNav.href = "#roster-kbm?scroll=santri"; 
-                raportNav.removeAttribute('target');
-                raportNav.onclick = null; // Hapus onclick lama yang membingungkan
+                // Langsung buka raport.html (tanpa username) agar muncul Pop-up pencarian
+                raportNav.href = "raport.html"; 
+                raportNav.setAttribute('target', '_blank'); // Buka di tab baru
+                raportNav.onclick = null; 
             }
         }
         // === AKHIR TAMBAHAN ===
