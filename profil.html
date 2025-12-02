@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Pengguna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        /* Style input saat mode edit aktif */
+        .profile-input:not([disabled]) {
+            background-color: #ffffff;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body class="p-6">
+
+    <div id="content-area" class="max-w-6xl mx-auto">
+        <div class="flex justify-center items-center h-64">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        </div>
+    </div>
+
+<script>
+    // --- KONFIGURASI ---
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec";
+
+    let currentUserData = {};
+    let myChart = null; 
+    let tempSkillData = []; 
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetUsername = urlParams.get('username');
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadUserProfile();
+    });
+
+    async function loadUserProfile() {
+        if (!targetUsername) { 
+            document.body.innerHTML = "<p class='text-center text-red-500 mt-10'>Username tidak ditemukan.</p>"; 
+            return; 
+        }
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getFullProfile', username: targetUsername }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                currentUserData = result.data;
+                tempSkillData = currentUserData.SkillChart || [];
+                renderProfile(currentUserData);
+            } else {
+                alert("Gagal: " + result.message);
+            }
+        } catch (error) { 
+            console.error(error); 
+            alert("Koneksi error."); 
+        }
+    }
+
+    function renderProfile(data) {
+        const contentArea = document.getElementById('content-area');
+        const role = (data.Jabatan || 'Santri').trim(); 
+        const isSantri = role.toLowerCase().includes('santri');
+        const statusColor = isSantri ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700';
+
+        // --- 1. LOGIKA VISUAL KIRI (GRAFIK) ---
+        let chartSection = '';
+        
+        if (isSantri) {
+            // Tampilan Santri: Radar Chart (SAMA SEPERTI RAPORT)
+            // Menampilkan Saldo Tabungan juga jika ada
+            const saldoRp = (data.SaldoTabungan || 0).toLocaleString('id-ID');
+            chartSection = `
+                <div class="relative h-64 w-full mb-4">
+                    <canvas id="radarChart"></canvas>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs mb-4">
+                    <div class="bg-gray-50 p-2 rounded border text-center">
+                        <span class="block text-gray-500">Tahfidz</span>
+                        <span class="font-bold text-emerald-600 text-lg">${data.Statistik ? data.Statistik[3] : 0}</span>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded border text-center">
+                        <span class="block text-gray-500">Akhlak</span>
+                        <span class="font-bold text-emerald-600 text-lg">${data.Statistik ? data.Statistik[4] : 0}</span>
+                    </div>
+                </div>
+                <div class="px-2">
+                    <a href="tabungan.html" class="block w-full bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-center hover:bg-indigo-100 transition shadow-sm group cursor-pointer no-underline">
+                        <div class="text-xs text-indigo-600 font-semibold uppercase tracking-wider mb-1">Saldo Tabungan</div>
+                        <div class="text-xl font-bold text-indigo-800 group-hover:text-indigo-900">
+                            Rp ${saldoRp}
+                        </div>
+                    </a>
+                </div>
+            `;
+        } else {
+            // Tampilan Guru: Progress Bar (SAMA SEPERTI YANG KITA BUAT SEBELUMNYA)
+            chartSection = `
+               <div id="skill-bars-container" class="w-full space-y-4 mb-4 px-2"></div>
+               <div id="skill-editor" class="hidden mt-6 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                   <p class="text-xs font-bold text-blue-800 mb-2 border-b border-blue-200 pb-1"><i class="fas fa-sliders-h mr-1"></i> Edit Keahlian</p>
+                   <div id="skill-list" class="space-y-2 text-xs mb-3 max-h-32 overflow-y-auto"></div>
+                   <div class="flex gap-1">
+                       <input type="text" id="new-skill-label" placeholder="Skill" class="w-full border p-1 rounded text-xs outline-none">
+                       <input type="number" id="new-skill-val" placeholder="%" class="w-16 border p-1 rounded text-xs text-center outline-none" min="0" max="100">
+                       <button onclick="addSkill()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-bold"><i class="fas fa-plus"></i></button>
+                   </div>
+               </div>`;
+        }
+
+        // --- 2. HTML UNTUK FORM KANAN ---
+        let formHTML = '';
+        if (isSantri) {
+            formHTML = `
+                <div class="md:col-span-2"><h4 class="font-bold text-gray-700 border-b pb-2 mb-4">Informasi Pribadi & Keluarga</h4></div>
+                ${createInput("Tempat Lahir", "TempatLahir", data.TempatLahir)}
+                ${createInput("Tanggal Lahir", "TanggalLahir", data.TanggalLahir, "date")}
+                ${createSelect("Jenis Kelamin", "JenisKelamin", data.JenisKelamin, ["Laki-laki", "Perempuan"])}
+                ${createSelect("Golongan Darah", "GolonganDarah", data.GolonganDarah, ["A", "B", "AB", "O", "-/Belum Tahu"])}
+                ${createInput("Kewarganegaraan", "Kewarganegaraan", data.Kewarganegaraan || "WNI")}
+                ${createInput("Anak Ke-", "AnakKe", data.AnakKe)}
+                
+                <div class="md:col-span-2 mt-4"><h4 class="font-bold text-gray-700 border-b pb-2 mb-4">Data Akademik & Wali</h4></div>
+                ${createInput("Nomor Induk Santri (NIS)", "NIS", data.NIS)}
+                ${createInput("Kelas", "Kelas", data.Kelas)}
+                ${createInput("Jurusan", "Jurusan", data.Jurusan)}
+                ${createInput("No. Kartu Keluarga", "KK", data.KK)}
+                ${createInput("Tanggal Masuk", "Masuk", data.Masuk, "date")}
+                ${createSelect("Status Santri", "Status", data.Status, ["Umum", "Yatim", "Duafa", "Yatim Duafa"])}
+                ${createInput("Nama Ayah", "NamaAyah", data.NamaAyah)}
+                ${createInput("Nama Ibu", "NamaIbu", data.NamaIbu)}
+                ${createInput("Pekerjaan Orang Tua", "Job", data.Job)}
+                ${createInput("No. Telp Wali", "TelpWali", data.TelpWali)}
+                
+                <div class="md:col-span-2 mt-4"><h4 class="font-bold text-gray-700 border-b pb-2 mb-4">Kontak & Lainnya</h4></div>
+                ${createInput("Email", "email", data.email, "email")}
+                ${createInput("Nama Sosmed (IG/FB)", "sosmed", data.sosmed)}
+                <div class="md:col-span-2">${createInput("Alamat Rumah", "AlamatRumah", data.AlamatRumah)}</div>
+                <div class="md:col-span-2">${createInput("Riwayat Penyakit", "RiwayatPenyakit", data.RiwayatPenyakit)}</div>
+            `;
+        } else {
+            // FORM GURU
+            formHTML = `
+                <div class="md:col-span-2"><h4 class="font-bold text-gray-700 border-b pb-2 mb-4">Data Kepegawaian</h4></div>
+                ${createInput("No. Pegawai", "NoPeg", data.NoPeg)}
+                ${createInput("Tipe Akun (Jabatan)", "DisplayJabatan", role, "text", true)}
+                ${createInput("Gelar Akademik", "DisplayGelar", data.Gelar, "text", true)}
+                <div class="md:col-span-2">${createInput("Kelompok Mata Pelajaran (Otomatis)", "Job", data.Job)}</div>
+                ${createInput("Tanggal Bergabung", "Masuk", data.Masuk, "date")}
+                
+                <div class="md:col-span-2 mt-4"><h4 class="font-bold text-gray-700 border-b pb-2 mb-4">Informasi Pribadi</h4></div>
+                ${createInput("Tempat Lahir", "TempatLahir", data.TempatLahir)}
+                ${createInput("Tanggal Lahir", "TanggalLahir", data.TanggalLahir, "date")}
+                ${createSelect("Jenis Kelamin", "JenisKelamin", data.JenisKelamin, ["Laki-laki", "Perempuan"])}
+                ${createSelect("Status Pernikahan", "Status", data.Status, ["Lajang", "Menikah", "Duda/Janda"])}
+                ${createSelect("Golongan Darah", "GolonganDarah", data.GolonganDarah, ["A", "B", "AB", "O", "-/Belum Tahu"])}
+                ${createInput("Kewarganegaraan", "Kewarganegaraan", data.Kewarganegaraan || "WNI")}
+                ${createInput("Jumlah Tanggungan", "JmlTanggungan", data.JmlTanggungan)}
+                ${createInput("NIK (KTP)", "NIK", data.NIK)}
+                
+                <div class="md:col-span-2 mt-4"><h4 class="font-bold text-gray-700 border-b pb-2 mb-4">Pendidikan & Pengalaman</h4></div>
+                ${createInput("Pendidikan Terakhir", "PendidikanTerakhir", data.PendidikanTerakhir)}
+                ${createInput("Lulusan", "Lulusan", data.Lulusan)}
+                ${createInput("Pengalaman Kerja", "Pengalaman", data.Pengalaman)}
+                ${createInput("Tahun Mulai Bekerja", "TahunKerja", data.TahunKerja)}
+                
+                <input type="hidden" id="Keahlian" value='${JSON.stringify(data.SkillChart || [])}'>
+
+                <div class="md:col-span-2 mt-4"><h4 class="font-bold text-gray-700 border-b pb-2 mb-4">Kontak & Domisili</h4></div>
+                ${createInput("No. HP / WA", "TelpWali", data.TelpWali)}
+                ${createInput("Email", "email", data.email, "email")}
+                ${createInput("Sosial Media", "sosmed", data.sosmed)}
+                <div class="md:col-span-2">${createInput("Alamat Domisili", "AlamatRumah", data.AlamatRumah)}</div>
+                <div class="md:col-span-2">${createInput("Riwayat Penyakit", "RiwayatPenyakit", data.RiwayatPenyakit)}</div>
+            `;
+        }
+
+        // --- 3. RENDER LAYOUT LENGKAP ---
+        contentArea.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1">
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 card pb-6">
+                        <div class="h-32 bg-gradient-to-r from-emerald-600 to-teal-500 relative"></div>
+                        <div class="px-6 relative">
+                            <div class="relative -mt-16 mb-4 flex justify-center">
+                                <img src="${data.Foto}" alt="Foto Profil" class="w-32 h-32 rounded-full border-4 border-white bg-white shadow-md object-cover">
+                            </div>
+                            <div class="text-center mb-6">
+                                <h2 class="text-xl font-bold text-gray-800">${data.NamaLengkap}</h2>
+                                <p class="text-gray-500 text-sm mb-2">${data.Username || targetUsername}</p>
+                                <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColor}">${role}</span>
+                                ${!isSantri ? `<p class="mt-2 text-sm font-semibold text-gray-600">${data.Gelar}</p>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="px-4 border-t bg-gray-50 pt-4">
+                            <h3 class="font-bold text-gray-600 text-xs uppercase tracking-wider text-center mb-3">
+                                ${isSantri ? 'Peta Kemampuan Akademik' : 'Grafik Keahlian'}
+                            </h3>
+                            ${chartSection}
+                        </div>
+                        
+                        <div class="px-6 mt-4">
+                            <button id="btn-save-profile" onclick="saveProfile()" class="hidden w-full bg-blue-600 text-white py-2 rounded-lg shadow hover:bg-blue-700 transition font-bold">
+                                <i class="fas fa-save mr-2"></i> Simpan Perubahan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6 card">
+                        <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex justify-between items-center">
+                            <h3 class="font-semibold text-gray-700"><i class="fas fa-user-edit mr-2 text-emerald-600"></i> Biodata Lengkap</h3>
+                            <button onclick="enableEditMode()" class="text-xs bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 font-bold shadow">
+                                <i class="fas fa-pencil-alt"></i> Edit Profil
+                            </button>
+                        </div>
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${formHTML}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // --- 4. RENDER GRAFIK SETELAH DOM SIAP ---
+        if (isSantri) {
+            // Pastikan stats tidak kosong/undefined
+            const stats = data.Statistik && data.Statistik.length === 5 ? data.Statistik : [0,0,0,0,0];
+            renderRadarChart(stats);
+        } else {
+            renderSkillBars(tempSkillData);
+            renderSkillEditorList();
+        }
+    }
+
+    // --- FUNGSI RENDER RADAR CHART (SANTRI) - DISELARASKAN DENGAN RAPORT.HTML ---
+    function renderRadarChart(statsData) {
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        if (myChart) myChart.destroy();
+
+        myChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ["Umum", "Diniyah", "Kejuruan", "Tahfidz", "Akhlak"],
+                datasets: [{
+                    label: 'Skala Kemampuan',
+                    data: statsData,
+                    // Warna Emerald (Sama persis dengan raport.html)
+                    backgroundColor: 'rgba(16, 185, 129, 0.4)',
+                    borderColor: '#059669',      
+                    pointBackgroundColor: '#047857',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#047857',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, 
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        pointLabels: {
+                            font: { size: 11, family: 'Inter', weight: 'bold' },
+                            color: '#1F2937'
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100, // Skala dikunci 0-100
+                        ticks: { stepSize: 20, display: false } 
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    // --- FUNGSI RENDER SKILL BARS (GURU) ---
+    function renderSkillBars(skillData) {
+        const container = document.getElementById('skill-bars-container');
+        if (!container) return;
+        
+        if (skillData.length === 0) {
+            container.innerHTML = '<p class="text-center text-gray-400 text-xs italic">Belum ada data keahlian.</p>';
+            return;
+        }
+
+        let html = '';
+        skillData.forEach(item => {
+            html += `
+            <div class="group">
+                <div class="flex justify-between mb-1">
+                    <span class="text-sm font-semibold text-gray-700">${item.label}</span>
+                    <span class="text-sm font-bold text-blue-600">${item.val}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5 shadow-inner">
+                    <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: ${item.val}%"></div>
+                </div>
+            </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    // --- HELPER UNTUK EDIT SKILL GURU ---
+    function renderSkillEditorList() {
+        const container = document.getElementById('skill-list');
+        if(!container) return;
+        container.innerHTML = '';
+        tempSkillData.forEach((skill, index) => {
+            container.innerHTML += `
+                <div class="flex justify-between items-center bg-white border p-1.5 rounded shadow-sm">
+                    <span class="text-gray-700">${skill.label} (${skill.val}%)</span>
+                    <button onclick="removeSkill(${index})" class="text-red-500 hover:text-red-700 font-bold px-2">&times;</button>
+                </div>
+            `;
+        });
+    }
+
+    window.addSkill = function() {
+        const label = document.getElementById('new-skill-label').value;
+        const val = parseInt(document.getElementById('new-skill-val').value);
+        if (label && val) {
+            tempSkillData.push({ label, val });
+            renderSkillBars(tempSkillData);
+            renderSkillEditorList();
+            document.getElementById('Keahlian').value = JSON.stringify(tempSkillData);
+            document.getElementById('new-skill-label').value = '';
+            document.getElementById('new-skill-val').value = '';
+        }
+    };
+
+    window.removeSkill = function(index) {
+        tempSkillData.splice(index, 1);
+        renderSkillBars(tempSkillData);
+        renderSkillEditorList();
+        document.getElementById('Keahlian').value = JSON.stringify(tempSkillData);
+    };
+
+    // --- HELPER FORM ---
+    function createInput(label, id, value = "", type = "text", readonly = false) {
+        const bgClass = readonly ? "bg-gray-200 cursor-not-allowed" : "bg-gray-50";
+        const inputClass = readonly ? "" : "profile-input";
+        
+        // Khusus untuk 'Job' guru yang panjang, pakai textarea
+        if (id === 'Job' && !label.includes('Pekerjaan Orang Tua')) { 
+             return `
+                <div class="form-group">
+                    <label class="block text-xs text-gray-500 uppercase tracking-wide mb-1">${label}</label>
+                    <textarea id="${id}" disabled ${readonly ? 'readonly' : ''}
+                        class="${inputClass} w-full p-2 border border-gray-300 rounded ${bgClass} text-gray-800 focus:outline-none focus:bg-white transition-colors h-20">${value || ''}</textarea>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="form-group">
+                <label class="block text-xs text-gray-500 uppercase tracking-wide mb-1">${label}</label>
+                <input type="${type}" id="${id}" value="${value || ''}" disabled ${readonly ? 'readonly' : ''}
+                    class="${inputClass} w-full p-2 border border-gray-300 rounded ${bgClass} text-gray-800 focus:outline-none focus:bg-white transition-colors">
+            </div>
+        `;
+    }
+
+    function createSelect(label, id, selectedValue, options) {
+        let opts = options.map(opt => `<option value="${opt}" ${opt === selectedValue ? 'selected' : ''}>${opt}</option>`).join('');
+        return `
+            <div class="form-group">
+                <label class="block text-xs text-gray-500 uppercase tracking-wide mb-1">${label}</label>
+                <select id="${id}" disabled class="profile-input w-full p-2 border border-gray-300 rounded bg-gray-50 text-gray-800 focus:outline-none focus:bg-white">
+                    <option value="">- Pilih -</option>
+                    ${opts}
+                </select>
+            </div>
+        `;
+    }
+
+    window.enableEditMode = function() {
+        document.querySelectorAll('.profile-input').forEach(input => {
+            input.disabled = false;
+            input.classList.add('ring-2', 'ring-blue-200', 'bg-white');
+            input.classList.remove('bg-gray-50');
+        });
+        document.getElementById('btn-save-profile').classList.remove('hidden');
+        
+        const skillEditor = document.getElementById('skill-editor');
+        if (skillEditor) skillEditor.classList.remove('hidden');
+        
+        alert("Mode Edit Aktif.");
+    };
+
+    window.saveProfile = async function() {
+        const btn = document.getElementById('btn-save-profile');
+        btn.textContent = "Menyimpan...";
+        btn.disabled = true;
+
+        const getVal = (id) => { const el = document.getElementById(id); return el ? el.value : ""; };
+
+        const dataToSend = {
+            action: 'saveFullProfile',
+            username: targetUsername,
+            // Ambil semua field
+            TempatLahir: getVal('TempatLahir'),
+            TanggalLahir: getVal('TanggalLahir'),
+            JenisKelamin: getVal('JenisKelamin'),
+            GolonganDarah: getVal('GolonganDarah'),
+            Kewarganegaraan: getVal('Kewarganegaraan'),
+			NIS: getVal('NIS'),       // BARU
+            Kelas: getVal('Kelas'),   // BARU
+            Jurusan: getVal('Jurusan'), // BARU
+            AnakKe: getVal('AnakKe'),
+            NamaAyah: getVal('NamaAyah'),
+            NamaIbu: getVal('NamaIbu'),
+            TelpWali: getVal('TelpWali'),
+            AlamatRumah: getVal('AlamatRumah'),
+            PendidikanTerakhir: getVal('PendidikanTerakhir'),
+            RiwayatPenyakit: getVal('RiwayatPenyakit'),
+            NIK: getVal('NIK'),
+            KK: getVal('KK'),
+            Job: getVal('Job'),
+            Masuk: getVal('Masuk'),
+            Status: getVal('Status'),
+            JmlTanggungan: getVal('JmlTanggungan'),
+            email: getVal('email'),
+            sosmed: getVal('sosmed'),
+            Pengalaman: getVal('Pengalaman'),
+            TahunKerja: getVal('TahunKerja'),
+            Lulusan: getVal('Lulusan'),
+            NoPeg: getVal('NoPeg'),
+            Keahlian: getVal('Keahlian') 
+        };
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(dataToSend),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                alert("Berhasil disimpan!");
+                location.reload(); 
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            alert("Error: " + error.message);
+            btn.textContent = "Simpan Perubahan";
+            btn.disabled = false;
+        }
+    };
+</script>
+</body>
+</html>

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raport Digital - Markaz Qur’an Al-Maa’un</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .font-arab { font-family: 'Amiri', serif; }
+        .paper { width: 210mm; min-height: 297mm; margin: 20px auto; background: white; padding: 12mm; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        
+        /* PERBAIKAN: CSS manual untuk #search-overlay DIHAPUS agar tidak bentrok dengan class hidden */
+
+        @media print {
+            body { background-color: white; }
+            .no-print, #search-overlay { display: none !important; }
+            .paper { margin: 0; width: 100%; box-shadow: none; padding: 0; }
+            canvas { max-height: 300px !important; width: 100% !important; }
+            tr.group-header { background-color: #ecfdf5 !important; -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="search-overlay" class="flex items-center justify-center fixed inset-0 bg-black bg-opacity-80 z-[9999]">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md relative">
+            <h2 class="text-2xl font-bold text-emerald-800 mb-2 text-center">Raport Digital</h2>
+            <p class="text-gray-500 text-sm text-center mb-6">Silakan pilih data santri untuk ditampilkan</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Santri</label>
+                    <select id="select-santri" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="">Memuat data...</option>
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Semester</label>
+                        <select id="select-semester" class="w-full p-3 border border-gray-300 rounded-lg">
+                            <option value="Ganjil" selected>Ganjil</option>
+                            <option value="Genap">Genap</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tahun Ajaran</label>
+                        <select id="select-tahun" class="w-full p-3 border border-gray-300 rounded-lg">
+                            <option value="2024">2024/2025</option>
+                            <option value="2025" selected>2025/2026</option>
+                            <option value="2026">2026/2027</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="loadReportFromForm()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow transition transform hover:scale-105">
+                    Buka Raport
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed top-4 left-4 z-50 no-print hidden" id="btn-ganti-santri">
+        <button onclick="showSearch()" class="bg-gray-800 text-white px-4 py-2 rounded-full shadow hover:bg-gray-700 text-sm">
+            <i class="fas fa-arrow-left mr-2"></i> Ganti Santri
+        </button>
+    </div>
+    
+    <div class="fixed bottom-6 right-6 flex flex-col space-y-3 no-print z-50">
+        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition transform hover:scale-105 tooltip" title="Cetak Raport">
+            <i class="fas fa-print fa-lg"></i>
+        </button>
+    </div>
+
+    <div id="report-container" class="paper hidden"> <div class="border-b-4 border-double border-emerald-800 pb-4 mb-4 flex items-center justify-between">
+            <div class="w-24 text-center">
+                 <img src="Logo_yayasan.png" alt="Logo Yayasan" class="w-20 h-20 mx-auto object-contain" onerror="this.src='https://placehold.co/80x80/e9ecef/343a40?text=Logo';">
+            </div>
+            <div class="flex-1 text-center px-4">
+                <h1 class="text-2xl font-bold text-gray-800 uppercase tracking-wide">Markaz Qur’an Al-Maa’un</h1>
+                <p class="text-sm text-gray-600 font-medium">Desa Sei Kamah II Kec. Sei Dadap Kab. Asahan Prov. Sumatera Utara</p>
+                <p class="text-xs text-gray-500 mt-1">
+                    <i class="fab fa-whatsapp text-emerald-600"></i> 0822-1188-2667 
+                    <span class="mx-1">|</span> 
+                    <i class="far fa-envelope text-emerald-600"></i> markazyatimduafaqurani@gmail.com
+                </p>
+            </div>
+            <div class="w-24 text-center">
+                <img src="LOGO_MARKAZ_QURAN2.png" alt="Logo Markaz" class="w-20 h-20 mx-auto object-contain" onerror="this.src='https://placehold.co/80x80/064e3b/ffffff?text=MQ';">
+            </div>
+        </div>
+
+        <div class="text-center mb-6">
+            <h2 class="text-xl font-bold text-gray-800 underline decoration-2 decoration-emerald-500 underline-offset-4">LAPORAN HASIL BELAJAR SANTRI</h2>
+            <p class="text-sm text-gray-500 mt-1">
+                Semester <span id="lbl-semester">...</span> | Tahun Ajaran <span id="lbl-tahun">...</span>
+            </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-x-12 mb-6 text-sm border-b border-gray-200 pb-4">
+            <div class="space-y-1">
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Nama Santri</span>
+                    <span class="font-semibold text-gray-800" id="santri-nama">: ...</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Nomor Induk (NIS)</span>
+                    <span class="font-semibold text-gray-800" id="santri-nis">: ...</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Jurusan</span>
+                    <span class="font-semibold text-gray-800" id="santri-jurusan">: ...</span>
+                </div>
+            </div>
+            <div class="space-y-1">
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Kelas</span>
+                    <span class="font-semibold text-gray-800" id="santri-kelas">: ...</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Pengasuh</span> <span class="font-semibold text-gray-800" id="santri-wali">: ...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 flex-grow">
+            <div class="lg:col-span-2">
+                <h3 class="font-bold text-gray-700 border-l-4 border-emerald-500 pl-3 mb-2 text-sm">A. Capaian Akademik</h3>
+                <div class="overflow-hidden rounded border border-gray-200">
+                    <table class="min-w-full text-xs md:text-sm text-left table-dense">
+                        <thead class="bg-gray-100 text-gray-700 font-semibold border-b">
+    <tr>
+        <th class="px-3 py-2 w-8 text-center">No</th>
+        <th class="px-3 py-2 text-left">Mata Pelajaran / Materi</th>
+        <th class="px-2 py-2 text-center w-12">KKM</th>
+        <th class="px-2 py-2 text-center w-12">Bobot</th> <th class="px-2 py-2 text-center w-12">Nilai</th>
+        <th class="px-2 py-2 text-center w-12">Pred</th>
+    </tr>
+</thead>
+                        <tbody class="divide-y divide-gray-100" id="nilai-body"></tbody>
+                    </table>
+                </div>
+                <div class="mt-2 flex justify-end">
+                    <div class="bg-emerald-50 border border-emerald-100 px-4 py-2 rounded text-right">
+                        <span class="text-xs text-emerald-800 block">Rata-rata Nilai Akademik</span>
+                        <span class="text-lg font-bold text-emerald-700" id="avg-score">00.0</span>
+                    </div>
+                </div>
+				<div class="mt-2 flex justify-end gap-4">
+    <div class="bg-blue-50 border border-blue-100 px-4 py-2 rounded text-right">
+        <span class="text-xs text-blue-800 block">Indeks Prestasi (IP)</span>
+        <span class="text-lg font-bold text-blue-700" id="ipk-score">0.00</span>
+    </div>
+    
+</div>
+            </div>
+
+            <div class="lg:col-span-1 flex flex-col justify-start items-center">
+                <h3 class="font-bold text-gray-700 border-l-4 border-blue-500 pl-3 mb-2 self-start w-full text-sm">B. Peta Kemampuan</h3>
+                <div class="w-full bg-white p-1 rounded-xl border border-gray-200 relative">
+                    <canvas id="skillsChart"></canvas>
+                </div>
+                 <div class="mt-4 w-full space-y-2">
+                    <div class="flex justify-between items-center text-xs bg-gray-50 p-2 rounded border">
+                        <span class="text-gray-600">Nilai Tahfidz</span>
+                        <span class="font-bold text-emerald-600" id="score-tahfidz-display">0</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs bg-gray-50 p-2 rounded border">
+                        <span class="text-gray-600">Nilai Akhlak</span>
+                        <span class="font-bold text-emerald-600" id="score-akhlak-display">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 break-inside-avoid">
+            <div>
+                <h3 class="font-bold text-gray-700 border-l-4 border-emerald-500 pl-3 mb-2 text-sm">C. Laporan Tahfidz</h3>
+                <div class="bg-white border border-gray-200 rounded p-3 text-sm">
+                    <div class="flex items-center justify-between mb-1"><span class="text-gray-600">Target</span><span class="font-semibold">3 Juz / Semester</span></div>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-3"><div class="bg-emerald-600 h-2 rounded-full" id="bar-tahfidz" style="width: 0%"></div></div>
+                    <div class="flex justify-between text-xs">
+                        <div><span class="block text-gray-500">Hafalan (Ziyadah) terakhir</span><span class="font-bold text-gray-800" id="txt-ziyadah">-</span></div>
+                        <div class="text-right"><span class="block text-gray-500">Muroja'ah</span><span class="font-bold text-emerald-600" id="txt-predikat-tahfidz">-</span></div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <h3 class="font-bold text-gray-700 border-l-4 border-emerald-500 pl-3 mb-2 text-sm">D. Akhlaq (Disiplin)</h3>
+                <table class="w-full text-sm border border-gray-200 rounded overflow-hidden">
+                    <tbody class="divide-y divide-gray-100">
+                        <tr><td class="px-3 py-2 bg-gray-50 w-1/2">Kedisiplinan Ibadah</td><td class="px-3 py-2 text-center font-bold" id="nilai-ibadah">-</td></tr>
+                        <tr><td class="px-3 py-2 bg-gray-50">Kebersihan & Kerapian</td><td class="px-3 py-2 text-center font-bold" id="nilai-kebersihan">-</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="flex justify-between text-sm text-center mt-auto px-12 break-inside-avoid pt-8">
+            <div>
+                <p class="mb-20 font-medium text-gray-600">Mengetahui,<br>Pengasuh</p>
+                <p class="font-bold underline text-gray-800" id="ttd-pengasuh">...</p>
+            </div>
+            
+            <div>
+                <p class="mb-20 font-medium text-gray-600">Asahan, <span id="tgl-cetak">...</span><br>Waka Bidang Kurikulum</p>
+                <p class="font-bold underline text-gray-800" id="ttd-waka">...</p>
+            </div>
+        </div>
+        
+        <div class="mt-6 text-center text-[10px] text-gray-400 border-t pt-2">
+            Dokumen ini dicetak secara digital oleh Sistem Informasi Markaz Qur’an Al-Maa’un.
+        </div>
+    </div>
+
+    <script>
+    // --- KONFIGURASI ---
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec";
+    let radarChartInstance = null;
+
+    // Inisialisasi Halaman
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetUsername = urlParams.get('username');
+
+        // Set Tanggal Cetak Otomatis
+        const options = { day: 'numeric', month: 'long', year: 'numeric' };
+        const tglCetakEl = document.getElementById('tgl-cetak');
+        if(tglCetakEl) tglCetakEl.textContent = new Date().toLocaleDateString('id-ID', options);
+
+        // LOGIKA UTAMA:
+        // 1. Selalu tampilkan Overlay di awal (class 'hidden' sudah dihapus dari HTML)
+        // 2. Ambil data santri, lalu atur perilaku form berdasarkan siapa yang login
+        fetchSantriList(targetUsername);
+
+        // 3. Atur Tombol "Ganti Santri" di pojok kiri
+        const btnGanti = document.getElementById('btn-ganti-santri');
+        if (targetUsername) {
+            // Jika Santri (ada username), sembunyikan tombol ganti santri
+            if(btnGanti) btnGanti.classList.add('hidden');
+        } else {
+            // Jika Admin (tidak ada username), tampilkan tombol ganti
+            if(btnGanti) btnGanti.classList.remove('hidden');
+        }
+    });
+
+    // Fungsi Ambil List Santri (Dimodifikasi untuk Lock/Unlock)
+    async function fetchSantriList(lockedUsername = null) {
+        const select = document.getElementById('select-santri');
+        select.innerHTML = '<option value="">Memuat data...</option>';
+        select.disabled = true; // Disable sementara loading
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getSantriListWithUsernames' }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const result = await response.json();
+            
+            select.innerHTML = '<option value="">-- Pilih Santri --</option>';
+            
+            if(result.status === 'success') {
+                // Urutkan nama
+                result.santri.sort((a,b) => a.profileName.localeCompare(b.profileName)).forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.username;
+                    opt.textContent = s.profileName;
+                    select.appendChild(opt);
+                });
+
+                // LOGIKA KUNCI (LOCK) JIKA SANTRI
+                if (lockedUsername) {
+                    select.value = lockedUsername; // Pilih otomatis
+                    select.disabled = true; // Kunci agar tidak bisa diubah
+                    select.classList.add('bg-gray-100', 'cursor-not-allowed'); // Ubah warna jadi abu
+                } else {
+                    select.disabled = false; // Buka kunci untuk admin
+                    select.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                }
+            }
+        } catch(e) { 
+            console.error(e); 
+            select.innerHTML = '<option value="">Gagal memuat data</option>';
+        }
+    }
+
+    function showSearch() {
+        document.getElementById('search-overlay').classList.remove('hidden');
+    }
+
+    function loadReportFromForm() {
+        const username = document.getElementById('select-santri').value;
+        const semester = document.getElementById('select-semester').value;
+        const tahun = document.getElementById('select-tahun').value;
+
+        if(!username) { alert("Mohon tunggu data santri dimuat atau pilih santri."); return; }
+
+        // 1. Sembunyikan Popup (Overlay)
+        document.getElementById('search-overlay').classList.add('hidden');
+        
+        // 2. Tampilkan Kertas Raport
+        document.getElementById('report-container').classList.remove('hidden');
+        
+        // 3. Update Header Judul
+        document.getElementById('lbl-semester').textContent = semester;
+        document.getElementById('lbl-tahun').textContent = `${tahun}/${parseInt(tahun)+1}`;
+
+        // 4. Panggil Data
+        loadRaportData(username, semester, tahun);
+    }
+
+    async function loadRaportData(username, semester = null, tahun = null) {
+        // Tampilkan loading di tabel
+        document.getElementById('nilai-body').innerHTML = '<tr><td colspan="5" class="text-center py-6 text-gray-500 italic">Sedang mengambil data dari server...</td></tr>';
+        
+        // Reset Grafik & Nilai ke 0 dulu biar rapi
+        resetVisuals();
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    action: 'getRaportData', 
+                    username: username,
+                    semester: semester,
+                    tahun: tahun 
+                }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                renderRaport(result.data);
+            } else {
+                alert("Gagal memuat data: " + result.message);
+                document.getElementById('search-overlay').classList.remove('hidden'); // Kembalikan popup jika gagal
+            }
+        } catch (error) {
+            alert("Terjadi kesalahan koneksi internet.");
+            document.getElementById('search-overlay').classList.remove('hidden');
+        }
+    }
+
+    function resetVisuals() {
+        document.getElementById('score-tahfidz-display').textContent = "0";
+        document.getElementById('score-akhlak-display').textContent = "0";
+        document.getElementById('bar-tahfidz').style.width = "0%";
+        document.getElementById('nilai-ibadah').textContent = "-";
+        document.getElementById('nilai-kebersihan').textContent = "-";
+        if (radarChartInstance) radarChartInstance.destroy();
+    }
+
+    function renderRaport(data) {
+        // 1. ISI IDENTITAS
+        document.getElementById('santri-nama').textContent = `: ${data.identity.nama}`;
+        document.getElementById('santri-nis').textContent = `: ${data.identity.nis}`;
+        document.getElementById('santri-kelas').textContent = `: ${data.identity.kelas}`;
+        document.getElementById('santri-jurusan').textContent = `: ${data.identity.jurusan}`;
+        document.getElementById('santri-wali').textContent = `: ${data.identity.wali}`;
+        
+        // 2. ISI TANDA TANGAN (Updated)
+        // Menggunakan data dari backend
+        document.getElementById('ttd-pengasuh').textContent = data.identity.wali; 
+        document.getElementById('ttd-waka').textContent = data.identity.waka;
+
+        // 2. RENDER TABEL AKADEMIK (GROUPING)
+        const tbody = document.getElementById('nilai-body');
+        tbody.innerHTML = '';
+        
+        let totalSKS = 0;   
+        let totalPoin = 0;  
+        let totalNilaiAll = 0;
+        let countMapelAll = 0;
+
+        if (data.academics.length === 0) {
+             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Belum ada data nilai akademik.</td></tr>';
+             document.getElementById('avg-score').textContent = "0.0";
+             document.getElementById('avg-score-bottom').textContent = "0.0"; // Update yang bawah juga
+             return;
+        }
+
+        // A. KELOMPOKKAN DATA
+        const groupedData = {};
+        data.academics.forEach(item => {
+            if (!groupedData[item.group]) groupedData[item.group] = {};
+            if (!groupedData[item.group][item.parent]) groupedData[item.group][item.parent] = [];
+            groupedData[item.group][item.parent].push(item);
+        });
+
+        // B. RENDER LOOP
+        const groupOrder = ["Kelompok Diniyah", "Kelompok Umum", "Kelompok Kejuruan"];
+        const allGroups = [...new Set([...groupOrder, ...Object.keys(groupedData)])].filter(g => groupedData[g]);
+
+        allGroups.forEach(groupName => {
+            let color = "bg-gray-100 text-gray-700";
+            if(groupName.includes("Diniyah")) color = "bg-emerald-100 text-emerald-800";
+            if(groupName.includes("Kejuruan")) color = "bg-blue-100 text-blue-800";
+            if(groupName.includes("Umum")) color = "bg-yellow-50 text-yellow-800";
+
+            tbody.innerHTML += `<tr class="group-header border-b"><td colspan="6" class="px-3 py-2 font-bold text-sm uppercase tracking-wide ${color}">${groupName}</td></tr>`;
+
+            const parents = groupedData[groupName];
+            Object.keys(parents).sort().forEach((parentName, pIndex) => {
+                const subjects = parents[parentName];
+                const avgParent = (subjects.reduce((acc, curr) => acc + curr.score, 0) / subjects.length).toFixed(0);
+                const letter = String.fromCharCode(65 + pIndex); 
+                
+                tbody.innerHTML += `
+                    <tr class="bg-white border-b">
+                        <td colspan="6" class="px-4 py-2 font-bold text-gray-800 text-sm">
+                            ${letter}. ${parentName} 
+                            <span class="float-right text-xs font-normal bg-gray-200 px-2 py-1 rounded">Rata-rata: ${avgParent}</span>
+                        </td>
+                    </tr>
+                `;
+
+                subjects.forEach((sub, sIndex) => {
+                    const gradeInfo = getGradeInfo(sub.score);
+                    
+                    // Hitung untuk Total & IPK
+                    totalNilaiAll += sub.score;
+                    countMapelAll++;
+                    
+                    // PERBAIKAN LOGIKA IPK: Pastikan bobot dianggap angka
+                    totalPoin += gradeInfo.bobot; 
+                    totalSKS += 1; // Asumsi 1 mapel = 1 SKS
+
+                    tbody.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-3 py-1.5 text-center text-xs w-8 text-gray-400">${sIndex + 1}</td>
+                            <td class="px-3 py-1.5 font-medium text-sm">
+                                <span class="font-bold text-emerald-700 text-xs mr-1">[${sub.code}]</span> ${sub.name}
+                            </td>
+                            <td class="px-2 py-1.5 text-center text-xs text-gray-500">${sub.kkm}</td>
+                            <td class="px-2 py-1.5 text-center text-xs font-semibold text-gray-600">${gradeInfo.bobot.toFixed(2)}</td>
+                            <td class="px-2 py-1.5 text-center font-bold text-sm text-gray-800">${sub.score}</td>
+                            <td class="px-2 py-1.5 text-center text-xs font-bold ${gradeInfo.color}">${gradeInfo.huruf}</td>
+                        </tr>
+                    `;
+                });
+            });
+        });
+
+        // 4. KALKULASI AKHIR (PERBAIKAN)
+        const rataRataTotal = countMapelAll > 0 ? (totalNilaiAll / countMapelAll).toFixed(1) : "0.0";
+        
+        // Pastikan tidak membagi dengan 0
+        const ipk = totalSKS > 0 ? (totalPoin / totalSKS).toFixed(2) : "0.00";
+
+        // Update UI (Atas & Bawah)
+        // Cek apakah elemen ada sebelum mengisinya untuk menghindari error
+        const elAvgTop = document.getElementById('avg-score');
+        const elAvgBottom = document.getElementById('avg-score-bottom'); // ID Baru
+        const elIpk = document.getElementById('ipk-score');
+
+        if(elAvgTop) elAvgTop.textContent = rataRataTotal;
+        if(elAvgBottom) elAvgBottom.textContent = rataRataTotal;
+        if(elIpk) elIpk.textContent = ipk;
+
+        // 5. UPDATE BAGIAN LAIN
+        document.getElementById('txt-ziyadah').textContent = data.tahfidzDetail.ziyadah || "-";
+        document.getElementById('txt-predikat-tahfidz').textContent = data.tahfidzDetail.predikat || "-";
+        
+        const valTahfidz = data.stats[3] || 0;
+        const valAkhlak = data.stats[4] || 0;
+
+        document.getElementById('bar-tahfidz').style.width = `${valTahfidz}%`;
+        document.getElementById('score-tahfidz-display').textContent = valTahfidz;
+        document.getElementById('score-akhlak-display').textContent = valAkhlak;
+        
+        document.getElementById('nilai-ibadah').textContent = data.akhlakDetail.ibadah;
+        document.getElementById('nilai-kebersihan').textContent = data.akhlakDetail.kebersihan;
+        
+        renderChart(data.stats);
+    }
+
+	function getGradeInfo(score) {
+            if (score >= 90) return { huruf: 'A', bobot: 4.00, color: 'text-emerald-600' };
+            if (score >= 85) return { huruf: 'A-', bobot: 3.70, color: 'text-emerald-500' };
+            if (score >= 80) return { huruf: 'B+', bobot: 3.30, color: 'text-blue-600' };
+            if (score >= 75) return { huruf: 'B', bobot: 3.00, color: 'text-blue-500' };
+            if (score >= 70) return { huruf: 'B-', bobot: 2.70, color: 'text-blue-400' };
+            if (score >= 65) return { huruf: 'C', bobot: 2.00, color: 'text-yellow-600' };
+            if (score >= 50) return { huruf: 'D', bobot: 1.00, color: 'text-orange-600' };
+            return { huruf: 'E', bobot: 0.00, color: 'text-red-600' };
+        }
+
+    
+
+    function renderChart(statsData) {
+        const ctx = document.getElementById('skillsChart').getContext('2d');
+        if (radarChartInstance) radarChartInstance.destroy();
+
+        radarChartInstance = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ["Umum", "Diniyah", "Kejuruan", "Tahfidz", "Akhlak"],
+                datasets: [{
+                    label: 'Skor',
+                    data: statsData,
+                    backgroundColor: 'rgba(16, 185, 129, 0.4)',
+                    borderColor: '#059669',      
+                    pointBackgroundColor: '#047857',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true, 
+                scales: { r: { suggestedMin: 0, suggestedMax: 100, ticks: { display: false } } },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    // Fungsi Randomize dihapus karena kita sudah pakai data real
+    function randomizeScores() {
+        alert("Fitur demo dinonaktifkan. Data diambil real-time dari database.");
+    }
+</script>
+</body>
+</html>
