@@ -5743,23 +5743,25 @@ function renderExamNavGrid(questions, answers) {
     const container = document.getElementById('exam-nav-grid-container');
     if (!container) return;
     
-    container.innerHTML = ''; // Kosongkan
+    container.innerHTML = ''; 
     
     questions.forEach((q, index) => {
-        const box = document.createElement('a'); // Gunakan tag <a> agar bisa di-scroll
+        const box = document.createElement('a'); 
         box.id = `nav-box-${index}`;
         box.className = 'nav-box';
         box.textContent = index + 1;
-        box.href = `#q${index}_block`; // Link ke blok soal
+        box.href = `#q${index}_block`; 
 
         // Cek apakah sudah dijawab
         const questionText = q.q;
-        const savedAnswer = answers[questionText] || "";
-        const isAnswered = (savedAnswer !== "");
+        const savedAnswer = answers[questionText]; // Ambil raw data
+        
+        // LOGIKA PERBAIKAN:
+        // Pastikan tidak undefined, tidak null, dan setelah di-trim tidak kosong
+        const isAnswered = (savedAnswer !== undefined && savedAnswer !== null && String(savedAnswer).trim().length > 0);
         
         box.classList.add(isAnswered ? 'answered' : 'unanswered');
         
-        // Buat agar scroll-nya mulus
         box.onclick = (e) => {
             e.preventDefault();
             const targetBlock = document.getElementById(`q${index}_block`);
