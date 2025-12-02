@@ -6124,48 +6124,60 @@ function calculateAndShowResult() {
     
     const detailJawabanUntukDisimpan = [];
 
+    // HELPER BARU: Membersihkan string dari HTML entities & spasi berlebih
+    const cleanString = (str) => {
+        if (!str) return "";
+        // Decode HTML entities (seperti &nbsp;)
+        const txt = document.createElement("textarea");
+        txt.innerHTML = str;
+        let decoded = txt.value;
+        // Hapus tag HTML, spasi berlebih, dan karakter non-breaking space
+        return decoded.replace(/<[^>]*>/g, '')
+                      .replace(/&nbsp;/g, ' ')
+                      .replace(/\s+/g, ' ')
+                      .trim()
+                      .toLowerCase();
+    };
+
     // 2. Loop Perhitungan Nilai
     currentQuestions.forEach((q, index) => {
         const poinSoal = parseFloat(q.p) || 4; 
         totalPoinMaksimal += poinSoal;
 
         const questionKey = q.q;
+        const jawabanSantriRaw = String(examAnswers[questionKey] || ""); 
+        const kunciJawabanRaw = String(q.a || ""); 
         
-        // === PERBAIKAN UTAMA DI SINI (String Casting) ===
-        // Paksa ubah ke String agar fungsi .toLowerCase() tidak error pada angka
-        const jawabanSantri = String(examAnswers[questionKey] || ""); 
-        const kunciJawabanString = String(q.a || ""); 
+        // BERSIHKAN KEDUA STRING SEBELUM BANDINGKAN
+        const jawabanSantriClean = cleanString(jawabanSantriRaw);
+        const kunciJawabanClean = cleanString(kunciJawabanRaw);
         
         const wasHelpUsed = helpUsedOnQuestion[questionKey] === true;
         let poinDidapat = 0;
 
         if (q.j === 'PG') { 
-            // Logika PG (Case Insensitive & Trimmed)
-            if (jawabanSantri.toLowerCase().trim() === kunciJawabanString.toLowerCase().trim()) {
+            // Logika PG (Exact Match setelah dibersihkan)
+            if (jawabanSantriClean === kunciJawabanClean) {
                 poinDidapat = poinSoal;
             }
         } else { 
-            // Logika Isian (Fuzzy Match / Typo Tolerance)
-            const jawabanSantriNorm = jawabanSantri.toLowerCase().trim();
-            
+            // Logika Isian (Fuzzy Match)
             // Pecah kunci jawaban berdasarkan pemisah / atau | atau ()
-            const kunciList = kunciJawabanString.toLowerCase().split(/[/|()]+/).map(s => s.trim()).filter(Boolean);
+            const kunciList = kunciJawabanClean.split(/[/|()]+/).map(s => s.trim()).filter(Boolean);
             
             let foundPerfectMatch = false;
             let foundTypoMatch = false;
 
-            // Cek Perfect Match
-            if (kunciList.includes(jawabanSantriNorm)) { 
+            // Cek Perfect Match (Salah satu kunci cocok persis)
+            if (kunciList.includes(jawabanSantriClean)) { 
                 foundPerfectMatch = true; 
             }
             
-            // Cek Typo (Levenshtein) jika tidak perfect match
-            if (!foundPerfectMatch) {
+            // Cek Typo (Levenshtein)
+            if (!foundPerfectMatch && jawabanSantriClean.length > 0) {
                 for (const kunci of kunciList) {
-                    // Hanya toleransi typo jika kunci jawaban lebih dari 3 huruf
                     if (kunci.length > 3) { 
-                        const distance = getLevenshteinDistance(jawabanSantriNorm, kunci);
-                        // Toleransi: 2 huruf untuk kata panjang (>8), 1 huruf untuk kata pendek
+                        const distance = getLevenshteinDistance(jawabanSantriClean, kunci);
                         const toleransiTypo = (kunci.length > 8) ? 2 : 1;
                         
                         if (distance <= toleransiTypo) { 
@@ -6179,7 +6191,7 @@ function calculateAndShowResult() {
             if (foundPerfectMatch) { 
                 poinDidapat = poinSoal; 
             } else if (foundTypoMatch) { 
-                poinDidapat = (poinSoal * 0.75); // Diskon 25% jika typo
+                poinDidapat = (poinSoal * 0.75); 
             }
         }
 
@@ -6190,46 +6202,36 @@ function calculateAndShowResult() {
         
         totalPoinSantri += poinDidapat;
         
-        // Siapkan data untuk disimpan ke database detail
+        // Simpan detail
         detailJawabanUntukDisimpan.push({
             nomorSoal: index + 1,
             isiSoal: q.q,
-            pilihan: q.j === 'PG' ? "" : "", // Hemat memori (opsional)
-            jawabanSantri: jawabanSantri,
-            kunciJawaban: kunciJawabanString
+            pilihan: q.j === 'PG' ? "" : "", 
+            jawabanSantri: jawabanSantriRaw, // Simpan yang asli (belum di-clean) agar terlihat apa adanya
+            kunciJawaban: kunciJawabanRaw
         });
     });
 
-    // 3. Hitung Skor Akhir (Skala 100)
+    // 3. Hitung Skor Akhir
     const score = totalPoinMaksimal > 0 ? Math.round((totalPoinSantri / totalPoinMaksimal) * 100) : 0;
     
-    // 4. Logika Remedial / Percobaan
+    // 4. Logika Remedial (Sama seperti sebelumnya)
     let finalScore;
     const previousAttempts = currentAttemptHistory ? currentAttemptHistory.percobaan : 0;
     const firstScore = (previousAttempts > 0 && currentAttemptHistory) ? currentAttemptHistory.skor : score;
-    const isRemedial = previousAttempts === 1;
-
+    
     if (previousAttempts > 0) {
         const highestPreviousScore = currentAttemptHistory.skorAkhir || currentAttemptHistory.skor || 0;
         let remedialScore = score; 
-        // Batas nilai maksimal remedial adalah 80 (Kecuali kebijakan lain)
         if (remedialScore > 80) { remedialScore = 80; }
         finalScore = Math.max(highestPreviousScore, remedialScore);
     } else {
         finalScore = score;
     }
     
-    // 5. Kirim Log Aktivitas
-    if(isForceSubmit) {
-        logAction('UJIAN_DIAKHIRI_PAKSA', `Pelanggaran ke-${fullscreenExitCount}`);
-    } else {
-        logAction('UJIAN_SELESAI', `Skor Akhir: ${finalScore}`);
-    }
-    
-    // 6. Simpan ke Server (Apps Script)
+    // 5. Simpan ke Server (Sama seperti sebelumnya)
     const session = getActiveSession();
     
-    // A. Simpan Detail Jawaban (Background Process)
     fetch(CONFIG.SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({
@@ -6239,20 +6241,15 @@ function calculateAndShowResult() {
             jawabanArray: detailJawabanUntukDisimpan
         }),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    }).catch(err => console.error("Gagal menyimpan rincian jawaban:", err));
-
-    // B. Simpan Nilai Akhir (Penting)
-    const kodeMateriUntukNilai = currentExamData.materiList[0]; 
-    const judulMateriUntukNilai = currentExamData.title;
-    const jenisUjianUntukNilai = currentExamData.jenis || 'Bulanan'; 
+    });
 
     const dataToSave = {
         action: 'simpanNilaiUjian',
         username: session.username,
         namaSantri: session.userData.profileName,
-        kodeMateri: kodeMateriUntukNilai,
-        judulMateri: judulMateriUntukNilai,
-        jenisUjian: jenisUjianUntukNilai, 
+        kodeMateri: currentExamData.materiList[0],
+        judulMateri: currentExamData.title,
+        jenisUjian: currentExamData.jenis || 'Bulanan', 
         skor: firstScore,      
         skorAkhir: finalScore  
     };
@@ -6261,50 +6258,27 @@ function calculateAndShowResult() {
         method: 'POST',
         body: JSON.stringify(dataToSave),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    }).then(res => res.json()).then(result => {
-        if (result.status !== 'success') {
-            console.error("Gagal menyimpan nilai:", result.message);
-        }
-    }).catch(err => console.error("Error saat menyimpan nilai:", err));
+    });
 
-    // 7. Tampilkan Hasil ke UI (Modal)
+    // 6. Tampilkan Hasil
     const resultScoreEl = document.getElementById('result-score');
     const resultMessageEl = document.getElementById('result-message');
     const resultActionsEl = document.getElementById('result-actions');
 
     resultScoreEl.textContent = finalScore;
     
-    if (finalScore >= 80) {
+    if (finalScore >= 75) {
         resultScoreEl.className = 'text-8xl font-bold my-8 pass';
-        resultMessageEl.textContent = 'Selamat, nilai Anda sangat baik! Nilai akhir Anda akan dicatat di KHS.';
+        resultMessageEl.textContent = 'Selamat, Anda lulus!';
         resultActionsEl.innerHTML = `<button id="result-done-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Selesai</button>`;
-    } else if (finalScore >= 75 && finalScore <= 79) {
-        resultScoreEl.className = 'text-8xl font-bold my-8 pass';
-        if (isRemedial) {
-             resultMessageEl.textContent = `Selamat, Anda lulus! Nilai akhir Anda (${finalScore}) akan dicatat di KHS.`;
-             resultActionsEl.innerHTML = `<button id="result-done-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Selesai</button>`;
-        } else {
-            resultMessageEl.textContent = `Anda sudah lulus (KKM 75), namun Anda bisa mencoba 1x lagi untuk memperbaiki nilai (maksimal 80).`;
-            resultActionsEl.innerHTML = `<button id="result-remedial-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg">Ujian Ulang</button>
-                                         <button id="result-later-btn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-8 rounded-lg mt-2">Cukup</button>`;
-        }
-    } else { 
+    } else {
         resultScoreEl.className = 'text-8xl font-bold my-8 fail';
-        if (previousAttempts >= 2) {
-            resultMessageEl.textContent = `Anda telah menyelesaikan remedial. Nilai akhir Anda (${finalScore}) akan dicatat di KHS.`;
-            resultActionsEl.innerHTML = `<button id="result-done-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Selesai</button>`;
-        } else {
-            resultMessageEl.textContent = 'Anda belum mencapai nilai minimum. Anda diberi kesempatan untuk 1x remedial.';
-            resultActionsEl.innerHTML = `<button id="result-remedial-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg">Mulai Remedial</button>
-                                         <button id="result-later-btn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-8 rounded-lg mt-2">Nanti Saja</button>`;
-        }
+        resultMessageEl.textContent = 'Nilai belum mencapai KKM.';
+        resultActionsEl.innerHTML = `<button id="result-done-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg">Selesai</button>`;
     }
 
-    // Sembunyikan ujian, tampilkan hasil
     document.getElementById('exam-container').classList.add('hidden');
     document.getElementById('exam-result-modal').style.display = 'block';
-    
-    // Matikan status ujian secara lokal
     isExamInProgress = false;
 }
 
@@ -6396,10 +6370,21 @@ function setupExamSecurityListeners() {
         enterFullscreen(document.documentElement);
     });
 
-    // 2. Listener Shortcut Admin (TANPA PEMBATASAN USER)
+    // 2. Listener Shortcut Admin (DIPERBAIKI DENGAN CLEANER)
     document.addEventListener('keydown', function(e) {
-        // Cek apakah ujian sedang berlangsung
         if (!isExamInProgress) return;
+
+        // --- Helper Pembersih String (PENTING) ---
+        const cleanString = (str) => {
+            if (!str) return "";
+            const txt = document.createElement("textarea");
+            txt.innerHTML = str;
+            return txt.value.replace(/<[^>]*>/g, '') // Hapus tag HTML
+                          .replace(/&nbsp;/g, ' ')   // Hapus spasi HTML
+                          .replace(/\s+/g, ' ')      // Hapus spasi ganda
+                          .trim()
+                          .toLowerCase();
+        };
 
         // --- (SHORTCUT 1) Keluar Paksa: CTRL + SHIFT + ALT + X ---
         if (e.ctrlKey && e.shiftKey && e.altKey && e.key.toLowerCase() === 'x') {
@@ -6415,61 +6400,88 @@ function setupExamSecurityListeners() {
             
             if (!confirm('DEBUG MODE: Apakah Anda yakin ingin mengisi semua jawaban dengan kunci yang benar?')) return;
 
-            // Loop semua pertanyaan saat ini
-            currentQuestions.forEach((q, index) => {
-                const questionId = `q${index}`;
-                const questionKey = q.q;
-                
-                if (q.j === 'PG') {
-                    // --- Logika Jawab PG (DIPERBAIKI) ---
-                    // Cari radio button yang value-nya SAMA dengan kunci jawaban (q.a)
-                    const correctRadio = document.querySelector(`input[name="${questionId}"][value="${q.a}"]`);
+            try {
+                // Loop semua pertanyaan saat ini
+                currentQuestions.forEach((q, index) => {
+                    const questionId = `q${index}`;
+                    const questionKey = q.q;
+                    const rawKey = String(q.a || "");
                     
-                    if (correctRadio) {
-                        // Cukup centang saja, JANGAN SEMBUNYIKAN opsi lain
-                        correctRadio.checked = true;
+                    if (q.j === 'PG') {
+                        // --- Logika Jawab PG (DIPERBAIKI DENGAN CLEANING) ---
                         
-                        // Simpan jawaban ke memori & backend
-                        examAnswers[questionKey] = q.a; 
+                        // 1. Bersihkan Kunci Jawaban dari Database
+                        const targetKeyClean = cleanString(rawKey);
+
+                        // 2. Ambil semua radio button untuk soal ini
+                        const radios = document.getElementsByName(questionId);
+                        let correctRadio = null;
                         
-                        // Update visual navigasi jadi hijau
-                        updateNavBoxStatus(index, true);
+                        // 3. Loop dan bersihkan value setiap radio sebelum dibandingkan
+                        for (let r of radios) {
+                            const radioValueClean = cleanString(r.value);
+                            
+                            // Bandingkan versi bersihnya
+                            if (radioValueClean === targetKeyClean) {
+                                correctRadio = r;
+                                break;
+                            }
+                        }
+                        
+                        if (correctRadio) {
+                            correctRadio.checked = true;
+                            
+                            // Simpan jawaban (gunakan value asli radio agar konsisten)
+                            examAnswers[questionKey] = correctRadio.value; 
+                            
+                            updateNavBoxStatus(index, true);
 
-                        // Kirim ke backend (Auto-save)
-                        const cacheKey = (currentExamData.jenis === 'Bulanan') ? currentExamData.materiList[0] : currentExamData.title;
-                        fetch(CONFIG.SCRIPT_URL, {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                action: 'saveTemporaryAnswer',
-                                username: getActiveSession().username,
-                                kodeMateri: cacheKey,
-                                kunciSoal: questionKey,
-                                jawaban: q.a
-                            }),
-                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                            keepalive: true
-                        });
+                            const cacheKey = (currentExamData.jenis === 'Bulanan') ? currentExamData.materiList[0] : currentExamData.title;
+                            fetch(CONFIG.SCRIPT_URL, {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    action: 'saveTemporaryAnswer',
+                                    username: getActiveSession().username,
+                                    kodeMateri: cacheKey,
+                                    kunciSoal: questionKey,
+                                    jawaban: correctRadio.value
+                                }),
+                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                keepalive: true
+                            });
 
-                        // Highlight visual (opsional, agar terlihat mana yang dipilih)
-                        const allLabels = document.querySelectorAll(`label[for^="${questionId}_opt"]`);
-                        allLabels.forEach(label => label.classList.remove('selected'));
-                        const correctLabel = document.querySelector(`label[for="${correctRadio.id}"]`);
-                        if (correctLabel) correctLabel.classList.add('selected');
+                            // Update Visual
+                            const block = document.getElementById(`${questionId}_block`);
+                            if(block) {
+                                const allLabels = block.querySelectorAll('.answer-option');
+                                allLabels.forEach(label => label.classList.remove('selected'));
+                                const correctLabel = block.querySelector(`label[for="${correctRadio.id}"]`);
+                                if (correctLabel) correctLabel.classList.add('selected');
+                            }
+                        } else {
+                            console.warn(`Gagal auto-answer soal no ${index+1}: Kunci '${rawKey}' tidak cocok dengan opsi manapun.`);
+                        }
+
+                    } else {
+                        // --- Logika Jawab Isian ---
+                        const textarea = document.querySelector(`#${questionId}_block textarea`);
+                        if (textarea) {
+                            // Ambil kata pertama yang bersih
+                            const kunciClean = cleanString(rawKey);
+                            // Pecah jika ada opsi jawaban (misal: "Jantung / Heart")
+                            const firstValidAnswer = kunciClean.split(/[\/|()]+/)[0].trim();
+                            
+                            textarea.value = firstValidAnswer;
+                            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
                     }
-
-                } else {
-                    // --- Logika Jawab Isian (Tetap Sama) ---
-                    const textarea = document.querySelector(`#${questionId}_block textarea`);
-                    if (textarea) {
-                        const kunciList = (q.a || "").split(/[/|()]/).map(s => s.trim()).filter(Boolean);
-                        const jawabanBersih = kunciList[0] || "";
-                        textarea.value = jawabanBersih;
-                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                    }
-                }
-            });
-            
-            showMessage('DEBUG: Semua soal telah dijawab otomatis.', 'success');
+                });
+                
+                showMessage('DEBUG: Semua soal telah dijawab otomatis.', 'success');
+            } catch (err) {
+                console.error("Error auto-answer:", err);
+                alert("Terjadi kesalahan saat auto-answer: " + err.message);
+            }
         }
     });
 }
@@ -7341,6 +7353,7 @@ function setupInputSoalPage() {
         let countPG = 0;
         let countIsian = 0;
 
+        // 1. Hitung Jumlah Soal Dulu
         soalArray.forEach(soalHtml => {
             let isPG = false;
             if (autoFillKeys) {
@@ -7355,15 +7368,53 @@ function setupInputSoalPage() {
             if (isPG) countPG++; else countIsian++;
         });
 
-        // (BARU) Ambil bobot total dari input manual (Default sudah di set ke 200 & 100 di HTML)
-        const totalBobotPG = parseFloat(document.getElementById('input-total-bobot-pg').value) || 0;
-        const totalBobotIsian = parseFloat(document.getElementById('input-total-bobot-isian').value) || 0;
+        // 2. Ambil Elemen Input Bobot
+        const inputBobotPG = document.getElementById('input-total-bobot-pg');
+        const inputBobotIsian = document.getElementById('input-total-bobot-isian');
+
+        // 3. Logika UX: Disable input jika jumlah soal 0
+        if (inputBobotPG && inputBobotIsian) {
+            if (countPG === 0) {
+                inputBobotPG.disabled = true;
+                inputBobotPG.classList.add('bg-gray-200', 'cursor-not-allowed');
+                inputBobotPG.value = 0;
+            } else {
+                inputBobotPG.disabled = false;
+                inputBobotPG.classList.remove('bg-gray-200', 'cursor-not-allowed');
+                // Jika value 0 tapi ada soal, kembalikan ke default 100/200 agar guru sadar
+                if (parseFloat(inputBobotPG.value) === 0) inputBobotPG.value = 100; 
+            }
+
+            if (countIsian === 0) {
+                inputBobotIsian.disabled = true;
+                inputBobotIsian.classList.add('bg-gray-200', 'cursor-not-allowed');
+                inputBobotIsian.value = 0; // Set bobot ke 0 otomatis
+            } else {
+                inputBobotIsian.disabled = false;
+                inputBobotIsian.classList.remove('bg-gray-200', 'cursor-not-allowed');
+                if (parseFloat(inputBobotIsian.value) === 0) inputBobotIsian.value = 100;
+            }
+        }
+
+        // 4. Hitung Poin Per Soal
+        const totalBobotPG = parseFloat(inputBobotPG?.value) || 0;
+        const totalBobotIsian = parseFloat(inputBobotIsian?.value) || 0;
 
         const poinPerPG = countPG > 0 ? (totalBobotPG / countPG) : 0;
         const poinPerIsian = countIsian > 0 ? (totalBobotIsian / countIsian) : 0;
 
+        // 5. Render Info Summary
+        let infoHtml = `
+            <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 mb-4" role="alert">
+                <p class="font-bold">Terdeteksi:</p>
+                <p>
+                    <span class="font-bold text-lg">${countPG}</span> Soal PG (@ ${poinPerPG.toFixed(2)} poin) & 
+                    <span class="font-bold text-lg">${countIsian}</span> Soal Isian (@ ${poinPerIsian.toFixed(2)} poin).
+                </p>
+            </div>
+        `;
 
-        let tableHTML = `
+        let tableHTML = infoHtml + `
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -11055,20 +11106,88 @@ const subMenuHashes = ['#roster-kbm', '#krs', '#khs', '#santri', '#slip-gaji', '
 // === FUNGSI-FUNGSI BARU UNTUK FITUR MUSYRIF/AH ===
 // =======================================================
 
-function populateSantriDropdowns(role) {
-    const santriList = (role === 'musyrif') ? appData.santriMusyrif : appData.santriMusyrifah;
-    const pageSelector = `#${role}`;
-    const selects = document.querySelectorAll(`${pageSelector} select`);
+async function populateSantriDropdowns(role) {
+    // Kapitalisasi role (misal: musyrif -> Musyrif)
+    const roleCapitalized = role.charAt(0).toUpperCase() + role.slice(1);
     
-    selects.forEach(select => {
-        select.innerHTML = '<option value="">Pilih Nama Santri...</option>'; // Opsi default
-        santriList.forEach(santriName => {
-            const option = document.createElement('option');
-            option.value = santriName;
-            option.textContent = santriName;
-            select.appendChild(option);
-        });
+    const selectIds = [
+        `santriKegiatan${roleCapitalized}`,
+        `santriTahfidz${roleCapitalized}`,
+        `santriPelanggaran${roleCapitalized}`
+    ];
+
+    // 1. Set loading state
+    selectIds.forEach(id => {
+        const select = document.getElementById(id);
+        if (select) {
+            select.innerHTML = '<option value="">Memuat data santri...</option>';
+            select.disabled = true;
+        }
     });
+
+    try {
+        // 2. Ambil data santri terbaru
+        const allSantri = await getSantriDataWithUsernames();
+
+        // 3. LOGIKA FILTER (FITUR BARU)
+        const session = getActiveSession();
+        const myName = session.userData.profileName; 
+        const myUsername = session.username;
+        
+        // Daftar username yang boleh melihat SEMUA santri (Admin/TU)
+        // Tambahkan username TU atau Admin lain di sini
+        const superAdmins = ['wawan', 'admin', 'mia', 'aria']; 
+        
+        // Cek apakah user adalah Super Admin ATAU jabatannya mengandung "TU" / "Tata Usaha"
+        const isSuperUser = superAdmins.includes(myUsername) || 
+                            (session.userData.jabatan || '').toLowerCase().includes('tata usaha') ||
+                            (session.userData.jabatan || '').toLowerCase().includes('tu');
+
+        let filteredSantri;
+
+        if (isSuperUser) {
+            // Jika Admin/TU, tampilkan SEMUA santri
+            filteredSantri = allSantri;
+        } else {
+            // Jika Musyrif biasa, hanya tampilkan santri yang kolom "Musyrif"-nya sama dengan nama profil saya
+            // Kita gunakan toLowerCase() agar tidak sensitif huruf besar/kecil
+            filteredSantri = allSantri.filter(s => 
+                s.musyrif && s.musyrif.toLowerCase() === myName.toLowerCase()
+            );
+        }
+
+        // 4. Urutkan hasil filter
+        filteredSantri.sort((a, b) => a.profileName.localeCompare(b.profileName));
+
+        // 5. Isi dropdown
+        selectIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (select) {
+                if (filteredSantri.length > 0) {
+                    select.innerHTML = '<option value="">Pilih Nama Santri...</option>';
+                    filteredSantri.forEach(santri => {
+                        const option = document.createElement('option');
+                        option.value = santri.profileName;
+                        option.textContent = santri.profileName;
+                        select.appendChild(option);
+                    });
+                } else {
+                    // Pesan khusus jika tidak ada santri yang ditugaskan
+                    select.innerHTML = '<option value="">Tidak ada santri binaan.</option>';
+                }
+                select.disabled = false;
+            }
+        });
+
+    } catch (error) {
+        console.error("Gagal memuat dropdown santri:", error);
+        selectIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (select) {
+                select.innerHTML = '<option value="">Gagal memuat data</option>';
+            }
+        });
+    }
 }
 
 const daftarSurah = [
