@@ -181,7 +181,7 @@
             <div>
                 <h3 class="font-bold text-gray-700 border-l-4 border-emerald-500 pl-3 mb-2 text-sm">C. Laporan Tahfidz</h3>
                 <div class="bg-white border border-gray-200 rounded p-3 text-sm">
-                    <div class="flex items-center justify-between mb-1"><span class="text-gray-600">Target</span><span class="font-semibold">3 Juz / Semester</span></div>
+                    <div class="flex items-center justify-between mb-1"><span class="text-gray-600">Target Hafalan</span><span class="font-semibold">3 Juz / Semester</span></div>
                     <div class="w-full bg-gray-200 rounded-full h-2 mb-3"><div class="bg-emerald-600 h-2 rounded-full" id="bar-tahfidz" style="width: 0%"></div></div>
                     <div class="flex justify-between text-xs">
                         <div><span class="block text-gray-500">Hafalan (Ziyadah) terakhir</span><span class="font-bold text-gray-800" id="txt-ziyadah">-</span></div>
@@ -357,18 +357,18 @@
 
     function renderRaport(data) {
         // 1. ISI IDENTITAS
-        document.getElementById('santri-nama').textContent = `: ${data.identity.nama}`;
-        document.getElementById('santri-nis').textContent = `: ${data.identity.nis}`;
-        document.getElementById('santri-kelas').textContent = `: ${data.identity.kelas}`;
-        document.getElementById('santri-jurusan').textContent = `: ${data.identity.jurusan}`;
-        document.getElementById('santri-wali').textContent = `: ${data.identity.wali}`;
+        // Pastikan elemen ID di HTML sudah sesuai
+        if (document.getElementById('santri-nama')) document.getElementById('santri-nama').textContent = `: ${data.identity.nama}`;
+        if (document.getElementById('santri-nis')) document.getElementById('santri-nis').textContent = `: ${data.identity.nis}`;
+        if (document.getElementById('santri-kelas')) document.getElementById('santri-kelas').textContent = `: ${data.identity.kelas}`;
+        if (document.getElementById('santri-jurusan')) document.getElementById('santri-jurusan').textContent = `: ${data.identity.jurusan}`;
+        if (document.getElementById('santri-wali')) document.getElementById('santri-wali').textContent = `: ${data.identity.wali}`;
         
-        // 2. ISI TANDA TANGAN (Updated)
-        // Menggunakan data dari backend
-        document.getElementById('ttd-pengasuh').textContent = data.identity.wali; 
-        document.getElementById('ttd-waka').textContent = data.identity.waka;
+        // Isi Tanda Tangan
+        if (document.getElementById('ttd-pengasuh')) document.getElementById('ttd-pengasuh').textContent = data.identity.wali; 
+        if (document.getElementById('ttd-waka')) document.getElementById('ttd-waka').textContent = data.identity.waka;
 
-        // 2. RENDER TABEL AKADEMIK (GROUPING)
+        // 2. RENDER TABEL AKADEMIK
         const tbody = document.getElementById('nilai-body');
         tbody.innerHTML = '';
         
@@ -379,104 +379,129 @@
 
         if (data.academics.length === 0) {
              tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Belum ada data nilai akademik.</td></tr>';
-             document.getElementById('avg-score').textContent = "0.0";
-             document.getElementById('avg-score-bottom').textContent = "0.0"; // Update yang bawah juga
-             return;
-        }
+             // Reset nilai jika kosong
+             if(document.getElementById('avg-score')) document.getElementById('avg-score').textContent = "0.0";
+             if(document.getElementById('avg-score-bottom')) document.getElementById('avg-score-bottom').textContent = "0.0"; 
+             if(document.getElementById('ipk-score')) document.getElementById('ipk-score').textContent = "0.00";
+        } else {
+            // A. KELOMPOKKAN DATA
+            // Struktur: { "Kelompok Umum": { "Matematika": [Array Nilai], "Bahasa": [Array Nilai] }, ... }
+            const groupedData = {};
+            
+            data.academics.forEach(item => {
+                if (!groupedData[item.group]) groupedData[item.group] = {};
+                if (!groupedData[item.group][item.parent]) groupedData[item.group][item.parent] = [];
+                groupedData[item.group][item.parent].push(item);
+            });
 
-        // A. KELOMPOKKAN DATA
-        const groupedData = {};
-        data.academics.forEach(item => {
-            if (!groupedData[item.group]) groupedData[item.group] = {};
-            if (!groupedData[item.group][item.parent]) groupedData[item.group][item.parent] = [];
-            groupedData[item.group][item.parent].push(item);
-        });
+            // B. RENDER LOOP
+            // Urutan Kelompok: Diniyah dulu, lalu Umum, lalu Kejuruan
+            const groupOrder = ["Kelompok Diniyah", "Kelompok Umum", "Kelompok Kejuruan"];
+            // Gabungkan kunci yang ada dengan urutan prioritas
+            const allGroups = [...new Set([...groupOrder, ...Object.keys(groupedData)])].filter(g => groupedData[g]);
 
-        // B. RENDER LOOP
-        const groupOrder = ["Kelompok Diniyah", "Kelompok Umum", "Kelompok Kejuruan"];
-        const allGroups = [...new Set([...groupOrder, ...Object.keys(groupedData)])].filter(g => groupedData[g]);
+            allGroups.forEach(groupName => {
+                // 1. Header Kelompok Besar (Misal: KELOMPOK DINIYAH)
+                let color = "bg-gray-100 text-gray-700";
+                if(groupName.includes("Diniyah")) color = "bg-emerald-100 text-emerald-800";
+                if(groupName.includes("Kejuruan")) color = "bg-blue-100 text-blue-800";
+                if(groupName.includes("Umum")) color = "bg-yellow-50 text-yellow-800";
 
-        allGroups.forEach(groupName => {
-            let color = "bg-gray-100 text-gray-700";
-            if(groupName.includes("Diniyah")) color = "bg-emerald-100 text-emerald-800";
-            if(groupName.includes("Kejuruan")) color = "bg-blue-100 text-blue-800";
-            if(groupName.includes("Umum")) color = "bg-yellow-50 text-yellow-800";
+                tbody.innerHTML += `<tr class="group-header border-b"><td colspan="6" class="px-3 py-2 font-bold text-sm uppercase tracking-wide ${color}">${groupName}</td></tr>`;
 
-            tbody.innerHTML += `<tr class="group-header border-b"><td colspan="6" class="px-3 py-2 font-bold text-sm uppercase tracking-wide ${color}">${groupName}</td></tr>`;
-
-            const parents = groupedData[groupName];
-            Object.keys(parents).sort().forEach((parentName, pIndex) => {
-                const subjects = parents[parentName];
-                const avgParent = (subjects.reduce((acc, curr) => acc + curr.score, 0) / subjects.length).toFixed(0);
-                const letter = String.fromCharCode(65 + pIndex); 
-                
-                tbody.innerHTML += `
-                    <tr class="bg-white border-b">
-                        <td colspan="6" class="px-4 py-2 font-bold text-gray-800 text-sm">
-                            ${letter}. ${parentName} 
-                            <span class="float-right text-xs font-normal bg-gray-200 px-2 py-1 rounded">Rata-rata: ${avgParent}</span>
-                        </td>
-                    </tr>
-                `;
-
-                subjects.forEach((sub, sIndex) => {
-                    const gradeInfo = getGradeInfo(sub.score);
+                const parents = groupedData[groupName];
+                Object.keys(parents).sort().forEach((parentName, pIndex) => {
+                    const subjects = parents[parentName];
                     
-                    // Hitung untuk Total & IPK
-                    totalNilaiAll += sub.score;
-                    countMapelAll++;
+                    // Hitung Rata-rata per Induk
+                    const avgParent = (subjects.reduce((acc, curr) => acc + curr.score, 0) / subjects.length).toFixed(0);
                     
-                    // PERBAIKAN LOGIKA IPK: Pastikan bobot dianggap angka
-                    totalPoin += gradeInfo.bobot; 
-                    totalSKS += 1; // Asumsi 1 mapel = 1 SKS
-
+                    // 2. Header Induk Mapel (Misal: A. Matematika)
+                    const letter = String.fromCharCode(65 + pIndex); 
                     tbody.innerHTML += `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="px-3 py-1.5 text-center text-xs w-8 text-gray-400">${sIndex + 1}</td>
-                            <td class="px-3 py-1.5 font-medium text-sm">
-                                <span class="font-bold text-emerald-700 text-xs mr-1">[${sub.code}]</span> ${sub.name}
+                        <tr class="bg-white border-b">
+                            <td colspan="6" class="px-4 py-2 font-bold text-gray-800 text-sm">
+                                ${letter}. ${parentName} 
+                                <span class="float-right text-xs font-normal bg-gray-200 px-2 py-1 rounded">Rata-rata: ${avgParent}</span>
                             </td>
-                            <td class="px-2 py-1.5 text-center text-xs text-gray-500">${sub.kkm}</td>
-                            <td class="px-2 py-1.5 text-center text-xs font-semibold text-gray-600">${gradeInfo.bobot.toFixed(2)}</td>
-                            <td class="px-2 py-1.5 text-center font-bold text-sm text-gray-800">${sub.score}</td>
-                            <td class="px-2 py-1.5 text-center text-xs font-bold ${gradeInfo.color}">${gradeInfo.huruf}</td>
                         </tr>
                     `;
+
+                    // 3. List Materi
+                    subjects.forEach((sub, sIndex) => {
+                        const gradeInfo = getGradeInfo(sub.score);
+                        
+                        // Hitung untuk Total & IPK
+                        totalNilaiAll += sub.score;
+                        countMapelAll++;
+                        
+                        // Perhitungan IPK: Bobot x SKS (Asumsi 1 Mapel = 1 SKS jika tidak ada data SKS)
+                        const sks = sub.sks || 1; 
+                        totalPoin += gradeInfo.bobot * sks; 
+                        totalSKS += sks;
+
+                        tbody.innerHTML += `
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="px-3 py-1.5 text-center text-xs w-8 text-gray-400">${sIndex + 1}</td>
+                                <td class="px-3 py-1.5 font-medium text-sm">
+                                    <span class="font-bold text-emerald-700 text-xs mr-1">[${sub.code}]</span> ${sub.name}
+                                </td>
+                                <td class="px-2 py-1.5 text-center text-xs text-gray-500">${sub.kkm}</td>
+                                <td class="px-2 py-1.5 text-center text-xs font-semibold text-gray-600">${gradeInfo.bobot.toFixed(2)}</td>
+                                <td class="px-2 py-1.5 text-center font-bold text-sm text-gray-800">${sub.score}</td>
+                                <td class="px-2 py-1.5 text-center text-xs font-bold ${gradeInfo.color}">${gradeInfo.huruf}</td>
+                            </tr>
+                        `;
+                    });
                 });
             });
-        });
+        }
 
-        // 4. KALKULASI AKHIR (PERBAIKAN)
+        // 4. KALKULASI AKHIR
         const rataRataTotal = countMapelAll > 0 ? (totalNilaiAll / countMapelAll).toFixed(1) : "0.0";
-        
-        // Pastikan tidak membagi dengan 0
         const ipk = totalSKS > 0 ? (totalPoin / totalSKS).toFixed(2) : "0.00";
 
-        // Update UI (Atas & Bawah)
-        // Cek apakah elemen ada sebelum mengisinya untuk menghindari error
-        const elAvgTop = document.getElementById('avg-score');
-        const elAvgBottom = document.getElementById('avg-score-bottom'); // ID Baru
-        const elIpk = document.getElementById('ipk-score');
+        // Update UI Bawah Tabel (Rata-rata & IPK)
+        if(document.getElementById('avg-score')) document.getElementById('avg-score').textContent = rataRataTotal;
+        if(document.getElementById('avg-score-bottom')) document.getElementById('avg-score-bottom').textContent = rataRataTotal;
+        if(document.getElementById('ipk-score')) document.getElementById('ipk-score').textContent = ipk;
 
-        if(elAvgTop) elAvgTop.textContent = rataRataTotal;
-        if(elAvgBottom) elAvgBottom.textContent = rataRataTotal;
-        if(elIpk) elIpk.textContent = ipk;
+        // === 5. LOGIKA PERBAIKAN DATA GRAFIK & SKOR TAHFIDZ ===
+        
+        // Ambil data array statistik dari backend
+        // Array ini sekarang berisi 6 item: [Umum, Diniyah, Kejuruan, SkorGrafikTahfidz, SkorAkhlak, RataRataTahfidz]
+        const rawStats = data.stats || [0,0,0,0,0,0];
 
-        // 5. UPDATE BAGIAN LAIN
-        document.getElementById('txt-ziyadah').textContent = data.tahfidzDetail.ziyadah || "-";
-        document.getElementById('txt-predikat-tahfidz').textContent = data.tahfidzDetail.predikat || "-";
-        
-        const valTahfidz = data.stats[3] || 0;
-        const valAkhlak = data.stats[4] || 0;
+        // Ambil 5 data pertama untuk Grafik Radar (Agar bentuknya segilima sempurna)
+        const chartData = rawStats.slice(0, 5); 
 
-        document.getElementById('bar-tahfidz').style.width = `${valTahfidz}%`;
-        document.getElementById('score-tahfidz-display').textContent = valTahfidz;
-        document.getElementById('score-akhlak-display').textContent = valAkhlak;
+        // Ambil data untuk Progress Bar Tahfidz (Index 3 = Persentase Target)
+        const valTahfidzGrafik = rawStats[3] || 0;
+
+        // Ambil data Nilai Akhlak (Index 4)
+        const valAkhlak = rawStats[4] || 0;
         
-        document.getElementById('nilai-ibadah').textContent = data.akhlakDetail.ibadah;
-        document.getElementById('nilai-kebersihan').textContent = data.akhlakDetail.kebersihan;
+        // Ambil Nilai Rata-rata Tahfidz (Index 5) untuk ditampilkan sebagai ANGKA di bawah grafik
+        // Jika index 5 tidak ada (karena data lama), gunakan 0
+        const valTahfidzRataRata = rawStats.length > 5 ? rawStats[5] : 0;
+
+        // Update Teks Laporan Tahfidz & Akhlak
+        if(document.getElementById('txt-ziyadah')) document.getElementById('txt-ziyadah').textContent = data.tahfidzDetail.ziyadah || "-";
+        if(document.getElementById('txt-predikat-tahfidz')) document.getElementById('txt-predikat-tahfidz').textContent = data.tahfidzDetail.predikat || "-";
         
-        renderChart(data.stats);
+        // Update Progress Bar Tahfidz
+        if(document.getElementById('bar-tahfidz')) document.getElementById('bar-tahfidz').style.width = `${valTahfidzGrafik}%`;
+        
+        // Update Angka di bawah grafik (Menggunakan Rata-rata Nilai, BUKAN persentase grafik)
+        if(document.getElementById('score-tahfidz-display')) document.getElementById('score-tahfidz-display').textContent = valTahfidzRataRata;
+        if(document.getElementById('score-akhlak-display')) document.getElementById('score-akhlak-display').textContent = valAkhlak;
+        
+        // Update Tabel Nilai Huruf Akhlak (Ibadah & Kebersihan)
+        if(document.getElementById('nilai-ibadah')) document.getElementById('nilai-ibadah').textContent = data.akhlakDetail.ibadah;
+        if(document.getElementById('nilai-kebersihan')) document.getElementById('nilai-kebersihan').textContent = data.akhlakDetail.kebersihan;
+        
+        // Render Grafik dengan data yang sudah dipotong (isi 5 elemen)
+        renderChart(chartData);
     }
 
 	function getGradeInfo(score) {
