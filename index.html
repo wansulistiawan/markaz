@@ -5989,9 +5989,14 @@ async function startExam() {
                 const radioButtons = questionBlock.querySelectorAll('input[type="radio"]');
                 radioButtons.forEach(radio => {
                     radio.addEventListener('change', (e) => {
-                        examAnswers[questionKey] = e.target.value; 
+                        const val = e.target.value;
+                        examAnswers[questionKey] = val; 
                         logAction('JAWAB_SOAL', `Menjawab soal no. ${index + 1}`);
                         updateNavBoxStatus(index, true); 
+                        
+                        // === PERUBAHAN DISINI: ENCODE JUGA ===
+                        const encodedVal = safeEncode(val);
+                        // =====================================
                         
                         fetch(CONFIG.SCRIPT_URL, {
                             method: 'POST',
@@ -6000,7 +6005,7 @@ async function startExam() {
                                 username: session.username,
                                 kodeMateri: cacheKey, 
                                 kunciSoal: questionKey, 
-                                jawaban: e.target.value
+                                jawaban: encodedVal // Kirim terbungkus
                             }),
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                             keepalive: true
@@ -6015,22 +6020,34 @@ async function startExam() {
             } else {
                 const textarea = questionBlock.querySelector('textarea');
                 if (textarea) {
+                    let typingTimer; 
+                    
                     textarea.addEventListener('input', (e) => { 
-                        examAnswers[questionKey] = e.target.value; 
-                        updateNavBoxStatus(index, e.target.value.trim() !== '');
+                        const val = e.target.value;
+                        // Update lokal (memori browser) dengan teks ASLI (biar tampilan gak berubah)
+                        examAnswers[questionKey] = val; 
+                        updateNavBoxStatus(index, val.trim() !== '');
                         
-                        fetch(CONFIG.SCRIPT_URL, {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                action: 'saveTemporaryAnswer',
-                                username: session.username,
-                                kodeMateri: cacheKey, 
-                                kunciSoal: questionKey, 
-                                jawaban: e.target.value
-                            }),
-                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                            keepalive: true
-                        });
+                        clearTimeout(typingTimer);
+
+                        typingTimer = setTimeout(() => {
+                            // === PERUBAHAN DISINI: ENCODE DULU SEBELUM KIRIM ===
+                            const encodedVal = safeEncode(val); 
+                            // ==================================================
+
+                            fetch(CONFIG.SCRIPT_URL, {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    action: 'saveTemporaryAnswer',
+                                    username: session.username,
+                                    kodeMateri: cacheKey, 
+                                    kunciSoal: questionKey, 
+                                    jawaban: encodedVal // Kirim versi terbungkus
+                                }),
+                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                keepalive: true
+                            });
+                        }, 1000); 
                     });
                 }
             }
@@ -6275,9 +6292,21 @@ function calculateAndShowResult() {
         resultActionsEl.innerHTML = `<button id="result-done-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Selesai</button>`;
     } else {
         resultScoreEl.className = 'text-8xl font-bold my-8 fail';
-        resultMessageEl.textContent = 'Nilai belum mencapai KKM.';
-        resultActionsEl.innerHTML = `<button id="result-done-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg">Selesai</button>`;
-    }
+        
+        // CEK: Apakah sudah pernah remedial sebelumnya?
+        // (previousAttempts didapat dari variabel global currentAttemptHistory yang sudah ada di kode Anda)
+        if (previousAttempts >= 2) { 
+             resultMessageEl.textContent = 'Kesempatan remedial Anda sudah habis.';
+             resultActionsEl.innerHTML = `<button id="result-done-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg">Selesai</button>`;
+        } else {
+             // JIKA BELUM -> Tampilkan Tombol Remedial
+             resultMessageEl.textContent = 'Nilai Anda belum mencapai KKM. Silakan ambil remedial.';
+             resultActionsEl.innerHTML = `
+                <button id="result-remedial-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg mr-4 shadow-lg">Mulai Remedial</button>
+                <button id="result-later-btn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-8 rounded-lg">Nanti Saja</button>
+            `;
+        }
+	}
 
     document.getElementById('exam-container').classList.add('hidden');
     document.getElementById('exam-result-modal').style.display = 'block';
@@ -14057,6 +14086,15 @@ window.loadSavedTheme = function() {
     const savedTheme = localStorage.getItem('selectedTheme');
     if (savedTheme) {
         window.setTheme(savedTheme);
+    }
+}
+
+function safeEncode(str) {
+    try {
+        return btoa(unescape(encodeURIComponent(str)));
+    } catch (e) {
+        console.error("Gagal encode:", e);
+        return "";
     }
 }
 
