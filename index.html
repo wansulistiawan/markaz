@@ -6981,153 +6981,181 @@ function setupPengawasUjianPage() {
     const alarmAudio = document.getElementById('proctor-alarm-sound');
     const stopAlarmBtn = document.getElementById('proctor-stop-alarm-btn'); 
 
+    // Set untuk melacak pelanggaran yang sudah dibunyikan
     seenViolationTimestamps.clear(); 
-    
-    // Setup Audio
+    let isAudioUnlocked = false;
+
+    // --- LOGIKA AUDIO (SAMA SEPERTI KODE LAMA) ---
     const stopProctorAlarm = () => {
-        if (alarmAudio) { alarmAudio.pause(); alarmAudio.currentTime = 0; }
+        if (!alarmAudio) return;
+        alarmAudio.pause();
+        alarmAudio.currentTime = 0;
         stopAlarmBtn.classList.add('hidden'); 
     };
 
     const playProctorAlarm = () => {
-        if (alarmAudio) {
-            stopAlarmBtn.classList.remove('hidden'); 
-            alarmAudio.play().catch(e => console.warn("Audio perlu interaksi"));
+        if (!alarmAudio) return;
+        stopAlarmBtn.classList.remove('hidden'); 
+        alarmAudio.volume = 1.0;
+        alarmAudio.currentTime = 0;
+        const playPromise = alarmAudio.play();
+        if (playPromise !== undefined) {
+            playPromise.then(_ => { isAudioUnlocked = true; })
+            .catch(e => console.warn("Audio perlu interaksi"));
         }
     };
     stopAlarmBtn.onclick = stopProctorAlarm;
 
     const refreshProctorView = async () => {
         try {
-            // Ambil Log dari Google Sheet
             const response = await fetch(CONFIG.SCRIPT_URL, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'getSantriActivityLogs', cacheBuster: new Date().getTime() }),
+                body: JSON.stringify({ 
+                    action: 'getSantriActivityLogs',
+                    cacheBuster: new Date().getTime()
+                }),
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             const result = await response.json();
             if (result.status !== 'success') throw new Error(result.message);
 
             const allLogs = result.data;
-            
-            // 1. Kelompokkan Log per Santri
+
+            // 1. PENGOLAHAN DATA (AGREGASI)
+            // Kita butuh data status terkini DAN daftar log lengkap
             const santriDataMap = {};
             
-            // Filter log 2 jam terakhir saja agar relevan
-            const twoHoursAgo = new Date().getTime() - (2 * 60 * 60 * 1000);
+            // Hanya ambil data 3 jam terakhir agar relevan
+            const timeLimit = new Date().getTime() - (3 * 60 * 60 * 1000);
 
             allLogs.forEach(log => {
-                const logTime = new Date(log.Timestamp).getTime();
-                if (logTime < twoHoursAgo) return;
+                const logTimestamp = new Date(log.Timestamp).getTime();
+                if (logTimestamp < timeLimit) return;
 
                 if (!santriDataMap[log.Username]) {
                     santriDataMap[log.Username] = {
                         profileName: log.ProfileName,
                         currentExam: '-',
                         lastAnswer: '-',
-                        score: '-',
-                        status: 'online', // online, violation, finished
-                        logs: []
+                        score: null,
+                        isViolation: false,
+                        logs: [] // Menyimpan semua log untuk ditampilkan
                     };
                 }
 
-                // Proses Status & Data berdasarkan Tipe Log
                 const sData = santriDataMap[log.Username];
                 
-                if (log.ActionType === 'MULAI_UJIAN') {
-                    sData.currentExam = log.ActionDetail;
-                    sData.status = 'online';
-                    sData.score = '-'; // Reset nilai jika mulai ujian baru
+                // Update Status Terkini
+                if (log.ActionType === 'MULAI_UJIAN') sData.currentExam = log.ActionDetail;
+                if (log.ActionType === 'JAWAB') sData.lastAnswer = log.ActionDetail;
+                if (log.ActionType === 'SELESAI_UJIAN') sData.score = log.ActionDetail;
+                
+                // Cek Pelanggaran (untuk alarm)
+                if (log.ActionType === 'PELANGGARAN') {
+                    sData.isViolation = true;
+                    if (!seenViolationTimestamps.has(logTimestamp)) {
+                        seenViolationTimestamps.add(logTimestamp);
+                        playProctorAlarm();
+                    }
+                } else if (log.ActionType === 'AKSES_KEMBALI') {
+                    sData.isViolation = false;
                 }
-                else if (log.ActionType === 'JAWAB') {
-                    sData.lastAnswer = log.ActionDetail; // "No. 1: A"
-                }
-                else if (log.ActionType === 'SELESAI_UJIAN') {
-                    sData.score = log.ActionDetail; // "Nilai: 80"
-                    sData.status = 'finished';
-                }
-                else if (log.ActionType === 'PELANGGARAN') {
-                    sData.status = 'violation';
-                    sData.logs.push({ time: log.Timestamp, msg: log.ActionDetail, type: 'violation' });
-                }
-                else if (log.ActionType === 'AKSES_KEMBALI') {
-                    if (sData.status === 'violation') sData.status = 'online'; // Reset status jika kembali
-                }
+
+                // Simpan Log ke Array (untuk ditampilkan di list bawah)
+                sData.logs.push(log);
             });
 
-            // 2. Render Kartu
-            proctorGridContainer.innerHTML = '';
-            const sortedUsernames = Object.keys(santriDataMap).sort();
+            // 2. HAPUS KARTU YANG TIDAK AKTIF
+            const activeUsernames = Object.keys(santriDataMap);
+            document.querySelectorAll('.santri-proctor-card').forEach(card => {
+                const uid = card.id.replace('proctor-card-', '');
+                if (!activeUsernames.includes(uid)) card.remove();
+            });
 
-            if (sortedUsernames.length === 0) {
-                proctorGridContainer.innerHTML = '<p class="col-span-full text-center text-gray-500">Tidak ada aktivitas ujian dalam 2 jam terakhir.</p>';
+            if (activeUsernames.length === 0) {
+                proctorGridContainer.innerHTML = '<p class="col-span-full text-center text-gray-500">Tidak ada santri ujian dalam 3 jam terakhir.</p>';
                 return;
             }
 
-            sortedUsernames.forEach(username => {
+            // 3. RENDER KARTU
+            activeUsernames.sort(); // Urutkan nama
+            
+            activeUsernames.forEach(username => {
                 const data = santriDataMap[username];
+                let card = document.getElementById(`proctor-card-${username}`);
                 
-                // Tentukan Warna Kartu
-                let cardBorderClass = 'border-gray-200';
-                let statusBadge = '<span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded">Sedang Mengerjakan</span>';
-                
-                if (data.status === 'violation') {
-                    cardBorderClass = 'border-red-500 border-2 shadow-red-200';
-                    statusBadge = '<span class="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded animate-pulse">PELANGGARAN</span>';
-                    
-                    // Cek alarm (jika pelanggaran baru terjadi < 1 menit yang lalu)
-                    const lastLog = data.logs[data.logs.length - 1];
-                    if (lastLog && (new Date() - new Date(lastLog.time) < 60000)) {
-                         if (!seenViolationTimestamps.has(lastLog.time)) {
-                             seenViolationTimestamps.add(lastLog.time);
-                             playProctorAlarm();
-                         }
-                    }
-                } else if (data.status === 'finished') {
-                    cardBorderClass = 'border-blue-500';
-                    statusBadge = '<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">Selesai</span>';
-                }
+                // Warna Border
+                let borderClass = data.isViolation ? 'border-red-500 border-2 shadow-red-200' : 
+                                  (data.score ? 'border-blue-500' : 'border-gray-300');
 
-                const cardHTML = `
-                    <div class="santri-proctor-card bg-white rounded-lg shadow p-4 border ${cardBorderClass} flex flex-col gap-2">
-                        <div class="flex justify-between items-start border-b pb-2">
-                            <div>
-                                <h3 class="font-bold text-gray-800">${data.profileName}</h3>
-                                <p class="text-xs text-gray-500">${data.currentExam}</p>
-                            </div>
-                            ${statusBadge}
-                        </div>
+                // Generate HTML Log (List Scrollable)
+                // Urutkan log dari terbaru ke terlama
+                const logsHTML = data.logs.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp))
+                    .map(log => {
+                        const time = new Date(log.Timestamp).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+                        let colorClass = 'text-gray-600';
+                        if (log.ActionType === 'PELANGGARAN') colorClass = 'text-red-600 font-bold';
+                        if (log.ActionType === 'AKSES_KEMBALI') colorClass = 'text-green-600 font-bold';
+                        if (log.ActionType === 'SELESAI_UJIAN') colorClass = 'text-blue-600 font-bold';
                         
-                        <div class="text-sm space-y-1 mt-1 flex-grow">
-                            <div class="flex justify-between bg-gray-50 p-2 rounded">
-                                <span class="text-gray-600 text-xs">Aktivitas Terakhir:</span>
-                                <span class="font-mono font-bold text-gray-800 text-xs text-right">${data.lastAnswer}</span>
-                            </div>
-                            
-                            ${data.status === 'finished' ? `
-                            <div class="flex justify-between bg-blue-50 p-2 rounded border border-blue-100">
-                                <span class="text-blue-800 font-bold">Hasil Akhir:</span>
-                                <span class="text-2xl font-bold text-blue-600">${data.score.replace('Nilai: ', '')}</span>
-                            </div>` : ''}
-                            
-                            ${data.status === 'violation' ? `
-                            <div class="bg-red-50 p-2 rounded text-xs text-red-700 border border-red-100">
-                                ⚠️ ${data.logs[data.logs.length-1].msg}
-                            </div>` : ''}
+                        return `<div class="text-xs border-b border-gray-100 py-1">
+                                    <span class="text-gray-400 mr-1">[${time}]</span>
+                                    <span class="${colorClass}">${log.ActionDetail}</span>
+                                </div>`;
+                    }).join('');
+
+                const cardContent = `
+                    <div class="bg-gray-50 p-3 border-b">
+                        <h3 class="font-bold text-gray-800 text-lg leading-tight">${data.profileName}</h3>
+                        <p class="text-xs text-gray-500 mt-1 font-semibold truncate">${data.currentExam}</p>
+                    </div>
+                    
+                    <div class="p-3 bg-white">
+                        ${data.score ? 
+                            `<div class="bg-blue-100 text-blue-800 text-center py-2 rounded mb-2 font-bold">
+                                Nilai Akhir: ${data.score.replace('Nilai: ', '')}
+                             </div>` 
+                            : 
+                            `<div class="flex justify-between text-xs mb-2">
+                                <span class="text-gray-500">Jawab:</span>
+                                <span class="font-mono font-bold text-teal-700 truncate ml-2">${data.lastAnswer}</span>
+                             </div>`
+                        }
+                        
+                        <div class="h-32 overflow-y-auto bg-gray-50 border rounded p-2 shadow-inner">
+                            ${logsHTML}
                         </div>
                     </div>
                 `;
-                proctorGridContainer.insertAdjacentHTML('beforeend', cardHTML);
+
+                if (!card) {
+                    card = document.createElement('div');
+                    card.id = `proctor-card-${username}`;
+                    proctorGridContainer.appendChild(card);
+                }
+                
+                // Update Class & Content
+                card.className = `santri-proctor-card bg-white rounded-lg shadow hover:shadow-md transition-all duration-300 flex flex-col ${borderClass}`;
+                card.innerHTML = cardContent;
+
+                // Efek kedip jika pelanggaran baru
+                if (data.isViolation) {
+                    card.classList.add('flash-red-alert');
+                } else {
+                    card.classList.remove('flash-red-alert');
+                }
             });
 
+            // Hapus pesan kosong jika ada data
+            const emptyMsg = proctorGridContainer.querySelector('p.col-span-full');
+            if (emptyMsg && activeUsernames.length > 0) emptyMsg.remove();
+
         } catch (error) {
-            proctorGridContainer.innerHTML = `<p class="col-span-full text-center text-red-500">Gagal memuat data: ${error.message}</p>`;
+            console.error("Proctor Error:", error);
         }
     };
-
-    // Panggil pertama kali
+    
     refreshProctorView();
-    // Refresh setiap 3 detik
     proctorInterval = setInterval(refreshProctorView, 3000);
 }
 
