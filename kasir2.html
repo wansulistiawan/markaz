@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasir Pintar Pro v5.0 - Ultimate Enterprise</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; position: absolute; top: 0; left: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        const { useState, useEffect, useMemo, useRef } = React;
+        
+        // --- ICONS WRAPPER ---
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const iconRef = useRef(null);
+            useEffect(() => {
+                lucide.createIcons({
+                    root: iconRef.current ? iconRef.current.parentNode : document,
+                    nameAttr: 'data-lucide',
+                    attrs: {class: className}
+                });
+            }, [name]);
+            return <i ref={iconRef} data-lucide={name} width={size} height={size} className={className}></i>;
+        };
+
+        // --- FIREBASE SETUP ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, query, where, orderBy, setDoc, getDoc, limit, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4t1Gya_QHDzTkYsF7U-pw1Uo1oQUABpM",
+            authDomain: "websitemarkaz.firebaseapp.com",
+            databaseURL: "https://websitemarkaz-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "websitemarkaz",
+            storageBucket: "websitemarkaz.firebasestorage.app",
+            messagingSenderId: "5529883980",
+            appId: "1:5529883980:web:792ce6d869070e9a79ebe9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+		// --- NEW: AKTIFKAN CACHE OFFLINE ---
+        enableIndexedDbPersistence(db)
+            .catch((err) => {
+                if (err.code == 'failed-precondition') {
+                    console.log('Persistence failed: Multiple tabs open');
+                } else if (err.code == 'unimplemented') {
+                    console.log('Persistence is not available in this browser');
+                }
+            });
+        // ------------------------------------
+        const APP_ID = "kasir-pintar-pro-v5";
+
+        // --- UTILS ---
+        const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val || 0);
+        const formatDate = (ts) => ts ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(ts.toDate ? ts.toDate() : new Date(ts)) : '-';
+
+        const exportToCSV = (data, filename) => {
+            if (!data || !data.length) return alert("Tidak ada data untuk diexport");
+            const headers = Object.keys(data[0]).join(",");
+            const rows = data.map(obj => Object.values(obj).map(v => `"${v}"`).join(",")).join("\n");
+            const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + rows;
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", filename + ".csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        // --- COMPONENTS ---
+
+        const Modal = ({ title, onClose, children, maxWidth = "max-w-md" }) => (
+            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+                <div className={`bg-white rounded-2xl w-full ${maxWidth} shadow-2xl overflow-hidden flex flex-col max-h-[90vh]`}>
+                    <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+                        <h3 className="font-bold text-lg text-gray-800">{title}</h3>
+                        <button onClick={onClose} className="hover:bg-gray-200 p-1 rounded-full"><Icon name="x" size={20}/></button>
+                    </div>
+                    <div className="p-6 overflow-y-auto">{children}</div>
+                </div>
+            </div>
+        );
+
+        const Receipt = ({ data, storeProfile, onClose }) => {
+            if (!data) return null;
+            return (
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in">
+                        <div className="bg-gray-900 text-white p-4 flex justify-between items-center no-print">
+                            <h3 className="font-bold flex items-center gap-2"><Icon name="check-circle" size={18}/> Transaksi Sukses</h3>
+                            <button onClick={onClose}><Icon name="x"/></button>
+                        </div>
+                        <div className="p-6 font-mono text-sm bg-gray-50 overflow-y-auto max-h-[70vh]">
+                            <div className="text-center mb-6">
+                                {storeProfile?.logo && <img src={storeProfile.logo} className="h-16 mx-auto mb-2 object-contain" />}
+                                <h2 className="text-xl font-bold uppercase">{storeProfile?.name || 'Toko Kasir Pro'}</h2>
+                                <p className="text-gray-500 text-xs">{storeProfile?.address || 'Alamat Belum Diatur'}</p>
+                                <p className="text-gray-500 text-xs">{storeProfile?.phone || ''}</p>
+                            </div>
+                            <div className="border-b border-dashed border-gray-400 pb-2 mb-2 text-xs">
+                                <p>No: #{data.id.slice(0,8).toUpperCase()}</p>
+                                <p>{formatDate(data.createdAt)}</p>
+                                <p>Tipe: <span className="font-bold">{data.orderType || 'Dine In'}</span> {data.table ? `(Meja ${data.table})` : ''}</p>
+                                <p>Plg: {data.customerName || 'Umum'}</p>
+                            </div>
+                            <div className="space-y-2 mb-4">
+                                {data.items.map((item, i) => (
+                                    <div key={i} className="flex justify-between">
+                                        <div className="flex-1">
+                                            <div className="font-bold">{item.name}</div>
+                                            <div className="text-xs text-gray-500">{item.qty} x {formatCurrency(item.price)}</div>
+                                            {item.itemDiscount > 0 && <div className="text-[10px] text-green-600">Disc: -{formatCurrency(item.itemDiscount)}</div>}
+                                            {item.note && <div className="text-[10px] italic text-gray-400">"{item.note}"</div>}
+                                        </div>
+                                        <div className="font-bold">{formatCurrency((item.price * item.qty) - (item.itemDiscount || 0))}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="border-t border-dashed border-gray-400 pt-2 space-y-1 text-right">
+                                <div className="flex justify-between text-gray-500"><span>Subtotal</span><span>{formatCurrency(data.subtotal)}</span></div>
+                                {data.discount > 0 && <div className="flex justify-between text-green-600"><span>Diskon Global</span><span>-{formatCurrency(data.discount)}</span></div>}
+                                {data.serviceCharge > 0 && <div className="flex justify-between text-gray-500"><span>Service ({data.serviceRate}%)</span><span>{formatCurrency(data.serviceCharge)}</span></div>}
+                                {data.tax > 0 && <div className="flex justify-between text-gray-500"><span>Pajak ({data.taxRate}%)</span><span>{formatCurrency(data.tax)}</span></div>}
+                                <div className="flex justify-between text-xl font-bold mt-2 pt-2 border-t border-dotted"><span>Total</span><span>{formatCurrency(data.total)}</span></div>
+                                <div className="flex justify-between text-xs text-gray-500 mt-2">
+                                    <span>Metode: {data.paymentMethod}</span>
+                                    <span>{data.paymentMethod === 'Hutang' ? 'Belum Lunas' : 'Lunas'}</span>
+                                </div>
+                            </div>
+                            <div className="mt-6 text-center text-xs text-gray-400 italic">
+                                {storeProfile?.footerMessage || "Terima kasih atas kunjungan Anda!"}
+                            </div>
+                        </div>
+                        <div className="p-4 bg-white border-t no-print">
+                            <button onClick={() => window.print()} className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-blue-700">
+                                <Icon name="printer" size={18}/> Cetak Struk
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- MAIN APPLICATION ---
+        const App = () => {
+            const [user, setUser] = useState(null);
+            const [view, setView] = useState('pos');
+            const [loading, setLoading] = useState(true);
+            
+            // Data States
+            const [products, setProducts] = useState([]);
+            const [customers, setCustomers] = useState([]);
+            const [suppliers, setSuppliers] = useState([]); 
+            const [expenses, setExpenses] = useState([]); 
+            const [debts, setDebts] = useState([]); 
+            const [storeProfile, setStoreProfile] = useState({}); 
+            const [tables, setTables] = useState([]); // NEW v5
+            const [shift, setShift] = useState(null); 
+            const [transactions, setTransactions] = useState([]);
+            const [stockHistory, setStockHistory] = useState([]); 
+
+            // POS States
+            const [cart, setCart] = useState([]);
+            const [selectedCustomer, setSelectedCustomer] = useState(null);
+            const [selectedTable, setSelectedTable] = useState(null); // NEW v5
+            const [discount, setDiscount] = useState(0); 
+            const [paymentMethod, setPaymentMethod] = useState('Tunai');
+            const [orderType, setOrderType] = useState('Dine In'); 
+            const [lastTrans, setLastTrans] = useState(null);
+            const [searchQuery, setSearchQuery] = useState("");
+			// --- NEW: FITUR ROLE MANAGEMENT ---
+            const [staff, setStaff] = useState([]); // Database karyawan
+            const [activeStaff, setActiveStaff] = useState(null); // Siapa yang sedang login?
+            // ----------------------------------
+            
+            // Advanced Cart Item Edit
+            const [editingItem, setEditingItem] = useState(null); // NEW v5
+
+            // Modals & Forms
+            const [modalConfig, setModalConfig] = useState({ show: false, type: '', data: null });
+            const [settingsTab, setSettingsTab] = useState('profile'); // NEW v5
+
+            // Auth Logic
+            useEffect(() => {
+                const init = async () => { await signInAnonymously(auth); };
+                init();
+                return onAuthStateChanged(auth, u => { setUser(u); if (!u) setLoading(false); });
+            }, []);
+
+            // Data Fetching
+            useEffect(() => {
+                if (!user) return;
+                setLoading(true);
+
+                const basePath = ['artifacts', APP_ID, 'users', user.uid];
+
+                // 1. Core Data
+                const unsubProd = onSnapshot(collection(db, ...basePath, 'products'), s => setProducts(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                const unsubCust = onSnapshot(collection(db, ...basePath, 'customers'), s => setCustomers(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                const unsubSupp = onSnapshot(collection(db, ...basePath, 'suppliers'), s => setSuppliers(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                const unsubExp = onSnapshot(collection(db, ...basePath, 'expenses'), s => setExpenses(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                const unsubDebts = onSnapshot(collection(db, ...basePath, 'debts'), s => setDebts(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                
+                // OPTIMASI 1: Hanya ambil 50 riwayat stok terakhir
+                const unsubStock = onSnapshot(query(collection(db, ...basePath, 'stock_history'), orderBy('createdAt', 'desc'), limit(50)), s => setStockHistory(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                
+                const unsubTables = onSnapshot(query(collection(db, ...basePath, 'tables'), orderBy('name', 'asc')), s => setTables(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                // --- NEW: FETCH STAFF ---
+                const unsubStaff = onSnapshot(collection(db, ...basePath, 'staff'), s => {
+                    const staffData = s.docs.map(d => ({id:d.id, ...d.data()}));
+                    setStaff(staffData);
+                    // Jika belum ada staff sama sekali (pengguna baru), buat akun Admin otomatis
+                    if(s.empty) {
+                        addDoc(collection(db, ...basePath, 'staff'), { name: 'Owner', pin: '1234', role: 'admin' });
+                    }
+                });
+                // ------------------------
+                // 2. Settings
+                const unsubSettings = onSnapshot(doc(db, ...basePath, 'settings', 'profile'), s => {
+                    if (s.exists()) setStoreProfile(s.data());
+                });
+
+                // 3. Shift & Trans
+                const qShift = query(collection(db, ...basePath, 'shifts'), where('status', '==', 'open'));
+                const unsubShift = onSnapshot(qShift, s => {
+                    setShift(s.empty ? null : {id: s.docs[0].id, ...s.docs[0].data()});
+                    
+                });
+
+                // OPTIMASI 2: Hanya ambil 50 transaksi terakhir untuk ditampilkan di List
+                // Data lama biarkan di server, hanya diambil jika export
+                const qTrans = query(collection(db, ...basePath, 'transactions'), orderBy('createdAt', 'desc'), limit(50)); 
+                const unsubTrans = onSnapshot(qTrans, s => setTransactions(s.docs.map(d => ({id:d.id, ...d.data()}))));
+				setTimeout(() => {
+                    setLoading(false);
+                }, 1000);
+                return () => { unsubProd(); unsubCust(); unsubSupp(); unsubExp(); unsubDebts(); unsubStock(); unsubSettings(); unsubShift(); unsubTrans(); unsubTables(); unsubStaff(); };
+            }, [user]);
+
+            // --- BUSINESS LOGIC ---
+
+            const handleBarcode = (e) => {
+                if (e.key === 'Enter') {
+                    const code = e.target.value.trim();
+                    if (!code) return;
+                    const prod = products.find(p => p.barcode === code);
+                    if (prod) {
+                        addToCart(prod);
+                        setSearchQuery('');
+                    } else {
+                        alert("Barcode tidak ditemukan!");
+                    }
+                }
+            };
+
+            const addToCart = (p) => {
+                if (p.stock <= 0) return alert("Stok Habis!");
+                setCart(prev => { 
+                    const ex = prev.find(i=>i.id===p.id); 
+                    return ex ? prev.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i) : [...prev,{...p,qty:1, itemDiscount:0}];
+                });
+            };
+
+            const calculateTotals = () => {
+                const subtotalRaw = cart.reduce((a,b) => a + (b.price * b.qty), 0);
+                const itemDiscounts = cart.reduce((a,b) => a + (b.itemDiscount || 0), 0);
+                const subtotal = subtotalRaw - itemDiscounts;
+                const hppTotal = cart.reduce((a,b) => a + ((b.hpp || 0) * b.qty), 0);
+                
+                // Advanced Tax & Service Logic
+                const serviceRate = storeProfile?.serviceRate || 0;
+                const taxRate = storeProfile?.taxRate || 0;
+                
+                const taxableAmount = Math.max(0, subtotal - discount);
+                const serviceCharge = (taxableAmount * serviceRate) / 100;
+                const tax = ((taxableAmount + serviceCharge) * taxRate) / 100; // Tax usually applies to (Subtotal + Service)
+                
+                const total = taxableAmount + serviceCharge + tax;
+
+                return { subtotal, hppTotal, tax, serviceCharge, total, serviceRate, taxRate };
+            };
+
+            const handleCheckout = async () => {
+                if(!shift) return alert("Kasir belum dibuka!");
+                if(cart.length === 0) return;
+                if(paymentMethod === 'Hutang' && !selectedCustomer) return alert("Pembayaran Hutang wajib memilih Pelanggan!");
+                if(orderType === 'Dine In' && !selectedTable) {
+                    if(!confirm("Anda belum memilih Meja untuk Dine In. Lanjutkan tanpa nomor meja?")) return;
+                }
+
+                const totals = calculateTotals();
+                const profit = totals.total - totals.tax - totals.serviceCharge - totals.hppTotal;
+
+                const transData = {
+                    items: cart,
+                    ...totals,
+                    profit: profit, 
+                    paymentMethod,
+                    orderType,
+                    table: selectedTable ? selectedTable.name : null, // NEW v5
+                    customerId: selectedCustomer ? selectedCustomer.id : null,
+                    customerName: selectedCustomer ? selectedCustomer.name : 'Umum',
+                    shiftId: shift.id,
+                    createdAt: serverTimestamp(),
+                    status: 'success'
+                };
+
+                try {
+                    // 1. Transaction Record
+                    const ref = await addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'transactions'), transData);
+                    
+                    // 2. If Debt
+                    if (paymentMethod === 'Hutang') {
+                        await addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'debts'), {
+                            transactionId: ref.id,
+                            customerId: selectedCustomer.id,
+                            customerName: selectedCustomer.name,
+                            amount: totals.total,
+                            paid: 0,
+                            status: 'unpaid',
+                            createdAt: serverTimestamp()
+                        });
+                    }
+
+                    // 3. Update Stock & Log History
+                    cart.forEach(item => {
+                        const pRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'products', item.id);
+                        const prod = products.find(p => p.id === item.id);
+                        if(prod) {
+                            updateDoc(pRef, { stock: prod.stock - item.qty });
+                            addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'stock_history'), {
+                                productId: item.id,
+                                productName: item.name,
+                                change: -item.qty,
+                                type: 'sale',
+                                refId: ref.id,
+                                reason: 'Penjualan POS',
+                                createdAt: serverTimestamp()
+                            });
+                        }
+                    });
+
+                    // 4. Update Shift
+                    await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'shifts', shift.id), {
+                        transactionsCount: (shift.transactionsCount || 0) + 1,
+                        totalSales: (shift.totalSales || 0) + transData.total
+                    });
+
+                    setLastTrans({id: ref.id, ...transData});
+                    setCart([]);
+                    setDiscount(0);
+                    setSelectedCustomer(null);
+                    setSelectedTable(null);
+                    setOrderType('Dine In');
+                } catch (e) { alert("Gagal transaksi: " + e.message); }
+            };
+
+            const handlePayDebt = async (debtId, currentPaid, totalAmount, payAmount) => {
+                const newPaid = currentPaid + Number(payAmount);
+                const status = newPaid >= totalAmount ? 'paid' : 'partial';
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'debts', debtId), {
+                    paid: newPaid,
+                    status: status,
+                    lastPayment: serverTimestamp()
+                });
+            };
+
+            const handleAdjustStock = async (e) => { 
+                e.preventDefault();
+                const f = e.target;
+                const qty = Number(f.qty.value);
+                const type = f.type.value;
+                const change = type === 'in' ? qty : -qty;
+                const prod = modalConfig.data;
+                
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'products', prod.id), { stock: prod.stock + change });
+                await addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'stock_history'), {
+                    productId: prod.id, productName: prod.name, change: change, type: 'adjustment', reason: f.reason.value, createdAt: serverTimestamp()
+                });
+                setModalConfig({show: false});
+            };
+
+            const handleExport = (type) => {
+                if (type === 'transactions') {
+                    const data = transactions.map(t => ({
+                        Date: formatDate(t.createdAt), ID: t.id, Total: t.total, Profit: t.profit, Method: t.paymentMethod, Type: t.orderType, Table: t.table || '-'
+                    }));
+                    exportToCSV(data, 'laporan_transaksi');
+                }
+            };
+
+            // --- SETTINGS SAVE ---
+            const saveSettings = async (e) => {
+                e.preventDefault();
+                const f = e.target;
+                const basePath = ['artifacts', APP_ID, 'users', user.uid];
+                await setDoc(doc(db, ...basePath, 'settings', 'profile'), {
+                    name: f.name.value, 
+                    address: f.address.value, 
+                    phone: f.phone.value,
+                    logo: f.logo.value,
+                    footerMessage: f.footerMessage.value,
+                    taxRate: Number(f.taxRate.value),
+                    serviceRate: Number(f.serviceRate.value)
+                });
+                setModalConfig({ show: false });
+            };
+
+            // --- CRUD GENERIC ---
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                const f = e.target;
+                const type = modalConfig.type;
+                const isEdit = !!modalConfig.data;
+                const collPath = ['artifacts', APP_ID, 'users', user.uid];
+                let payload = {};
+
+                if (type === 'product') {
+                    payload = { name: f.name.value, barcode: f.barcode.value, category: f.category.value, price: Number(f.price.value), hpp: Number(f.hpp.value), stock: Number(f.stock.value), image: f.image.value };
+                } else if (type === 'customer') {
+                    payload = { name: f.name.value, phone: f.phone.value, email: f.email.value };
+                } else if (type === 'supplier') {
+                    payload = { name: f.name.value, phone: f.phone.value, address: f.address.value };
+                } else if (type === 'table') {
+                    payload = { name: f.name.value, capacity: f.capacity.value };
+                } else if (type === 'staff') {
+                    payload = { name: f.name.value, pin: f.pin.value, role: f.role.value };
+                } else if (type === 'expense') {
+                    payload = { name: f.name.value, amount: Number(f.amount.value), category: f.category.value, date: serverTimestamp() };
+                }
+
+                if (isEdit) {
+                    await updateDoc(doc(db, ...collPath, type + 's', modalConfig.data.id), { ...payload, updatedAt: serverTimestamp() });
+                } else {
+                    await addDoc(collection(db, ...collPath, type + 's'), { ...payload, createdAt: serverTimestamp() });
+                }
+                setModalConfig({ show: false });
+            };
+
+            // --- RENDERERS ---
+            if (loading) return <div className="h-screen flex items-center justify-center text-blue-600 font-bold">Loading Kasir Pro v5 Ultimate...</div>;
+			
+			// --- NEW: LOGIN SCREEN (LOCK SCREEN) ---
+            if (user && !activeStaff) {
+                return (
+                    <div className="h-screen bg-slate-900 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center">
+                            <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600"><Icon name="lock" size={32}/></div>
+                            <h2 className="text-2xl font-bold mb-2">Siapa yang bertugas?</h2>
+                            <p className="text-gray-500 mb-6 text-sm">Silakan pilih akun untuk melanjutkan</p>
+                            
+                            <div className="grid grid-cols-2 gap-3 mb-6">
+                                {staff.map(s => (
+                                    <button key={s.id} onClick={() => {
+                                        const pin = prompt(`Masukkan PIN untuk ${s.name}:`);
+                                        if(pin === s.pin) { setActiveStaff(s); if(s.role==='admin') setView('dashboard'); else setView('pos'); } 
+                                        else alert("PIN Salah!");
+                                    }} className="p-4 border rounded-xl hover:bg-blue-50 hover:border-blue-500 transition group">
+                                        <div className="font-bold text-lg group-hover:text-blue-600">{s.name}</div>
+                                        <div className="text-xs text-gray-400 uppercase">{s.role}</div>
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="text-xs text-gray-400">Default PIN Owner: 1234</div>
+                        </div>
+                    </div>
+                );
+            }
+            // ----------------------------------------			
+			
+            // Shift Modal
+            if (user && !shift && view === 'pos') {
+                return (
+                    <Modal title="Buka Shift (Modal Awal)" onClose={()=>{}}>
+                        <form onSubmit={async(e)=>{
+                            e.preventDefault();
+                            await addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'shifts'), {
+                                startCash: Number(e.target.startCash.value), startTime: serverTimestamp(), status: 'open', transactionsCount:0, totalSales:0
+                            });
+                        }}>
+                            <input name="startCash" type="number" placeholder="Modal Awal (Rp)" required className="w-full p-3 border rounded-lg mb-4"/>
+                            <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Buka Toko</button>
+                        </form>
+                    </Modal>
+                );
+            }
+
+            return (
+                <div className="flex h-screen bg-gray-100 overflow-hidden text-slate-800">
+                    {/* SIDEBAR */}
+                    <aside className="w-20 md:w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20 overflow-y-auto">
+                        <div className="h-16 flex items-center justify-center md:justify-start md:px-6 bg-slate-950 text-white font-bold gap-3 flex-shrink-0 sticky top-0 z-10">
+                            <div className="bg-blue-600 p-2 rounded-lg"><Icon name="zap" size={20}/></div>
+                            <span className="hidden md:block">Kasir Pro v5</span>
+                        </div>
+                        <nav className="flex-1 py-4 space-y-1 px-2">
+                            {/* Tampilkan Info User Login */}
+                            <div className="px-3 mb-6 flex items-center gap-3 pb-4 border-b border-slate-800">
+                                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white">{activeStaff?.name[0]}</div>
+                                <div className="hidden md:block">
+                                    <div className="text-sm font-bold text-white">{activeStaff?.name}</div>
+                                    <div className="text-xs text-slate-500 uppercase">{activeStaff?.role}</div>
+                                </div>
+                                <button onClick={()=>setActiveStaff(null)} className="ml-auto text-slate-500 hover:text-white"><Icon name="log-out" size={16}/></button>
+                            </div>
+
+                            <div className="text-xs font-bold text-slate-500 px-3 mb-2 uppercase hidden md:block">Utama</div>
+                            {[
+                                {id: 'pos', icon: 'monitor', label: 'Kasir / POS', roles: ['admin', 'kasir']},
+                                {id: 'dashboard', icon: 'layout-dashboard', label: 'Dashboard', roles: ['admin']},
+                                {id: 'inventory', icon: 'clipboard-list', label: 'Stok Opname', roles: ['admin']},
+                                {id: 'debts', icon: 'book', label: 'Hutang / Kasbon', roles: ['admin', 'kasir']},
+                                {id: 'expenses', icon: 'wallet', label: 'Pengeluaran', roles: ['admin']},
+                            ].filter(m => m.roles.includes(activeStaff?.role)).map(m => (
+                                <button key={m.id} onClick={() => setView(m.id)} className={`w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl transition ${view===m.id ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}>
+                                    <Icon name={m.icon} /> <span className="hidden md:block font-medium">{m.label}</span>
+                                </button>
+                            ))}
+                            
+                            {/* Hanya Tampilkan Database & Setting jika Admin */}
+                            {activeStaff?.role === 'admin' && <>
+                                <div className="text-xs font-bold text-slate-500 px-3 mt-4 mb-2 uppercase hidden md:block">Database</div>
+                                {[
+                                    {id: 'products', icon: 'package', label: 'Produk'},
+                                    {id: 'customers', icon: 'users', label: 'Pelanggan'},
+                                    {id: 'staff', icon: 'id-card', label: 'Karyawan'}, // Menu Baru
+                                    {id: 'tables', icon: 'layout-grid', label: 'Meja Resto'},
+                                    {id: 'suppliers', icon: 'truck', label: 'Supplier'},
+                                ].map(m => (
+                                    <button key={m.id} onClick={() => setView(m.id)} className={`w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl transition ${view===m.id ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}>
+                                        <Icon name={m.icon} /> <span className="hidden md:block font-medium">{m.label}</span>
+                                    </button>
+                                ))}
+
+                                <div className="text-xs font-bold text-slate-500 px-3 mt-4 mb-2 uppercase hidden md:block">Sistem</div>
+                                <button onClick={() => {setSettingsTab('profile'); setModalConfig({show:true, type:'settings'})}} className="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl hover:bg-slate-800">
+                                    <Icon name="settings" /> <span className="hidden md:block font-medium">Pengaturan</span>
+                                </button>
+                            </>}
+                        </nav>
+                        <div className="p-4 border-t border-slate-800">
+                            <button onClick={()=>{if(confirm("Tutup Shift?")) updateDoc(doc(db,'artifacts',APP_ID,'users',user.uid,'shifts',shift.id),{status:'closed', endTime:serverTimestamp()})}} className="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl bg-red-900/30 text-red-400 hover:bg-red-900/50 transition">
+                                <Icon name="power" /> <span className="hidden md:block">Tutup Toko</span>
+                            </button>
+                        </div>
+                    </aside>
+
+                    {/* MAIN CONTENT */}
+                    <main className="flex-1 flex flex-col overflow-hidden relative w-full">
+                        
+                        {/* POS VIEW */}
+                        {view === 'pos' && (
+                            <div className="flex h-full flex-col md:flex-row">
+                                <div className="flex-1 bg-gray-50 flex flex-col min-w-0">
+                                    <div className="p-4 bg-white border-b flex gap-3 items-center">
+                                        <div className="relative flex-1">
+                                            <Icon name="scan-barcode" className="absolute left-3 top-3 text-gray-400"/>
+                                            <input className="w-full pl-10 p-2.5 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Scan Barcode / Cari nama..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} onKeyDown={handleBarcode} autoFocus/>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 content-start">
+                                        {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.barcode && p.barcode.includes(searchQuery))).map(p => (
+                                            <div key={p.id} onClick={() => addToCart(p)} className={`bg-white rounded-xl shadow-sm border p-3 cursor-pointer hover:shadow-md transition ${p.stock<=0 && 'opacity-50'}`}>
+                                                <div className="h-24 bg-gray-100 rounded-lg mb-2 overflow-hidden">{p.image && <img src={p.image} className="w-full h-full object-cover"/>}</div>
+                                                <h4 className="font-bold truncate">{p.name}</h4>
+                                                <div className="flex justify-between mt-1"><span className="text-blue-600 font-bold">{formatCurrency(p.price)}</span><span className="text-xs bg-gray-100 px-1 rounded">{p.stock}</span></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="w-full md:w-96 bg-white shadow-2xl z-10 flex flex-col border-l">
+                                    <div className="p-4 border-b bg-gray-50 space-y-2">
+                                        <div className="flex gap-2">
+                                            <select className="flex-1 p-2 border rounded bg-white text-sm" value={orderType} onChange={e=>setOrderType(e.target.value)}>
+                                                <option>Dine In</option>
+                                                <option>Take Away</option>
+                                                <option>Delivery</option>
+                                            </select>
+                                            {orderType === 'Dine In' && (
+                                                <select className="flex-1 p-2 border rounded bg-white text-sm" value={selectedTable?.name||''} onChange={e=>setSelectedTable(tables.find(t=>t.name===e.target.value)||null)}>
+                                                    <option value="">Pilih Meja</option>
+                                                    {tables.map(t=><option key={t.id} value={t.name}>{t.name}</option>)}
+                                                </select>
+                                            )}
+                                        </div>
+                                        <select className="w-full p-2 border rounded bg-white text-sm" value={selectedCustomer?.id||''} onChange={e=>setSelectedCustomer(customers.find(c=>c.id===e.target.value)||null)}>
+                                            <option value="">Pelanggan Umum</option>
+                                            {customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                                        {cart.map(i => (
+                                            <div key={i.id} onClick={()=>{setEditingItem({...i}); setModalConfig({show:true, type:'edit_cart_item'})}} className="flex justify-between items-center bg-gray-50 p-2 rounded cursor-pointer hover:bg-gray-100">
+                                                <div className="flex-1">
+                                                    <div className="font-bold text-sm">{i.name}</div>
+                                                    <div className="text-xs text-blue-600">{formatCurrency(i.price)} x {i.qty} {i.itemDiscount>0 && <span className="text-green-600">(-{formatCurrency(i.itemDiscount)})</span>}</div>
+                                                    {i.note && <div className="text-[10px] text-gray-500 italic">"{i.note}"</div>}
+                                                </div>
+                                                <div className="font-bold text-sm">{formatCurrency((i.price*i.qty)- (i.itemDiscount||0))}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="p-4 bg-slate-50 border-t space-y-2">
+                                        <div className="flex gap-2">
+                                            <input type="number" placeholder="Diskon Nota" className="w-full p-2 border rounded text-sm" value={discount > 0 ? discount : ''} onChange={e=>setDiscount(Number(e.target.value))} />
+                                        </div>
+                                        <div className="space-y-1 text-sm pt-2 border-t border-dashed">
+                                            <div className="flex justify-between text-gray-500"><span>Subtotal</span><span>{formatCurrency(calculateTotals().subtotal)}</span></div>
+                                            {(calculateTotals().serviceRate > 0) && <div className="flex justify-between text-gray-500"><span>Service ({calculateTotals().serviceRate}%)</span><span>{formatCurrency(calculateTotals().serviceCharge)}</span></div>}
+                                            {(calculateTotals().taxRate > 0) && <div className="flex justify-between text-gray-500"><span>Pajak ({calculateTotals().taxRate}%)</span><span>{formatCurrency(calculateTotals().tax)}</span></div>}
+                                            <div className="flex justify-between font-bold text-lg pt-2"><span>Total</span><span>{formatCurrency(calculateTotals().total)}</span></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 text-xs">
+                                            {['Tunai', 'Hutang', 'QRIS', 'Transfer'].map(m => (
+                                                <button key={m} onClick={()=>setPaymentMethod(m)} className={`py-2 rounded border font-medium ${paymentMethod===m ? 'bg-slate-800 text-white' : 'bg-white'}`}>{m}</button>
+                                            ))}
+                                        </div>
+                                        <button onClick={handleCheckout} disabled={!cart.length} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 disabled:bg-gray-300">Bayar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* OTHER VIEWS (Dashboard, Inventory, etc same as v4 but inclusive tables) */}
+                        {view === 'dashboard' && (
+                            <div className="p-6 h-full overflow-y-auto">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-bold">Executive Dashboard</h2>
+                                    <button onClick={()=>handleExport('transactions')} className="bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-700 font-medium text-sm">
+                                        <Icon name="file-spreadsheet" size={16}/> Export Excel
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                                    <div className="bg-white p-5 rounded-xl border shadow-sm">
+                                        <p className="text-gray-500 text-sm">Omzet Kotor</p>
+                                        <h3 className="text-2xl font-bold text-blue-600">{formatCurrency(transactions.reduce((a,b)=>a+(b.total||0),0))}</h3>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-xl border shadow-sm">
+                                        <p className="text-gray-500 text-sm">Pengeluaran Operasional</p>
+                                        <h3 className="text-2xl font-bold text-red-500">{formatCurrency(expenses.reduce((a,b)=>a+(b.amount||0),0))}</h3>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-xl border shadow-sm">
+                                        <p className="text-gray-500 text-sm">Piutang Pelanggan (Hutang)</p>
+                                        <h3 className="text-2xl font-bold text-orange-500">{formatCurrency(debts.filter(d=>d.status!=='paid').reduce((a,b)=>a+(b.amount-b.paid),0))}</h3>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-green-500 to-green-700 text-white p-5 rounded-xl shadow-lg">
+                                        <p className="text-green-100 text-sm">Net Profit (Bersih)</p>
+                                        <h3 className="text-2xl font-bold">
+                                            {formatCurrency(
+                                                transactions.reduce((a,b)=>a+(b.profit||0),0) - 
+                                                expenses.reduce((a,b)=>a+(b.amount||0),0)
+                                            )}
+                                        </h3>
+                                        <p className="text-xs opacity-70 mt-1">*Profit Jual - Pengeluaran</p>
+                                    </div>
+                                </div>
+								{/* --- NEW: TABEL ANALISA TERLARIS --- */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-10">
+                                    <div className="bg-white p-6 rounded-xl border shadow-sm">
+                                        <h3 className="font-bold mb-4 flex items-center gap-2"><Icon name="trending-up" className="text-blue-600"/> Produk Terlaris</h3>
+                                        <div className="space-y-3">
+                                            {Object.values(transactions.reduce((acc, t) => {
+                                                t.items.forEach(i => {
+                                                    if(!acc[i.id]) acc[i.id] = {name: i.name, qty: 0, revenue: 0};
+                                                    acc[i.id].qty += i.qty;
+                                                    acc[i.id].revenue += (i.qty * i.price);
+                                                });
+                                                return acc;
+                                            }, {}))
+                                            .sort((a,b) => b.qty - a.qty)
+                                            .slice(0, 5)
+                                            .map((item, idx) => (
+                                                <div key={idx} className="flex justify-between items-center border-b border-dashed pb-2 last:border-0">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx===0?'bg-yellow-100 text-yellow-700':idx===1?'bg-gray-200 text-gray-600':'bg-orange-100 text-orange-700'}`}>#{idx+1}</div>
+                                                        <div>
+                                                            <div className="font-bold text-sm">{item.name}</div>
+                                                            <div className="text-xs text-gray-500">{item.qty} Terjual</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="font-bold text-sm">{formatCurrency(item.revenue)}</div>
+                                                </div>
+                                            ))}
+                                            {transactions.length === 0 && <p className="text-gray-400 text-sm text-center py-4">Belum ada data penjualan.</p>}
+                                        </div>
+                                    </div>
+                                </div>
+                                {/* ----------------------------------- */}
+                            </div>
+                        )}
+                        
+                        {/* INVENTORY / STOCK OPNAME VIEW */}
+                        {view === 'inventory' && (
+                            <div className="p-6 h-full overflow-y-auto">
+                                <h2 className="text-2xl font-bold mb-6">Stok Opname & Inventori</h2>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div className="bg-white rounded-xl shadow-sm border p-4">
+                                        <h3 className="font-bold mb-4">Daftar Stok Produk</h3>
+                                        <div className="overflow-x-auto max-h-[500px]">
+                                            <table className="w-full text-sm text-left">
+                                                <thead className="bg-gray-50 sticky top-0"><tr><th className="p-3">Produk</th><th className="p-3">Stok</th><th className="p-3">Aksi</th></tr></thead>
+                                                <tbody className="divide-y">
+                                                    {products.map(p => (
+                                                        <tr key={p.id}>
+                                                            <td className="p-3">
+                                                                <div className="font-bold">{p.name}</div>
+                                                                <div className="text-xs text-gray-500">{p.barcode || 'No Barcode'}</div>
+                                                            </td>
+                                                            <td className="p-3"><span className={`px-2 rounded ${p.stock<5?'bg-red-100 text-red-600':'bg-green-100'}`}>{p.stock}</span></td>
+                                                            <td className="p-3">
+                                                                <button onClick={()=>setModalConfig({show:true, type:'stock_adj', data:p})} className="text-blue-600 text-xs border border-blue-600 px-2 py-1 rounded hover:bg-blue-50">Sesuaikan</button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div className="bg-white rounded-xl shadow-sm border p-4">
+                                        <h3 className="font-bold mb-4">Riwayat Perubahan Stok</h3>
+                                        <div className="overflow-y-auto max-h-[500px] space-y-2">
+                                            {stockHistory.map(h => (
+                                                <div key={h.id} className="flex justify-between items-center text-sm border-b pb-2">
+                                                    <div>
+                                                        <div className="font-bold">{h.productName}</div>
+                                                        <div className="text-xs text-gray-500">{formatDate(h.createdAt)} • {h.reason || 'Sistem'}</div>
+                                                    </div>
+                                                    <div className={`font-bold ${h.change>0?'text-green-600':'text-red-600'}`}>
+                                                        {h.change > 0 ? '+' : ''}{h.change}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {['debts', 'expenses'].includes(view) && (
+                            <div className="p-6 h-full overflow-y-auto">
+                                <div className="flex justify-between items-center mb-6 capitalize">
+                                    <h2 className="text-2xl font-bold">{view === 'debts' ? 'Hutang / Piutang' : 'Pengeluaran'}</h2>
+                                    {view === 'expenses' && <button onClick={()=>setModalConfig({show:true, type:'expense'})} className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"><Icon name="plus"/> Tambah</button>}
+                                </div>
+                                {/* Debts List */}
+                                {view === 'debts' && debts.map(d => (
+                                    <div key={d.id} className="bg-white p-4 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 mb-3">
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-lg">{d.customerName} <span className={`text-xs px-2 py-0.5 rounded uppercase ${d.status==='paid'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}`}>{d.status}</span></h4>
+                                            <p className="text-sm text-gray-500">Total: {formatCurrency(d.amount)} • Terbayar: {formatCurrency(d.paid)}</p>
+                                        </div>
+                                        {d.status !== 'paid' && (
+                                            <form onSubmit={e=>{e.preventDefault(); handlePayDebt(d.id, d.paid, d.amount, e.target.pay.value); e.target.reset();}} className="flex gap-2">
+                                                <input name="pay" type="number" placeholder="Bayar (Rp)..." className="p-2 border rounded w-32 text-sm" required max={d.amount - d.paid}/>
+                                                <button className="bg-green-600 text-white px-4 py-2 rounded font-bold text-sm">Bayar</button>
+                                            </form>
+                                        )}
+                                    </div>
+                                ))}
+                                {/* Expenses List */}
+                                {view === 'expenses' && expenses.map(e => (
+                                    <div key={e.id} className="bg-white p-3 rounded-lg border flex justify-between items-center mb-2">
+                                        <div><div className="font-bold">{e.name}</div><div className="text-xs text-gray-400">{formatDate(e.date)} • {e.category}</div></div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-red-500 font-bold">-{formatCurrency(e.amount)}</div>
+                                            <button onClick={()=>{if(confirm('Hapus?')) deleteDoc(doc(db,'artifacts',APP_ID,'users',user.uid,'expenses',e.id))}} className="text-gray-400 hover:text-red-500"><Icon name="trash" size={16}/></button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {['products', 'customers', 'suppliers', 'tables', 'staff'].includes(view) && (
+                            <div className="p-6 h-full overflow-y-auto">
+                                <div className="flex justify-between items-center mb-6 capitalize">
+                                    <h2 className="text-2xl font-bold">{view}</h2>
+                                    <button onClick={()=>setModalConfig({show:true, type: view === 'staff' ? 'staff' : view.slice(0,-1)})} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"><Icon name="plus"/> Tambah</button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {(view==='products'?products:view==='customers'?customers:view==='suppliers'?suppliers:view==='staff'?staff:tables).map(item => (
+                                        <div key={item.id} className="bg-white p-4 rounded-xl border hover:shadow-md transition relative group">
+                                            <div className="flex items-center gap-4">
+                                                {view==='products' ? (
+                                                    <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">{item.image && <img src={item.image} className="w-full h-full object-cover"/>}</div>
+                                                ) : <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0">{item.name[0]}</div>}
+                                                <div className="min-w-0">
+                                                    <h4 className="font-bold truncate">{item.name}</h4>
+                                                    {view==='products' && <div className="text-sm text-blue-600 font-bold">{formatCurrency(item.price)} (Stok: {item.stock})</div>}
+                                                    {view==='tables' && <div className="text-sm text-gray-500">Kapasitas: {item.capacity} org</div>}
+                                                    {view==='staff' && <div className="text-sm text-gray-500 uppercase font-bold text-blue-600">{item.role} (PIN: {item.pin})</div>}
+                                                    {(view==='customers'||view==='suppliers') && <div className="text-sm text-gray-500">{item.phone}</div>}
+                                                </div>
+                                            </div>
+                                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                                                <button onClick={()=>setModalConfig({show:true, type:view.slice(0,-1), data:item})} className="p-1.5 bg-gray-100 hover:text-blue-600 rounded"><Icon name="edit-2" size={14}/></button>
+                                                <button onClick={()=>{if(confirm('Hapus?')) deleteDoc(doc(db,'artifacts',APP_ID,'users',user.uid,view,item.id))}} className="p-1.5 bg-gray-100 hover:text-red-600 rounded"><Icon name="trash" size={14}/></button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                    </main>
+
+                    {/* DYNAMIC MODAL FORM */}
+                    {modalConfig.show && (
+                        <Modal title={modalConfig.type==='stock_adj' ? 'Sesuaikan Stok' : modalConfig.type==='edit_cart_item' ? 'Edit Item' : modalConfig.type==='settings' ? 'Pengaturan' : (modalConfig.data ? `Edit ${modalConfig.type}` : `Tambah ${modalConfig.type}`)} onClose={()=>setModalConfig({show:false})}>
+                            
+                            {/* 1. STOCK ADJUSTMENT */}
+                            {modalConfig.type === 'stock_adj' && (
+                                <form onSubmit={handleAdjustStock} className="space-y-4">
+                                    <div className="text-sm text-gray-500">Produk: <span className="font-bold text-gray-800">{modalConfig.data.name}</span> (Stok Saat Ini: {modalConfig.data.stock})</div>
+                                    <select name="type" className="w-full p-3 border rounded-lg bg-white">
+                                        <option value="in">Stok Masuk (Restock/Retur)</option>
+                                        <option value="out">Stok Keluar (Rusak/Hilang/Expired)</option>
+                                    </select>
+                                    <input name="qty" type="number" placeholder="Jumlah" required min="1" className="w-full p-3 border rounded-lg"/>
+                                    <textarea name="reason" placeholder="Keterangan (Contoh: Barang rusak saat pengiriman)" className="w-full p-3 border rounded-lg" required></textarea>
+                                    <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan Penyesuaian</button>
+                                </form>
+                            )}
+
+                            {/* 2. EDIT CART ITEM (NEW v5) */}
+                            {modalConfig.type === 'edit_cart_item' && (
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                        <h3 className="font-bold">{editingItem.name}</h3>
+                                        <div className="text-blue-600 font-bold">{formatCurrency(editingItem.price)}</div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500">Jumlah</label>
+                                        <div className="flex items-center gap-3">
+                                            <button onClick={()=>setEditingItem(prev=>({...prev, qty: Math.max(1, prev.qty-1)}))} className="p-2 bg-gray-200 rounded">-</button>
+                                            <span className="font-bold text-lg w-8 text-center">{editingItem.qty}</span>
+                                            <button onClick={()=>setEditingItem(prev=>({...prev, qty: prev.qty+1}))} className="p-2 bg-gray-200 rounded">+</button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500">Diskon Per Item (Rp)</label>
+                                        <input type="number" value={editingItem.itemDiscount || 0} onChange={e=>setEditingItem({...editingItem, itemDiscount: Number(e.target.value)})} className="w-full p-2 border rounded"/>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500">Catatan (Opsional)</label>
+                                        <input value={editingItem.note || ''} onChange={e=>setEditingItem({...editingItem, note: e.target.value})} placeholder="Contoh: Tanpa gula, Pedas..." className="w-full p-2 border rounded"/>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={()=>{
+                                            setCart(cart.filter(c=>c.id!==editingItem.id));
+                                            setModalConfig({show:false});
+                                        }} className="flex-1 bg-red-100 text-red-600 py-3 rounded-lg font-bold">Hapus</button>
+                                        <button onClick={()=>{
+                                            setCart(cart.map(c=>c.id===editingItem.id ? editingItem : c));
+                                            setModalConfig({show:false});
+                                        }} className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold">Simpan</button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 3. SETTINGS (NEW v5) */}
+                            {modalConfig.type === 'settings' && (
+                                <form onSubmit={saveSettings} className="space-y-4">
+                                    <div className="flex gap-2 mb-4 border-b">
+                                        {['profile', 'tax'].map(tab => (
+                                            <button type="button" key={tab} onClick={()=>setSettingsTab(tab)} className={`px-4 py-2 text-sm font-bold capitalize ${settingsTab===tab ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>{tab === 'tax' ? 'Pajak & Struk' : 'Profil Toko'}</button>
+                                        ))}
+                                    </div>
+                                    
+                                    {settingsTab === 'profile' && <>
+                                        <input name="name" placeholder="Nama Toko" required defaultValue={storeProfile?.name} className="w-full p-3 border rounded-lg"/>
+                                        <input name="phone" placeholder="No HP" required defaultValue={storeProfile?.phone} className="w-full p-3 border rounded-lg"/>
+                                        <textarea name="address" placeholder="Alamat Toko" required defaultValue={storeProfile?.address} className="w-full p-3 border rounded-lg"></textarea>
+                                    </>}
+
+                                    {settingsTab === 'tax' && <>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500">Pajak (PPN) %</label>
+                                                <input name="taxRate" type="number" step="0.1" defaultValue={storeProfile?.taxRate || 0} className="w-full p-3 border rounded-lg"/>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500">Service Charge %</label>
+                                                <input name="serviceRate" type="number" step="0.1" defaultValue={storeProfile?.serviceRate || 0} className="w-full p-3 border rounded-lg"/>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500">Logo Toko (URL Gambar)</label>
+                                            <input name="logo" placeholder="https://..." defaultValue={storeProfile?.logo} className="w-full p-3 border rounded-lg"/>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500">Pesan Footer Struk</label>
+                                            <input name="footerMessage" placeholder="Terima kasih..." defaultValue={storeProfile?.footerMessage} className="w-full p-3 border rounded-lg"/>
+                                        </div>
+                                    </>}
+
+                                    <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold mt-4">Simpan Pengaturan</button>
+                                </form>
+                            )}
+
+                            {/* 4. GENERIC CRUD */}
+                            {['product', 'customer', 'supplier', 'expense', 'table', 'staff'].includes(modalConfig.type) && (
+                                <form onSubmit={handleSubmit} className="space-y-4 capitalize">
+                                    <input name="name" placeholder="Nama" required defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/>
+                                    
+                                    {modalConfig.type === 'product' && <>
+                                        <input name="barcode" placeholder="Barcode / SKU (Scan Disini)" defaultValue={modalConfig.data?.barcode} className="w-full p-3 border rounded-lg bg-gray-50 font-mono"/>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input name="price" type="number" placeholder="Harga Jual" required defaultValue={modalConfig.data?.price} className="w-full p-3 border rounded-lg"/>
+                                            <input name="hpp" type="number" placeholder="Modal (HPP)" required defaultValue={modalConfig.data?.hpp} className="w-full p-3 border rounded-lg"/>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input name="stock" type="number" placeholder="Stok" required defaultValue={modalConfig.data?.stock} className="w-full p-3 border rounded-lg"/>
+                                            <select name="category" defaultValue={modalConfig.data?.category||'Umum'} className="w-full p-3 border rounded-lg bg-white">{['Umum','Makanan','Minuman','Jasa'].map(c=><option key={c}>{c}</option>)}</select>
+                                        </div>
+                                        <input name="image" placeholder="URL Gambar" defaultValue={modalConfig.data?.image} className="w-full p-3 border rounded-lg"/>
+                                    </>}
+
+                                    {modalConfig.type === 'table' && <input name="capacity" type="number" placeholder="Kapasitas Orang" required defaultValue={modalConfig.data?.capacity} className="w-full p-3 border rounded-lg"/>}
+                                    
+                                    {modalConfig.type === 'staff' && <>
+                                        <input name="pin" type="text" placeholder="PIN Akses (Angka)" required defaultValue={modalConfig.data?.pin} className="w-full p-3 border rounded-lg"/>
+                                        <select name="role" defaultValue={modalConfig.data?.role||'kasir'} className="w-full p-3 border rounded-lg bg-white">
+                                            <option value="kasir">Kasir (Terbatas)</option>
+                                            <option value="admin">Admin (Full Akses)</option>
+                                        </select>
+                                    </>}
+
+                                    {(modalConfig.type === 'customer' || modalConfig.type === 'supplier') && <>
+                                        <input name="phone" placeholder="No HP / WA" required defaultValue={modalConfig.data?.phone} className="w-full p-3 border rounded-lg"/>
+                                        {modalConfig.type === 'supplier' && <input name="address" placeholder="Alamat" required defaultValue={modalConfig.data?.address} className="w-full p-3 border rounded-lg"/>}
+                                        {modalConfig.type === 'customer' && <input name="email" type="email" placeholder="Email" defaultValue={modalConfig.data?.email} className="w-full p-3 border rounded-lg"/>}
+                                    </>}
+
+                                    {modalConfig.type === 'expense' && <>
+                                        <input name="amount" type="number" placeholder="Nominal (Rp)" required defaultValue={modalConfig.data?.amount} className="w-full p-3 border rounded-lg"/>
+                                        <select name="category" defaultValue={modalConfig.data?.category||'Operasional'} className="w-full p-3 border rounded-lg bg-white">
+                                            {['Operasional','Gaji Karyawan','Listrik/Air','Sewa','Bahan Baku','Lainnya'].map(c=><option key={c}>{c}</option>)}
+                                        </select>
+                                    </>}
+
+                                    <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan Data</button>
+                                </form>
+                            )}
+                        </Modal>
+                    )}
+
+                    <Receipt data={lastTrans} storeProfile={storeProfile} onClose={()=>setLastTrans(null)} />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
