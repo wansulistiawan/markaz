@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panduan Touring Kurma PCX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-fade-in-down { animation: fadeIn 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- SYSTEM ICON (SVG Manual agar Anti-Error) ---
+        const Icon = ({ path, size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {path}
+            </svg>
+        );
+
+        const icons = {
+            Bike: <path d="M18.6 18.6L16 16l2-2 4 4-4 4-2-2 2.6-2.6zM5.4 5.4L8 8 6 10 2 6l4-4 2 2-2.6 2.6zM12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 0v10m-5-5h10" />, 
+            Shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
+            Map: <path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4zM8 2v16M16 6v16" />,
+            Heart: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />,
+            CheckSquare: <React.Fragment><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></React.Fragment>,
+            ShoppingBag: <React.Fragment><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" /></React.Fragment>,
+            Info: <React.Fragment><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></React.Fragment>,
+            User: <React.Fragment><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></React.Fragment>,
+            Zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
+            Box: <React.Fragment><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></React.Fragment>,
+            AlertTriangle: <React.Fragment><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></React.Fragment>,
+            Menu: <React.Fragment><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></React.Fragment>,
+            X: <React.Fragment><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></React.Fragment>,
+            BookOpen: <React.Fragment><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></React.Fragment>,
+            Compass: <React.Fragment><circle cx="12" cy="12" r="10" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" /></React.Fragment>,
+            Scale: <React.Fragment><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z" /><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z" /><path d="M7 21h10" /><path d="M12 3v18" /><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></React.Fragment>,
+            ArrowRight: <React.Fragment><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></React.Fragment>,
+            Truck: <React.Fragment><rect x="1" y="3" width="15" height="13" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></React.Fragment>,
+            Activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />,
+            Lock: <React.Fragment><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></React.Fragment>,
+            Thermometer: <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z" />,
+            Tag: <React.Fragment><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><line x1="7" y1="7" x2="7.01" y2="7" /></React.Fragment>,
+            DollarSign: <React.Fragment><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></React.Fragment>,
+            ImageIcon: <React.Fragment><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></React.Fragment>,
+            Volume2: <React.Fragment><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" /></React.Fragment>,
+            Wind: <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2" />,
+            Camera: <React.Fragment><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></React.Fragment>,
+            Navigation: <polygon points="3 11 22 2 13 21 11 13 3 11" />,
+            Smartphone: <React.Fragment><rect x="5" y="2" width="14" height="20" rx="2" ry="2" /><line x1="12" y1="18" x2="12.01" y2="18" /></React.Fragment>,
+            Gauge: <React.Fragment><path d="m12 14 4-4" /><path d="M3.34 19a10 10 0 1 1 17.32 0" /></React.Fragment>,
+            SunSnow: <React.Fragment><path d="M10 9a3 3 0 1 0 0 6" /><path d="M2 12h1" /><path d="M14 21v-1" /><path d="M10 4V3" /><path d="M20 21v-1" /><path d="M10 21v-1" /><path d="M3 4l.7.7" /><path d="M16.3 7.7l.7-.7" /><path d="M21 12h-1" /><path d="M20.3 3.7l-.7.7" /><path d="M3.7 20.3l.7-.7" /></React.Fragment>,
+            CheckCircle2: <React.Fragment><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="m9 12 2 2 4-4" /></React.Fragment>,
+            Circle: <circle cx="12" cy="12" r="10" />,
+            Wrench: <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />,
+            Droplet: <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />,
+            Plug: <React.Fragment><path d="M12 22v-5" /><path d="M9 8V2" /><path d="M15 8V2" /><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" /></React.Fragment>,
+            Smile: <React.Fragment><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" /></React.Fragment>,
+            Coffee: <React.Fragment><path d="M17 8h1a4 4 0 1 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" y1="1" x2="6" y2="4" /><line x1="10" y1="1" x2="10" y2="4" /><line x1="14" y1="1" x2="14" y2="4" /></React.Fragment>,
+            Banknote: <React.Fragment><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01M18 12h.01" /></React.Fragment>,
+            Glasses: <React.Fragment><circle cx="6" cy="15" r="4" /><circle cx="18" cy="15" r="4" /><path d="M14 15a2 2 0 0 0-2-2 2 2 0 0 0-2 2" /><path d="M2.5 13 5 7c.7-1.3 1.4-2 3-2" /><path d="M21.5 13 19 7c-.7-1.3-1.5-2-3-2" /></React.Fragment>,
+            SprayCan: <React.Fragment><path d="M3 11h3a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z" /><path d="M5 11V5a3 3 0 0 1 6 0v6" /><path d="M13 5h.01" /><path d="M17 5h.01" /><path d="M21 5h.01" /><path d="M19 21h2" /></React.Fragment>,
+            Stethoscope: <React.Fragment><path d="M4.8 2.3A5 5 0 1 1 9 12.1V15a4 4 0 0 0 8 0v-2.1a5 5 0 1 1 4.2-9.8" /><circle cx="13" cy="20" r="3" /></React.Fragment>,
+            Moon: <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />,
+            Pill: <React.Fragment><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" /><path d="m8.5 8.5 7 7" /></React.Fragment>,
+            FileText: <React.Fragment><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></React.Fragment>,
+            Trash2: <React.Fragment><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></React.Fragment>,
+            PenTool: <React.Fragment><path d="m12 19 7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="m2 2 7.586 7.586" /><circle cx="11" cy="11" r="2" /></React.Fragment>,
+            Flag: <React.Fragment><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></React.Fragment>,
+            Flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.2-2.2.6-3.3.4.8 1.9 2.3 2.9 2.8z" />
+        };
+
+        const InternalIcon = ({ name, ...props }) => {
+            const path = icons[name];
+            if (!path) return null;
+            return <Icon path={path} {...props} />;
+        };
+
+        // === DEFINISI DATA ===
+        const syariData = [
+            {
+                title: "Niat Karena Allah",
+                desc: "Pastikan safar bukan untuk maksiat. Niatkan untuk tadabbur alam, silaturahmi, atau menyenangkan keluarga (istri/anak) yang bernilai pahala.",
+                dalil: "Innamal a'malu binniyat (HR. Bukhari & Muslim)"
+            },
+            {
+                title: "Adab Berkendara (Tidak Sombong)",
+                desc: "Hindari aksesoris yang 'ghuluw' (berlebihan) atau knalpot bising (tazyin). Tetap tawadhu, tidak arogan meminta jalan (mengawal diri sendiri).",
+                dalil: "Dan janganlah kamu berjalan di muka bumi ini dengan sombong... (QS. Al-Isra: 37)"
+            },
+            {
+                title: "Fiqih Shalat (Jamak & Qashar)",
+                desc: "Manfaatkan rukhsah (keringanan). Shalat 4 rakaat diringkas jadi 2. Boleh dijamak (Taqdim/Takhir). Jangan memaksakan shalat lengkap jika kondisi sulit.",
+                dalil: "Apabila kamu bepergian di muka bumi, maka tidaklah mengapa kamu menqashar shalat(mu)... (QS. An-Nisa: 101)"
+            },
+            {
+                title: "Wanita & Mahram",
+                desc: "Jika membawa istri/anak perempuan, pastikan menutup aurat sempurna (tidak tersingkap saat naik motor) dan wajib bersama mahram.",
+                dalil: "Tidak halal bagi wanita... melakukan safar perjalanan sehari semalam kecuali bersama mahramnya."
+            }
+        ];
+
+        const comparisonData = {
+            conclusion: {
+                title: "Keputusan Akhir: Honda PCX 160",
+                summary: "Meskipun ADV 160 menang di kategori 'Segala Medan', PCX dipilih karena Ergonomi (Posisi Kaki).",
+                details: [
+                    "Pemenang Segala Medan: Honda ADV 160 (Suspensi panjang, Ground clearance 165mm, Ban dual purpose).",
+                    "Pemenang Kenyamanan: Honda PCX 160 (Kaki selonjoran penuh, jok luas, posisi rileks).",
+                    "Strategi: Membeli PCX untuk kenyamanannya, lalu memodifikasi kaki-kakinya agar setangguh ADV (Menutup gap ground clearance & grip ban)."
+                ]
+            },
+            table: [
+                { feature: "Gaya Berkendara", pcx: "Luxury Cruiser (Rileks)", adv: "Adventure (Tegak)", nmax: "Sport Scooter (Sigap)" },
+                { feature: "Kenyamanan Kaki", pcx: "Bisa selonjoran penuh (Sangat Luas)", adv: "Terbatas (Agak nekuk)", nmax: "Cukup Luas" },
+                { feature: "Suspensi Belakang", pcx: "Empuk & Pendek (350mm - Rawan Mentok)", adv: "Tabung & Panjang (395mm - Stabil)", nmax: "Tabung & Kaku" },
+                { feature: "Ground Clearance", pcx: "135 mm (Rawan Gasruk)", adv: "165 mm (Aman Batu/Polisi Tidur)", nmax: "125 mm" },
+                { feature: "Karakter Mesin", pcx: "Halus & Linear", adv: "Halus Bawah-Tengah", nmax: "Agresif (VVA) Putaran Atas" }
+            ]
+        };
+
+        const gapProjectData = [
+            {
+                part: "Suspensi Belakang (Kunci Utama)",
+                icon: "ArrowRight",
+                image: "https://cosmobikers.com/wp-content/uploads/2021/06/post-4.jpeg",
+                problem: "Shock standar PCX pendek (350mm) dan terlalu empuk. Sering 'bottoming' (mentok jedug) jika bawa box/boncengan di jalan rusak.",
+                solution: "Ganti Shockbreaker Aftermarket tinggi 365mm.",
+                detail: "Kenapa 365mm? Ini ukuran 'tanggung' yang aman. Menaikkan ground clearance agar tidak gasruk, tapi tidak merusak geometri motor ekstrem seperti pakai punya ADV (395mm).",
+                price: "Rp 1.500.000 - 3.500.000",
+                brands: "YSS G-Series, RCB VS-Series, KYB Zeto"
+            },
+            {
+                part: "Ban Dual Purpose",
+                icon: "Activity",
+                image: "https://img.lazcdn.com/g/p/de23b0b8d418a06180bd218623cff5b4.png_720x720q80.png",
+                problem: "Ban bawaan PCX adalah ban aspal murni. Sangat licin jika Google Maps mengarahkan ke jalan tanah, berpasir, atau berlumpur.",
+                solution: "Ganti Ban Semi-Trail (Dual Purpose).",
+                detail: "Ukuran bisa di-upsize 1 tingkat (misal belakang jadi 140/70-13) agar motor makin tinggi dan kekar. Grip aman di segala medan.",
+                price: "Rp 800.000 - 1.300.000",
+                brands: "Maxxis, Michelin Anakee, Corsa Cross S"
+            },
+            {
+                part: "Proteksi Fisik (Crashbar)",
+                icon: "Shield",
+                image: "https://down-id.img.susercontent.com/file/id-11134207-7r98v-lomyy4ziu7sgb4",
+                problem: "Body PCX lebar, elegan, dan mahal. Sangat rawan pecah jika motor jatuh bego (diam) atau tergelincir.",
+                solution: "Pasang Crashbar Tubular Full Body.",
+                detail: "Fungsi ganda: Melindungi body samping dan menjadi dudukan untuk Lampu Tembak serta Action Cam.",
+                price: "Rp 450.000 - 850.000",
+                brands: "Coriaz, Agna, Custom Lokal"
+            },
+            {
+                part: "Upgrade CVT (Kirian)",
+                icon: "Zap",
+                image: "https://down-id.img.susercontent.com/file/id-11134207-7r98p-lnvijgn0lsp579",
+                problem: "Setelah pasang Box dan Crashbar, motor jadi berat. PCX standar disetting untuk irit, jadi akan terasa 'ngeden' di tanjakan curam (Bromo/Dieng).",
+                solution: "Turunkan berat Roller (13-14gr), Per CVT Keras & Mangkok Ganda.",
+                detail: "Tujuannya mengorbankan sedikit Top Speed demi mendapatkan Torsi (jambakan) awal yang kuat untuk menanjak bawa beban. Mangkok ganda kartel/bolong mengurangi gredek.",
+                price: "Rp 300.000 - 600.000",
+                brands: "Dr. Pulley, TDR, V-belt Kevlar"
+            }
+        ];
+
+        const categories = {
+            accessories: {
+                title: "Aksesoris & Printilan Vital",
+                desc: "Solusi teknis untuk kenyamanan, keamanan, dan durabilitas mesin.",
+                items: [
+                    { image: "https://www.hondacengkareng.com/wp-content/uploads/2018/02/Aksesoris-High-WindScreen-Kaca-Depan-Honda-PCX.jpg", name: "High Windshield (Visor Tinggi)", role: "Anti Masuk Angin", price: "Rp 150.000 - 350.000", brands: "Sectbill, Geba, MHR", desc: "Bawaan PCX terlalu rendah. Ganti yang tinggi (50-60cm) agar angin lewat atas helm. Mengurangi kelelahan tubuh bagian atas secara drastis." },
+                    { image: "https://down-id.img.susercontent.com/file/id-11134207-7rasj-m4zgaa5ldcn447", name: "Jok Custom (Latex + Gel)", role: "Kenyamanan Pantat", price: "Rp 500.000 - 1.200.000", brands: "Custom Tukang Jok (MBtech)", desc: "Busa standar keras setelah 2 jam. Tambahan Latex+Gel mencegah panas/tepos dan memberikan lumbar support (sandaran pinggang kecil)." },
+                    { image: "https://m.media-amazon.com/images/I/51-7dY07SXL._AC_UF350,350_QL80_.jpg", name: "Handguard", role: "Proteksi Tangan", price: "Rp 150.000 - 350.000", brands: "Nemo, Universal", desc: "Melindungi tangan dari angin dingin (hipotermia), kerikil, dan ranting pohon di jalan sempit." },
+                    { image: "PASTE LINK GAMBAR PENAHAN GAS DISINI", name: "Throttle Assist (Penahan Gas)", role: "Anti Pegal", price: "Rp 15.000 - 50.000", brands: "Universal", desc: "Alat plastik kecil untuk menahan gas dengan telapak tangan. Mencegah kram pergelangan tangan kanan saat jalan lurus panjang." },
+                    { image: "PASTE LINK GAMBAR LAMPU TEMBAK DISINI", name: "Lampu Tembak (2 Warna)", role: "Visibilitas Malam", price: "Rp 500.000 - 1.500.000", brands: "Duromoto, Luminos, Bullaes", desc: "Lampu LED bawaan sering 'hilang' saat hujan/kabut. Wajib pasang lampu Putih/Kuning. Kuning khusus untuk menembus kabut tebal." },
+                    { image: "PASTE LINK GAMBAR DASHCAM MOTOR DISINI", name: "Dashcam Motor (DVR)", role: "Blackbox / Bukti Hukum", price: "Rp 1.000.000 - 2.500.000", brands: "V-SYS, Innovv, Mofly", desc: "Merekam otomatis depan-belakang. Bukti vital jika terjadi kecelakaan atau dicegat orang jahat (begal). Jangan andalkan ingatan." },
+                    { image: "PASTE LINK GAMBAR GPS TRACKER DISINI", name: "GPS Tracker", role: "Anti Maling", price: "Rp 300.000 - 700.000", brands: "Sinotrack, Concox", desc: "Melacak posisi motor via HP dan mematikan mesin jarak jauh. Sangat penting saat parkir di penginapan yang keamanannya meragukan." },
+                    { image: "PASTE LINK GAMBAR TPMS DISINI", name: "TPMS (Tire Pressure)", role: "Pantau Ban", price: "Rp 150.000 - 350.000", brands: "Sun, OTO", desc: "Memantau tekanan ban real-time. Memberi peringatan dini jika ban bocor halus sebelum kempes total di tengah jalan." },
+                    { image: "PASTE LINK GAMBAR PHONE HOLDER DISINI", name: "Phone Holder (Anti Getar)", role: "Navigasi", price: "Rp 150.000 - 1.000.000", brands: "QuadLock, Motowolf", desc: "Wajib cari yang ada fitur Vibration Damper (peredam getar) agar kamera HP (OIS) tidak rusak karena getaran stang." },
+                    { image: "PASTE LINK GAMBAR KLAKSON KEONG DISINI", name: "Klakson Keong Dual Tone", role: "Komunikasi", price: "Rp 150.000 - 300.000", brands: "Denso, Hella, PIAA", desc: "Klakson standar 'tit-tit' tidak terdengar oleh Bus/Truk. Ganti keong stereo agar 'berwibawa' saat menyalip kendaraan besar." },
+                    { image: "PASTE LINK GAMBAR VOLTMETER DISINI", name: "Voltmeter Digital", role: "Pantau Aki", price: "Rp 50.000 - 150.000", brands: "9Nine, Rizoma KW", desc: "Sangat Kritis! Lampu tambahan membebani spul. Jika tegangan turun di bawah 12.0V saat jalan, matikan aksesoris atau motor akan mogok total." },
+                    { image: "PASTE LINK GAMBAR PENTIL MIRING DISINI", name: "Pentil Miring CNC", role: "Kemudahan Akses", price: "Rp 75.000", brands: "Universal CNC", desc: "Masalah sepele tapi bikin emosi: Ban belakang PCX ring 13 celahnya sempit, susah isi angin di tukang tambal ban. Pentil miring solusinya." },
+                    { image: "PASTE LINK GAMBAR TUAS REM TANGAN DISINI", name: "Tuas Brake Lock Manual", role: "Rem Tangan", price: "Rp 50.000 - 150.000", brands: "TGP, CNC", desc: "PCX tidak punya fitur rem tangan bawaan. Alat ini menahan tuas rem saat berhenti di tanjakan/lampu merah agar tangan tidak kram." },
+                    { image: "PASTE LINK GAMBAR FILTER UDARA DISINI", name: "Filter Udara Stainless", role: "Durabilitas Mesin", price: "Rp 350.000 - 500.000", brands: "Ferrox, Apex", desc: "Filter kertas sekali pakai rawan mampet debu touring. Filter stainless bisa dicuci pakai air sabun di jalan, performa kembali prima selamanya." },
+                    { image: "PASTE LINK GAMBAR COVER JOK JARING DISINI", name: "Cover Jok Jaring (Cool Tech)", role: "Sirkulasi Udara", price: "Rp 50.000 - 100.000", brands: "Cool Tech", desc: "Membuat ada jarak antara pantat dan jok. Angin bisa lewat (semriwing) dan air hujan langsung turun ke bawah. Mencegah iritasi." },
+                    { image: "PASTE LINK GAMBAR SPION BLIND SPOT DISINI", name: "Blind Spot Mirror", role: "Safety Spion", price: "Rp 10.000 - 30.000", brands: "Universal", desc: "Kaca cembung kecil di pojok spion. Melihat area mati di samping belakang yang tidak tercover spion utama." },
+                    { image: "PASTE LINK GAMBAR PENINGGI SPION DISINI", name: "Extender Spion", role: "Visibilitas", price: "Rp 30.000 - 75.000", brands: "Universal", desc: "Membuat posisi spion lebih keluar. 40% pandangan spion PCX sering tertutup bahu sendiri, alat ini solusinya." },
+                    { image: "PASTE LINK GAMBAR TEMPAT BOTOL DISINI", name: "Bottle Holder Stang", role: "Hidrasi", price: "Rp 20.000 - 75.000", brands: "Motowolf", desc: "Tempat botol minum di stang. Agar bisa minum saat lampu merah tanpa harus turun buka box." },
+                    { image: "PASTE LINK GAMBAR SAMBUNGAN SPATBOR DISINI", name: "Sambungan Spatbor Depan", role: "Kebersihan Radiator", price: "Rp 35.000 - 75.000", brands: "Aksesoris Plastik", desc: "Spatbor depan PCX pendek. Sambungan ini mencegah lumpur/kerikil nyiprat ke radiator dan leher knalpot." },
+                    { image: "PASTE LINK GAMBAR STIKER SPION DISINI", name: "Stiker Anti-Kabut Spion", role: "Safety Hujan", price: "Rp 10.000 - 30.000", brands: "Universal Rain Film", desc: "Efek daun talas untuk kaca spion. Saat hujan deras, spion tetap jernih tanpa tertutup butiran air. Krusial untuk pindah jalur." },
+                    { image: "PASTE LINK GAMBAR SAKLAR LAMPU DISINI", name: "Saklar Lampu On/Off", role: "Hemat Listrik", price: "Rp 75.000 - 150.000", brands: "Universal", desc: "Mematikan lampu utama saat memanaskan mesin di pagi hari membantu pengisian aki lebih cepat sebelum jalan." },
+                    { image: "PASTE LINK GAMBAR ALAS STANDAR SAMPING DISINI", name: "Side Stand Enlarger", role: "Anti Ambles", price: "Rp 75.000 - 150.000", brands: "MHR, Spirit Beast", desc: "Standar samping PCX runcing. Alat ini memperlebar tapak agar motor tidak jatuh saat parkir di tanah lunak atau aspal panas." },
+                    { image: "PASTE LINK GAMBAR COVER RADIATOR DISINI", name: "Cover Radiator", role: "Proteksi Mesin", price: "Rp 100.000 - 250.000", brands: "Hayaidesu, Custom", desc: "Kisi-kisi radiator rawan bocor kena kerikil. Cover aluminium melindungi sirip radiator dari benturan benda keras." },
+                    { image: "PASTE LINK GAMBAR SELANG REM BAJA DISINI", name: "Selang Rem Braided", role: "Pengereman Stabil", price: "Rp 200.000 - 400.000", brands: "TDR, HEL, RCB", desc: "Mencegah rem 'masuk angin' atau blong saat panas di turunan curam. Selang serat baja tidak memuai seperti karet." }
+                ]
+            },
+            survival: {
+                title: "Skenario Terburuk (Survival)",
+                desc: "Perlengkapan wajib untuk kondisi mogok di hutan, tanpa sinyal, atau tanpa bengkel.",
+                items: [
+                    { image: "PASTE LINK GAMBAR JUMP STARTER DISINI", name: "Jump Starter Portable", priority: "MUTLAK", role: "Anti Mogok Aki", price: "Rp 300.000 - 600.000", brands: "Baseus, 70mai", desc: "Skenario: Aki mati/soak di hutan. PCX matic TIDAK BISA didorong (kick start tidak ada). Alat ini seperti powerbank yang bisa menyalakan motor seketika." },
+                    { image: "PASTE LINK GAMBAR V-BELT CADANGAN DISINI", name: "Spare V-Belt + Trekker CVT", priority: "MUTLAK", role: "Penyelamat Penggerak", price: "Rp 500.000 - 1.000.000", brands: "Honda Genuine Part + Tekiro", desc: "Skenario: V-Belt putus di tengah jalan. Bengkel desa tidak punya stok/alat buka. Wajib bawa belt cadangan + Impact wrench portable/Trekker." },
+                    { image: "PASTE LINK GAMBAR PELINDUNG BAWAH MESIN DISINI", name: "Skid Plate (Pelindung Mesin)", priority: "EKSTREM", role: "Pelindung Karter", price: "Rp 350.000 - 600.000", brands: "Custom Plat Besi/Alu", desc: "Skenario: Lewat jalan makadam, batu besar menghantam bawah mesin. Jika crankcase pecah dan oli habis, motor tamat." },
+                    { image: "PASTE LINK GAMBAR POMPA PORTABLE DISINI", name: "Pompa Ban Portable", priority: "MUTLAK", role: "Ban Kempes", price: "Rp 300.000 - 500.000", brands: "Xiaomi, Baseus", desc: "Isi angin otomatis. Sangat vital jika bocor di tengah hutan." },
+                    { image: "PASTE LINK GAMBAR ALAT TAMBAL BAN DISINI", name: "Tire Repair Kit", priority: "MUTLAK", role: "Tambal Ban", price: "Rp 50.000", brands: "Tekiro", desc: "Alat tambal ban tubeless (model cacing) & lem. Wajib bisa pakai sendiri." },
+                    { image: "PASTE LINK GAMBAR KUNCI L BINTANG DISINI", name: "Kunci L Bintang (Torx)", priority: "PENTING", role: "Tools Spesifik", price: "Rp 50.000", brands: "Tekiro", desc: "Body PCX banyak pakai baut bintang (Torx). Obeng biasa tidak bisa buka. Wajib bawa set kunci L Bintang." },
+                    { image: "PASTE LINK GAMBAR SEKRING DISINI", name: "Sekring Mini Blade Cadangan", priority: "PENTING", role: "Kelistrikan", price: "Rp 10.000", brands: "Generic", desc: "Bawa sekring tipe Mini Blade (5A, 10A, 15A, 25A). Jika putus karena aksesoris, motor mati total." },
+                    { image: "PASTE LINK GAMBAR KABEL TIES & LAKBAN DISINI", name: "Emergency Supplies", priority: "PENTING", role: "Perbaikan Darurat", price: "Rp 50.000", brands: "-", desc: "Isi: Kabel Ties (Zip ties), Lakban (Duct tape), Kawat. Bisa menyambung body pecah sementara." },
+                    { image: "PASTE LINK GAMBAR FOOTSTEP TAMBAHAN DISINI", name: "Footstep Tambahan (Highway Pegs)", priority: "EKSTREM", role: "Kenyamanan Kaki", price: "Rp 100.000 - 250.000", brands: "Custom di Crashbar", desc: "Footstep lipat yang dipasang di crashbar depan. Memungkinkan kaki lurus total saat lelah, mengurangi pegal pinggang drastis." },
+                    { image: "PASTE LINK GAMBAR JERIGEN BENSIN DISINI", name: "Jerigen Bensin Pipih (5L)", priority: "EKSTREM", role: "Cadangan BBM", price: "Rp 300.000 - 700.000", brands: "Rotopax, Jerry Can", desc: "Untuk jalur Lintas Sumatera/Sulawesi di mana jarak SPBU >100km dan sering tutup/habis di malam hari." },
+                    { image: "PASTE LINK GAMBAR GRIP PEMANAS DISINI", name: "Heated Grips (Grip Pemanas)", priority: "EKSTREM", role: "Anti Beku", price: "Rp 150.000 - 400.000", brands: "Universal", desc: "Skenario: Hujan badai di gunung (Dieng/Bromo). Jari tangan kaku/beku bisa bikin rem telat. Grip ini menghangatkan tangan (cegah hipotermia)." },
+                    { image: "PASTE LINK GAMBAR TALI DEREK DISINI", name: "Tali Derek Webbing", priority: "TINGGI", role: "Evakuasi", price: "Rp 50.000 - 100.000", brands: "Universal Tow Strap", desc: "Jika mesin jebol total. Jangan pakai tali rafia! Pakai webbing elastis khusus motor agar aman saat ditarik motor lain." },
+                    { image: "PASTE LINK GAMBAR CORONG BENSIN DISINI", name: "Corong Filter Bensin", priority: "PENTING", role: "Anti Air", price: "Rp 50.000 - 150.000", brands: "Magic Funnel", desc: "Jika terpaksa beli bensin eceran (botolan). Filter ini memisahkan air dan kotoran karat agar injektor tidak rusak (water hammer)." },
+                    { image: "PASTE LINK GAMBAR KUNCI DUPLIKAT DISINI", name: "Duplikat Kunci Darurat", priority: "CERDIK", role: "Akses Mekanis", price: "Rp 25.000", brands: "Tukang Kunci", desc: "Duplikat kunci besi pembuka jok, lalu sembunyikan (baut) di balik plat nomor/rangka. Solusi jika kunci utama hilang atau tertinggal di dalam jok." },
+                    { image: "PASTE LINK GAMBAR BATERAI REMOTE DISINI", name: "Baterai Keyless Cadangan", priority: "DARURAT", role: "Nyawa Kunci", price: "Rp 20.000", brands: "Panasonic CR2032", desc: "Jika baterai remote habis, motor tidak bisa hidup. Lakban 1 baterai cadangan di balik jok atau di dompet STNK." },
+                    { image: "PASTE LINK GAMBAR PEMADAM API MINI DISINI", name: "APAR Mini (Fire Stop)", priority: "JAGA-JAGA", role: "Pemadam Api", price: "Rp 50.000 - 100.000", brands: "Fire Stop", desc: "Untuk memadamkan api jika terjadi korsleting listrik pada aksesoris atau kebakaran pasca terjatuh." }
+                ]
+            },
+            logistics: {
+                title: "Logistik & Packing Zones",
+                desc: "Manajemen barang berdasarkan kemudahan akses. Prinsip: Berat di bawah, Ringan di atas.",
+                items: [
+                    { image: "PASTE LINK GAMBAR TUNNEL BAG DISINI", name: "Zona 1: Tunnel Bag (Tangki)", role: "Akses Cepat", price: "Rp 150.000 - 300.000", brands: "7Gear, Givi", desc: "Isi: Dompet, E-toll, Minum, Powerbank, Tisu. Barang yang diambil tanpa turun dari motor." },
+                    { image: "PASTE LINK GAMBAR SIDE BOX DISINI", name: "Zona 2: Side Box Kanan", role: "Bengkel & Berat", price: "Rp 400.000 - 800.000", brands: "7Gear, Donimoto (Soft Bag)", desc: "Isi: Tool kit lengkap (termasuk Kunci L Bintang), Pompa ban, Oli cadangan (Mesin/Rem), WD-40. Menjaga center of gravity tetap rendah." },
+                    { image: "PASTE LINK GAMBAR SIDE BOX KIRI DISINI", name: "Zona 3: Side Box Kiri", role: "Logistik & Medis", price: "-", brands: "-", desc: "Isi: P3K, Sandal, Makanan darurat, Jas Hujan (taruh paling atas/luar!). Gunakan tas kain agar fleksibel saat macet." },
+                    { image: "PASTE LINK GAMBAR KOTAK P3K DISINI", name: "P3K Lengkap (First Aid)", role: "Medis", price: "Rp 100.000", brands: "-", desc: "Wajib isi: Diapet/Entrostop (Diare), Paracetamol, Ibuprofen (Nyeri), Betadine, Perban, Minyak Kayu Putih, Gunting Kecil, Pinset." },
+                    { image: "PASTE LINK GAMBAR ALAT SHOLAT DISINI", name: "Alat Sholat & Sarung", role: "Ibadah", price: "-", brands: "-", desc: "Wajib untuk Touring Syar'i. Sarung juga multifungsi sebagai selimut darurat atau ganti celana saat mandi di SPBU." },
+                    { image: "PASTE LINK GAMBAR WD40/CHAIN LUBE DISINI", name: "Chain Lube / WD-40", role: "Cairan", price: "Rp 35.000", brands: "WD-40, Rexco", desc: "Bawa WD-40 untuk baut macet. Bawa Chain Lube jika ada teman touring yang motornya pakai rantai (solidaritas)." },
+                    { image: "PASTE LINK GAMBAR TRASH BAG DISINI", name: "Trash Bag Besar (Heavy Duty)", role: "Kebersihan & Darurat", price: "Rp 20.000", brands: "Bagus", desc: "Untuk sampah (adab safar), tapi bisa jadi Ponco Darurat atau Alas Sholat di tanah basah." },
+                    { image: "PASTE LINK GAMBAR TOP BOX DISINI", name: "Zona 4: Top Box", role: "Ringan & Berharga", price: "Rp 1.500.000 - 3.000.000", brands: "Givi, SHAD, Kappa (40L+)", desc: "Isi: Laptop, Dokumen, Baju ganti, Helm saat parkir. Jangan isi barang berat agar stang tidak goyang (wobble) saat lepas tangan." },
+                    { image: "PASTE LINK GAMBAR BAGASI JOK DISINI", name: "Zona 5: Bawah Jok", role: "Gudang Panas", price: "-", brands: "-", desc: "Isi: V-belt cadangan, Tali derek. Jangan taruh coklat, obat, atau elektronik berbaterai karena suhu mesin panas." },
+                    { image: "PASTE LINK GAMBAR BUSA PEREDAM BOX DISINI", name: "Inner Liner (Busa Box)", role: "Peredam Suara", price: "Rp 150.000 - 300.000", brands: "Custom", desc: "Melapisi bagian dalam Top Box agar barang tidak beradu 'klotok-klotok' saat lewat jalan rusak. Barang lebih awet, tidak baret." },
+                    { image: "PASTE LINK GAMBAR UANG TUNAI DISINI", name: "Uang Pecahan Kecil & Besar Tersembunyi", role: "Cash & Emergency", price: "Rp 500.000+", brands: "-", desc: "Receh untuk parkir/toilet. Simpan Rp 500rb-1jt di tempat sangat tersembunyi (lining helm/sepatu) untuk darurat dirampok/dompet hilang." },
+                    { image: "PASTE LINK GAMBAR TISU BASAH DISINI", name: "Tisu Basah Antiseptik", role: "Hygiene", price: "Rp 15.000", brands: "Mitu, Dettol", desc: "Untuk 'mandi koboi' saat di jalan, membersihkan tangan sebelum makan, atau membersihkan visor helm dari serangga." },
+                    { image: "PASTE LINK GAMBAR MAKANAN DARURAT DISINI", name: "Makanan Darurat & Permen Karet", role: "Survival Food", price: "Rp 50.000", brands: "Sari Roti, Yupi", desc: "Roti sobek, biskuit gandum, madu sachet, coklat bar, Oralit (untuk dehidrasi). Permen karet/kacang untuk dikunyah agar tidak microsleep (ngantuk)." },
+                    { image: "PASTE LINK GAMBAR KACAMATA CADANGAN DISINI", name: "Kacamata (Hitam/Clear)", role: "Visi", price: "-", brands: "-", desc: "Cadangan jika visor helm bermasalah. Kacamata hitam untuk siang terik, clear untuk malam hari jika visor helm gelap." },
+                    { image: "PASTE LINK GAMBAR KANEBO/LAP DISINI", name: "Lap Microfiber & Kanebo", role: "Kebersihan", price: "Rp 20.000", brands: "Honaga", desc: "Untuk mengeringkan jok/spion setelah hujan atau membersihkan motor saat istirahat pagi." },
+                    { image: "PASTE LINK GAMBAR SLEEPING BAG DISINI", name: "Sleeping Bag / Selimut Aluminium", role: "Darurat Tidur", price: "Rp 50.000 - 200.000", brands: "Naturehike", desc: "Jika terpaksa tidur di emperan toko/SPBU karena kemalaman atau mogok. Selimut aluminium foil sangat ringkas dan hangat." },
+                    { image: "PASTE LINK GAMBAR AIR RADIATOR DISINI", name: "Air Radiator Cadangan", role: "Cairan", price: "Rp 25.000", brands: "Honda Coolant", desc: "Botol kecil saja (300ml). Jaga-jaga jika terjadi kebocoran halus di sistem pendingin." }
+                ]
+            },
+            apparel: {
+                title: "Apparel Rider (Baju Perang)",
+                desc: "Perlindungan tubuh: Safety, Comfort (Anti-Gerah), & Visibility.",
+                items: [
+                    { image: "PASTE LINK GAMBAR HELM MODULAR DISINI", name: "Helm Modular + Pinlock", role: "Kepala", price: "Rp 1.500.000 - 3.000.000", brands: "KYT TT Course, Nolan, Shoei", desc: "Modular memudahkan minum/bicara. Pinlock WAJIB agar kaca tidak berembun (buta) saat hujan/dingin di pegunungan." },
+                    { image: "PASTE LINK GAMBAR MASKER BALACLAVA DISINI", name: "Balaclava (Masker Full)", role: "Leher & Kepala", price: "Rp 50.000 - 100.000", brands: "Alpinestars, Respiro", desc: "Menyerap keringat agar helm tidak bau, melindungi leher dari sengatan matahari (belang)." },
+                    { image: "PASTE LINK GAMBAR JAKET TOURING DISINI", name: "Jaket Touring Mesh", role: "Badan", price: "Rp 800.000 - 1.500.000", brands: "Respiro, Komine, Contin", desc: "Pilih bahan Mesh (jaring) agar angin masuk (tidak dehidrasi), tapi punya protektor sikut/bahu CE Level 1. Bawa inner layer untuk hujan." },
+                    { image: "PASTE LINK GAMBAR SARUNG TANGAN DISINI", name: "Sarung Tangan (2 Pasang)", role: "Tangan", price: "Rp 300.000 (Total)", brands: "Respiro, Eiger", desc: "Bawa 2 pasang: 1 Tipe Mesh (Tipis/Adem) untuk siang hari, 1 Tipe Waterproof/Kulit (Tebal) untuk hujan & malam hari." },
+                    { image: "PASTE LINK GAMBAR CELANA TOURING DISINI", name: "Celana Touring (Riding Pants)", role: "Kaki Bawah", price: "Rp 500.000 - 900.000", brands: "Contin, 7Gear", desc: "Jangan pakai Jeans! Jeans tidak tahan gesek aspal dan berat jika basah. Pakai celana khusus yang ada protektor lutut & pinggul." },
+                    { image: "PASTE LINK GAMBAR SEPATU TOURING DISINI", name: "Sepatu High Cut", role: "Kaki", price: "Rp 500.000 - 1.000.000", brands: "7Gear, RVR", desc: "Wajib menutup mata kaki (ankle). Cedera paling umum saat jatuh tertimpa motor adalah mata kaki remuk." },
+                    { image: "PASTE LINK GAMBAR JAS HUJAN SEPATU DISINI", name: "Cover Shoes (Jas Hujan Sepatu)", role: "Anti Basah", price: "Rp 50.000 - 100.000", brands: "Funcover", desc: "Wajib dibawa! Sepatu basah kuyup di jalan bikin masuk angin dan bau kaki. Pakai ini saat hujan turun." },
+                    { image: "PASTE LINK GAMBAR BAJU MANSET/DRIFIT DISINI", name: "Base Layer (Dri-fit)", role: "Dalaman", price: "Rp 150.000 - 300.000", brands: "Under Armour, Lokal", desc: "Jangan pakai kaos katun (menyerap keringat bikin masuk angin). Pakai baju ketat dri-fit agar keringat cepat menguap." },
+                    { image: "PASTE LINK GAMBAR EARPLUGS DISINI", name: "Earplugs", role: "Telinga", price: "Rp 50.000 - 150.000", brands: "3M, Alpine", desc: "Meredam suara angin (wind noise) konstan yang bikin cepat lelah dan pusing. Tetap bisa mendengar klakson." },
+                    { image: "PASTE LINK GAMBAR KARTU DARURAT DISINI", name: "Hardcopy Kontak Darurat & Gol. Darah", role: "Dokumen Medis", price: "-", brands: "-", desc: "Tulis nomor darurat di kertas laminating (jangan cuma di HP). Tempel stiker Golongan Darah di Helm/Jaket." }
+                ]
+            },
+            family: {
+                title: "Family Touring (Istri & Anak)",
+                desc: "Manajemen mood dan keselamatan nyawa untuk perjalanan keluarga.",
+                items: [
+                    { image: "PASTE LINK GAMBAR SANDARAN BOX DISINI", name: "Backrest Pad (Sandaran)", type: "Kenyamanan Istri", price: "Rp 100.000 - 200.000", brands: "Givi/Shad Acc", desc: "Tempel di Top Box. Mengubah box keras menjadi sandaran sofa yang nyaman untuk istri agar punggung tidak sakit." },
+                    { image: "PASTE LINK GAMBAR INTERCOM HELM DISINI", name: "Intercom Helm", type: "Harmonisasi", price: "Rp 800.000 - 3.000.000", brands: "Parani, Maxto, Sena", desc: "Wajib pairing. Komunikasi lancar tanpa teriak. Bisa ngobrol santai atau koordinasi 'Mau pipis/haus'." },
+                    { image: "PASTE LINK GAMBAR SABUK BONCENG ANAK DISINI", name: "Sabuk Bonceng Anak", type: "Nyawa Anak", price: "Rp 100.000 - 200.000", brands: "Oscas, Zatra", desc: "Wajib! Mengikat anak ke pengendara. Mencegah anak jatuh saat ketiduran (Microsleep) kena angin sepoi-sepoi." },
+                    { image: "PASTE LINK GAMBAR KURSI BONCENG DEPAN DISINI", name: "Kursi Bonceng Tambahan", type: "Anak Depan", price: "Rp 150.000 - 250.000", brands: "Expro, Lokal", desc: "Jika anak duduk di depan (PCX). Wajib pakai sandaran dada dan bantal agar anak tidak terbentur stang saat ngerem." },
+                    { image: "PASTE LINK GAMBAR BANTAL STANG DISINI", name: "Bantal Stang (Dashboard Pillow)", type: "Tidur Anak", price: "Rp 50.000", brands: "Custom", desc: "Bantal yang diikat di stang. Tempat anak bersandar kepala saat mengantuk (jika duduk depan)." },
+                    { image: "PASTE LINK GAMBAR BANTAL LEHER DISINI", name: "Bantal Leher Tiup", type: "Tidur Penumpang", price: "Rp 30.000 - 75.000", brands: "Miniso, Naturehike", desc: "Agar leher boncenger tidak sakit saat tertidur, dan helm tidak beradu (jeduk) dengan helm pengendara." },
+                    { image: "PASTE LINK GAMBAR HANDUK MICROFIBER DISINI", name: "Handuk Microfiber", type: "Hygiene", price: "Rp 50.000", brands: "Decathlon", desc: "Sangat ringkas dan cepat kering. Hemat tempat di box dibanding handuk rumahan yang tebal." },
+                    { image: "PASTE LINK GAMBAR TAS SABUN GANTUNG DISINI", name: "Toiletry Bag Gantung", type: "Hygiene", price: "Rp 75.000", brands: "Naturehike, Miniso", desc: "Tas sabun/sikat gigi model gantung. Sangat memudahkan mandi di toilet SPBU/Masjid yang gantungannya sedikit/kotor." },
+                    { image: "PASTE LINK GAMBAR DRY SHAMPOO DISINI", name: "Dry Shampoo & Sunblock", type: "Perawatan", price: "Rp 50.000 - 100.000", brands: "Ellips, Vaseline", desc: "Wajib untuk istri/boncenger. Dry shampoo mengatasi rambut lepek helm tanpa keramas. Sunblock mencegah kulit belang kena angin/matahari." },
+                    { image: "PASTE LINK GAMBAR BOTOL SEDOTAN DISINI", name: "Botol Minum Sedotan", type: "Anak", price: "Rp 50.000", brands: "Tupperware, LocknLock", desc: "Wajib untuk anak! Agar bisa minum di jalan tanpa harus repot membuka helm (lewat sela-sela kaca)." },
+                    { image: "PASTE LINK GAMBAR MAINAN ANAK DISINI", name: "Mainan Favorit", type: "Hiburan Anak", price: "-", brands: "-", desc: "Robot/boneka kecil. Ikat dengan tali ke jaket anak agar jika jatuh tidak hilang. Penyelamat saat anak rewel." },
+                    { image: "PASTE LINK GAMBAR MASKER ANAK DISINI", name: "Masker & Kacamata Anak", type: "Kesehatan", price: "Rp 50.000", brands: "-", desc: "Paru-paru anak sensitif debu jalanan. Wajib pakai masker double kain/medis dan kacamata agar tidak kelilipan." },
+                    { image: "PASTE LINK GAMBAR ILUSTRASI DUDUK BERTIGA DISINI", name: "Formasi Sandwich (Anak <7 Th)", type: "Strategi Duduk", price: "-", brands: "-", desc: "Posisi: Ayah (Depan) - Anak (Tengah) - Ibu (Belakang). Anak terlindungi angin oleh ayah, dan ditahan ibu dari belakang." },
+                    { image: "PASTE LINK GAMBAR ILUSTRASI ANAK DIBELAKANG DISINI", name: "Formasi Pilot (Anak >7 Th)", type: "Strategi Duduk", price: "-", brands: "-", desc: "Anak duduk sendiri di belakang (jika Ibu tidak ikut). WAJIB pakai Top Box Backrest & Sabuk Bonceng ke pinggang Ayah." },
+                    { image: "PASTE LINK GAMBAR TAS ORGANIZER BAJU DISINI", name: "Packing Cubes", type: "Manajemen Baju", price: "Rp 50.000 - 150.000", brands: "Naturehike", desc: "Pisahkan baju Ayah (Tas A), Ibu (Tas B), Anak (Tas C) di dalam box agar tidak 'kapal pecah' saat cari ganti." },
+                    { image: "PASTE LINK GAMBAR OBAT/SUSU ANAK DISINI", name: "Logistik Anak Komplit", type: "Kesehatan", price: "Variatif", brands: "-", desc: "Wajib bawa: Termometer, Paracetamol, Minyak Telon, Antimo (Mabuk), Bedak Salicyl (Gatal), Susu UHT." },
+                    { image: "PASTE LINK GAMBAR POPOK/PLASTIK DISINI", name: "Popok & Plastik Muntah", type: "Hygiene Anak", price: "Rp 50.000", brands: "Pampers", desc: "Stok popok harus lebih. Plastik muntah di saku jaket Ibu untuk akses cepat jika anak 'hoek' mendadak." },
+                    { image: "PASTE LINK GAMBAR BAJU GANTI ANAK DISINI", name: "Baju Ganti Anak (2x Lipat)", type: "Pakaian", price: "-", brands: "-", desc: "Jika ortu bawa 3 stel, anak wajib 6 stel. Anak sering tumpah/ngompol/kotor di jalan." },
+                    { image: "PASTE LINK GAMBAR KABEL DATA 3-IN-1 DISINI", name: "Kabel Data 3-in-1", type: "Elektronik", price: "Rp 50.000", brands: "Baseus, Uneed", desc: "Satu kabel ada 3 kepala (Micro, Type-C, Lightning). Hemat tempat dan colokan. Wajib untuk gadget sekeluarga." },
+                    { image: "PASTE LINK GAMBAR KABEL ROLL KECIL DISINI", name: "Stopkontak T / Kabel Roll", type: "Kelistrikan Hotel", price: "Rp 30.000", brands: "Uticon", desc: "Di hotel colokan sedikit. Alat ini agar bisa ngecas 2 HP, 2 Intercom, dan Kamera sekaligus." },
+                    { image: "PASTE LINK GAMBAR BUKU NIKAH DISINI", name: "Fotokopi Buku Nikah", type: "Dokumen", price: "-", brands: "-", desc: "Simpan fotokopi/foto digital di HP. Syarat check-in di beberapa Hotel Syariah di daerah." },
+                    { image: "PASTE LINK GAMBAR SANDAL JEPIT DISINI", name: "Sandal Jepit", type: "Kenyamanan", price: "Rp 20.000", brands: "Swallow", desc: "Wajib bawa untuk di hotel/masjid agar kaki bisa bernapas setelah seharian pakai sepatu boots." }
+                ]
+            }
+        };
+
+        function PCXSyariTouring() {
+            const [activePage, setActivePage] = useState('dashboard');
+            const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+            const [expandedItem, setExpandedItem] = useState(null);
+            const [checkedItems, setCheckedItems] = useState({});
+
+            useEffect(() => {
+                const saved = localStorage.getItem('pcx_syari_checklist');
+                if (saved) setCheckedItems(JSON.parse(saved));
+            }, []);
+
+            const handleCheck = (itemName) => {
+                const newChecked = { ...checkedItems, [itemName]: !checkedItems[itemName] };
+                setCheckedItems(newChecked);
+                localStorage.setItem('pcx_syari_checklist', JSON.stringify(newChecked));
+            };
+
+            const calculateProgress = (items) => {
+                if (!items || items.length === 0) return 0;
+                const checkedCount = items.filter(item => checkedItems[item.name]).length;
+                return Math.round((checkedCount / items.length) * 100);
+            };
+
+            const NavItem = ({ page, icon, label }) => (
+                <button
+                    onClick={() => { setActivePage(page); setIsMobileMenuOpen(false); setExpandedItem(null); }}
+                    className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl transition-all ${
+                        activePage === page 
+                        ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/20' 
+                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    }`}
+                >
+                    <InternalIcon name={icon} size={18} />
+                    <span className="font-medium text-sm">{label}</span>
+                </button>
+            );
+
+            const toggleDetail = (idx) => {
+                setExpandedItem(expandedItem === idx ? null : idx);
+            };
+
+            const getPlaceholderImage = (text) => {
+                return `https://placehold.co/600x300/1e293b/orange?text=${encodeURIComponent(text)}`;
+            };
+
+            // Logic render gambar yang baru
+            const getImageSource = (item) => {
+                if (item.image && item.image.startsWith("http")) {
+                    return item.image;
+                }
+                // Jika masih placeholder text "PASTE LINK...", tampilkan placeholder generated
+                return getPlaceholderImage(item.name);
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col md:flex-row">
+                    <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 border-r border-slate-800 transform transition-transform duration-300 md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                        <div className="p-6 border-b border-slate-800 flex items-center gap-3">
+                            <div className="bg-orange-600 p-2 rounded-lg">
+                                <InternalIcon name="Bike" size={24} className="text-white" />
+                            </div>
+                            <div>
+                                <h1 className="font-bold text-lg tracking-tight">Panduan Kurma</h1>
+                                <p className="text-xs text-slate-500">PCX Grand Touring</p>
+                            </div>
+                        </div>
+                        
+                        <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-80px)] custom-scrollbar">
+                            <div className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 px-4 mt-2">Analisis & Syari</div>
+                            <NavItem page="dashboard" icon="Compass" label="Kenapa PCX? (Analisis)" />
+                            <NavItem page="syari" icon="BookOpen" label="Pedoman Safar Syar'i" />
+                            
+                            <div className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 px-4 mt-6">Modifikasi</div>
+                            <NavItem page="project" icon="Zap" label="Project: Menutup Gap ADV" />
+                            <NavItem page="accessories" icon="ShoppingBag" label="Aksesoris & Printilan" />
+                            
+                            <div className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 px-4 mt-6">Manajemen</div>
+                            <NavItem page="survival" icon="AlertTriangle" label="Skenario Terburuk" />
+                            <NavItem page="logistics" icon="Box" label="Logistik & Packing Zones" />
+                            <NavItem page="apparel" icon="User" label="Apparel (Baju Perang)" />
+                            <NavItem page="family" icon="Heart" label="Family & Child Safety" />
+                        </nav>
+                    </aside>
+
+                    <div className="md:hidden fixed top-0 w-full bg-slate-900 border-b border-slate-800 z-40 px-4 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <InternalIcon name="Bike" size={20} className="text-orange-500" />
+                            <span className="font-bold">Panduan Kurma PCX</span>
+                        </div>
+                        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-slate-300">
+                            {isMobileMenuOpen ? <InternalIcon name="X" /> : <InternalIcon name="Menu" />}
+                        </button>
+                    </div>
+
+                    <main className="flex-1 p-4 md:p-8 pt-20 md:pt-8 overflow-y-auto h-screen bg-slate-950 scroll-smooth custom-scrollbar">
+                        {activePage === 'dashboard' && (
+                            <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+                                <header className="mb-8">
+                                    <h2 className="text-3xl font-bold text-white mb-2">Panduan Touring Kurma dengan PCX</h2>
+                                    <p className="text-slate-400">Analisis fundamental mengapa PCX 160 dipilih sebagai basis Grand Touring.</p>
+                                </header>
+
+                                <div className="bg-gradient-to-br from-slate-900 to-slate-800 border-l-4 border-orange-500 p-6 rounded-r-xl shadow-lg">
+                                    <h3 className="text-xl font-bold text-orange-400 mb-4 flex items-center gap-2">
+                                        <InternalIcon name="CheckSquare" size={20} /> {comparisonData.conclusion.title}
+                                    </h3>
+                                    <p className="text-white text-lg font-medium mb-4">"{comparisonData.conclusion.summary}"</p>
+                                    <div className="space-y-3">
+                                        {comparisonData.conclusion.details.map((detail, idx) => (
+                                            <div key={idx} className="flex gap-3 text-slate-300 text-sm">
+                                                <InternalIcon name="ArrowRight" size={16} className="text-orange-500 mt-1 flex-shrink-0" />
+                                                <p>{detail}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
+                                    <div className="p-4 bg-slate-800 border-b border-slate-700">
+                                        <h3 className="font-bold text-white flex items-center gap-2"><InternalIcon name="Scale" size={18} /> Tabel Komparasi (Data Dokumen)</h3>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="text-slate-400 bg-slate-900/50 uppercase text-xs">
+                                                <tr>
+                                                    <th className="px-6 py-4">Fitur</th>
+                                                    <th className="px-6 py-4 text-orange-400">Honda PCX 160</th>
+                                                    <th className="px-6 py-4 text-slate-300">Honda ADV 160</th>
+                                                    <th className="px-6 py-4 text-slate-300">Yamaha NMAX 155</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-800">
+                                                {comparisonData.table.map((row, idx) => (
+                                                    <tr key={idx} className="hover:bg-slate-800/50 transition-colors">
+                                                        <td className="px-6 py-4 font-medium text-slate-200">{row.feature}</td>
+                                                        <td className="px-6 py-4 text-orange-200 bg-orange-900/10 font-medium">{row.pcx}</td>
+                                                        <td className="px-6 py-4 text-slate-400">{row.adv}</td>
+                                                        <td className="px-6 py-4 text-slate-400">{row.nmax}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activePage === 'syari' && (
+                            <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
+                                <header className="mb-8 text-center bg-slate-900 p-8 rounded-2xl border border-slate-800">
+                                    <InternalIcon name="BookOpen" size={48} className="text-emerald-500 mx-auto mb-4" />
+                                    <h2 className="text-3xl font-bold text-white mb-2">Panduan Touring Syar'i</h2>
+                                    <p className="text-emerald-400">"Safar adalah bagian dari azab (kepayahan), maka percepatlah kembali jika urusan selesai."</p>
+                                </header>
+                                
+                                <div className="grid gap-6">
+                                    {syariData.map((item, idx) => (
+                                        <div key={idx} className="bg-slate-900 border-l-4 border-emerald-500 p-6 rounded-r-xl">
+                                            <h3 className="text-lg font-bold text-emerald-100 mb-2">{item.title}</h3>
+                                            <p className="text-slate-300 mb-4 leading-relaxed">{item.desc}</p>
+                                            <div className="bg-slate-950 p-3 rounded text-sm text-emerald-400/80 italic font-serif">
+                                                "{item.dalil}"
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {activePage === 'project' && (
+                            <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+                                <header>
+                                    <h2 className="text-3xl font-bold text-white mb-2">Project: Menutup Kelemahan PCX</h2>
+                                    <p className="text-slate-400">Langkah teknis mengubah "City Cruiser" menjadi "Adventure Tourer" setara ADV.</p>
+                                </header>
+
+                                <div className="grid gap-6">
+                                    {gapProjectData.map((item, idx) => (
+                                        <div key={idx} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden group hover:border-orange-500/50 transition-all">
+                                            <div className="w-full h-48 overflow-hidden bg-slate-800 relative">
+                                                <img 
+                                                    src={getImageSource(item)}
+                                                    alt={item.part}
+                                                    className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
+                                                <div className="absolute bottom-4 left-6 flex items-center gap-2">
+                                                    <span className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+                                                        <InternalIcon name="DollarSign" size={12}/> {item.price}
+                                                    </span>
+                                                    <span className="bg-slate-700 text-slate-300 text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+                                                        <InternalIcon name="Tag" size={12}/> {item.brands}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="p-6">
+                                                <div className="flex items-center gap-4 mb-4">
+                                                    <div className="p-3 bg-slate-800 rounded-lg text-orange-500 group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                                                        <InternalIcon name={item.icon} />
+                                                    </div>
+                                                    <h3 className="text-xl font-bold text-white">{item.part}</h3>
+                                                </div>
+                                                
+                                                <div className="grid md:grid-cols-2 gap-6">
+                                                    <div className="bg-red-950/10 p-4 rounded-lg border border-red-900/30">
+                                                        <p className="text-xs font-bold text-red-400 mb-2 uppercase tracking-wider">Masalah </p>
+                                                        <p className="text-sm text-slate-300 leading-relaxed">{item.problem}</p>
+                                                    </div>
+                                                    <div className="bg-green-950/10 p-4 rounded-lg border border-green-900/30">
+                                                        <p className="text-xs font-bold text-green-400 mb-2 uppercase tracking-wider">Solusi </p>
+                                                        <p className="text-sm text-slate-300 leading-relaxed">{item.solution}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-4 pt-4 border-t border-slate-800">
+                                                    <p className="text-sm text-slate-400">
+                                                        <span className="font-bold text-orange-400">Analisis Detail: </span>
+                                                        {item.detail}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {categories[activePage] && (
+                            <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+                                <header className="flex flex-col gap-4 mb-8 bg-slate-900 p-6 rounded-xl border border-slate-800">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-3 bg-slate-800 rounded-xl border border-slate-700 mt-1">
+                                            {activePage === 'accessories' && <InternalIcon name="ShoppingBag" className="text-blue-400" size={28} />}
+                                            {activePage === 'survival' && <InternalIcon name="AlertTriangle" className="text-red-500" size={28} />}
+                                            {activePage === 'logistics' && <InternalIcon name="Box" className="text-yellow-500" size={28} />}
+                                            {activePage === 'family' && <InternalIcon name="Heart" className="text-pink-500" size={28} />}
+                                            {activePage === 'apparel' && <InternalIcon name="User" className="text-purple-500" size={28} />}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">{categories[activePage].title}</h2>
+                                            <p className="text-slate-400 mb-2">{categories[activePage].desc}</p>
+                                            
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-2 flex-1 bg-slate-800 rounded-full overflow-hidden">
+                                                    <div 
+                                                        className="h-full bg-orange-500 transition-all duration-500" 
+                                                        style={{ width: `${calculateProgress(categories[activePage].items)}%` }}
+                                                    ></div>
+                                                </div>
+                                                <span className="text-xs font-bold text-orange-400">{calculateProgress(categories[activePage].items)}% Ready</span>
+                                            </div>
+
+                                            {activePage === 'family' && (
+                                                <div className="mt-3 inline-block px-3 py-1 bg-pink-900/30 text-pink-400 text-xs font-bold rounded-full border border-pink-800">
+                                                    Mode: Expert Parenting
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </header>
+
+                                <div className="grid gap-4">
+                                    {categories[activePage].items.map((item, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            className={`bg-slate-900 border rounded-lg overflow-hidden transition-all hover:bg-slate-800/80 ${
+                                                checkedItems[item.name] ? 'border-green-800 bg-slate-900/50' : 'border-slate-800'
+                                            }`}
+                                        >
+                                            <div className="flex items-stretch">
+                                                <button 
+                                                    onClick={() => handleCheck(item.name)}
+                                                    className="px-4 bg-slate-950/50 border-r border-slate-800 flex items-center justify-center group hover:bg-slate-900 transition-colors"
+                                                >
+                                                    {checkedItems[item.name] ? (
+                                                        <InternalIcon name="CheckCircle2" className="text-green-500" size={24} />
+                                                    ) : (
+                                                        <InternalIcon name="Circle" className="text-slate-600 group-hover:text-slate-400" size={24} />
+                                                    )}
+                                                </button>
+
+                                                <button 
+                                                    onClick={() => toggleDetail(idx)}
+                                                    className="flex-1 p-5 text-left"
+                                                >
+                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                        <div className="flex items-start gap-3">
+                                                            <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
+                                                                item.priority === 'MUTLAK' ? 'bg-red-600 shadow-[0_0_10px_red]' : 
+                                                                item.priority === 'EKSTREM' ? 'bg-orange-500' : 'bg-blue-500'
+                                                            }`}></div>
+                                                            <div className={checkedItems[item.name] ? "opacity-50" : ""}>
+                                                                <h4 className={`font-bold text-lg ${checkedItems[item.name] ? "text-slate-400 line-through" : "text-white"}`}>
+                                                                    {item.name}
+                                                                </h4>
+                                                                <p className="text-sm text-slate-400 font-medium">{item.role} {item.type ? `- ${item.type}` : ''}</p>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div className="flex items-center gap-3">
+                                                            {item.priority && (
+                                                                <span className="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300 whitespace-nowrap">
+                                                                    {item.priority}
+                                                                </span>
+                                                            )}
+                                                            <div className="text-slate-500 text-sm whitespace-nowrap">
+                                                                {expandedItem === idx ? <span className="text-orange-500">Tutup</span> : "Detail"}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            </div>
+                                            
+                                            {expandedItem === idx && (
+                                                <div className="px-5 pb-5 pt-0 animate-fade-in-down pl-[4.5rem]">
+                                                    <div className="mb-4 rounded-lg overflow-hidden h-40 w-full relative group">
+                                                        <img 
+                                                            src={getImageSource(item)}
+                                                            alt={item.name}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                                            <span className="text-white text-sm font-bold flex items-center gap-2">
+                                                                <InternalIcon name="ImageIcon" size={16}/> Ilustrasi Barang
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid md:grid-cols-2 gap-4 mb-4">
+                                                        <div className="bg-slate-950 p-3 rounded border border-slate-700">
+                                                            <p className="text-xs text-slate-500 mb-1">Estimasi Harga</p>
+                                                            <p className="text-orange-400 font-mono font-bold">{item.price}</p>
+                                                        </div>
+                                                        <div className="bg-slate-950 p-3 rounded border border-slate-700">
+                                                            <p className="text-xs text-slate-500 mb-1">Rekomendasi Merek</p>
+                                                            <p className="text-blue-400 font-medium">{item.brands}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="bg-slate-950 p-4 rounded-lg border-l-2 border-orange-500 text-slate-300 text-sm leading-relaxed">
+                                                        <span className="font-bold text-orange-400 block mb-1">Penjelasan Lengkap:</span>
+                                                        {item.desc}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {activePage === 'logistics' && (
+                                    <div className="mt-8 p-6 bg-slate-900 rounded-xl border border-slate-800">
+                                        <h3 className="font-bold text-white mb-4 flex items-center gap-2"><InternalIcon name="Truck" size={20}/> Prinsip Packing Motor</h3>
+                                        <div className="grid md:grid-cols-3 gap-4 text-center">
+                                            <div className="p-4 bg-slate-950 rounded-lg">
+                                                <p className="text-orange-400 font-bold mb-1">Center of Gravity</p>
+                                                <p className="text-xs text-slate-500">Barang TERBERAT (Tools, Sparepart) wajib di bawah/tengah (Sidebox/Dek).</p>
+                                            </div>
+                                            <div className="p-4 bg-slate-950 rounded-lg">
+                                                <p className="text-blue-400 font-bold mb-1">Aksesibilitas</p>
+                                                <p className="text-xs text-slate-500">Jas Hujan & P3K wajib di paling atas/luar. Jangan tertimbun baju.</p>
+                                            </div>
+                                            <div className="p-4 bg-slate-950 rounded-lg">
+                                                <p className="text-green-400 font-bold mb-1">Stabilitas Stang</p>
+                                                <p className="text-xs text-slate-500">Top Box hanya untuk barang RINGAN (Helm/Kerupuk/Baju). Jika berat, stang akan goyang (Wobble).</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activePage === 'family' && (
+                                    <div className="mt-8 grid md:grid-cols-2 gap-4">
+                                        <div className="bg-pink-950/20 border border-pink-500/30 p-5 rounded-xl">
+                                            <h4 className="font-bold text-pink-400 mb-2 flex items-center gap-2"><InternalIcon name="Lock" size={16}/> Aturan 90 Menit</h4>
+                                            <p className="text-sm text-slate-300">Setiap 1.5 - 2 jam WAJIB berhenti. Anak harus turun, luruskan punggung, minum, dan ganti popok. Jangan egois mengejar waktu. Cek suhu tangan/jidat anak berkala.</p>
+                                        </div>
+                                        <div className="bg-pink-950/20 border border-pink-500/30 p-5 rounded-xl">
+                                            <h4 className="font-bold text-pink-400 mb-2 flex items-center gap-2"><InternalIcon name="User" size={16}/> Apparel Anak "Astronaut"</h4>
+                                            <p className="text-sm text-slate-300">Jangan helm dewasa! Pakai helm anak ukuran pas. Jaket harus tebal (Winter/Puff). Masker double kain + medis. Anak tidak punya refleks menahan angin/kantuk.</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                            </div>
+                        )}
+
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<PCXSyariTouring />);
+    </script>
+</body>
+</html>
