@@ -4231,10 +4231,16 @@ async function setupLihatNilaiPage() {
     const session = getActiveSession();
     if (!session || !session.loggedIn) return;
 
+    // Cek Hak Akses
+    const userRoles = (session.userData.jabatan || '').toLowerCase();
+    const canAudit = ['wawan', 'admin', 'aria'].includes(session.username) || 
+                     userRoles.includes('tata usaha') || userRoles.includes('tu');
+    const isGuru = userRoles.includes('guru') || ['wawan', 'mia', 'aria'].includes(session.username);
+
     const materiSelect = document.getElementById('guru-nilai-materi-select');
     const nilaiContainer = document.getElementById('guru-nilai-container');
 
-    // 1. Ambil daftar materi
+    // 1. Load Materi
     try {
         const response = await fetch(CONFIG.SCRIPT_URL, {
             method: 'POST',
@@ -4242,28 +4248,32 @@ async function setupLihatNilaiPage() {
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
         const result = await response.json();
-        if (result.status !== 'success') throw new Error(result.message);
-
-        materiSelect.innerHTML = '<option value="">-- Pilih Materi --</option>';
-        for (const kode in result.materi) {
-            const subjectData = Object.values(appState.processedSchedules).flat().find(item => item.subject.startsWith(kode));
-            const namaLengkapMateri = subjectData ? subjectData.subject : kode;
-            const option = document.createElement('option');
-            option.value = kode;
-            option.textContent = namaLengkapMateri;
-            materiSelect.appendChild(option);
+        
+        if (result.status === 'success') {
+            materiSelect.innerHTML = '<option value="">-- Pilih Materi --</option>';
+            const sortedKeys = Object.keys(result.materi).sort();
+            for (const kode of sortedKeys) {
+                let namaLengkap = kode;
+                if (typeof appState !== 'undefined' && appState.processedSchedules) {
+                    const subjectData = Object.values(appState.processedSchedules).flat().find(item => item.subject && item.subject.startsWith(kode));
+                    if (subjectData) namaLengkap = subjectData.subject;
+                }
+                const option = document.createElement('option');
+                option.value = kode;
+                option.textContent = namaLengkap;
+                materiSelect.appendChild(option);
+            }
         }
     } catch (error) {
-        materiSelect.innerHTML = `<option value="">Gagal memuat materi</option>`;
-        console.error(error);
+        console.error("Gagal load materi:", error);
     }
 
-    // 2. Event Listener saat materi dipilih
+    // 2. Event Listener Saat Materi Dipilih
     materiSelect.addEventListener('change', async (e) => {
         const kodeMateri = e.target.value;
         if (!kodeMateri) {
-            nilaiContainer.innerHTML = '<p class="p-8 text-center text-gray-400">Silakan pilih materi.</p>';
-            return;
+             nilaiContainer.innerHTML = '<p class="p-8 text-center text-gray-400">Silakan pilih materi.</p>';
+             return;
         }
 
         nilaiContainer.innerHTML = '<div class="flex justify-center p-8"><div class="loader"></div></div>';
@@ -4277,181 +4287,123 @@ async function setupLihatNilaiPage() {
             const result = await response.json();
             if (result.status !== 'success') throw new Error(result.message);
 
-            if (result.scores.length === 0) {
-                nilaiContainer.innerHTML = '<p class="p-8 text-center text-gray-500">Belum ada santri yang mengerjakan ujian ini.</p>';
-                return;
-            }
-
-            // --- STRUKTUR TABEL ---
+            // --- RENDER TABEL (PERUBAHAN UKURAN KOLOM AKSI) ---
             let tableHTML = `
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
+            <div class="overflow-x-auto mb-4">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase w-10">No</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Santri</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Skor Ujian</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-blue-600 uppercase bg-blue-50 border-b-2 border-blue-200">Nilai Praktek</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Poin Tugas</th>
-                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-gray-100">Nilai KHS</th>
+                        <th class="px-4 py-3 text-center w-10 border">No</th>
+                        <th class="px-4 py-3 text-left border">Nama Santri</th>
+                        <th class="px-4 py-3 text-center border w-24 bg-blue-50">Skor Ujian</th>
+                        <th class="px-4 py-3 text-center border w-24 bg-green-50">Nilai Praktek</th>
+                        <th class="px-4 py-3 text-center border w-24 bg-yellow-50">Poin Tugas</th>
+                        <th class="px-4 py-3 text-center border w-24 font-bold bg-gray-100">Nilai KHS</th>
+                        ${canAudit ? '<th class="px-1 py-3 text-center border w-16 text-indigo-600 text-xs">Aksi</th>' : ''}
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">`;
 
             result.scores.forEach((item, index) => {
-                // Data Mentah
                 const skorUjian = parseFloat(item.skorAkhir) || 0;
-                const nilaiPraktek = parseFloat(item.praktek) || 0; // Pastikan float
-                const totalNilaiTugas = parseFloat(item.totalNilaiTugas) || 0;
-                
-                // Hitung Poin Tugas (8% dari total tugas)
-                const poinTugas = Math.ceil(0.08 * totalNilaiTugas);
+                const nilaiPraktek = parseFloat(item.praktek) || 0;
+                const poinTugas = parseFloat(item.totalNilaiTugas) || 0; 
 
-                // === LOGIKA BARU: Hitung Rata-rata Dinamis ===
-                let pembagi = 0;
-                if (skorUjian > 0) pembagi++;
-                if (nilaiPraktek > 0) pembagi++;
+                let baseScore = skorUjian;
+                if (nilaiPraktek > 0) {
+                    baseScore = (skorUjian + nilaiPraktek) / 2;
+                }
+                let nilaiKHS = Math.round(baseScore + poinTugas);
+                if (nilaiKHS > 100) nilaiKHS = 100;
 
-                let rataRataNilai = 0;
-                if (pembagi > 0) {
-                    rataRataNilai = (skorUjian + nilaiPraktek) / pembagi;
+                let actionBtn = '';
+                if (canAudit) {
+                    // TOMBOL VERSI MINI (Tanpa Ikon, Text Kecil)
+                    actionBtn = `
+                    <button onclick="window.runAudit('${item.username}', '${kodeMateri}', ${skorUjian}, '${item.namaSantri}')" 
+                            class="bg-indigo-100 text-indigo-700 px-1 py-0.5 rounded hover:bg-indigo-200 text-[10px] font-bold w-full h-6 border border-indigo-200 shadow-sm" title="Audit Jawaban">
+                        Audit
+                    </button>`;
                 }
 
-                // Hitung Nilai KHS: Rata-rata + Poin Tugas
-                let nilaiKHS = rataRataNilai + poinTugas;
-                
-                // Cap maksimal 100
-                if (nilaiKHS > 100) nilaiKHS = 100;
-                const nilaiKHSBulat = Math.round(nilaiKHS);
-
-                // Warna Nilai KHS
-                const warnaNilai = nilaiKHSBulat >= 75 ? 'text-green-600' : 'text-red-600';
+                const inputPraktek = isGuru ? 
+                    `<input type="number" min="0" max="100" class="w-full p-1 border rounded text-center input-praktek" 
+                        value="${nilaiPraktek > 0 ? nilaiPraktek : ''}" 
+                        data-username="${item.username}" placeholder="0">` 
+                    : (nilaiPraktek || '-');
 
                 tableHTML += `
-                    <tr>
-                        <td class="px-4 py-3 text-center">${index + 1}</td>
-                        <td class="px-4 py-3 font-medium text-gray-800">${item.namaSantri}</td>
-                        
-                        <td class="px-4 py-3 text-center">
-                            <span class="skor-ujian-val font-semibold">${skorUjian}</span>
-                        </td>
-                        
-                        <td class="px-4 py-2 text-center bg-blue-50">
-                            <input type="number" 
-                                   class="input-praktek w-20 p-1 text-center border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 outline-none font-bold text-blue-700" 
-                                   data-username="${item.username}" 
-                                   value="${nilaiPraktek}" 
-                                   min="0" max="100"
-                                   placeholder="0">
-                        </td>
-
-                        <td class="px-4 py-3 text-center text-sm text-gray-600">
-                            <span class="poin-tugas-val" data-val="${poinTugas}">+${poinTugas}</span>
-                        </td>
-
-                        <td class="px-4 py-3 text-center font-bold text-lg bg-gray-50">
-                            <span class="nilai-khs-preview ${warnaNilai}">${nilaiKHSBulat}</span>
-                        </td>
-                    </tr>
-                `;
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-4 py-2 text-center border">${index + 1}</td>
+                        <td class="px-4 py-2 font-medium border">${item.namaSantri}</td>
+                        <td class="px-4 py-2 text-center font-bold border text-blue-700 bg-blue-50">${skorUjian}</td>
+                        <td class="px-2 py-2 text-center border bg-green-50">${inputPraktek}</td>
+                        <td class="px-4 py-2 text-center border bg-yellow-50 font-semibold text-yellow-700">+${poinTugas.toFixed(1)}</td>
+                        <td class="px-4 py-2 text-center font-extrabold border bg-gray-100 text-gray-800 text-lg">${nilaiKHS}</td>
+                        ${canAudit ? `<td class="px-1 py-1 text-center border align-middle">${actionBtn}</td>` : ''}
+                    </tr>`;
             });
-
-            tableHTML += `</tbody></table></div>
             
-            <div class="mt-4 text-right p-4 bg-gray-50 border-t">
-                <button id="simpan-praktek-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow flex items-center gap-2 ml-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
-                    </svg>
-                    Simpan Nilai Praktek
-                </button>
-            </div>`;
+            tableHTML += `</tbody></table></div>`;
+
+            if (isGuru) {
+                tableHTML += `
+                <div class="mt-4 text-right border-t pt-4">
+                    <button id="btn-save-praktek" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded shadow-lg flex items-center gap-2 ml-auto">
+                        Simpan Nilai Praktek
+                    </button>
+                </div>`;
+            }
 
             nilaiContainer.innerHTML = tableHTML;
 
-            // 3. LOGIKA TOMBOL SIMPAN
-            document.getElementById('simpan-praktek-btn').addEventListener('click', async function() {
-                const btn = this;
-                const inputs = document.querySelectorAll('.input-praktek');
-                const nilaiData = [];
-
-                inputs.forEach(input => {
-                    nilaiData.push({
-                        username: input.dataset.username,
-                        nilai: parseFloat(input.value) || 0
+            const saveBtn = document.getElementById('btn-save-praktek');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', async () => {
+                    const inputs = document.querySelectorAll('.input-praktek');
+                    const updates = [];
+                    inputs.forEach(input => {
+                        const val = parseFloat(input.value);
+                        if (!isNaN(val)) {
+                            updates.push({ username: input.dataset.username, nilai: val });
+                        }
                     });
-                });
 
-                btn.disabled = true;
-                btn.textContent = 'Menyimpan...';
-
-                try {
-                    const saveResp = await fetch(CONFIG.SCRIPT_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ 
-                            action: 'simpanNilaiPraktek', 
-                            kodeMateri: kodeMateri,
-                            nilaiData: nilaiData 
-                        }),
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-                    });
-                    const saveResult = await saveResp.json();
-                    
-                    if (saveResult.status === 'success') {
-                        showMessage('Nilai praktek berhasil disimpan!', 'success');
-                    } else {
-                        throw new Error(saveResult.message);
-                    }
-                } catch (err) {
-                    showMessage('Gagal menyimpan: ' + err.message, 'error');
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = `Simpan Nilai Praktek`;
-                }
-            });
-
-            // 4. UPDATE NILAI KHS REALTIME (LOGIKA BARU JUGA DI SINI)
-            document.querySelectorAll('.input-praktek').forEach(input => {
-                input.addEventListener('input', function() {
-                    const row = this.closest('tr');
-                    
-                    // Ambil nilai-nilai
-                    const skorTulis = parseFloat(row.querySelector('.skor-ujian-val').textContent) || 0;
-                    const poinTugas = parseFloat(row.querySelector('.poin-tugas-val').dataset.val) || 0;
-                    let skorPraktek = parseFloat(this.value);
-                    
-                    if (isNaN(skorPraktek)) skorPraktek = 0;
-
-                    // === LOGIKA HITUNG REALTIME ===
-                    let pembagi = 0;
-                    if (skorTulis > 0) pembagi++;
-                    if (skorPraktek > 0) pembagi++;
-
-                    let rataRata = 0;
-                    if (pembagi > 0) {
-                        rataRata = (skorTulis + skorPraktek) / pembagi;
+                    if (updates.length === 0) {
+                        showMessage("Tidak ada nilai praktek yang diisi.", "error");
+                        return;
                     }
 
-                    let nilaiAkhir = rataRata + poinTugas;
-                    if (nilaiAkhir > 100) nilaiAkhir = 100;
-                    const hasilBulat = Math.round(nilaiAkhir);
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = 'Menyimpan...';
 
-                    // Update Tampilan & Warna
-                    const khsEl = row.querySelector('.nilai-khs-preview');
-                    khsEl.textContent = hasilBulat;
-                    
-                    if (hasilBulat >= 75) {
-                        khsEl.classList.remove('text-red-600');
-                        khsEl.classList.add('text-green-600');
-                    } else {
-                        khsEl.classList.remove('text-green-600');
-                        khsEl.classList.add('text-red-600');
+                    try {
+                        const resp = await fetch(CONFIG.SCRIPT_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({ 
+                                action: 'simpanNilaiPraktek', 
+                                kodeMateri: kodeMateri,
+                                nilaiData: updates 
+                            }),
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                        });
+                        const res = await resp.json();
+                        if (res.status === 'success') {
+                            showMessage('Nilai praktek berhasil disimpan!', 'success');
+                            materiSelect.dispatchEvent(new Event('change'));
+                        } else {
+                            throw new Error(res.message);
+                        }
+                    } catch (err) {
+                        showMessage('Gagal menyimpan: ' + err.message, 'error');
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = 'Simpan Nilai Praktek';
                     }
                 });
-            });
+            }
 
         } catch (error) {
-            nilaiContainer.innerHTML = `<p class="p-8 text-center text-red-500">Gagal memuat nilai: ${error.message}</p>`;
+            nilaiContainer.innerHTML = `<p class="text-red-500 p-4 text-center">${error.message}</p>`;
         }
     });
 }
@@ -6148,20 +6100,33 @@ function calculateAndShowResult() {
     
     const detailJawabanUntukDisimpan = [];
 
-    // HELPER BARU: Membersihkan string dari HTML entities & spasi berlebih
+    // Helper 1: Pembersih Standar (Hanya huruf & angka)
     const cleanString = (str) => {
         if (!str) return "";
-        // Decode HTML entities (seperti &nbsp;)
-        const txt = document.createElement("textarea");
+        const txt = document.createElement("textarea"); 
         txt.innerHTML = str;
-        let decoded = txt.value;
-        // Hapus tag HTML, spasi berlebih, dan karakter non-breaking space
-        return decoded.replace(/<[^>]*>/g, '')
-                      .replace(/&nbsp;/g, ' ')
-                      .replace(/\s+/g, ' ')
+        return txt.value.replace(/<[^>]*>/g, '') // Hapus HTML
+                      .replace(/&nbsp;/g, ' ')   // Hapus spasi HTML
+                      .replace(/[^a-z0-9\s]/gi, '') // Hapus simbol selain huruf/angka
+                      .replace(/\s+/g, ' ')      // Hapus spasi ganda
                       .trim()
                       .toLowerCase();
     };
+
+    // Helper 2: Pembersih Ringan (Mempertahankan koma utk kasus list)
+    const cleanLight = (str) => {
+        if (!str) return "";
+        const txt = document.createElement("textarea"); 
+        txt.innerHTML = str;
+        return txt.value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').toLowerCase().trim();
+    };
+
+    // Helper 3: Konversi Angka
+    const numberToWordMap = {'0':'nol','1':'satu','2':'dua','3':'tiga','4':'empat','5':'lima','6':'enam','7':'tujuh','8':'delapan','9':'sembilan','10':'sepuluh','100':'seratus'};
+    const normalizeNumber = (str) => numberToWordMap[str] || str;
+
+    // Helper 4: Fonetik
+    const toPhonetic = (str) => str.replace(/ph|f|v/g,'f').replace(/c|k|q/g,'k').replace(/y|i/g,'i').replace(/z|s|sy|sh/g,'s').replace(/ks|x/g,'s').replace(/[^a-z0-9]/g,'');
 
     // 2. Loop Perhitungan Nilai
     currentQuestions.forEach((q, index) => {
@@ -6172,51 +6137,88 @@ function calculateAndShowResult() {
         const jawabanSantriRaw = String(examAnswers[questionKey] || ""); 
         const kunciJawabanRaw = String(q.a || ""); 
         
-        // BERSIHKAN KEDUA STRING SEBELUM BANDINGKAN
-        const jawabanSantriClean = cleanString(jawabanSantriRaw);
-        const kunciJawabanClean = cleanString(kunciJawabanRaw);
-        
         const wasHelpUsed = helpUsedOnQuestion[questionKey] === true;
         let poinDidapat = 0;
 
+        // Bersihkan
+        const santriClean = cleanString(jawabanSantriRaw);
+        const santriLight = cleanLight(jawabanSantriRaw); // Versi ada komanya
+        const kunciRawClean = cleanString(kunciJawabanRaw);
+
         if (q.j === 'PG') { 
-            // Logika PG (Exact Match setelah dibersihkan)
-            if (jawabanSantriClean === kunciJawabanClean) {
+            // PG: Cek Exact Match
+            if (santriClean === kunciRawClean) {
                 poinDidapat = poinSoal;
             }
         } else { 
-            // Logika Isian (Fuzzy Match)
-            // Pecah kunci jawaban berdasarkan pemisah / atau | atau ()
-            const kunciList = kunciJawabanClean.split(/[/|()]+/).map(s => s.trim()).filter(Boolean);
+            // --- LOGIKA ISIAN SUPER PERMISSIVE (SAMA DENGAN AUDIT) ---
             
-            let foundPerfectMatch = false;
-            let foundTypoMatch = false;
+            // Pecah kunci berdasarkan / atau | atau ()
+            const kunciList = kunciJawabanRaw.split(/[/|()]+/).map(s => cleanString(s)).filter(Boolean);
+            
+            let bestMatchScore = 0; // 0, 0.75, 1
 
-            // Cek Perfect Match (Salah satu kunci cocok persis)
-            if (kunciList.includes(jawabanSantriClean)) { 
-                foundPerfectMatch = true; 
-            }
-            
-            // Cek Typo (Levenshtein)
-            if (!foundPerfectMatch && jawabanSantriClean.length > 0) {
-                for (const kunci of kunciList) {
-                    if (kunci.length > 3) { 
-                        const distance = getLevenshteinDistance(jawabanSantriClean, kunci);
-                        const toleransiTypo = (kunci.length > 8) ? 2 : 1;
-                        
-                        if (distance <= toleransiTypo) { 
-                            foundTypoMatch = true; 
-                            break; 
-                        }
+            for (const kunci of kunciList) {
+                // Bersihkan satu per satu kunci
+                const keyClean = cleanString(kunci); 
+                if (!keyClean) continue;
+
+                // 1. CEK EXACT & NUMBER (100%)
+                if (santriClean === keyClean || normalizeNumber(santriClean) === normalizeNumber(keyClean)) {
+                    bestMatchScore = Math.max(bestMatchScore, 1);
+                    break; 
+                }
+
+                // 2. CEK STARTS WITH (100%) - Untuk kasus "AB Positif" vs "AB"
+                // Syarat: Kunci pendek (<= 3 huruf) TAPI harus di awal kalimat
+                if (keyClean.length <= 3 && santriClean.startsWith(keyClean)) {
+                     bestMatchScore = Math.max(bestMatchScore, 1);
+                }
+
+                // 3. CEK WORD BOUNDARY (100%) - Untuk kasus "Golongan O Biasa" atau "A, B, O"
+                // Cari kunci sebagai "kata utuh" di dalam jawaban santri
+                // Regex: \bKEY\b akan cocok dengan "A, B" tapi TIDAK dengan "Abjad"
+                try {
+                    const regexWord = new RegExp(`\\b${keyClean}\\b`, 'i');
+                    // Cek di santriLight (untuk mendeteksi pemisah koma)
+                    // ATAU Cek di santriClean (untuk mendeteksi kata yang simbolnya dihapus total, misal: a'in -> ain)
+                    if (regexWord.test(santriLight) || regexWord.test(santriClean)) { 
+                        bestMatchScore = Math.max(bestMatchScore, 1);
                     }
+                } catch(e) {}
+
+                // 4. CEK URUTAN KATA (75%)
+                const sSort = santriClean.split(' ').sort().join(' ');
+                const kSort = keyClean.split(' ').sort().join(' ');
+                if (sSort === kSort) {
+                    bestMatchScore = Math.max(bestMatchScore, 0.75);
+                }
+
+                // 5. CEK FONETIK (75%)
+                if (toPhonetic(santriClean) === toPhonetic(keyClean)) {
+                    bestMatchScore = Math.max(bestMatchScore, 0.75);
+                }
+
+                // 6. CEK KANDUNGAN KATA (75%) - Untuk kunci panjang
+                // Jika kunci panjang (>4 huruf) dan ada di dalam jawaban santri
+                if (keyClean.length > 4 && (keyClean.includes(santriClean) || santriClean.includes(keyClean))) {
+                     bestMatchScore = Math.max(bestMatchScore, 0.75);
+                }
+
+                // 7. CEK TYPO RINGAN (75%)
+                // Anomia vs Anemia (Diff 1 huruf)
+                if (keyClean.length > 3 && Math.abs(santriClean.length - keyClean.length) <= 2) {
+                     if (santriClean[0] === keyClean[0]) { // Huruf depan harus sama
+                         let diff = 0;
+                         for(let i=0; i<Math.min(santriClean.length, keyClean.length); i++) {
+                             if(santriClean[i] !== keyClean[i]) diff++;
+                         }
+                         if (diff <= 2) bestMatchScore = Math.max(bestMatchScore, 0.75);
+                     }
                 }
             }
-
-            if (foundPerfectMatch) { 
-                poinDidapat = poinSoal; 
-            } else if (foundTypoMatch) { 
-                poinDidapat = (poinSoal * 0.75); 
-            }
+            
+            poinDidapat = poinSoal * bestMatchScore;
         }
 
         // Kurangi poin jika menggunakan bantuan
@@ -6226,52 +6228,32 @@ function calculateAndShowResult() {
         
         totalPoinSantri += poinDidapat;
         
-        // Simpan detail
         detailJawabanUntukDisimpan.push({
             nomorSoal: index + 1,
             isiSoal: q.q,
             pilihan: q.j === 'PG' ? "" : "", 
-            jawabanSantri: jawabanSantriRaw, // Simpan yang asli (belum di-clean) agar terlihat apa adanya
-            kunciJawaban: kunciJawabanRaw
+            jawabanSantri: jawabanSantriRaw,
+            kunciJawaban: kunciJawabanRaw,
+			bantuan: wasHelpUsed
         });
     });
 
     // 3. Hitung Skor Akhir
     const score = totalPoinMaksimal > 0 ? Math.round((totalPoinSantri / totalPoinMaksimal) * 100) : 0;
     
-    // 4. Logika Remedial (Sama seperti sebelumnya)
+    // 4. Logika Remedial
     let finalScore;
-    const previousAttempts = currentAttemptHistory ? currentAttemptHistory.percobaan : 0;
-    const firstScore = (previousAttempts > 0 && currentAttemptHistory) ? currentAttemptHistory.skor : score;
-    
+    const previousAttempts = currentAttemptHistory ? (parseInt(currentAttemptHistory.percobaan) || 0) : 0;
     if (previousAttempts > 0) {
-        const highestPreviousScore = currentAttemptHistory.skorAkhir || currentAttemptHistory.skor || 0;
-        let remedialScore = score; 
-        if (remedialScore > 80) { remedialScore = 80; }
-        finalScore = Math.max(highestPreviousScore, remedialScore);
+        const prevScore = parseFloat(currentAttemptHistory.skorAkhir) || 0;
+        let remedialCap = score > 80 ? 80 : score; 
+        finalScore = Math.max(prevScore, remedialCap);
     } else {
         finalScore = score;
     }
     
-	// [UPDATE] Log Nilai Akhir
-    // Gunakan 'wasInProgress' untuk memastikan log terkirim
-    // Kirim log manual karena isExamInProgress akan di-set false
+    // 5. Simpan ke Server
     const session = getActiveSession();
-    fetch(CONFIG.SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'logUserActivity',
-            username: session.username,
-            profileName: session.userData.profileName,
-            actionType: 'SELESAI_UJIAN',
-            actionDetail: `Nilai: ${score}` // Kirim Nilai
-        }),
-        keepalive: true
-    });
-	
-    // 5. Simpan ke Server (Sama seperti sebelumnya)
-   
-    
     fetch(CONFIG.SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({
@@ -6290,7 +6272,7 @@ function calculateAndShowResult() {
         kodeMateri: currentExamData.materiList[0],
         judulMateri: currentExamData.title,
         jenisUjian: currentExamData.jenis || 'Bulanan', 
-        skor: firstScore,      
+        skor: score,      
         skorAkhir: finalScore  
     };
     
@@ -6299,35 +6281,45 @@ function calculateAndShowResult() {
         body: JSON.stringify(dataToSave),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
     });
+    
+    // Log Selesai
+    fetch(CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'logUserActivity',
+            username: session.username,
+            profileName: session.userData.profileName,
+            actionType: 'SELESAI_UJIAN',
+            actionDetail: `Nilai: ${score}`
+        }),
+        keepalive: true
+    });
 
     // 6. Tampilkan Hasil
     const resultScoreEl = document.getElementById('result-score');
     const resultMessageEl = document.getElementById('result-message');
     const resultActionsEl = document.getElementById('result-actions');
 
-    resultScoreEl.textContent = finalScore;
+    resultScoreEl.textContent = score;
     
-    if (finalScore >= 75) {
+    if (score >= 75) {
         resultScoreEl.className = 'text-8xl font-bold my-8 pass';
         resultMessageEl.textContent = 'Selamat, Anda lulus!';
         resultActionsEl.innerHTML = `<button id="result-done-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Selesai</button>`;
     } else {
         resultScoreEl.className = 'text-8xl font-bold my-8 fail';
         
-        // CEK: Apakah sudah pernah remedial sebelumnya?
-        // (previousAttempts didapat dari variabel global currentAttemptHistory yang sudah ada di kode Anda)
         if (previousAttempts >= 2) { 
-             resultMessageEl.textContent = 'Kesempatan remedial Anda sudah habis.';
-             resultActionsEl.innerHTML = `<button id="result-done-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg">Selesai</button>`;
+            resultMessageEl.textContent = 'Kesempatan remedial Anda sudah habis.';
+            resultActionsEl.innerHTML = `<button id="result-done-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg">Selesai</button>`;
         } else {
-             // JIKA BELUM -> Tampilkan Tombol Remedial
-             resultMessageEl.textContent = 'Nilai Anda belum mencapai KKM. Silakan ambil remedial.';
-             resultActionsEl.innerHTML = `
+            resultMessageEl.textContent = 'Nilai Anda belum mencapai KKM. Silakan ambil remedial.';
+            resultActionsEl.innerHTML = `
                 <button id="result-remedial-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg mr-4 shadow-lg">Mulai Remedial</button>
                 <button id="result-later-btn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-8 rounded-lg">Nanti Saja</button>
             `;
         }
-	}
+    }
 
     document.getElementById('exam-container').classList.add('hidden');
     document.getElementById('exam-result-modal').style.display = 'block';
@@ -14165,6 +14157,141 @@ window.addEventListener('click', (e) => {
     }
 });
 
+// =======================================================
+// === FUNGSI AUDIT (GLOBAL SCOPE) - WAJIB DI LUAR FUNGSI LAIN ===
+// =======================================================
+
+window.runAudit = async function(username, kodeMateri, oldScore, namaSantri) {
+    const modal = document.getElementById('auditModal');
+    const tbody = document.getElementById('audit-table-body');
+    const btnApply = document.getElementById('btn-apply-audit');
+    const scoreDisplay = document.getElementById('audit-new-score');
+    const closeBtn = modal.querySelector('.close-button');
+
+    modal.style.display = 'flex'; 
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4"><div class="loader"></div> Memuat data...</td></tr>';
+    
+    document.getElementById('audit-old-score').textContent = oldScore;
+    scoreDisplay.textContent = '...';
+    btnApply.classList.add('hidden'); // Sembunyikan tombol simpan dulu
+
+    // Event Tutup Modal
+    closeBtn.onclick = () => { modal.style.display = 'none'; };
+    window.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+    try {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ 
+               action: 'getStudentExamDetails', 
+               username: username,
+               kodeMateri: kodeMateri
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message);
+
+        const dataAudit = result.data; 
+        
+        if (!dataAudit || dataAudit.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-red-500">Data tidak ditemukan.</td></tr>';
+            scoreDisplay.textContent = '0';
+            return; 
+        }
+
+        let totalPoinDidapat = 0;
+        let totalPoinMaksimal = 0;
+        
+        tbody.innerHTML = '';
+
+        // Render Baris
+        dataAudit.forEach(item => {
+            const poinItem = parseFloat(item.poinDidapat) || 0;
+            const poinMax = parseFloat(item.poinMaster) || 0;
+            
+            totalPoinDidapat += poinItem;
+            totalPoinMaksimal += poinMax;
+
+            let status = "Salah (0)";
+            let rowColor = "bg-red-50 text-red-700";
+
+            if (poinItem === poinMax && poinMax > 0) {
+                status = `Benar (${poinItem})`;
+                rowColor = "bg-green-50 text-green-700";
+            } else if (poinItem > 0) {
+                status = `Parsial (${poinItem})`;
+                rowColor = "bg-blue-50 text-blue-700";
+            }
+
+            tbody.innerHTML += `
+                <tr class="${rowColor} border-b text-xs">
+                    <td class="px-2 py-2 text-center border">${item.no}</td>
+                    <td class="px-2 py-2 border font-medium">${item.jawabanSantri || '-'}</td>
+                    <td class="px-2 py-2 border text-gray-600 italic">${item.kunciMaster}</td>
+                    <td class="px-2 py-2 text-center font-bold border">${status}</td>
+                </tr>
+            `;
+        });
+
+        // Hitung Nilai Akhir
+        const newScore = totalPoinMaksimal > 0 ? Math.round((totalPoinDidapat / totalPoinMaksimal) * 100) : 0;
+        scoreDisplay.textContent = newScore;
+
+        // Tampilkan tombol simpan jika perhitungan selesai
+        btnApply.classList.remove('hidden');
+        
+        // Hapus listener lama (agar tidak menumpuk)
+        const newBtn = btnApply.cloneNode(true);
+        btnApply.parentNode.replaceChild(newBtn, btnApply);
+        
+        // --- PERBAIKAN UTAMA DI SINI ---
+        // Pasang fungsi klik yang benar (langsung eksekusi, bukan mendefinisikan fungsi)
+        newBtn.onclick = async function() {
+            if (!confirm(`Yakin ingin mengubah nilai ${namaSantri} menjadi ${newScore}?`)) return;
+            
+            newBtn.disabled = true;
+            newBtn.textContent = 'Menyimpan...';
+
+            try {
+                const saveResp = await fetch(CONFIG.SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'updateStudentScoreDirectly', // Pastikan action ini ada di Backend
+                        username: username,
+                        kodeMateri: kodeMateri,
+                        newScore: newScore
+                    }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                
+                const saveResult = await saveResp.json();
+                if (saveResult.status === 'success') {
+                    alert('Nilai berhasil diperbarui!');
+                    modal.style.display = 'none';
+                    // Refresh tampilan tabel nilai guru jika ada
+                    const materiSelect = document.getElementById('guru-nilai-materi-select');
+                    if (materiSelect) materiSelect.dispatchEvent(new Event('change'));
+                } else {
+                    throw new Error(saveResult.message);
+                }
+            } catch (err) {
+                alert('Gagal menyimpan: ' + err.message);
+            } finally {
+                newBtn.disabled = false;
+                newBtn.textContent = 'Simpan Perubahan';
+            }
+        };
+
+    } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-red-500 p-4">Gagal: ${error.message}</td></tr>`;
+    }
+};
+
+
+
+
     // --- MULAI APLIKASI ---
     initializeApp();
 });
@@ -14198,5 +14325,43 @@ window.addEventListener('click', (e) => {
         <iframe src="" id="game-frame" style="width: 100%; flex: 1; border: none; background-color: #ecfdf5;"></iframe>
     </div>
 </div>
+
+<div id="auditModal" class="modal" style="z-index: 10001;">
+    <div class="modal-content" style="max-width: 800px;">
+        <span class="close-button" onclick="document.getElementById('auditModal').style.display='none'">&times;</span>
+        <h2 class="text-2xl font-bold text-blue-800 mb-2">Audit & Koreksi Otomatis</h2>
+        <p class="text-sm text-gray-600 mb-4">Sistem akan menilai ulang jawaban santri menggunakan logika "Cerdas" (Typo, Fonetik, dll).</p>
+        
+        <div class="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200 flex justify-between items-center">
+            <div>
+                <span class="block text-xs text-gray-500 uppercase">Nilai Lama</span>
+                <span id="audit-old-score" class="text-2xl font-bold text-red-600">0</span>
+            </div>
+            <div class="text-2xl text-gray-400">➔</div>
+            <div>
+                <span class="block text-xs text-gray-500 uppercase">Nilai Baru (Koreksi)</span>
+                <span id="audit-new-score" class="text-2xl font-bold text-green-600">0</span>
+            </div>
+            <button id="btn-apply-audit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow hidden">
+                Simpan Perubahan
+            </button>
+        </div>
+
+        <div class="overflow-y-auto max-h-96 border rounded">
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-100 sticky top-0">
+                    <tr>
+                        <th class="px-4 py-2 text-left">No</th>
+                        <th class="px-4 py-2 text-left">Jawaban Santri</th>
+                        <th class="px-4 py-2 text-left">Kunci Jawaban</th>
+                        <th class="px-4 py-2 text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="audit-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
