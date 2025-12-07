@@ -180,14 +180,41 @@
             const [loading, setLoading] = useState(false);
             const [error, setError] = useState('');
 
-            // Setup Recaptcha (Wajib untuk Phone Auth)
+            // PERBAIKAN DI SINI: Setup Recaptcha dengan Cleanup
             useEffect(() => {
-                if (!window.recaptchaVerifier) {
-                    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                        'size': 'invisible',
-                        'callback': (response) => { /* Recaptcha solved */ }
-                    });
-                }
+                // Pastikan auth sudah siap sebelum init recaptcha
+                const setupRecaptcha = () => {
+                    try {
+                        if (!window.recaptchaVerifier) {
+                            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                                'size': 'invisible',
+                                'callback': (response) => { 
+                                    // Recaptcha solved - allow signInWithPhoneNumber.
+                                    // onSignInSubmit(); 
+                                },
+                                'expired-callback': () => {
+                                    // Response expired. Ask user to solve reCAPTCHA again.
+                                    if(window.recaptchaVerifier) window.recaptchaVerifier.clear();
+                                    window.recaptchaVerifier = null;
+                                }
+                            });
+                        }
+                    } catch (err) {
+                        console.error("Recaptcha Init Error:", err);
+                    }
+                };
+
+                setupRecaptcha();
+
+                // CLEANUP FUNCTION (PENTING AGAR TIDAK CRASH 'removeChild')
+                return () => {
+                    if (window.recaptchaVerifier) {
+                        try {
+                            window.recaptchaVerifier.clear(); // Hapus elemen visual recaptcha
+                        } catch (e) { console.log(e); }
+                        window.recaptchaVerifier = null; // Hapus referensi memori
+                    }
+                };
             }, []);
 
             const handleGoogleLogin = async () => {
@@ -195,7 +222,7 @@
                 const provider = new GoogleAuthProvider();
                 try {
                     await signInWithPopup(auth, provider);
-                    // Berhasil login, otomatis redirect karena onAuthStateChanged di App
+                    // Berhasil login, otomatis redirect
                 } catch (err) {
                     setError(err.message);
                     setLoading(false);
@@ -205,7 +232,6 @@
             const handleSendOtp = async (e) => {
                 e.preventDefault();
                 setLoading(true); setError('');
-                const appVerifier = window.recaptchaVerifier;
                 
                 // Format nomor HP ke +62
                 let formatPhone = phone.trim();
@@ -213,15 +239,27 @@
                 if (!formatPhone.startsWith('+')) formatPhone = '+62' + formatPhone;
 
                 try {
+                    // Pastikan verifier ada sebelum request
+                    if (!window.recaptchaVerifier) {
+                         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                            'size': 'invisible'
+                        });
+                    }
+                    
+                    const appVerifier = window.recaptchaVerifier;
                     const confirmation = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
                     setConfirmObj(confirmation);
                     setShowOtp(true);
                     setLoading(false);
                 } catch (err) {
-                    setError("Gagal kirim SMS: " + err.message);
+                    console.error(err);
+                    setError("Gagal kirim SMS: " + (err.message || 'Cek koneksi/quota'));
                     setLoading(false);
-                    // Reset recaptcha jika gagal
-                    if(window.recaptchaVerifier) window.recaptchaVerifier.clear();
+                    // Reset recaptcha jika gagal agar bisa coba lagi
+                    if(window.recaptchaVerifier) {
+                        window.recaptchaVerifier.clear();
+                        window.recaptchaVerifier = null;
+                    }
                 }
             };
 
@@ -269,7 +307,10 @@
                                                 />
                                             </div>
                                         </div>
+                                        
+                                        {/* CONTAINER RECAPTCHA WAJIB ADA DI SINI */}
                                         <div id="recaptcha-container"></div>
+                                        
                                         <button disabled={loading} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition disabled:bg-gray-300 flex justify-center items-center gap-2">
                                             {loading ? 'Mengirim OTP...' : <>Kirim Kode OTP <Icon name="arrow-right" size={16}/></>}
                                         </button>
