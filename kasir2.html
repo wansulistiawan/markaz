@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v6.4 - Bug Fixes</title>
+    <title>Kasir Pintar Pro v6.5 - Anti Crash</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -73,8 +73,8 @@
             const [phone, setPhone] = useState('');
             const [otp, setOtp] = useState('');
             const [showOtp, setShowOtp] = useState(false);
-            const [loading, setLoading] = useState(false);
             const [confirmObj, setConfirmObj] = useState(null);
+            const [loading, setLoading] = useState(false);
             const recaptchaRef = useRef(null);
 
             useEffect(() => {
@@ -196,6 +196,7 @@
             const [user, setUser] = useState(null);
             const [view, setView] = useState('pos');
             const [loading, setLoading] = useState(true);
+            const [isProcessing, setIsProcessing] = useState(false); // [FIX] Loading state bayar
             
             const [products, setProducts] = useState([]);
             const [ingredients, setIngredients] = useState([]);
@@ -234,6 +235,7 @@
                 if (!user) return;
                 setLoading(true);
                 const basePath = ['artifacts', APP_ID, 'users', user.uid];
+                
                 const unsubProd = onSnapshot(collection(db, ...basePath, 'products'), s => setProducts(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubIng = onSnapshot(collection(db, ...basePath, 'ingredients'), s => setIngredients(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubCust = onSnapshot(collection(db, ...basePath, 'customers'), s => setCustomers(s.docs.map(d => ({id:d.id, ...d.data()}))));
@@ -244,11 +246,14 @@
                 const unsubTrans = onSnapshot(query(collection(db, ...basePath, 'transactions'), orderBy('createdAt', 'desc'), limit(50)), s => setTransactions(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubTables = onSnapshot(query(collection(db, ...basePath, 'tables'), orderBy('name', 'asc')), s => setTables(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 
-                // [FIX LOGIN GOOGLE: Pastikan Staff ter-init]
+                // [FIX GOOGLE LOGIN BLANK: Pastikan Staff minimal Owner dibuat]
                 const unsubStaff = onSnapshot(collection(db, ...basePath, 'staff'), s => {
                     const staffData = s.docs.map(d => ({id:d.id, ...d.data()}));
-                    setStaff(staffData);
-                    if(s.empty) addDoc(collection(db, ...basePath, 'staff'), { name: 'Owner', pin: '1234', role: 'admin' });
+                    if(s.empty) {
+                        addDoc(collection(db, ...basePath, 'staff'), { name: 'Owner', pin: '1234', role: 'admin' });
+                    } else {
+                        setStaff(staffData);
+                    }
                 });
                 
                 const unsubSettings = onSnapshot(doc(db, ...basePath, 'settings', 'profile'), s => { if (s.exists()) setStoreProfile(s.data()); });
@@ -268,14 +273,14 @@
 
             const addToCart = (p) => {
                 const hasRecipe = p.recipe && p.recipe.length > 0;
-                // [FIX BUG 2: Cek stok di awal tambah]
+                // [FIX STOK] Cek stok di awal tambah
                 if (!hasRecipe && p.stock <= 0) return alert("Stok Produk Habis!");
 
                 setCart(prev => { 
                     const ex = prev.find(i=>i.id===p.id); 
                     if (ex) {
                         const newQty = ex.qty + 1;
-                        // [FIX BUG 2: Cek stok saat update]
+                        // [FIX STOK] Cek limit stok saat nambah di cart
                         if (!hasRecipe && newQty > p.stock) {
                             alert(`Stok tidak cukup! (Sisa: ${p.stock})`);
                             return prev;
@@ -287,24 +292,24 @@
                 });
             };
 
-            const updateCartQty = (itemId, change) => {
+            const updateCartQty = (item, change) => {
                 setCart(prev => {
-                    return prev.map(item => {
-                        if (item.id !== itemId) return item;
-                        const newQty = item.qty + change;
-                        if (newQty <= 0) return null; // Hapus jika 0
+                    return prev.map(i => {
+                        if (i.id !== item.id) return i;
+                        const newQty = i.qty + change;
+                        if (newQty <= 0) return null;
                         
-                        const prod = products.find(p => p.id === itemId);
-                        if (!prod) return item; // Safety check
+                        const prod = products.find(p => p.id === i.id);
+                        if (!prod) return i;
 
-                        // [FIX BUG 2: Cek stok saat tombol + ditekan]
+                        // [FIX STOK] Cek limit saat tombol + ditekan
                         const hasRecipe = prod.recipe && prod.recipe.length > 0;
                         if (!hasRecipe && change > 0 && newQty > prod.stock) {
                             alert(`Maksimal stok tersedia: ${prod.stock}`);
-                            return item; // Jangan update jika over stock
+                            return i; 
                         }
 
-                        return { ...item, qty: newQty, price: getPrice(prod, newQty) }; 
+                        return { ...i, qty: newQty, price: getPrice(prod, newQty) }; 
                     }).filter(Boolean);
                 });
             };
@@ -354,26 +359,31 @@
                 return null;
             };
 
+            // [FIX BUG] : HANDLE CHECKOUT ANTI-CRASH
             const handleCheckout = async () => {
-                // [FIX BUG 1: Validasi yang lebih ketat & Try-Catch]
-                try {
-                    if(!shift) {
-                        alert("Shift Kasir belum dibuka! Silakan Buka Toko dulu.");
-                        return;
-                    }
-                    if(cart.length === 0) return;
-                    
-                    const stockError = checkIngredientsAvailability();
-                    if (stockError) {
-                        alert(stockError);
-                        return;
-                    }
+                // 1. Validasi Shift
+                if(!shift) {
+                    alert("Shift Kasir belum dibuka! Silakan Buka Toko dulu.");
+                    return;
+                }
+                if(cart.length === 0) return;
+                
+                // 2. Validasi Stok Resep
+                const stockError = checkIngredientsAvailability();
+                if (stockError) {
+                    alert(stockError);
+                    return;
+                }
 
-                    if(paymentMethod === 'Hutang' && !selectedCustomer) {
-                        alert("Pembayaran Hutang wajib memilih Pelanggan!");
-                        return;
-                    }
-                    
+                // 3. Validasi Hutang
+                if(paymentMethod === 'Hutang' && !selectedCustomer) {
+                    alert("Pembayaran Hutang wajib memilih Pelanggan!");
+                    return;
+                }
+                
+                setIsProcessing(true); // Kunci tombol
+
+                try {
                     const totals = calculateTotals();
                     const profit = totals.total - totals.tax - totals.serviceCharge - totals.hppTotal;
 
@@ -410,18 +420,22 @@
                         }
                     });
 
+                    // [ANTI CRASH] Pastikan 'ing' dan 'prod' ditemukan sebelum update
                     for (const [id, qty] of Object.entries(ingUpdates)) {
                         const ing = ingredients.find(i => i.id === id);
-                        batchPromises.push(updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'ingredients', id), { stock: ing.stock - qty }));
+                        if (ing) {
+                            batchPromises.push(updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'ingredients', id), { stock: ing.stock - qty }));
+                        }
                     }
                     
                     for (const [id, qty] of Object.entries(prodUpdates)) {
                         const prod = products.find(p => p.id === id);
-                        const prodRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'products', id);
-                        batchPromises.push(updateDoc(prodRef, { stock: prod.stock - qty }));
-                        batchPromises.push(addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'stock_history'), {
-                            productId: id, productName: prod.name, change: -qty, type: 'sale', refId: ref.id, reason: 'Penjualan POS', createdAt: serverTimestamp()
-                        }));
+                        if (prod) {
+                            batchPromises.push(updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'products', id), { stock: prod.stock - qty }));
+                            batchPromises.push(addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'stock_history'), {
+                                productId: id, productName: prod.name, change: -qty, type: 'sale', refId: ref.id, reason: 'Penjualan POS', createdAt: serverTimestamp()
+                            }));
+                        }
                     }
 
                     await Promise.all(batchPromises);
@@ -435,7 +449,9 @@
                     setCart([]); setDiscount(0); setSelectedCustomer(null); setSelectedTable(null);
                 } catch (e) { 
                     console.error(e);
-                    alert("Gagal memproses transaksi: " + e.message); 
+                    alert("Terjadi kesalahan saat proses bayar: " + e.message); 
+                } finally {
+                    setIsProcessing(false); // Buka kunci tombol
                 }
             };
 
@@ -531,9 +547,9 @@
                             <h2 className="text-2xl font-bold mb-2">Siapa yang bertugas?</h2>
                             <p className="text-gray-500 mb-6 text-sm">Masuk sebagai: <span className="font-bold text-blue-600">{user.phoneNumber || user.email || 'Anonim'}</span></p>
                             
-                            {/* [FIX BUG 3: Tampilkan Loading jika staff belum ke-load] */}
+                            {/* [FIX BLANK SCREEN] Tampilkan loading jika staff belum loaded */}
                             {staff.length === 0 ? (
-                                <div className="p-6 text-gray-400 animate-pulse">Menyiapkan Data Staff...</div>
+                                <div className="p-4 text-gray-400 animate-pulse">Menyiapkan Data Staff...</div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-3 mb-6">
                                     {staff.map(s => (
@@ -683,9 +699,9 @@
                                                     {i.note && <div className="text-[10px] text-gray-500 italic">"{i.note}"</div>}
                                                 </div>
                                                 <div className="flex items-center gap-2 mr-2" onClick={e=>e.stopPropagation()}>
-                                                    <button onClick={()=>updateCartQty(i.id, -1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">-</button>
+                                                    <button onClick={()=>updateCartQty(i, -1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">-</button>
                                                     <span className="font-bold text-sm w-4 text-center">{i.qty}</span>
-                                                    <button onClick={()=>updateCartQty(i.id, 1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">+</button>
+                                                    <button onClick={()=>updateCartQty(i, 1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">+</button>
                                                     <button onClick={()=>removeFromCart(i.id)} className="ml-2 p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition">
                                                         <Icon name="trash-2" size={14}/>
                                                     </button>
@@ -707,7 +723,9 @@
                                                 <button key={m} onClick={()=>setPaymentMethod(m)} className={`py-2 rounded border font-medium ${paymentMethod===m ? 'bg-slate-800 text-white' : 'bg-white'}`}>{m}</button>
                                             ))}
                                         </div>
-                                        <button onClick={handleCheckout} disabled={!cart.length} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 disabled:bg-gray-300">Bayar</button>
+                                        <button onClick={handleCheckout} disabled={!cart.length || isProcessing} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 disabled:bg-gray-300">
+                                            {isProcessing ? 'Memproses...' : 'Bayar'}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -977,8 +995,6 @@
 
                                     {modalConfig.type === 'staff' && <>
                                         <input name="pin" type="text" placeholder="PIN Akses" required defaultValue={modalConfig.data?.pin} className="w-full p-3 border rounded-lg"/>
-                                        
-                                        {/* [ADD] OPSI ROLE TAMBAHAN DI SINI */}
                                         <select name="role" defaultValue={modalConfig.data?.role||'kasir'} className="w-full p-3 border rounded-lg">
                                             <option value="kasir">Kasir (Jualan)</option>
                                             <option value="admin">Admin (Full Akses)</option>
