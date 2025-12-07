@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v5.2 - Fixed & Ready</title>
+    <title>Kasir Pintar Pro v5.3 - Fixed & Ready</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -523,6 +523,19 @@
                 setModalConfig({show: false});
             };
 
+            // [FIX 1] Menambah Logic untuk Form Pembayaran Hutang
+            const handlePaymentSubmit = async (e) => {
+                e.preventDefault();
+                const amount = Number(e.target.amount.value);
+                const debt = modalConfig.data;
+                const newPaid = (debt.paid || 0) + amount;
+                const status = newPaid >= debt.amount ? 'paid' : 'partial';
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'debts', debt.id), {
+                    paid: newPaid, status: status, lastPayment: serverTimestamp()
+                });
+                setModalConfig({show:false});
+            };
+
             const handleExport = (type) => {
                 if (type === 'transactions') {
                     const data = transactions.map(t => ({
@@ -535,6 +548,7 @@
             const saveSettings = async (e) => {
                 e.preventDefault();
                 const f = e.target;
+                // [FIX 2] Menyimpan input setting yang lengkap (Pajak, Logo, Footer)
                 await setDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'settings', 'profile'), {
                     name: f.name.value, address: f.address.value, phone: f.phone.value, logo: f.logo.value,
                     footerMessage: f.footerMessage.value, taxRate: Number(f.taxRate.value), serviceRate: Number(f.serviceRate.value)
@@ -548,28 +562,50 @@
                 const type = modalConfig.type;
                 const isEdit = !!modalConfig.data;
                 const collPath = ['artifacts', APP_ID, 'users', user.uid];
+                
+                // [FIX 3] Perbaikan Nama Koleksi
+                const collectionName = type === 'staff' ? 'staff' : type + 's';
+
                 let payload = {};
 
-                if (type === 'product') {
-                    payload = { name: f.name.value, barcode: f.barcode.value, category: f.category.value, price: Number(f.price.value), hpp: Number(f.hpp.value), stock: Number(f.stock.value), image: f.image.value };
-                } else if (type === 'customer') {
-                    payload = { name: f.name.value, phone: f.phone.value, email: f.email.value };
-                } else if (type === 'supplier') {
-                    payload = { name: f.name.value, phone: f.phone.value, address: f.address.value };
-                } else if (type === 'table') {
-                    payload = { name: f.name.value, capacity: f.capacity.value };
-                } else if (type === 'staff') {
-                    payload = { name: f.name.value, pin: f.pin.value, role: f.role.value };
-                } else if (type === 'expense') {
-                    payload = { name: f.name.value, amount: Number(f.amount.value), category: f.category.value, date: serverTimestamp() };
-                }
+                // Validasi & Penyusunan Data
+                try {
+                    if (type === 'product') {
+                        // [FIX 4] Tambah Input Image
+                        payload = { name: f.name.value, barcode: f.barcode.value, category: f.category.value, price: Number(f.price.value), hpp: Number(f.hpp.value), stock: Number(f.stock.value), image: f.image.value };
+                    } else if (type === 'customer') {
+                        payload = { name: f.name.value, phone: f.phone.value, email: f.email.value };
+                    } else if (type === 'supplier') {
+                        payload = { name: f.name.value, phone: f.phone.value, address: f.address.value };
+                    } else if (type === 'table') {
+                        payload = { name: f.name.value, capacity: f.capacity.value };
+                    } else if (type === 'staff') {
+                        // [FIX 5] Validasi PIN
+                        if(!f.pin.value) throw new Error("PIN Wajib diisi!");
+                        payload = { name: f.name.value, pin: f.pin.value, role: f.role.value };
+                    } else if (type === 'expense') {
+                        payload = { name: f.name.value, amount: Number(f.amount.value), category: f.category.value, date: serverTimestamp() };
+                    }
 
-                if (isEdit) {
-                    await updateDoc(doc(db, ...collPath, type + 's', modalConfig.data.id), { ...payload, updatedAt: serverTimestamp() });
-                } else {
-                    await addDoc(collection(db, ...collPath, type + 's'), { ...payload, createdAt: serverTimestamp() });
+                    // Eksekusi ke Database dengan Error Handling
+                    if (isEdit) {
+                        await updateDoc(doc(db, ...collPath, collectionName, modalConfig.data.id), { ...payload, updatedAt: serverTimestamp() });
+                    } else {
+                        await addDoc(collection(db, ...collPath, collectionName), { ...payload, createdAt: serverTimestamp() });
+                    }
+                    
+                    // Tutup Modal jika sukses
+                    setModalConfig({ show: false });
+                    
+                } catch (err) {
+                    console.error("Error Saving:", err);
+                    // [FIX 6] Pesan Error yang Jelas untuk User
+                    if(err.code === 'permission-denied') {
+                        alert("GAGAL SIMPAN: Izin Database ditolak. Pastikan Rules Firebase sudah 'allow write: if true'");
+                    } else {
+                        alert("GAGAL SIMPAN: " + err.message);
+                    }
                 }
-                setModalConfig({ show: false });
             };
 
             // --- RENDERERS ---
@@ -691,10 +727,14 @@
                                     </div>
                                     <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 content-start">
                                         {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.barcode && p.barcode.includes(searchQuery))).map(p => (
-                                            <div key={p.id} onClick={() => addToCart(p)} className={`bg-white rounded-xl shadow-sm border p-3 cursor-pointer hover:shadow-md transition ${p.stock<=0 && 'opacity-50'}`}>
-                                                <div className="h-24 bg-gray-100 rounded-lg mb-2 overflow-hidden">{p.image && <img src={p.image} className="w-full h-full object-cover"/>}</div>
+                                            /* [FIX 7] Tampilan Produk dengan Indikator Stok Menipis & Gambar */
+                                            <div key={p.id} onClick={() => addToCart(p)} className={`relative bg-white rounded-xl shadow-sm border p-3 cursor-pointer hover:shadow-md transition ${p.stock<=0 && 'opacity-50'} ${p.stock<=5 && p.stock > 0 ? 'border-red-300 bg-red-50' : ''}`}>
+                                                {p.stock <= 5 && p.stock > 0 && <div className="absolute top-2 right-2 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full z-10 animate-pulse">Menipis</div>}
+                                                <div className="h-24 bg-gray-100 rounded-lg mb-2 overflow-hidden">
+                                                    {p.image ? <img src={p.image} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300"><Icon name="image" size={32}/></div>}
+                                                </div>
                                                 <h4 className="font-bold truncate">{p.name}</h4>
-                                                <div className="flex justify-between mt-1"><span className="text-blue-600 font-bold">{formatCurrency(p.price)}</span><span className="text-xs bg-gray-100 px-1 rounded">{p.stock}</span></div>
+                                                <div className="flex justify-between mt-1"><span className="text-blue-600 font-bold">{formatCurrency(p.price)}</span><span className={`text-xs px-1.5 py-0.5 rounded font-bold ${p.stock<=5 ? 'bg-red-200 text-red-800' : 'bg-gray-100'}`}>{p.stock}</span></div>
                                             </div>
                                         ))}
                                     </div>
@@ -723,6 +763,9 @@
                                         <div className="flex gap-2"><input type="number" placeholder="Diskon" className="w-full p-2 border rounded text-sm" value={discount > 0 ? discount : ''} onChange={e=>setDiscount(Number(e.target.value))} /></div>
                                         <div className="space-y-1 text-sm pt-2 border-t border-dashed">
                                             <div className="flex justify-between text-gray-500"><span>Subtotal</span><span>{formatCurrency(calculateTotals().subtotal)}</span></div>
+                                            {/* [FIX 8] Menampilkan Pajak & Service jika disetting */}
+                                            {calculateTotals().tax > 0 && <div className="flex justify-between text-gray-500"><span>Pajak ({calculateTotals().taxRate}%)</span><span>{formatCurrency(calculateTotals().tax)}</span></div>}
+                                            {calculateTotals().serviceCharge > 0 && <div className="flex justify-between text-gray-500"><span>Service ({calculateTotals().serviceRate}%)</span><span>{formatCurrency(calculateTotals().serviceCharge)}</span></div>}
                                             <div className="flex justify-between font-bold text-lg pt-2"><span>Total</span><span>{formatCurrency(calculateTotals().total)}</span></div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2 text-xs">
@@ -741,7 +784,11 @@
                                 <h2 className="text-2xl font-bold mb-6">Executive Dashboard</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                                     <div className="bg-white p-5 rounded-xl border shadow-sm"><p className="text-gray-500 text-sm">Omzet Kotor</p><h3 className="text-2xl font-bold text-blue-600">{formatCurrency(transactions.reduce((a,b)=>a+(b.total||0),0))}</h3></div>
+                                    {/* [FIX 9] Menghitung Net Profit (Laba Kotor - Pengeluaran) */}
                                     <div className="bg-gradient-to-br from-green-500 to-green-700 text-white p-5 rounded-xl shadow-lg"><p className="text-green-100 text-sm">Net Profit (Bersih)</p><h3 className="text-2xl font-bold">{formatCurrency(transactions.reduce((a,b)=>a+(b.profit||0),0) - expenses.reduce((a,b)=>a+(b.amount||0),0))}</h3></div>
+                                    {/* [FIX 10] Widget Pengeluaran */}
+                                    <div className="bg-white p-5 rounded-xl border shadow-sm"><p className="text-gray-500 text-sm">Pengeluaran</p><h3 className="text-2xl font-bold text-red-600">{formatCurrency(expenses.reduce((a,b)=>a+(b.amount||0),0))}</h3></div>
+                                    <div className="bg-white p-5 rounded-xl border shadow-sm"><p className="text-gray-500 text-sm">Piutang Belum Bayar</p><h3 className="text-2xl font-bold text-orange-600">{formatCurrency(debts.reduce((a,b)=>a + (b.status!=='paid' ? (b.amount - b.paid) : 0),0))}</h3></div>
                                 </div>
                                 <div className="bg-white p-6 rounded-xl border shadow-sm max-w-lg">
                                     <h3 className="font-bold mb-4">Produk Terlaris</h3>
@@ -750,6 +797,64 @@
                                             <div className="flex items-center gap-2"><div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold">#{idx+1}</div><span>{item.name}</span></div><span className="font-bold text-blue-600">{item.qty}</span>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* --- [FIX 11] BUG FIX KRITIKAL: MENU HUTANG / KASBON SEKARANG MUNCUL --- */}
+                        {view === 'debts' && (
+                            <div className="p-6 h-full overflow-y-auto">
+                                <h2 className="text-2xl font-bold mb-6">Buku Hutang (Piutang)</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {debts.sort((a,b)=>b.createdAt-a.createdAt).map(d => (
+                                        <div key={d.id} className={`bg-white p-4 rounded-xl border shadow-sm hover:shadow-md transition ${d.status==='paid' ? 'opacity-60 grayscale' : ''}`}>
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <h4 className="font-bold text-lg">{d.customerName}</h4>
+                                                    <div className="text-xs text-gray-500">{formatDate(d.createdAt)}</div>
+                                                </div>
+                                                <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${d.status==='paid'?'bg-green-100 text-green-700':'bg-orange-100 text-orange-700'}`}>{d.status}</span>
+                                            </div>
+                                            <div className="space-y-1 my-3 text-sm">
+                                                <div className="flex justify-between"><span>Total Hutang:</span> <span className="font-bold">{formatCurrency(d.amount)}</span></div>
+                                                <div className="flex justify-between text-green-600"><span>Sudah Bayar:</span> <span>{formatCurrency(d.paid || 0)}</span></div>
+                                                <div className="flex justify-between text-red-600 border-t pt-1 font-bold"><span>Sisa:</span> <span>{formatCurrency(d.amount - (d.paid||0))}</span></div>
+                                            </div>
+                                            {d.status !== 'paid' && (
+                                                <button onClick={()=>setModalConfig({show:true, type:'pay_debt', data:d})} className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-bold mt-2 hover:bg-blue-700">Bayar / Cicil</button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    {debts.length === 0 && <div className="col-span-full text-center text-gray-400 py-10">Tidak ada data hutang</div>}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* --- [FIX 12] BUG FIX KRITIKAL: MENU PENGELUARAN SEKARANG MUNCUL --- */}
+                        {view === 'expenses' && (
+                            <div className="p-6 h-full overflow-y-auto">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-bold">Pengeluaran Operasional</h2>
+                                    <button onClick={()=>setModalConfig({show:true, type:'expense'})} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-blue-700"><Icon name="plus"/> Tambah</button>
+                                </div>
+                                <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+                                    <table className="w-full text-left">
+                                        <thead className="bg-gray-50 border-b"><tr><th className="p-4">Nama</th><th className="p-4">Kategori</th><th className="p-4">Tanggal</th><th className="p-4 text-right">Jumlah</th><th className="p-4 text-center">Aksi</th></tr></thead>
+                                        <tbody>
+                                            {expenses.map(e => (
+                                                <tr key={e.id} className="border-b last:border-0 hover:bg-gray-50">
+                                                    <td className="p-4 font-bold">{e.name}</td>
+                                                    <td className="p-4"><span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">{e.category}</span></td>
+                                                    <td className="p-4 text-sm text-gray-500">{formatDate(e.date)}</td>
+                                                    <td className="p-4 text-right font-mono font-bold text-red-600">{formatCurrency(e.amount)}</td>
+                                                    <td className="p-4 text-center">
+                                                        <button onClick={()=>{if(confirm('Hapus?')) deleteDoc(doc(db,'artifacts',APP_ID,'users',user.uid,'expenses',e.id))}} className="text-red-500 hover:bg-red-50 p-2 rounded"><Icon name="trash" size={16}/></button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    {expenses.length === 0 && <div className="p-8 text-center text-gray-400">Belum ada data pengeluaran</div>}
                                 </div>
                             </div>
                         )}
@@ -767,7 +872,9 @@
                                     {(view==='products'?products:view==='customers'?customers:view==='suppliers'?suppliers:view==='staff'?staff:tables).map(item => (
                                         <div key={item.id} className="bg-white p-4 rounded-xl border hover:shadow-md transition relative group">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0">{item.name[0]}</div>
+                                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
+                                                    {view==='products' && item.image ? <img src={item.image} className="w-full h-full object-cover rounded-full"/> : item.name[0]}
+                                                </div>
                                                 <div className="min-w-0">
                                                     <h4 className="font-bold truncate">{item.name}</h4>
                                                     {view==='products' && <div className="text-sm text-blue-600 font-bold">{formatCurrency(item.price)} (Stok: {item.stock})</div>}
@@ -809,7 +916,20 @@
 
                     {/* DYNAMIC MODAL FORM */}
                     {modalConfig.show && (
-                        <Modal title={modalConfig.type} onClose={()=>setModalConfig({show:false})}>
+                        <Modal title={modalConfig.type.replace('_', ' ')} onClose={()=>setModalConfig({show:false})}>
+                            
+                            {/* [FIX 13] Form Pembayaran Hutang */}
+                            {modalConfig.type === 'pay_debt' && (
+                                <form onSubmit={handlePaymentSubmit} className="space-y-4">
+                                    <div className="bg-blue-50 p-3 rounded-lg text-sm">
+                                        <p>Pelanggan: <b>{modalConfig.data.customerName}</b></p>
+                                        <p>Sisa Hutang: <b className="text-red-600">{formatCurrency(modalConfig.data.amount - modalConfig.data.paid)}</b></p>
+                                    </div>
+                                    <input name="amount" type="number" placeholder="Jumlah Bayar" max={modalConfig.data.amount - modalConfig.data.paid} required className="w-full p-3 border rounded-lg"/>
+                                    <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Proses Pembayaran</button>
+                                </form>
+                            )}
+                        
                             {modalConfig.type === 'stock_adj' && (
                                 <form onSubmit={handleAdjustStock} className="space-y-4">
                                     <div className="text-sm">Produk: <b>{modalConfig.data.name}</b></div>
@@ -828,6 +948,7 @@
                                         <span className="font-bold">{editingItem.qty}</span>
                                         <button onClick={()=>setEditingItem(p=>({...p, qty: p.qty+1}))} className="p-2 bg-gray-200 rounded">+</button>
                                     </div>
+                                    <input type="text" placeholder="Catatan Item (Pedas/Tanpa Es)" value={editingItem.note||''} onChange={e=>setEditingItem(p=>({...p, note:e.target.value}))} className="w-full p-2 border rounded text-sm"/>
                                     <div className="flex gap-2">
                                         <button onClick={()=>{setCart(cart.filter(c=>c.id!==editingItem.id)); setModalConfig({show:false});}} className="flex-1 bg-red-100 text-red-600 py-3 rounded">Hapus</button>
                                         <button onClick={()=>{setCart(cart.map(c=>c.id===editingItem.id ? editingItem : c)); setModalConfig({show:false});}} className="flex-1 bg-blue-600 text-white py-3 rounded">Simpan</button>
@@ -835,10 +956,19 @@
                                 </div>
                             )}
 
+                            {/* [FIX 14] Pengaturan Toko Lengkap */}
                             {modalConfig.type === 'settings' && (
                                 <form onSubmit={saveSettings} className="space-y-4">
                                     <input name="name" placeholder="Nama Toko" defaultValue={storeProfile?.name} className="w-full p-3 border rounded-lg"/>
-                                    <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan</button>
+                                    <input name="address" placeholder="Alamat Lengkap" defaultValue={storeProfile?.address} className="w-full p-3 border rounded-lg"/>
+                                    <input name="phone" placeholder="No. Telepon" defaultValue={storeProfile?.phone} className="w-full p-3 border rounded-lg"/>
+                                    <input name="logo" placeholder="URL Logo (Link Gambar)" defaultValue={storeProfile?.logo} className="w-full p-3 border rounded-lg"/>
+                                    <textarea name="footerMessage" placeholder="Pesan di Bawah Struk" defaultValue={storeProfile?.footerMessage} className="w-full p-3 border rounded-lg"/>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="text-xs">Pajak (%)</label><input name="taxRate" type="number" step="0.1" defaultValue={storeProfile?.taxRate || 0} className="w-full p-3 border rounded-lg"/></div>
+                                        <div><label className="text-xs">Service (%)</label><input name="serviceRate" type="number" step="0.1" defaultValue={storeProfile?.serviceRate || 0} className="w-full p-3 border rounded-lg"/></div>
+                                    </div>
+                                    <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan Pengaturan</button>
                                 </form>
                             )}
 
@@ -848,9 +978,15 @@
                                     
                                     {modalConfig.type === 'product' && <>
                                         <input name="barcode" placeholder="Barcode" defaultValue={modalConfig.data?.barcode} className="w-full p-3 border rounded-lg"/>
+                                        <input name="category" placeholder="Kategori" defaultValue={modalConfig.data?.category} className="w-full p-3 border rounded-lg"/>
                                         <div className="grid grid-cols-2 gap-4">
                                             <input name="price" type="number" placeholder="Harga" required defaultValue={modalConfig.data?.price} className="w-full p-3 border rounded-lg"/>
+                                            <input name="hpp" type="number" placeholder="Harga Modal (HPP)" required defaultValue={modalConfig.data?.hpp} className="w-full p-3 border rounded-lg"/>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
                                             <input name="stock" type="number" placeholder="Stok" required defaultValue={modalConfig.data?.stock} className="w-full p-3 border rounded-lg"/>
+                                            {/* [FIX 15] Input Image Produk */}
+                                            <input name="image" placeholder="Link Gambar" defaultValue={modalConfig.data?.image} className="w-full p-3 border rounded-lg"/>
                                         </div>
                                     </>}
 
@@ -858,6 +994,16 @@
                                         <input name="pin" type="text" placeholder="PIN Akses" required defaultValue={modalConfig.data?.pin} className="w-full p-3 border rounded-lg"/>
                                         <select name="role" defaultValue={modalConfig.data?.role||'kasir'} className="w-full p-3 border rounded-lg"><option value="kasir">Kasir</option><option value="admin">Admin</option></select>
                                     </>}
+                                    
+                                    {/* [FIX 16] Input Pengeluaran */}
+                                    {modalConfig.type === 'expense' && <>
+                                        <input name="amount" type="number" placeholder="Jumlah Biaya (Rp)" required defaultValue={modalConfig.data?.amount} className="w-full p-3 border rounded-lg"/>
+                                        <select name="category" defaultValue={modalConfig.data?.category} className="w-full p-3 border rounded-lg"><option value="Operasional">Operasional</option><option value="Gaji">Gaji Karyawan</option><option value="Belanja">Belanja Bahan</option><option value="Lainnya">Lainnya</option></select>
+                                    </>}
+                                    
+                                    {modalConfig.type === 'customer' && <><input name="phone" placeholder="No HP" defaultValue={modalConfig.data?.phone} className="w-full p-3 border rounded-lg"/><input name="email" placeholder="Email (Opsional)" defaultValue={modalConfig.data?.email} className="w-full p-3 border rounded-lg"/></>}
+                                    {modalConfig.type === 'supplier' && <><input name="phone" placeholder="No HP" defaultValue={modalConfig.data?.phone} className="w-full p-3 border rounded-lg"/><input name="address" placeholder="Alamat" defaultValue={modalConfig.data?.address} className="w-full p-3 border rounded-lg"/></>}
+                                    {modalConfig.type === 'table' && <input name="capacity" type="number" placeholder="Kapasitas (Orang)" defaultValue={modalConfig.data?.capacity} className="w-full p-3 border rounded-lg"/>}
 
                                     <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan</button>
                                 </form>
