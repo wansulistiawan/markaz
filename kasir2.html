@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v5.3 - Fixed & Ready</title>
+    <title>Kasir Pintar Pro v6 - Ultimate (Fixed)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -50,7 +50,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, query, where, orderBy, setDoc, getDoc, limit, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // CONFIG HASIL COPY DARI KODE KAMU SEBELUMNYA
+        // CONFIG KODE ASLI
         const firebaseConfig = {
             apiKey: "AIzaSyC4t1Gya_QHDzTkYsF7U-pw1Uo1oQUABpM",
             authDomain: "websitemarkaz.firebaseapp.com",
@@ -67,11 +67,10 @@
         
         // --- OFFLINE PERSISTENCE ---
         enableIndexedDbPersistence(db).catch((err) => {
-            // Ignore persistence errors (usually due to multiple tabs)
             console.log('Persistence status:', err.code);
         });
 
-        const APP_ID = "kasir-pintar-pro-v5";
+        const APP_ID = "kasir-pintar-pro-v6"; // Versi database baru
 
         // --- UTILS ---
         const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val || 0);
@@ -97,7 +96,7 @@
             <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                 <div className={`bg-white rounded-2xl w-full ${maxWidth} shadow-2xl overflow-hidden flex flex-col max-h-[90vh]`}>
                     <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-                        <h3 className="font-bold text-lg text-gray-800">{title}</h3>
+                        <h3 className="font-bold text-lg text-gray-800 uppercase">{title}</h3>
                         <button onClick={onClose} className="hover:bg-gray-200 p-1 rounded-full"><Icon name="x" size={20}/></button>
                     </div>
                     <div className="p-6 overflow-y-auto">{children}</div>
@@ -105,7 +104,7 @@
             </div>
         );
 
-        // --- COMPONENT: LOGIN SCREEN (PERBAIKAN UTAMA: Anti-Crash & removeChild Error) ---
+        // --- LOGIN SCREEN (KEMBALI KE KODE ASLI) ---
         const LoginScreen = () => {
             const [phone, setPhone] = useState('');
             const [otp, setOtp] = useState('');
@@ -114,7 +113,6 @@
             const [loading, setLoading] = useState(false);
             const [error, setError] = useState('');
             
-            // Gunakan Ref untuk container Recaptcha agar React tidak menghapusnya sembarangan
             const recaptchaRef = useRef(null);
 
             useEffect(() => {
@@ -125,11 +123,8 @@
                     }
                     if (recaptchaRef.current) recaptchaRef.current.innerHTML = '';
                 };
-
-                // Init saat komponen siap
                 cleanupRecaptcha();
-
-                return () => cleanupRecaptcha(); // Cleanup saat unmount
+                return () => cleanupRecaptcha();
             }, []);
 
             const handleGoogleLogin = async () => {
@@ -139,7 +134,7 @@
                     await signInWithPopup(auth, provider);
                 } catch (err) {
                     console.error("Google Login Error:", err);
-                    setError("Gagal Login Google. Pastikan domain github.io sudah diizinkan di Firebase Console. (" + err.message + ")");
+                    setError("Gagal Login Google. (" + err.message + ")");
                     setLoading(false);
                 }
             };
@@ -153,16 +148,12 @@
                 if (!formatPhone.startsWith('+')) formatPhone = '+62' + formatPhone;
 
                 try {
-                    // Pastikan DOM container ada sebelum init
                     if(!recaptchaRef.current) throw new Error("Recaptcha container not found");
-
                     if (!window.recaptchaVerifier) {
                         window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaRef.current, {
-                            'size': 'invisible',
-                            'callback': () => {} 
+                            'size': 'invisible', 'callback': () => {} 
                         });
                     }
-                    
                     const confirmation = await signInWithPhoneNumber(auth, formatPhone, window.recaptchaVerifier);
                     setConfirmObj(confirmation);
                     setShowOtp(true);
@@ -171,7 +162,6 @@
                     console.error("OTP Error:", err);
                     setError("Gagal kirim SMS: " + err.message);
                     setLoading(false);
-                    // Reset recaptcha
                     if (window.recaptchaVerifier) {
                          try { window.recaptchaVerifier.clear(); } catch(e){}
                          window.recaptchaVerifier = null;
@@ -211,33 +201,20 @@
                                             <label className="block text-xs font-bold text-gray-500 mb-1">NOMOR WHATSAPP / HP</label>
                                             <div className="flex bg-gray-50 border rounded-lg overflow-hidden focus-within:ring-2 ring-blue-500 transition">
                                                 <span className="bg-gray-200 px-3 py-3 text-gray-600 font-bold border-r">+62</span>
-                                                <input 
-                                                    type="tel" 
-                                                    className="w-full p-3 bg-transparent outline-none font-bold text-gray-800"
-                                                    placeholder="812-3456-7890" 
-                                                    value={phone}
-                                                    onChange={e => setPhone(e.target.value.replace(/\D/g,''))} 
-                                                    required
-                                                />
+                                                <input type="tel" className="w-full p-3 bg-transparent outline-none font-bold text-gray-800" placeholder="812-3456-7890" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g,''))} required />
                                             </div>
                                         </div>
-                                        
-                                        {/* CONTAINER RECAPTCHA AMAN */}
                                         <div ref={recaptchaRef}></div>
-                                        
                                         <button disabled={loading} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition disabled:bg-gray-300 flex justify-center items-center gap-2">
                                             {loading ? 'Mengirim OTP...' : <>Kirim Kode OTP <Icon name="arrow-right" size={16}/></>}
                                         </button>
                                     </form>
-
                                     <div className="flex items-center gap-4 mb-6">
                                         <div className="h-px bg-gray-200 flex-1"></div>
                                         <span className="text-xs text-gray-400 font-bold">ATAU MASUK DENGAN</span>
                                         <div className="h-px bg-gray-200 flex-1"></div>
                                     </div>
-
                                     <button onClick={handleGoogleLogin} className="w-full border border-gray-300 bg-white text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition flex items-center justify-center gap-3">
-                                        <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                                         Lanjutkan dengan Google
                                     </button>
                                 </>
@@ -247,14 +224,7 @@
                                         <p className="text-sm text-gray-500">Kode dikirim ke <span className="font-bold text-gray-800">+62{phone}</span></p>
                                         <button type="button" onClick={()=>setShowOtp(false)} className="text-xs text-blue-600 hover:underline">Ubah Nomor</button>
                                     </div>
-                                    <input 
-                                        type="number" 
-                                        className="w-full p-3 border-2 border-blue-100 rounded-xl text-center text-2xl font-bold tracking-widest outline-none focus:border-blue-600 focus:bg-blue-50 transition"
-                                        placeholder="• • • • • •" 
-                                        value={otp}
-                                        onChange={e => setOtp(e.target.value)}
-                                        autoFocus
-                                    />
+                                    <input type="number" className="w-full p-3 border-2 border-blue-100 rounded-xl text-center text-2xl font-bold tracking-widest outline-none focus:border-blue-600 focus:bg-blue-50 transition" placeholder="• • • • • •" value={otp} onChange={e => setOtp(e.target.value)} autoFocus />
                                     <button disabled={loading} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition disabled:bg-gray-300">
                                         {loading ? 'Memverifikasi...' : 'Verifikasi & Masuk'}
                                     </button>
@@ -296,7 +266,11 @@
                                     <div key={i} className="flex justify-between">
                                         <div className="flex-1">
                                             <div className="font-bold">{item.name}</div>
-                                            <div className="text-xs text-gray-500">{item.qty} x {formatCurrency(item.price)}</div>
+                                            <div className="text-xs text-gray-500">
+                                                {item.qty} x {formatCurrency(item.price)}
+                                                {/* [FITUR GROSIR] Indikator harga grosir di struk */}
+                                                {item.wholesaleQty && item.qty >= item.wholesaleQty && <span className="ml-1 text-[10px] font-bold">(Grosir)</span>}
+                                            </div>
                                             {item.itemDiscount > 0 && <div className="text-[10px] text-green-600">Disc: -{formatCurrency(item.itemDiscount)}</div>}
                                             {item.note && <div className="text-[10px] italic text-gray-400">"{item.note}"</div>}
                                         </div>
@@ -337,6 +311,7 @@
             
             // Data States
             const [products, setProducts] = useState([]);
+            const [ingredients, setIngredients] = useState([]); // [FITUR BARU] State Bahan Baku
             const [customers, setCustomers] = useState([]);
             const [suppliers, setSuppliers] = useState([]); 
             const [expenses, setExpenses] = useState([]); 
@@ -366,16 +341,11 @@
             const [modalConfig, setModalConfig] = useState({ show: false, type: '', data: null });
             const [settingsTab, setSettingsTab] = useState('profile');
 
-            // Auth Logic
             useEffect(() => {
-                const unsubscribe = onAuthStateChanged(auth, (u) => {
-                    setUser(u);
-                    setLoading(false);
-                });
+                const unsubscribe = onAuthStateChanged(auth, (u) => { setUser(u); setLoading(false); });
                 return unsubscribe;
             }, []);
 
-            // Data Fetching
             useEffect(() => {
                 if (!user) return;
                 setLoading(true);
@@ -383,67 +353,80 @@
                 const basePath = ['artifacts', APP_ID, 'users', user.uid];
 
                 const unsubProd = onSnapshot(collection(db, ...basePath, 'products'), s => setProducts(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                // [FITUR BARU] Fetch Bahan Baku
+                const unsubIng = onSnapshot(collection(db, ...basePath, 'ingredients'), s => setIngredients(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                
                 const unsubCust = onSnapshot(collection(db, ...basePath, 'customers'), s => setCustomers(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubSupp = onSnapshot(collection(db, ...basePath, 'suppliers'), s => setSuppliers(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubExp = onSnapshot(collection(db, ...basePath, 'expenses'), s => setExpenses(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubDebts = onSnapshot(collection(db, ...basePath, 'debts'), s => setDebts(s.docs.map(d => ({id:d.id, ...d.data()}))));
-                
-                // Limit Data for Performance
                 const unsubStock = onSnapshot(query(collection(db, ...basePath, 'stock_history'), orderBy('createdAt', 'desc'), limit(50)), s => setStockHistory(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubTrans = onSnapshot(query(collection(db, ...basePath, 'transactions'), orderBy('createdAt', 'desc'), limit(50)), s => setTransactions(s.docs.map(d => ({id:d.id, ...d.data()}))));
-                
                 const unsubTables = onSnapshot(query(collection(db, ...basePath, 'tables'), orderBy('name', 'asc')), s => setTables(s.docs.map(d => ({id:d.id, ...d.data()}))));
-                
                 const unsubStaff = onSnapshot(collection(db, ...basePath, 'staff'), s => {
                     const staffData = s.docs.map(d => ({id:d.id, ...d.data()}));
                     setStaff(staffData);
                     if(s.empty) addDoc(collection(db, ...basePath, 'staff'), { name: 'Owner', pin: '1234', role: 'admin' });
                 });
-
-                const unsubSettings = onSnapshot(doc(db, ...basePath, 'settings', 'profile'), s => {
-                    if (s.exists()) setStoreProfile(s.data());
-                });
-
+                const unsubSettings = onSnapshot(doc(db, ...basePath, 'settings', 'profile'), s => { if (s.exists()) setStoreProfile(s.data()); });
                 const qShift = query(collection(db, ...basePath, 'shifts'), where('status', '==', 'open'));
-                const unsubShift = onSnapshot(qShift, s => {
-                    setShift(s.empty ? null : {id: s.docs[0].id, ...s.docs[0].data()});
-                });
+                const unsubShift = onSnapshot(qShift, s => { setShift(s.empty ? null : {id: s.docs[0].id, ...s.docs[0].data()}); });
 
-                // Force load finish after 1s
                 setTimeout(() => setLoading(false), 1000);
-
-                return () => { unsubProd(); unsubCust(); unsubSupp(); unsubExp(); unsubDebts(); unsubStock(); unsubSettings(); unsubShift(); unsubTrans(); unsubTables(); unsubStaff(); };
+                return () => { unsubProd(); unsubIng(); unsubCust(); unsubSupp(); unsubExp(); unsubDebts(); unsubStock(); unsubSettings(); unsubShift(); unsubTrans(); unsubTables(); unsubStaff(); };
             }, [user]);
 
             // --- BUSINESS LOGIC ---
 
-            const handleBarcode = (e) => {
-                if (e.key === 'Enter') {
-                    const code = e.target.value.trim();
-                    if (!code) return;
-                    const prod = products.find(p => p.barcode === code);
-                    if (prod) {
-                        addToCart(prod);
-                        setSearchQuery('');
-                    } else {
-                        alert("Barcode tidak ditemukan!");
-                    }
+            // [FITUR BARU] Cek Harga (Normal atau Grosir)
+            const getPrice = (prod, qty) => {
+                if (prod.wholesaleQty && prod.wholesalePrice && qty >= prod.wholesaleQty) {
+                    return Number(prod.wholesalePrice);
                 }
+                return Number(prod.price);
             };
 
             const addToCart = (p) => {
-                if (p.stock <= 0) return alert("Stok Habis!");
+                // [FITUR BARU] Validasi Stok Pintar (Resep vs Produk Jadi)
+                const hasRecipe = p.recipe && p.recipe.length > 0;
+                if (!hasRecipe && p.stock <= 0) return alert("Stok Produk Habis!");
+
                 setCart(prev => { 
                     const ex = prev.find(i=>i.id===p.id); 
-                    return ex ? prev.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i) : [...prev,{...p,qty:1, itemDiscount:0}];
+                    if (ex) {
+                        const newQty = ex.qty + 1;
+                        // [FITUR BARU] Update harga jika masuk tier grosir
+                        return prev.map(i=>i.id===p.id ? {...i, qty: newQty, price: getPrice(p, newQty)} : i);
+                    } else {
+                        // Harga awal
+                        return [...prev,{...p, qty:1, price: getPrice(p, 1), itemDiscount:0}];
+                    }
                 });
+            };
+
+            const updateCartQty = (item, change) => {
+                const newQty = Math.max(1, item.qty + change);
+                const prod = products.find(p => p.id === item.id);
+                setCart(prev => prev.map(i => i.id === item.id ? { ...i, qty: newQty, price: getPrice(prod, newQty) } : i));
             };
 
             const calculateTotals = () => {
                 const subtotalRaw = cart.reduce((a,b) => a + (b.price * b.qty), 0);
                 const itemDiscounts = cart.reduce((a,b) => a + (b.itemDiscount || 0), 0);
                 const subtotal = subtotalRaw - itemDiscounts;
-                const hppTotal = cart.reduce((a,b) => a + ((b.hpp || 0) * b.qty), 0);
+                // [LOGIC BARU] HPP Dinamis (Bahan Baku vs Produk)
+                const hppTotal = cart.reduce((a,b) => {
+                     let itemHPP = b.hpp || 0;
+                     if (b.recipe && b.recipe.length > 0) {
+                        // Hitung HPP dari resep
+                        itemHPP = 0;
+                        b.recipe.forEach(r => {
+                            const ing = ingredients.find(i => i.id === r.ingId);
+                            if(ing) itemHPP += (ing.costPerUnit || 0) * r.qty;
+                        });
+                     }
+                     return a + (itemHPP * b.qty);
+                }, 0);
                 const serviceRate = storeProfile?.serviceRate || 0;
                 const taxRate = storeProfile?.taxRate || 0;
                 const taxableAmount = Math.max(0, subtotal - discount);
@@ -453,9 +436,36 @@
                 return { subtotal, hppTotal, tax, serviceCharge, total, serviceRate, taxRate };
             };
 
+            // [FITUR BARU] Validasi Stok Bahan Baku
+            const checkIngredientsAvailability = () => {
+                const requiredIngs = {};
+                
+                // Kumpulkan kebutuhan
+                cart.forEach(item => {
+                    if (item.recipe && item.recipe.length > 0) {
+                        item.recipe.forEach(r => {
+                            if (!requiredIngs[r.ingId]) requiredIngs[r.ingId] = 0;
+                            requiredIngs[r.ingId] += (r.qty * item.qty);
+                        });
+                    }
+                });
+
+                // Cek stok
+                for (const [id, needed] of Object.entries(requiredIngs)) {
+                    const ing = ingredients.find(i => i.id === id);
+                    if (!ing || ing.stock < needed) return `Stok Bahan Baku '${ing?.name||'Unknown'}' Kurang! (Butuh: ${needed}, Ada: ${ing?.stock||0})`;
+                }
+                return null;
+            };
+
             const handleCheckout = async () => {
                 if(!shift) return alert("Kasir belum dibuka!");
                 if(cart.length === 0) return;
+                
+                // 1. Validasi Stok Resep
+                const stockError = checkIngredientsAvailability();
+                if (stockError) return alert(stockError);
+
                 if(paymentMethod === 'Hutang' && !selectedCustomer) return alert("Pembayaran Hutang wajib memilih Pelanggan!");
                 
                 const totals = calculateTotals();
@@ -479,16 +489,44 @@
                         });
                     }
 
+                    // [LOGIC BARU] Pengurangan Stok (Produk vs Bahan Baku)
+                    const batchPromises = [];
+                    const ingUpdates = {};
+                    const prodUpdates = {};
+
                     cart.forEach(item => {
-                        const pRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'products', item.id);
-                        const prod = products.find(p => p.id === item.id);
-                        if(prod) {
-                            updateDoc(pRef, { stock: prod.stock - item.qty });
-                            addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'stock_history'), {
-                                productId: item.id, productName: item.name, change: -item.qty, type: 'sale', refId: ref.id, reason: 'Penjualan POS', createdAt: serverTimestamp()
+                        if (item.recipe && item.recipe.length > 0) {
+                            // Kurangi Bahan Baku
+                            item.recipe.forEach(r => {
+                                if (!ingUpdates[r.ingId]) ingUpdates[r.ingId] = 0;
+                                ingUpdates[r.ingId] += (r.qty * item.qty);
                             });
+                        } else {
+                            // Kurangi Produk Jadi
+                            if (!prodUpdates[item.id]) prodUpdates[item.id] = 0;
+                            prodUpdates[item.id] += item.qty;
                         }
                     });
+
+                    // Eksekusi Update Stok Bahan
+                    for (const [id, qty] of Object.entries(ingUpdates)) {
+                        const ing = ingredients.find(i => i.id === id);
+                        const ingRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'ingredients', id);
+                        batchPromises.push(updateDoc(ingRef, { stock: ing.stock - qty }));
+                    }
+                    
+                    // Eksekusi Update Stok Produk
+                    for (const [id, qty] of Object.entries(prodUpdates)) {
+                        const prod = products.find(p => p.id === id);
+                        const prodRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'products', id);
+                        batchPromises.push(updateDoc(prodRef, { stock: prod.stock - qty }));
+                        // Log History
+                        batchPromises.push(addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'stock_history'), {
+                            productId: id, productName: prod.name, change: -qty, type: 'sale', refId: ref.id, reason: 'Penjualan POS', createdAt: serverTimestamp()
+                        }));
+                    }
+
+                    await Promise.all(batchPromises);
 
                     await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'shifts', shift.id), {
                         transactionsCount: (shift.transactionsCount || 0) + 1,
@@ -500,12 +538,16 @@
                 } catch (e) { alert("Gagal transaksi: " + e.message); }
             };
 
-            const handlePayDebt = async (debtId, currentPaid, totalAmount, payAmount) => {
-                const newPaid = currentPaid + Number(payAmount);
-                const status = newPaid >= totalAmount ? 'paid' : 'partial';
-                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'debts', debtId), {
+            const handlePaymentSubmit = async (e) => {
+                e.preventDefault();
+                const amount = Number(e.target.amount.value);
+                const debt = modalConfig.data;
+                const newPaid = (debt.paid || 0) + amount;
+                const status = newPaid >= debt.amount ? 'paid' : 'partial';
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'debts', debt.id), {
                     paid: newPaid, status: status, lastPayment: serverTimestamp()
                 });
+                setModalConfig({show:false});
             };
 
             const handleAdjustStock = async (e) => { 
@@ -523,32 +565,9 @@
                 setModalConfig({show: false});
             };
 
-            // [FIX 1] Menambah Logic untuk Form Pembayaran Hutang
-            const handlePaymentSubmit = async (e) => {
-                e.preventDefault();
-                const amount = Number(e.target.amount.value);
-                const debt = modalConfig.data;
-                const newPaid = (debt.paid || 0) + amount;
-                const status = newPaid >= debt.amount ? 'paid' : 'partial';
-                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'debts', debt.id), {
-                    paid: newPaid, status: status, lastPayment: serverTimestamp()
-                });
-                setModalConfig({show:false});
-            };
-
-            const handleExport = (type) => {
-                if (type === 'transactions') {
-                    const data = transactions.map(t => ({
-                        Date: formatDate(t.createdAt), ID: t.id, Total: t.total, Profit: t.profit, Method: t.paymentMethod, Type: t.orderType, Table: t.table || '-'
-                    }));
-                    exportToCSV(data, 'laporan_transaksi');
-                }
-            };
-
             const saveSettings = async (e) => {
                 e.preventDefault();
                 const f = e.target;
-                // [FIX 2] Menyimpan input setting yang lengkap (Pajak, Logo, Footer)
                 await setDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'settings', 'profile'), {
                     name: f.name.value, address: f.address.value, phone: f.phone.value, logo: f.logo.value,
                     footerMessage: f.footerMessage.value, taxRate: Number(f.taxRate.value), serviceRate: Number(f.serviceRate.value)
@@ -563,16 +582,31 @@
                 const isEdit = !!modalConfig.data;
                 const collPath = ['artifacts', APP_ID, 'users', user.uid];
                 
-                // [FIX 3] Perbaikan Nama Koleksi
-                const collectionName = type === 'staff' ? 'staff' : type + 's';
+                let collectionName = type + 's';
+                if (type === 'staff') collectionName = 'staff';
+                if (type === 'ingredient') collectionName = 'ingredients'; // [FITUR BARU]
 
                 let payload = {};
 
-                // Validasi & Penyusunan Data
                 try {
                     if (type === 'product') {
-                        // [FIX 4] Tambah Input Image
-                        payload = { name: f.name.value, barcode: f.barcode.value, category: f.category.value, price: Number(f.price.value), hpp: Number(f.hpp.value), stock: Number(f.stock.value), image: f.image.value };
+                        payload = { 
+                            name: f.name.value, barcode: f.barcode.value, category: f.category.value, 
+                            price: Number(f.price.value), hpp: Number(f.hpp.value), stock: Number(f.stock.value), image: f.image.value,
+                            // [FITUR BARU] Data Grosir
+                            wholesaleQty: Number(f.wholesaleQty.value), wholesalePrice: Number(f.wholesalePrice.value)
+                        };
+                    } else if (type === 'ingredient') { // [FITUR BARU]
+                         payload = { name: f.name.value, unit: f.unit.value, stock: Number(f.stock.value), costPerUnit: Number(f.costPerUnit.value) };
+                    } else if (type === 'recipe_setup') { // [FITUR BARU] Simpan Resep
+                         const currentRecipe = modalConfig.data.recipe || [];
+                         const ingId = f.ingId.value;
+                         const qty = Number(f.qty.value);
+                         const newRecipe = [...currentRecipe, {ingId, qty}];
+                         // Update Produk Langsung
+                         await updateDoc(doc(db, ...collPath, 'products', modalConfig.data.id), { recipe: newRecipe });
+                         setModalConfig({ show: false });
+                         return; // Keluar agar tidak lanjut ke logic standar
                     } else if (type === 'customer') {
                         payload = { name: f.name.value, phone: f.phone.value, email: f.email.value };
                     } else if (type === 'supplier') {
@@ -580,41 +614,26 @@
                     } else if (type === 'table') {
                         payload = { name: f.name.value, capacity: f.capacity.value };
                     } else if (type === 'staff') {
-                        // [FIX 5] Validasi PIN
                         if(!f.pin.value) throw new Error("PIN Wajib diisi!");
                         payload = { name: f.name.value, pin: f.pin.value, role: f.role.value };
                     } else if (type === 'expense') {
                         payload = { name: f.name.value, amount: Number(f.amount.value), category: f.category.value, date: serverTimestamp() };
                     }
 
-                    // Eksekusi ke Database dengan Error Handling
                     if (isEdit) {
                         await updateDoc(doc(db, ...collPath, collectionName, modalConfig.data.id), { ...payload, updatedAt: serverTimestamp() });
                     } else {
                         await addDoc(collection(db, ...collPath, collectionName), { ...payload, createdAt: serverTimestamp() });
                     }
                     
-                    // Tutup Modal jika sukses
                     setModalConfig({ show: false });
-                    
-                } catch (err) {
-                    console.error("Error Saving:", err);
-                    // [FIX 6] Pesan Error yang Jelas untuk User
-                    if(err.code === 'permission-denied') {
-                        alert("GAGAL SIMPAN: Izin Database ditolak. Pastikan Rules Firebase sudah 'allow write: if true'");
-                    } else {
-                        alert("GAGAL SIMPAN: " + err.message);
-                    }
-                }
+                } catch (err) { alert("GAGAL SIMPAN: " + err.message); }
             };
 
             // --- RENDERERS ---
             if (loading) return <div className="h-screen flex items-center justify-center text-blue-600 font-bold">Loading Kasir Pro...</div>;
-            
-            // 1. LOGIN SCREEN (Utama)
             if (!user) return <LoginScreen />;
             
-            // 2. PIN SCREEN (Staff Lock)
             if (user && !activeStaff) {
                 return (
                     <div className="h-screen bg-slate-900 flex items-center justify-center p-4">
@@ -622,7 +641,6 @@
                             <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600"><Icon name="lock" size={32}/></div>
                             <h2 className="text-2xl font-bold mb-2">Siapa yang bertugas?</h2>
                             <p className="text-gray-500 mb-6 text-sm">Masuk sebagai: <span className="font-bold text-blue-600">{user.phoneNumber || user.email || 'Anonim'}</span></p>
-                            
                             <div className="grid grid-cols-2 gap-3 mb-6">
                                 {staff.map(s => (
                                     <button key={s.id} onClick={() => {
@@ -635,19 +653,14 @@
                                     </button>
                                 ))}
                             </div>
-                            
                             <div className="border-t pt-4 mt-4">
-                                <button onClick={() => signOut(auth)} className="text-red-500 text-sm font-bold flex items-center justify-center gap-2 w-full hover:bg-red-50 p-2 rounded transition">
-                                    <Icon name="log-out" size={16}/> Ganti Akun Pemilik
-                                </button>
-                                <div className="text-xs text-gray-400 mt-2">Default PIN Owner: 1234</div>
+                                <button onClick={() => signOut(auth)} className="text-red-500 text-sm font-bold flex items-center justify-center gap-2 w-full hover:bg-red-50 p-2 rounded transition"><Icon name="log-out" size={16}/> Ganti Akun Pemilik</button>
                             </div>
                         </div>
                     </div>
                 );
             }
 
-            // 3. SHIFT OPENING
             if (user && !shift && view === 'pos') {
                 return (
                     <Modal title="Buka Shift (Modal Awal)" onClose={()=>{}}>
@@ -664,13 +677,12 @@
                 );
             }
 
-            // 4. MAIN LAYOUT
             return (
                 <div className="flex h-screen bg-gray-100 overflow-hidden text-slate-800">
                     <aside className="w-20 md:w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20 overflow-y-auto">
                         <div className="h-16 flex items-center justify-center md:justify-start md:px-6 bg-slate-950 text-white font-bold gap-3 flex-shrink-0 sticky top-0 z-10">
                             <div className="bg-blue-600 p-2 rounded-lg"><Icon name="zap" size={20}/></div>
-                            <span className="hidden md:block">Kasir Pro v5</span>
+                            <span className="hidden md:block">Kasir Pro v6</span>
                         </div>
                         <nav className="flex-1 py-4 space-y-1 px-2">
                             <div className="px-3 mb-6 flex items-center gap-3 pb-4 border-b border-slate-800">
@@ -687,6 +699,7 @@
                                 {id: 'pos', icon: 'monitor', label: 'Kasir / POS', roles: ['admin', 'kasir']},
                                 {id: 'dashboard', icon: 'layout-dashboard', label: 'Dashboard', roles: ['admin']},
                                 {id: 'inventory', icon: 'clipboard-list', label: 'Stok Opname', roles: ['admin']},
+                                {id: 'ingredients', icon: 'flask-conical', label: 'Bahan Baku', roles: ['admin']}, // [FITUR BARU]
                                 {id: 'debts', icon: 'book', label: 'Hutang / Kasbon', roles: ['admin', 'kasir']},
                                 {id: 'expenses', icon: 'wallet', label: 'Pengeluaran', roles: ['admin']},
                             ].filter(m => m.roles.includes(activeStaff?.role)).map(m => (
@@ -722,21 +735,29 @@
                                     <div className="p-4 bg-white border-b flex gap-3 items-center">
                                         <div className="relative flex-1">
                                             <Icon name="scan-barcode" className="absolute left-3 top-3 text-gray-400"/>
-                                            <input className="w-full pl-10 p-2.5 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Scan Barcode / Cari nama..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} onKeyDown={handleBarcode} autoFocus/>
+                                            <input className="w-full pl-10 p-2.5 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Scan Barcode / Cari nama..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} autoFocus/>
                                         </div>
                                     </div>
                                     <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 content-start">
-                                        {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.barcode && p.barcode.includes(searchQuery))).map(p => (
-                                            /* [FIX 7] Tampilan Produk dengan Indikator Stok Menipis & Gambar */
-                                            <div key={p.id} onClick={() => addToCart(p)} className={`relative bg-white rounded-xl shadow-sm border p-3 cursor-pointer hover:shadow-md transition ${p.stock<=0 && 'opacity-50'} ${p.stock<=5 && p.stock > 0 ? 'border-red-300 bg-red-50' : ''}`}>
-                                                {p.stock <= 5 && p.stock > 0 && <div className="absolute top-2 right-2 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full z-10 animate-pulse">Menipis</div>}
-                                                <div className="h-24 bg-gray-100 rounded-lg mb-2 overflow-hidden">
-                                                    {p.image ? <img src={p.image} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300"><Icon name="image" size={32}/></div>}
+                                        {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.barcode && p.barcode.includes(searchQuery))).map(p => {
+                                            // [VISUAL BARU] Tampilan Stok vs Resep
+                                            const hasRecipe = p.recipe && p.recipe.length > 0;
+                                            return (
+                                                <div key={p.id} onClick={() => addToCart(p)} className={`relative bg-white rounded-xl shadow-sm border p-3 cursor-pointer hover:shadow-md transition ${!hasRecipe && p.stock<=0 && 'opacity-50'} ${!hasRecipe && p.stock<=5 && p.stock > 0 ? 'border-red-300 bg-red-50' : ''}`}>
+                                                    {!hasRecipe && p.stock <= 5 && p.stock > 0 && <div className="absolute top-2 right-2 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full z-10 animate-pulse">Menipis</div>}
+                                                    <div className="h-24 bg-gray-100 rounded-lg mb-2 overflow-hidden">
+                                                        {p.image ? <img src={p.image} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300"><Icon name="image" size={32}/></div>}
+                                                    </div>
+                                                    <h4 className="font-bold truncate">{p.name}</h4>
+                                                    <div className="flex justify-between mt-1 items-center">
+                                                        <span className="text-blue-600 font-bold">{formatCurrency(p.price)}</span>
+                                                        <span className={`text-xs px-1.5 py-0.5 rounded font-bold ${hasRecipe ? 'bg-purple-100 text-purple-700' : (p.stock<=5 ? 'bg-red-200 text-red-800' : 'bg-gray-100')}`}>
+                                                            {hasRecipe ? 'F&B' : p.stock}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <h4 className="font-bold truncate">{p.name}</h4>
-                                                <div className="flex justify-between mt-1"><span className="text-blue-600 font-bold">{formatCurrency(p.price)}</span><span className={`text-xs px-1.5 py-0.5 rounded font-bold ${p.stock<=5 ? 'bg-red-200 text-red-800' : 'bg-gray-100'}`}>{p.stock}</span></div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                                 <div className="w-full md:w-96 bg-white shadow-2xl z-10 flex flex-col border-l">
@@ -752,9 +773,20 @@
                                             <div key={i.id} onClick={()=>{setEditingItem({...i}); setModalConfig({show:true, type:'edit_cart_item'})}} className="flex justify-between items-center bg-gray-50 p-2 rounded cursor-pointer hover:bg-gray-100">
                                                 <div className="flex-1">
                                                     <div className="font-bold text-sm">{i.name}</div>
-                                                    <div className="text-xs text-blue-600">{formatCurrency(i.price)} x {i.qty} {i.itemDiscount>0 && <span className="text-green-600">(-{formatCurrency(i.itemDiscount)})</span>}</div>
+                                                    <div className="text-xs text-blue-600">
+                                                        {formatCurrency(i.price)} x {i.qty} 
+                                                        {i.wholesaleQty && i.qty >= i.wholesaleQty && <span className="text-green-600 font-bold ml-1 text-[10px]">(Grosir)</span>}
+                                                    </div>
                                                     {i.note && <div className="text-[10px] text-gray-500 italic">"{i.note}"</div>}
                                                 </div>
+                                                
+                                                {/* TOMBOL QTY DI CART AGAR MUDAH LIHAT PERUBAHAN HARGA GROSIR */}
+                                                <div className="flex items-center gap-2 mr-2" onClick={e=>e.stopPropagation()}>
+                                                    <button onClick={()=>updateCartQty(i, -1)} className="w-6 h-6 bg-gray-200 rounded text-sm">-</button>
+                                                    <span className="font-bold text-sm">{i.qty}</span>
+                                                    <button onClick={()=>updateCartQty(i, 1)} className="w-6 h-6 bg-gray-200 rounded text-sm">+</button>
+                                                </div>
+                                                
                                                 <div className="font-bold text-sm">{formatCurrency((i.price*i.qty)- (i.itemDiscount||0))}</div>
                                             </div>
                                         ))}
@@ -763,7 +795,6 @@
                                         <div className="flex gap-2"><input type="number" placeholder="Diskon" className="w-full p-2 border rounded text-sm" value={discount > 0 ? discount : ''} onChange={e=>setDiscount(Number(e.target.value))} /></div>
                                         <div className="space-y-1 text-sm pt-2 border-t border-dashed">
                                             <div className="flex justify-between text-gray-500"><span>Subtotal</span><span>{formatCurrency(calculateTotals().subtotal)}</span></div>
-                                            {/* [FIX 8] Menampilkan Pajak & Service jika disetting */}
                                             {calculateTotals().tax > 0 && <div className="flex justify-between text-gray-500"><span>Pajak ({calculateTotals().taxRate}%)</span><span>{formatCurrency(calculateTotals().tax)}</span></div>}
                                             {calculateTotals().serviceCharge > 0 && <div className="flex justify-between text-gray-500"><span>Service ({calculateTotals().serviceRate}%)</span><span>{formatCurrency(calculateTotals().serviceCharge)}</span></div>}
                                             <div className="flex justify-between font-bold text-lg pt-2"><span>Total</span><span>{formatCurrency(calculateTotals().total)}</span></div>
@@ -784,24 +815,13 @@
                                 <h2 className="text-2xl font-bold mb-6">Executive Dashboard</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                                     <div className="bg-white p-5 rounded-xl border shadow-sm"><p className="text-gray-500 text-sm">Omzet Kotor</p><h3 className="text-2xl font-bold text-blue-600">{formatCurrency(transactions.reduce((a,b)=>a+(b.total||0),0))}</h3></div>
-                                    {/* [FIX 9] Menghitung Net Profit (Laba Kotor - Pengeluaran) */}
                                     <div className="bg-gradient-to-br from-green-500 to-green-700 text-white p-5 rounded-xl shadow-lg"><p className="text-green-100 text-sm">Net Profit (Bersih)</p><h3 className="text-2xl font-bold">{formatCurrency(transactions.reduce((a,b)=>a+(b.profit||0),0) - expenses.reduce((a,b)=>a+(b.amount||0),0))}</h3></div>
-                                    {/* [FIX 10] Widget Pengeluaran */}
                                     <div className="bg-white p-5 rounded-xl border shadow-sm"><p className="text-gray-500 text-sm">Pengeluaran</p><h3 className="text-2xl font-bold text-red-600">{formatCurrency(expenses.reduce((a,b)=>a+(b.amount||0),0))}</h3></div>
                                     <div className="bg-white p-5 rounded-xl border shadow-sm"><p className="text-gray-500 text-sm">Piutang Belum Bayar</p><h3 className="text-2xl font-bold text-orange-600">{formatCurrency(debts.reduce((a,b)=>a + (b.status!=='paid' ? (b.amount - b.paid) : 0),0))}</h3></div>
-                                </div>
-                                <div className="bg-white p-6 rounded-xl border shadow-sm max-w-lg">
-                                    <h3 className="font-bold mb-4">Produk Terlaris</h3>
-                                    {Object.values(transactions.reduce((acc, t) => { t.items.forEach(i => { if(!acc[i.id]) acc[i.id] = {name: i.name, qty: 0}; acc[i.id].qty += i.qty; }); return acc; }, {})).sort((a,b) => b.qty - a.qty).slice(0, 5).map((item, idx) => (
-                                        <div key={idx} className="flex justify-between items-center border-b border-dashed pb-2 last:border-0 mb-2">
-                                            <div className="flex items-center gap-2"><div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold">#{idx+1}</div><span>{item.name}</span></div><span className="font-bold text-blue-600">{item.qty}</span>
-                                        </div>
-                                    ))}
                                 </div>
                             </div>
                         )}
 
-                        {/* --- [FIX 11] BUG FIX KRITIKAL: MENU HUTANG / KASBON SEKARANG MUNCUL --- */}
                         {view === 'debts' && (
                             <div className="p-6 h-full overflow-y-auto">
                                 <h2 className="text-2xl font-bold mb-6">Buku Hutang (Piutang)</h2>
@@ -830,7 +850,6 @@
                             </div>
                         )}
 
-                        {/* --- [FIX 12] BUG FIX KRITIKAL: MENU PENGELUARAN SEKARANG MUNCUL --- */}
                         {view === 'expenses' && (
                             <div className="p-6 h-full overflow-y-auto">
                                 <div className="flex justify-between items-center mb-6">
@@ -854,7 +873,30 @@
                                             ))}
                                         </tbody>
                                     </table>
-                                    {expenses.length === 0 && <div className="p-8 text-center text-gray-400">Belum ada data pengeluaran</div>}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* [FITUR BARU] HALAMAN INGREDIENTS */}
+                        {view === 'ingredients' && (
+                            <div className="p-6 h-full overflow-y-auto">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-bold">Stok Bahan Baku (Gudang)</h2>
+                                    <button onClick={()=>setModalConfig({show:true, type:'ingredient'})} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-blue-700"><Icon name="plus"/> Tambah</button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {ingredients.map(i => (
+                                        <div key={i.id} onClick={()=>setModalConfig({show:true, type:'ingredient', data:i})} className="bg-white p-4 rounded-xl border hover:shadow-md cursor-pointer">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600"><Icon name="flask-conical" size={20}/></div>
+                                                <div>
+                                                    <h4 className="font-bold">{i.name}</h4>
+                                                    <div className="text-xs text-gray-500">Stok: <b className="text-blue-600">{i.stock} {i.unit}</b></div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-2 text-xs bg-gray-50 p-2 rounded text-center">Cost: {formatCurrency(i.costPerUnit)} / {i.unit}</div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         )}
@@ -863,10 +905,7 @@
                             <div className="p-6 h-full overflow-y-auto">
                                 <div className="flex justify-between items-center mb-6 capitalize">
                                     <h2 className="text-2xl font-bold">{view}</h2>
-                                    
-                                    {/* PERBAIKAN DI SINI: Jika view 'staff', type tetap 'staff'. Jangan dipotong jadi 'staf' */}
                                     <button onClick={()=>setModalConfig({show:true, type: view === 'staff' ? 'staff' : view.slice(0,-1)})} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"><Icon name="plus"/> Tambah</button>
-                                
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {(view==='products'?products:view==='customers'?customers:view==='suppliers'?suppliers:view==='staff'?staff:tables).map(item => (
@@ -875,21 +914,35 @@
                                                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
                                                     {view==='products' && item.image ? <img src={item.image} className="w-full h-full object-cover rounded-full"/> : item.name[0]}
                                                 </div>
-                                                <div className="min-w-0">
+                                                <div className="min-w-0 flex-1">
                                                     <h4 className="font-bold truncate">{item.name}</h4>
-                                                    {view==='products' && <div className="text-sm text-blue-600 font-bold">{formatCurrency(item.price)} (Stok: {item.stock})</div>}
+                                                    {view==='products' && <div className="text-sm text-blue-600 font-bold">{formatCurrency(item.price)}</div>}
+                                                    {view==='products' && <div className="text-xs text-gray-500 mt-1">Stok: {item.stock}</div>}
                                                     
-                                                    {/* TAMPILAN ROLE STAFF */}
+                                                    {/* [FITUR BARU] Tampilan Info Resep di Card Produk */}
+                                                    {view==='products' && (
+                                                        <div className="mt-2 pt-2 border-t border-dashed">
+                                                            {item.recipe && item.recipe.length > 0 ? (
+                                                                <div className="text-[10px] space-y-1">
+                                                                    <div className="font-bold text-gray-400">RESEP:</div>
+                                                                    {item.recipe.map((r,idx) => {
+                                                                        const ing = ingredients.find(i=>i.id===r.ingId);
+                                                                        return <div key={idx} className="flex justify-between bg-purple-50 text-purple-700 px-1 rounded"><span>{ing?.name}</span><span>{r.qty} {ing?.unit}</span></div>
+                                                                    })}
+                                                                    <button onClick={()=>updateDoc(doc(db,'artifacts',APP_ID,'users',user.uid,'products',item.id), {recipe: []})} className="text-red-500 hover:underline w-full text-center mt-1">Reset Resep</button>
+                                                                </div>
+                                                            ) : <div className="text-[10px] text-gray-400 italic">Tanpa Resep (Stok Langsung)</div>}
+                                                            <button onClick={()=>setModalConfig({show:true, type:'recipe_setup', data:item})} className="w-full mt-1 bg-gray-100 text-xs py-1 rounded font-bold hover:bg-gray-200">+ Atur Resep</button>
+                                                        </div>
+                                                    )}
+
                                                     {view==='staff' && <div className="text-sm text-gray-500 uppercase font-bold text-blue-600">{item.role} (PIN: {item.pin})</div>}
-                                                    
                                                     {view==='tables' && <div className="text-sm text-gray-500">Kapasitas: {item.capacity} org</div>}
                                                     {(view==='customers'||view==='suppliers') && <div className="text-sm text-gray-500">{item.phone}</div>}
                                                 </div>
                                             </div>
                                             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                                                {/* PERBAIKAN JUGA DI TOMBOL EDIT (Di baris bawah ini) */}
                                                 <button onClick={()=>setModalConfig({show:true, type: view === 'staff' ? 'staff' : view.slice(0,-1), data:item})} className="p-1.5 bg-gray-100 hover:text-blue-600 rounded"><Icon name="edit-2" size={14}/></button>
-                                                
                                                 <button onClick={()=>{if(confirm('Hapus?')) deleteDoc(doc(db,'artifacts',APP_ID,'users',user.uid,view,item.id))}} className="p-1.5 bg-gray-100 hover:text-red-600 rounded"><Icon name="trash" size={14}/></button>
                                             </div>
                                         </div>
@@ -898,10 +951,9 @@
                             </div>
                         )}
                         
-                        {/* INVENTORY & EXPENSES (Simplified for length) */}
                         {view === 'inventory' && (
                             <div className="p-6 h-full overflow-y-auto">
-                                <h2 className="text-2xl font-bold mb-4">Stok Opname</h2>
+                                <h2 className="text-2xl font-bold mb-4">Stok Opname (Produk Jadi)</h2>
                                 <div className="bg-white p-4 rounded-xl border">
                                     {products.map(p => (
                                         <div key={p.id} className="flex justify-between items-center border-b p-2">
@@ -918,7 +970,6 @@
                     {modalConfig.show && (
                         <Modal title={modalConfig.type.replace('_', ' ')} onClose={()=>setModalConfig({show:false})}>
                             
-                            {/* [FIX 13] Form Pembayaran Hutang */}
                             {modalConfig.type === 'pay_debt' && (
                                 <form onSubmit={handlePaymentSubmit} className="space-y-4">
                                     <div className="bg-blue-50 p-3 rounded-lg text-sm">
@@ -956,7 +1007,6 @@
                                 </div>
                             )}
 
-                            {/* [FIX 14] Pengaturan Toko Lengkap */}
                             {modalConfig.type === 'settings' && (
                                 <form onSubmit={saveSettings} className="space-y-4">
                                     <input name="name" placeholder="Nama Toko" defaultValue={storeProfile?.name} className="w-full p-3 border rounded-lg"/>
@@ -971,6 +1021,35 @@
                                     <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan Pengaturan</button>
                                 </form>
                             )}
+                            
+                            {/* [FITUR BARU] Form Input Bahan Baku */}
+                            {modalConfig.type === 'ingredient' && (
+                                <form onSubmit={handleSubmit} className="space-y-4 capitalize">
+                                    <input name="name" placeholder="Nama Bahan (Misal: Beras)" required defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/>
+                                    <input name="unit" placeholder="Satuan (kg, gram, butir)" required defaultValue={modalConfig.data?.unit} className="w-full p-3 border rounded-lg"/>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <input name="stock" type="number" placeholder="Stok Awal" required defaultValue={modalConfig.data?.stock} className="w-full p-3 border rounded-lg"/>
+                                        <input name="costPerUnit" type="number" placeholder="Harga Beli / Satuan" required defaultValue={modalConfig.data?.costPerUnit} className="w-full p-3 border rounded-lg"/>
+                                    </div>
+                                    <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan Bahan</button>
+                                </form>
+                            )}
+
+                            {/* [FITUR BARU] Form Setup Resep */}
+                            {modalConfig.type === 'recipe_setup' && (
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                    <div className="bg-purple-50 p-3 rounded text-sm text-purple-700 font-bold border border-purple-200">
+                                        Menambah komposisi resep untuk: <br/><span className="text-lg">{modalConfig.data.name}</span>
+                                    </div>
+                                    <select name="ingId" className="w-full p-3 border rounded-lg bg-white" required>
+                                        <option value="">-- Pilih Bahan Baku --</option>
+                                        {ingredients.map(i=><option key={i.id} value={i.id}>{i.name} ({i.unit})</option>)}
+                                    </select>
+                                    <input name="qty" type="number" step="0.01" placeholder="Jumlah Takaran Pemakaian" required className="w-full p-3 border rounded-lg"/>
+                                    <p className="text-xs text-gray-500">Contoh: Jika Nasi Goreng butuh 200 gram beras, pilih "Beras" lalu isi "200".</p>
+                                    <button className="w-full bg-purple-600 text-white p-3 rounded-lg font-bold">Tambahkan ke Resep</button>
+                                </form>
+                            )}
 
                             {['product', 'customer', 'supplier', 'expense', 'table', 'staff'].includes(modalConfig.type) && (
                                 <form onSubmit={handleSubmit} className="space-y-4 capitalize">
@@ -981,12 +1060,20 @@
                                         <input name="category" placeholder="Kategori" defaultValue={modalConfig.data?.category} className="w-full p-3 border rounded-lg"/>
                                         <div className="grid grid-cols-2 gap-4">
                                             <input name="price" type="number" placeholder="Harga" required defaultValue={modalConfig.data?.price} className="w-full p-3 border rounded-lg"/>
-                                            <input name="hpp" type="number" placeholder="Harga Modal (HPP)" required defaultValue={modalConfig.data?.hpp} className="w-full p-3 border rounded-lg"/>
+                                            <input name="hpp" type="number" placeholder="HPP (Manual/Override)" defaultValue={modalConfig.data?.hpp} className="w-full p-3 border rounded-lg"/>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
-                                            <input name="stock" type="number" placeholder="Stok" required defaultValue={modalConfig.data?.stock} className="w-full p-3 border rounded-lg"/>
-                                            {/* [FIX 15] Input Image Produk */}
+                                            <input name="stock" type="number" placeholder="Stok (Produk Jadi)" required defaultValue={modalConfig.data?.stock} className="w-full p-3 border rounded-lg"/>
                                             <input name="image" placeholder="Link Gambar" defaultValue={modalConfig.data?.image} className="w-full p-3 border rounded-lg"/>
+                                        </div>
+                                        
+                                        {/* [FITUR BARU] Input Harga Grosir */}
+                                        <div className="p-3 bg-gray-50 border rounded-lg">
+                                            <h4 className="text-xs font-bold text-gray-500 mb-2 uppercase">Setting Harga Grosir</h4>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <input name="wholesaleQty" type="number" placeholder="Min Qty (Misal: 10)" defaultValue={modalConfig.data?.wholesaleQty} className="w-full p-2 border rounded bg-white text-sm"/>
+                                                <input name="wholesalePrice" type="number" placeholder="Harga Grosir (Rp)" defaultValue={modalConfig.data?.wholesalePrice} className="w-full p-2 border rounded bg-white text-sm"/>
+                                            </div>
                                         </div>
                                     </>}
 
@@ -995,7 +1082,6 @@
                                         <select name="role" defaultValue={modalConfig.data?.role||'kasir'} className="w-full p-3 border rounded-lg"><option value="kasir">Kasir</option><option value="admin">Admin</option></select>
                                     </>}
                                     
-                                    {/* [FIX 16] Input Pengeluaran */}
                                     {modalConfig.type === 'expense' && <>
                                         <input name="amount" type="number" placeholder="Jumlah Biaya (Rp)" required defaultValue={modalConfig.data?.amount} className="w-full p-3 border rounded-lg"/>
                                         <select name="category" defaultValue={modalConfig.data?.category} className="w-full p-3 border rounded-lg"><option value="Operasional">Operasional</option><option value="Gaji">Gaji Karyawan</option><option value="Belanja">Belanja Bahan</option><option value="Lainnya">Lainnya</option></select>
