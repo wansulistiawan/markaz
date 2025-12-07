@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v6.5 - Anti Crash</title>
+    <title>Kasir Pintar Pro v7.0 - History & Void</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -54,7 +54,14 @@
 
         const APP_ID = "kasir-pintar-pro-v6";
         const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val || 0);
-        const formatDate = (ts) => ts ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(ts.toDate ? ts.toDate() : new Date(ts)) : '-';
+        
+        const formatDate = (ts) => {
+            if (!ts) return '-';
+            try {
+                const date = ts.toDate ? ts.toDate() : new Date(ts);
+                return new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+            } catch (e) { return '-'; }
+        };
 
         // --- COMPONENTS ---
         const Modal = ({ title, onClose, children, maxWidth = "max-w-md" }) => (
@@ -196,7 +203,7 @@
             const [user, setUser] = useState(null);
             const [view, setView] = useState('pos');
             const [loading, setLoading] = useState(true);
-            const [isProcessing, setIsProcessing] = useState(false); // [FIX] Loading state bayar
+            const [isProcessing, setIsProcessing] = useState(false);
             
             const [products, setProducts] = useState([]);
             const [ingredients, setIngredients] = useState([]);
@@ -246,7 +253,6 @@
                 const unsubTrans = onSnapshot(query(collection(db, ...basePath, 'transactions'), orderBy('createdAt', 'desc'), limit(50)), s => setTransactions(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubTables = onSnapshot(query(collection(db, ...basePath, 'tables'), orderBy('name', 'asc')), s => setTables(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 
-                // [FIX GOOGLE LOGIN BLANK: Pastikan Staff minimal Owner dibuat]
                 const unsubStaff = onSnapshot(collection(db, ...basePath, 'staff'), s => {
                     const staffData = s.docs.map(d => ({id:d.id, ...d.data()}));
                     if(s.empty) {
@@ -273,14 +279,12 @@
 
             const addToCart = (p) => {
                 const hasRecipe = p.recipe && p.recipe.length > 0;
-                // [FIX STOK] Cek stok di awal tambah
                 if (!hasRecipe && p.stock <= 0) return alert("Stok Produk Habis!");
 
                 setCart(prev => { 
                     const ex = prev.find(i=>i.id===p.id); 
                     if (ex) {
                         const newQty = ex.qty + 1;
-                        // [FIX STOK] Cek limit stok saat nambah di cart
                         if (!hasRecipe && newQty > p.stock) {
                             alert(`Stok tidak cukup! (Sisa: ${p.stock})`);
                             return prev;
@@ -302,7 +306,6 @@
                         const prod = products.find(p => p.id === i.id);
                         if (!prod) return i;
 
-                        // [FIX STOK] Cek limit saat tombol + ditekan
                         const hasRecipe = prod.recipe && prod.recipe.length > 0;
                         if (!hasRecipe && change > 0 && newQty > prod.stock) {
                             alert(`Maksimal stok tersedia: ${prod.stock}`);
@@ -359,31 +362,27 @@
                 return null;
             };
 
-            // [FIX BUG] : HANDLE CHECKOUT ANTI-CRASH
             const handleCheckout = async () => {
-                // 1. Validasi Shift
-                if(!shift) {
-                    alert("Shift Kasir belum dibuka! Silakan Buka Toko dulu.");
-                    return;
-                }
-                if(cart.length === 0) return;
-                
-                // 2. Validasi Stok Resep
-                const stockError = checkIngredientsAvailability();
-                if (stockError) {
-                    alert(stockError);
-                    return;
-                }
-
-                // 3. Validasi Hutang
-                if(paymentMethod === 'Hutang' && !selectedCustomer) {
-                    alert("Pembayaran Hutang wajib memilih Pelanggan!");
-                    return;
-                }
-                
-                setIsProcessing(true); // Kunci tombol
-
                 try {
+                    if(!shift) {
+                        alert("Shift Kasir belum dibuka! Silakan Buka Toko dulu.");
+                        return;
+                    }
+                    if(cart.length === 0) return;
+                    
+                    const stockError = checkIngredientsAvailability();
+                    if (stockError) {
+                        alert(stockError);
+                        return;
+                    }
+
+                    if(paymentMethod === 'Hutang' && !selectedCustomer) {
+                        alert("Pembayaran Hutang wajib memilih Pelanggan!");
+                        return;
+                    }
+                    
+                    setIsProcessing(true);
+
                     const totals = calculateTotals();
                     const profit = totals.total - totals.tax - totals.serviceCharge - totals.hppTotal;
 
@@ -420,7 +419,6 @@
                         }
                     });
 
-                    // [ANTI CRASH] Pastikan 'ing' dan 'prod' ditemukan sebelum update
                     for (const [id, qty] of Object.entries(ingUpdates)) {
                         const ing = ingredients.find(i => i.id === id);
                         if (ing) {
@@ -445,13 +443,23 @@
                         totalSales: (shift.totalSales || 0) + transData.total
                     });
 
-                    setLastTrans({id: ref.id, ...transData});
+                    setLastTrans({id: ref.id, ...transData, createdAt: new Date()});
                     setCart([]); setDiscount(0); setSelectedCustomer(null); setSelectedTable(null);
                 } catch (e) { 
                     console.error(e);
                     alert("Terjadi kesalahan saat proses bayar: " + e.message); 
                 } finally {
-                    setIsProcessing(false); // Buka kunci tombol
+                    setIsProcessing(false);
+                }
+            };
+
+            const handleDeleteTransaction = async (t) => {
+                if(!confirm(`Hapus transaksi ${t.id}? \n\nPERHATIAN: Stok TIDAK otomatis kembali. Laporan keuangan akan disesuaikan.`)) return;
+                try {
+                    await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'transactions', t.id));
+                    alert("Transaksi dihapus.");
+                } catch(e) {
+                    alert("Gagal hapus: " + e.message);
                 }
             };
 
@@ -547,7 +555,6 @@
                             <h2 className="text-2xl font-bold mb-2">Siapa yang bertugas?</h2>
                             <p className="text-gray-500 mb-6 text-sm">Masuk sebagai: <span className="font-bold text-blue-600">{user.phoneNumber || user.email || 'Anonim'}</span></p>
                             
-                            {/* [FIX BLANK SCREEN] Tampilkan loading jika staff belum loaded */}
                             {staff.length === 0 ? (
                                 <div className="p-4 text-gray-400 animate-pulse">Menyiapkan Data Staff...</div>
                             ) : (
@@ -594,7 +601,7 @@
                     <aside className="w-20 md:w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20 overflow-y-auto">
                         <div className="h-16 flex items-center justify-center md:justify-start md:px-6 bg-slate-950 text-white font-bold gap-3 flex-shrink-0 sticky top-0 z-10">
                             <div className="bg-blue-600 p-2 rounded-lg"><Icon name="zap" size={20}/></div>
-                            <span className="hidden md:block">Kasir Pro v6</span>
+                            <span className="hidden md:block">Kasir Pro v7</span>
                         </div>
                         <nav className="flex-1 py-4 space-y-1 px-2">
                             <div className="px-3 mb-6 flex items-center gap-3 pb-4 border-b border-slate-800">
@@ -611,6 +618,8 @@
                             {[
                                 {id: 'pos', icon: 'monitor', label: 'Kasir / POS', roles: ['admin', 'kasir', 'waiter']},
                                 {id: 'dashboard', icon: 'layout-dashboard', label: 'Dashboard', roles: ['admin']},
+                                // [NEW FEATURE] HISTORY TRANSAKSI
+                                {id: 'history', icon: 'history', label: 'Riwayat Transaksi', roles: ['admin', 'kasir']},
                                 {id: 'expenses', icon: 'wallet', label: 'Pengeluaran', roles: ['admin', 'kasir']},
                                 {id: 'debts', icon: 'book', label: 'Hutang / Kasbon', roles: ['admin', 'kasir']},
                                 {id: 'customers', icon: 'users', label: 'Pelanggan', roles: ['admin', 'kasir']},
@@ -699,9 +708,9 @@
                                                     {i.note && <div className="text-[10px] text-gray-500 italic">"{i.note}"</div>}
                                                 </div>
                                                 <div className="flex items-center gap-2 mr-2" onClick={e=>e.stopPropagation()}>
-                                                    <button onClick={()=>updateCartQty(i, -1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">-</button>
+                                                    <button onClick={()=>updateCartQty(i.id, -1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">-</button>
                                                     <span className="font-bold text-sm w-4 text-center">{i.qty}</span>
-                                                    <button onClick={()=>updateCartQty(i, 1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">+</button>
+                                                    <button onClick={()=>updateCartQty(i.id, 1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">+</button>
                                                     <button onClick={()=>removeFromCart(i.id)} className="ml-2 p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition">
                                                         <Icon name="trash-2" size={14}/>
                                                     </button>
@@ -739,6 +748,49 @@
                                     <div className="bg-gradient-to-br from-green-500 to-green-700 text-white p-5 rounded-xl shadow-lg"><p className="text-green-100 text-sm">Net Profit (Bersih)</p><h3 className="text-2xl font-bold">{formatCurrency(transactions.reduce((a,b)=>a+(b.profit||0),0) - expenses.reduce((a,b)=>a+(b.amount||0),0))}</h3></div>
                                     <div className="bg-white p-5 rounded-xl border shadow-sm"><p className="text-gray-500 text-sm">Pengeluaran</p><h3 className="text-2xl font-bold text-red-600">{formatCurrency(expenses.reduce((a,b)=>a+(b.amount||0),0))}</h3></div>
                                     <div className="bg-white p-5 rounded-xl border shadow-sm"><p className="text-gray-500 text-sm">Piutang Belum Bayar</p><h3 className="text-2xl font-bold text-orange-600">{formatCurrency(debts.reduce((a,b)=>a + (b.status!=='paid' ? (b.amount - b.paid) : 0),0))}</h3></div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* [NEW FEATURE] VIEW HISTORY TRANSAKSI */}
+                        {view === 'history' && (
+                            <div className="p-6 h-full overflow-y-auto">
+                                <h2 className="text-2xl font-bold mb-6">Riwayat Transaksi</h2>
+                                <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+                                    <table className="w-full text-left text-sm">
+                                        <thead className="bg-gray-50 border-b">
+                                            <tr>
+                                                <th className="p-4">ID / Waktu</th>
+                                                <th className="p-4">Pelanggan</th>
+                                                <th className="p-4">Total</th>
+                                                <th className="p-4">Metode</th>
+                                                <th className="p-4 text-center">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {transactions.map(t => (
+                                                <tr key={t.id} className="border-b last:border-0 hover:bg-gray-50">
+                                                    <td className="p-4">
+                                                        <div className="font-bold text-xs text-gray-500">#{t.id.slice(0,6)}</div>
+                                                        <div>{formatDate(t.createdAt)}</div>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="font-bold">{t.customerName}</div>
+                                                        <div className="text-xs text-gray-500">{t.orderType} {t.table ? `(${t.table})` : ''}</div>
+                                                    </td>
+                                                    <td className="p-4 font-bold">{formatCurrency(t.total)}</td>
+                                                    <td className="p-4"><span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">{t.paymentMethod}</span></td>
+                                                    <td className="p-4 flex justify-center gap-2">
+                                                        <button onClick={()=>setLastTrans(t)} className="p-2 bg-gray-100 rounded hover:bg-blue-50 text-blue-600" title="Lihat/Print"><Icon name="printer" size={16}/></button>
+                                                        {activeStaff?.role === 'admin' && (
+                                                            <button onClick={()=>handleDeleteTransaction(t)} className="p-2 bg-gray-100 rounded hover:bg-red-50 text-red-600" title="Hapus"><Icon name="trash-2" size={16}/></button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    {transactions.length === 0 && <div className="p-8 text-center text-gray-400">Belum ada transaksi</div>}
                                 </div>
                             </div>
                         )}
