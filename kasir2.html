@@ -758,8 +758,10 @@
                             <div className="p-6 h-full overflow-y-auto">
                                 <div className="flex justify-between items-center mb-6 capitalize">
                                     <h2 className="text-2xl font-bold">{view}</h2>
-                                    {/* FIX TOMBOL STAFF (AGAR TIDAK DIPOTONG STRINGNYA) */}
+                                    
+                                    {/* PERBAIKAN DI SINI: Jika view 'staff', type tetap 'staff'. Jangan dipotong jadi 'staf' */}
                                     <button onClick={()=>setModalConfig({show:true, type: view === 'staff' ? 'staff' : view.slice(0,-1)})} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"><Icon name="plus"/> Tambah</button>
+                                
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {(view==='products'?products:view==='customers'?customers:view==='suppliers'?suppliers:view==='staff'?staff:tables).map(item => (
@@ -769,11 +771,18 @@
                                                 <div className="min-w-0">
                                                     <h4 className="font-bold truncate">{item.name}</h4>
                                                     {view==='products' && <div className="text-sm text-blue-600 font-bold">{formatCurrency(item.price)} (Stok: {item.stock})</div>}
+                                                    
+                                                    {/* TAMPILAN ROLE STAFF */}
                                                     {view==='staff' && <div className="text-sm text-gray-500 uppercase font-bold text-blue-600">{item.role} (PIN: {item.pin})</div>}
+                                                    
+                                                    {view==='tables' && <div className="text-sm text-gray-500">Kapasitas: {item.capacity} org</div>}
+                                                    {(view==='customers'||view==='suppliers') && <div className="text-sm text-gray-500">{item.phone}</div>}
                                                 </div>
                                             </div>
                                             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                                                {/* PERBAIKAN JUGA DI TOMBOL EDIT (Di baris bawah ini) */}
                                                 <button onClick={()=>setModalConfig({show:true, type: view === 'staff' ? 'staff' : view.slice(0,-1), data:item})} className="p-1.5 bg-gray-100 hover:text-blue-600 rounded"><Icon name="edit-2" size={14}/></button>
+                                                
                                                 <button onClick={()=>{if(confirm('Hapus?')) deleteDoc(doc(db,'artifacts',APP_ID,'users',user.uid,view,item.id))}} className="p-1.5 bg-gray-100 hover:text-red-600 rounded"><Icon name="trash" size={14}/></button>
                                             </div>
                                         </div>
