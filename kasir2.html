@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v7.0 - History & Void</title>
+    <title>Kasir Pintar Pro v7.1 - Shift & Stock Fix</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -35,7 +35,8 @@
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithPhoneNumber, RecaptchaVerifier } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, query, where, orderBy, setDoc, limit, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // [UPDATE IMPORTS] Tambah 'increment', 'getDocs' untuk logika stok & hapus hutang
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, query, where, orderBy, setDoc, limit, enableIndexedDbPersistence, increment, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC4t1Gya_QHDzTkYsF7U-pw1Uo1oQUABpM",
@@ -270,6 +271,94 @@
                 return () => { unsubProd(); unsubIng(); unsubCust(); unsubSupp(); unsubExp(); unsubDebts(); unsubStock(); unsubSettings(); unsubShift(); unsubTrans(); unsubTables(); unsubStaff(); };
             }, [user]);
 
+            // --- FUNGSI BARU UNTUK SHIFT (KASIR MASUK/KELUAR) ---
+            const handleOpenShift = async (e) => {
+                e.preventDefault();
+                await addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'shifts'), {
+                    startCash: Number(e.target.startCash.value),
+                    startTime: serverTimestamp(),
+                    status: 'open',
+                    transactionsCount: 0,
+                    totalSales: 0,
+                    cashierName: activeStaff?.name || 'Unknown'
+                });
+            };
+
+            const handleCloseShift = async (e) => {
+                e.preventDefault();
+                const endCash = Number(e.target.endCash.value);
+                // Hitung Penjualan Tunai di shift ini
+                const cashSales = transactions
+                    .filter(t => t.paymentMethod === 'Tunai' && t.shiftId === shift.id)
+                    .reduce((a,b) => a + (b.total || 0), 0);
+                
+                // Hitung Pengeluaran di shift ini (Asumsi semua pengeluaran ambil uang kasir)
+                const totalExpenses = expenses
+                    .filter(ex => ex.date?.seconds >= shift.startTime?.seconds) 
+                    .reduce((a,b) => a + (b.amount || 0), 0);
+
+                const expectedCash = (shift.startCash || 0) + cashSales - totalExpenses;
+                const difference = endCash - expectedCash;
+
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'shifts', shift.id), {
+                    endCash,
+                    expectedCash,
+                    difference,
+                    cashSales,
+                    totalExpenses,
+                    status: 'closed',
+                    endTime: serverTimestamp()
+                });
+                
+                setModalConfig({show: false});
+                alert(`Shift Ditutup.\n\nSaldo Seharusnya: ${formatCurrency(expectedCash)}\nSaldo Fisik: ${formatCurrency(endCash)}\nSelisih: ${formatCurrency(difference)}`);
+                setActiveStaff(null); // Logout staff setelah tutup shift
+            };
+
+            // --- FUNGSI HAPUS TRANSAKSI (DENGAN PENGEMBALIAN STOK) ---
+            const handleDeleteTransaction = async (t) => {
+                if(!confirm(`Hapus transaksi #${t.id.slice(0,6)}? \n\nPERHATIAN: Stok akan DIKEMBALIKAN ke sistem!`)) return;
+                
+                try {
+                    const batchPromises = [];
+                    
+                    // 1. Loop item untuk kembalikan stok
+                    t.items.forEach(item => {
+                        // Cek apakah item punya resep (F&B)
+                        if(item.recipe && item.recipe.length > 0) {
+                            // Kembalikan bahan baku
+                            item.recipe.forEach(r => {
+                                const ingRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'ingredients', r.ingId);
+                                // Gunakan 'increment' agar aman
+                                batchPromises.push(updateDoc(ingRef, { stock: increment(r.qty * item.qty) }));
+                            });
+                        } else {
+                            // Kembalikan produk jadi (Ritel)
+                            const prodRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'products', item.id);
+                            batchPromises.push(updateDoc(prodRef, { stock: increment(item.qty) }));
+                        }
+                    });
+
+                    // 2. Hapus dokumen transaksi
+                    batchPromises.push(deleteDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'transactions', t.id)));
+
+                    // 3. Hapus hutang terkait (jika ada)
+                    const qDebt = query(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'debts'), where('transactionId', '==', t.id));
+                    const debtSnap = await getDocs(qDebt);
+                    debtSnap.forEach(d => {
+                        batchPromises.push(deleteDoc(d.ref));
+                    });
+
+                    // Eksekusi semua
+                    await Promise.all(batchPromises);
+                    alert("Transaksi dihapus. Stok telah dikembalikan.");
+
+                } catch(e) {
+                    console.error(e);
+                    alert("Gagal menghapus: " + e.message);
+                }
+            };
+
             const getPrice = (prod, qty) => {
                 if (prod.wholesaleQty && prod.wholesalePrice && qty >= prod.wholesaleQty) {
                     return Number(prod.wholesalePrice);
@@ -453,16 +542,6 @@
                 }
             };
 
-            const handleDeleteTransaction = async (t) => {
-                if(!confirm(`Hapus transaksi ${t.id}? \n\nPERHATIAN: Stok TIDAK otomatis kembali. Laporan keuangan akan disesuaikan.`)) return;
-                try {
-                    await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'transactions', t.id));
-                    alert("Transaksi dihapus.");
-                } catch(e) {
-                    alert("Gagal hapus: " + e.message);
-                }
-            };
-
             const handlePaymentSubmit = async (e) => {
                 e.preventDefault();
                 const amount = Number(e.target.amount.value);
@@ -580,16 +659,15 @@
                 );
             }
 
-            if (user && !shift && view === 'pos') {
+            // [MODAL MODAL AWAL - KASIR BARU LOGIN]
+            if (user && !shift && (activeStaff?.role === 'kasir' || activeStaff?.role === 'admin' || activeStaff?.role === 'waiter') && view === 'pos') {
                 return (
-                    <Modal title="Buka Shift (Modal Awal)" onClose={()=>{}}>
-                        <form onSubmit={async(e)=>{
-                            e.preventDefault();
-                            await addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'shifts'), {
-                                startCash: Number(e.target.startCash.value), startTime: serverTimestamp(), status: 'open', transactionsCount:0, totalSales:0
-                            });
-                        }}>
-                            <input name="startCash" type="number" placeholder="Modal Awal (Rp)" required className="w-full p-3 border rounded-lg mb-4"/>
+                    <Modal title="Buka Toko / Shift Baru" onClose={()=>{}}>
+                        <form onSubmit={handleOpenShift}>
+                            <div className="bg-blue-50 p-4 rounded-lg mb-4 text-sm text-blue-800">
+                                Selamat Datang, <b>{activeStaff.name}</b>!<br/>Silakan masukkan uang modal di laci kasir sebelum mulai berjualan.
+                            </div>
+                            <input name="startCash" type="number" placeholder="Nominal Modal Awal (Rp)" required className="w-full p-3 border rounded-lg mb-4 text-lg font-bold"/>
                             <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Buka Toko</button>
                         </form>
                     </Modal>
@@ -618,7 +696,6 @@
                             {[
                                 {id: 'pos', icon: 'monitor', label: 'Kasir / POS', roles: ['admin', 'kasir', 'waiter']},
                                 {id: 'dashboard', icon: 'layout-dashboard', label: 'Dashboard', roles: ['admin']},
-                                // [NEW FEATURE] HISTORY TRANSAKSI
                                 {id: 'history', icon: 'history', label: 'Riwayat Transaksi', roles: ['admin', 'kasir']},
                                 {id: 'expenses', icon: 'wallet', label: 'Pengeluaran', roles: ['admin', 'kasir']},
                                 {id: 'debts', icon: 'book', label: 'Hutang / Kasbon', roles: ['admin', 'kasir']},
@@ -650,8 +727,10 @@
                                 </button>
                             </>}
                         </nav>
+                        
+                        {/* [UPDATE] Tombol Tutup Shift dengan Modal Setoran */}
                         <div className="p-4 border-t border-slate-800">
-                            <button onClick={()=>{if(confirm("Tutup Shift?")) updateDoc(doc(db,'artifacts',APP_ID,'users',user.uid,'shifts',shift.id),{status:'closed', endTime:serverTimestamp()})}} className="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl bg-red-900/30 text-red-400 hover:bg-red-900/50 transition">
+                            <button onClick={()=>setModalConfig({show:true, type:'close_shift'})} className="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl bg-red-900/30 text-red-400 hover:bg-red-900/50 transition">
                                 <Icon name="power" /> <span className="hidden md:block">Tutup Toko</span>
                             </button>
                         </div>
@@ -708,9 +787,9 @@
                                                     {i.note && <div className="text-[10px] text-gray-500 italic">"{i.note}"</div>}
                                                 </div>
                                                 <div className="flex items-center gap-2 mr-2" onClick={e=>e.stopPropagation()}>
-                                                    <button onClick={()=>updateCartQty(i.id, -1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">-</button>
+                                                    <button onClick={()=>updateCartQty(i, -1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">-</button>
                                                     <span className="font-bold text-sm w-4 text-center">{i.qty}</span>
-                                                    <button onClick={()=>updateCartQty(i.id, 1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">+</button>
+                                                    <button onClick={()=>updateCartQty(i, 1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">+</button>
                                                     <button onClick={()=>removeFromCart(i.id)} className="ml-2 p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition">
                                                         <Icon name="trash-2" size={14}/>
                                                     </button>
@@ -752,7 +831,6 @@
                             </div>
                         )}
 
-                        {/* [NEW FEATURE] VIEW HISTORY TRANSAKSI */}
                         {view === 'history' && (
                             <div className="p-6 h-full overflow-y-auto">
                                 <h2 className="text-2xl font-bold mb-6">Riwayat Transaksi</h2>
@@ -783,7 +861,7 @@
                                                     <td className="p-4 flex justify-center gap-2">
                                                         <button onClick={()=>setLastTrans(t)} className="p-2 bg-gray-100 rounded hover:bg-blue-50 text-blue-600" title="Lihat/Print"><Icon name="printer" size={16}/></button>
                                                         {activeStaff?.role === 'admin' && (
-                                                            <button onClick={()=>handleDeleteTransaction(t)} className="p-2 bg-gray-100 rounded hover:bg-red-50 text-red-600" title="Hapus"><Icon name="trash-2" size={16}/></button>
+                                                            <button onClick={()=>handleDeleteTransaction(t)} className="p-2 bg-gray-100 rounded hover:bg-red-50 text-red-600" title="Hapus & Kembalikan Stok"><Icon name="trash-2" size={16}/></button>
                                                         )}
                                                     </td>
                                                 </tr>
@@ -941,6 +1019,21 @@
                     {modalConfig.show && (
                         <Modal title={modalConfig.type.replace('_', ' ')} onClose={()=>setModalConfig({show:false})}>
                             
+                            {/* [UPDATE] MODAL TUTUP SHIFT / SETORAN */}
+                            {modalConfig.type === 'close_shift' && (
+                                <form onSubmit={handleCloseShift} className="space-y-4">
+                                    <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4 text-sm">
+                                        <h4 className="font-bold text-yellow-800 mb-2">Ringkasan Shift</h4>
+                                        <div className="flex justify-between"><span>Modal Awal:</span> <b>{formatCurrency(shift?.startCash)}</b></div>
+                                        <div className="flex justify-between"><span>Penjualan Tunai:</span> <b>{formatCurrency(transactions.filter(t=>t.paymentMethod==='Tunai' && t.shiftId===shift.id).reduce((a,b)=>a+(b.total||0),0))}</b></div>
+                                        <div className="flex justify-between text-red-600"><span>Pengeluaran:</span> <b>-{formatCurrency(expenses.filter(ex=>ex.date?.seconds>=shift.startTime?.seconds).reduce((a,b)=>a+(b.amount||0),0))}</b></div>
+                                    </div>
+                                    <label className="block text-sm font-bold text-gray-700">Total Uang Fisik di Laci</label>
+                                    <input name="endCash" type="number" placeholder="Hitung uang tunai..." required className="w-full p-3 border rounded-lg text-lg font-bold" autoFocus/>
+                                    <button className="w-full bg-red-600 text-white p-3 rounded-lg font-bold">Setor & Tutup Toko</button>
+                                </form>
+                            )}
+
                             {modalConfig.type === 'pay_debt' && (
                                 <form onSubmit={handlePaymentSubmit} className="space-y-4">
                                     <div className="bg-blue-50 p-3 rounded-lg text-sm">
