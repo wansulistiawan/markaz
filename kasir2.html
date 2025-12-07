@@ -3,52 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v6.2 - Complete Roles</title>
+    <title>Kasir Pintar Pro v6.3 - Layout Fix</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @media print {
-            .no-print { display: none !important; }
-            .print-only { display: block !important; position: absolute; top: 0; left: 0; width: 100%; }
-        }
+        /* Kustomisasi Scrollbar agar terlihat rapi */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-        const { useState, useEffect, useMemo, useRef } = React;
+        const { useState, useEffect, useRef } = React;
         
-        // --- ICONS WRAPPER ---
         const Icon = ({ name, size = 20, className = "" }) => {
             const iconRef = useRef(null);
-            useEffect(() => {
-                lucide.createIcons({
-                    root: iconRef.current ? iconRef.current.parentNode : document,
-                    nameAttr: 'data-lucide',
-                    attrs: {class: className}
-                });
-            }, [name]);
+            useEffect(() => { lucide.createIcons({ root: iconRef.current ? iconRef.current.parentNode : document, nameAttr: 'data-lucide', attrs: {class: className} }); }, [name]);
             return <i ref={iconRef} data-lucide={name} width={size} height={size} className={className}></i>;
         };
 
-        // --- FIREBASE SETUP ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, query, where, orderBy, setDoc, getDoc, limit, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithPhoneNumber, RecaptchaVerifier } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, query, where, orderBy, setDoc, limit, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC4t1Gya_QHDzTkYsF7U-pw1Uo1oQUABpM",
@@ -63,33 +51,13 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        enableIndexedDbPersistence(db).catch((err) => {
-            console.log('Persistence status:', err.code);
-        });
+        enableIndexedDbPersistence(db).catch((err) => {});
 
         const APP_ID = "kasir-pintar-pro-v6";
-
-        // --- UTILS ---
         const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val || 0);
         const formatDate = (ts) => ts ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(ts.toDate ? ts.toDate() : new Date(ts)) : '-';
 
-        const exportToCSV = (data, filename) => {
-            if (!data || !data.length) return alert("Tidak ada data untuk diexport");
-            const headers = Object.keys(data[0]).join(",");
-            const rows = data.map(obj => Object.values(obj).map(v => `"${v}"`).join(",")).join("\n");
-            const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + rows;
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", filename + ".csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        };
-
         // --- COMPONENTS ---
-
         const Modal = ({ title, onClose, children, maxWidth = "max-w-md" }) => (
             <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                 <div className={`bg-white rounded-2xl w-full ${maxWidth} shadow-2xl overflow-hidden flex flex-col max-h-[90vh]`}>
@@ -102,136 +70,61 @@
             </div>
         );
 
-        // --- LOGIN SCREEN (FULL ORIGINAL) ---
         const LoginScreen = () => {
             const [phone, setPhone] = useState('');
             const [otp, setOtp] = useState('');
             const [showOtp, setShowOtp] = useState(false);
             const [confirmObj, setConfirmObj] = useState(null);
             const [loading, setLoading] = useState(false);
-            const [error, setError] = useState('');
-            
             const recaptchaRef = useRef(null);
 
             useEffect(() => {
-                const cleanupRecaptcha = () => {
-                    if (window.recaptchaVerifier) {
-                        try { window.recaptchaVerifier.clear(); } catch(e){}
-                        window.recaptchaVerifier = null;
-                    }
-                    if (recaptchaRef.current) recaptchaRef.current.innerHTML = '';
-                };
-                cleanupRecaptcha();
-                return () => cleanupRecaptcha();
+                if (window.recaptchaVerifier) window.recaptchaVerifier.clear();
+                if (recaptchaRef.current) recaptchaRef.current.innerHTML = '';
             }, []);
 
             const handleGoogleLogin = async () => {
-                setLoading(true); setError('');
-                const provider = new GoogleAuthProvider();
-                try {
-                    await signInWithPopup(auth, provider);
-                } catch (err) {
-                    console.error("Google Login Error:", err);
-                    setError("Gagal Login Google. (" + err.message + ")");
-                    setLoading(false);
-                }
+                try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (err) { alert(err.message); }
             };
 
             const handleSendOtp = async (e) => {
-                e.preventDefault();
-                setLoading(true); setError('');
-                
-                let formatPhone = phone.trim();
-                if (formatPhone.startsWith('0')) formatPhone = '+62' + formatPhone.slice(1);
+                e.preventDefault(); setLoading(true);
+                let formatPhone = phone.trim().replace(/^0/, '+62');
                 if (!formatPhone.startsWith('+')) formatPhone = '+62' + formatPhone;
-
                 try {
-                    if(!recaptchaRef.current) throw new Error("Recaptcha container not found");
-                    if (!window.recaptchaVerifier) {
-                        window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaRef.current, {
-                            'size': 'invisible', 'callback': () => {} 
-                        });
-                    }
+                    if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaRef.current, { 'size': 'invisible' });
                     const confirmation = await signInWithPhoneNumber(auth, formatPhone, window.recaptchaVerifier);
-                    setConfirmObj(confirmation);
-                    setShowOtp(true);
-                    setLoading(false);
-                } catch (err) {
-                    console.error("OTP Error:", err);
-                    setError("Gagal kirim SMS: " + err.message);
-                    setLoading(false);
-                    if (window.recaptchaVerifier) {
-                         try { window.recaptchaVerifier.clear(); } catch(e){}
-                         window.recaptchaVerifier = null;
-                    }
-                }
+                    setConfirmObj(confirmation); setShowOtp(true); setLoading(false);
+                } catch (err) { alert(err.message); setLoading(false); }
             };
 
             const handleVerifyOtp = async (e) => {
-                e.preventDefault();
-                setLoading(true);
-                try {
-                    await confirmObj.confirm(otp);
-                } catch (err) {
-                    setError("Kode OTP Salah!");
-                    setLoading(false);
-                }
+                e.preventDefault(); setLoading(true);
+                try { await confirmObj.confirm(otp); } catch (err) { alert("Kode Salah"); setLoading(false); }
             };
 
             return (
                 <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center p-4 font-sans">
-                    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-                        <div className="p-8">
-                            <div className="text-center mb-8">
-                                <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
-                                    <Icon name="store" size={32}/>
-                                </div>
-                                <h1 className="text-2xl font-bold text-gray-800">Kasir Pintar Pro</h1>
-                                <p className="text-gray-500 text-sm">Masuk untuk mengelola toko Anda</p>
-                            </div>
-
-                            {error && <div className="bg-red-100 text-red-600 p-3 rounded-lg text-sm mb-4 text-center break-words">{error}</div>}
-
-                            {!showOtp ? (
-                                <>
-                                    <form onSubmit={handleSendOtp} className="space-y-4 mb-6">
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 mb-1">NOMOR WHATSAPP / HP</label>
-                                            <div className="flex bg-gray-50 border rounded-lg overflow-hidden focus-within:ring-2 ring-blue-500 transition">
-                                                <span className="bg-gray-200 px-3 py-3 text-gray-600 font-bold border-r">+62</span>
-                                                <input type="tel" className="w-full p-3 bg-transparent outline-none font-bold text-gray-800" placeholder="812-3456-7890" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g,''))} required />
-                                            </div>
-                                        </div>
-                                        <div ref={recaptchaRef}></div>
-                                        <button disabled={loading} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition disabled:bg-gray-300 flex justify-center items-center gap-2">
-                                            {loading ? 'Mengirim OTP...' : <>Kirim Kode OTP <Icon name="arrow-right" size={16}/></>}
-                                        </button>
-                                    </form>
-                                    <div className="flex items-center gap-4 mb-6">
-                                        <div className="h-px bg-gray-200 flex-1"></div>
-                                        <span className="text-xs text-gray-400 font-bold">ATAU MASUK DENGAN</span>
-                                        <div className="h-px bg-gray-200 flex-1"></div>
-                                    </div>
-                                    <button onClick={handleGoogleLogin} className="w-full border border-gray-300 bg-white text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition flex items-center justify-center gap-3">
-                                        Lanjutkan dengan Google
-                                    </button>
-                                </>
-                            ) : (
-                                <form onSubmit={handleVerifyOtp} className="space-y-4">
-                                    <div className="text-center mb-4">
-                                        <p className="text-sm text-gray-500">Kode dikirim ke <span className="font-bold text-gray-800">+62{phone}</span></p>
-                                        <button type="button" onClick={()=>setShowOtp(false)} className="text-xs text-blue-600 hover:underline">Ubah Nomor</button>
-                                    </div>
-                                    <input type="number" className="w-full p-3 border-2 border-blue-100 rounded-xl text-center text-2xl font-bold tracking-widest outline-none focus:border-blue-600 focus:bg-blue-50 transition" placeholder="• • • • • •" value={otp} onChange={e => setOtp(e.target.value)} autoFocus />
-                                    <button disabled={loading} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition disabled:bg-gray-300">
-                                        {loading ? 'Memverifikasi...' : 'Verifikasi & Masuk'}
-                                    </button>
-                                </form>
-                            )}
+                    <div className="bg-white w-full max-w-md rounded-2xl p-8 shadow-2xl overflow-hidden">
+                        <div className="text-center mb-8">
+                            <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600"><Icon name="store" size={32}/></div>
+                            <h1 className="text-2xl font-bold text-gray-800">Kasir Pintar Pro</h1>
+                            <p className="text-gray-500 text-sm">Masuk untuk mengelola toko Anda</p>
                         </div>
-                        <div className="bg-gray-50 p-4 text-center text-xs text-gray-400">
-                            &copy; 2025 Markaz Qur'an Al-Maa'un Technology
-                        </div>
+                        {!showOtp ? (
+                            <form onSubmit={handleSendOtp} className="space-y-4">
+                                <input type="tel" className="w-full p-3 border rounded-lg" placeholder="Nomor HP (Contoh: 812xxx)" value={phone} onChange={e=>setPhone(e.target.value)} required />
+                                <div ref={recaptchaRef}></div>
+                                <button disabled={loading} className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">{loading?'Loading...':'Kirim OTP'}</button>
+                                <div className="text-center text-xs text-gray-400 mt-4">ATAU</div>
+                                <button type="button" onClick={handleGoogleLogin} className="w-full border p-3 rounded-lg mt-2 font-bold text-gray-600">Masuk dengan Google</button>
+                            </form>
+                        ) : (
+                            <form onSubmit={handleVerifyOtp} className="space-y-4">
+                                <input type="number" className="w-full p-3 border rounded-lg text-center text-xl" placeholder="Kode OTP" value={otp} onChange={e=>setOtp(e.target.value)} />
+                                <button disabled={loading} className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Verifikasi</button>
+                            </form>
+                        )}
                     </div>
                 </div>
             );
@@ -300,13 +193,12 @@
             );
         };
 
-        // --- MAIN APPLICATION ---
+        // --- MAIN APP ---
         const App = () => {
             const [user, setUser] = useState(null);
             const [view, setView] = useState('pos');
             const [loading, setLoading] = useState(true);
             
-            // Data States
             const [products, setProducts] = useState([]);
             const [ingredients, setIngredients] = useState([]);
             const [customers, setCustomers] = useState([]);
@@ -319,7 +211,6 @@
             const [transactions, setTransactions] = useState([]);
             const [stockHistory, setStockHistory] = useState([]); 
 
-            // POS States
             const [cart, setCart] = useState([]);
             const [selectedCustomer, setSelectedCustomer] = useState(null);
             const [selectedTable, setSelectedTable] = useState(null); 
@@ -329,11 +220,9 @@
             const [lastTrans, setLastTrans] = useState(null);
             const [searchQuery, setSearchQuery] = useState("");
             
-            // Staff & Role
             const [staff, setStaff] = useState([]); 
             const [activeStaff, setActiveStaff] = useState(null); 
             
-            // Modals
             const [editingItem, setEditingItem] = useState(null);
             const [modalConfig, setModalConfig] = useState({ show: false, type: '', data: null });
             const [settingsTab, setSettingsTab] = useState('profile');
@@ -346,9 +235,7 @@
             useEffect(() => {
                 if (!user) return;
                 setLoading(true);
-
                 const basePath = ['artifacts', APP_ID, 'users', user.uid];
-
                 const unsubProd = onSnapshot(collection(db, ...basePath, 'products'), s => setProducts(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubIng = onSnapshot(collection(db, ...basePath, 'ingredients'), s => setIngredients(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubCust = onSnapshot(collection(db, ...basePath, 'customers'), s => setCustomers(s.docs.map(d => ({id:d.id, ...d.data()}))));
@@ -366,12 +253,9 @@
                 const unsubSettings = onSnapshot(doc(db, ...basePath, 'settings', 'profile'), s => { if (s.exists()) setStoreProfile(s.data()); });
                 const qShift = query(collection(db, ...basePath, 'shifts'), where('status', '==', 'open'));
                 const unsubShift = onSnapshot(qShift, s => { setShift(s.empty ? null : {id: s.docs[0].id, ...s.docs[0].data()}); });
-
                 setTimeout(() => setLoading(false), 1000);
                 return () => { unsubProd(); unsubIng(); unsubCust(); unsubSupp(); unsubExp(); unsubDebts(); unsubStock(); unsubSettings(); unsubShift(); unsubTrans(); unsubTables(); unsubStaff(); };
             }, [user]);
-
-            // --- BUSINESS LOGIC ---
 
             const getPrice = (prod, qty) => {
                 if (prod.wholesaleQty && prod.wholesalePrice && qty >= prod.wholesaleQty) {
@@ -383,7 +267,6 @@
             const addToCart = (p) => {
                 const hasRecipe = p.recipe && p.recipe.length > 0;
                 if (!hasRecipe && p.stock <= 0) return alert("Stok Produk Habis!");
-
                 setCart(prev => { 
                     const ex = prev.find(i=>i.id===p.id); 
                     if (ex) {
@@ -441,7 +324,7 @@
                 });
                 for (const [id, needed] of Object.entries(requiredIngs)) {
                     const ing = ingredients.find(i => i.id === id);
-                    if (!ing || ing.stock < needed) return `Stok Bahan Baku '${ing?.name||'Unknown'}' Kurang! (Butuh: ${needed}, Ada: ${ing?.stock||0})`;
+                    if (!ing || ing.stock < needed) return `Stok Bahan Baku Kurang!`;
                 }
                 return null;
             };
@@ -449,15 +332,12 @@
             const handleCheckout = async () => {
                 if(!shift) return alert("Kasir belum dibuka!");
                 if(cart.length === 0) return;
-                
                 const stockError = checkIngredientsAvailability();
                 if (stockError) return alert(stockError);
-
                 if(paymentMethod === 'Hutang' && !selectedCustomer) return alert("Pembayaran Hutang wajib memilih Pelanggan!");
                 
                 const totals = calculateTotals();
                 const profit = totals.total - totals.tax - totals.serviceCharge - totals.hppTotal;
-
                 const transData = {
                     items: cart, ...totals, profit, paymentMethod, orderType,
                     table: selectedTable ? selectedTable.name : null,
@@ -468,18 +348,15 @@
 
                 try {
                     const ref = await addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'transactions'), transData);
-                    
                     if (paymentMethod === 'Hutang') {
                         await addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'debts'), {
                             transactionId: ref.id, customerId: selectedCustomer.id, customerName: selectedCustomer.name,
                             amount: totals.total, paid: 0, status: 'unpaid', createdAt: serverTimestamp()
                         });
                     }
-
                     const batchPromises = [];
                     const ingUpdates = {};
                     const prodUpdates = {};
-
                     cart.forEach(item => {
                         if (item.recipe && item.recipe.length > 0) {
                             item.recipe.forEach(r => {
@@ -491,13 +368,10 @@
                             prodUpdates[item.id] += item.qty;
                         }
                     });
-
                     for (const [id, qty] of Object.entries(ingUpdates)) {
                         const ing = ingredients.find(i => i.id === id);
-                        const ingRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'ingredients', id);
-                        batchPromises.push(updateDoc(ingRef, { stock: ing.stock - qty }));
+                        batchPromises.push(updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'ingredients', id), { stock: ing.stock - qty }));
                     }
-                    
                     for (const [id, qty] of Object.entries(prodUpdates)) {
                         const prod = products.find(p => p.id === id);
                         const prodRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'products', id);
@@ -506,14 +380,11 @@
                             productId: id, productName: prod.name, change: -qty, type: 'sale', refId: ref.id, reason: 'Penjualan POS', createdAt: serverTimestamp()
                         }));
                     }
-
                     await Promise.all(batchPromises);
-
                     await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'shifts', shift.id), {
                         transactionsCount: (shift.transactionsCount || 0) + 1,
                         totalSales: (shift.totalSales || 0) + transData.total
                     });
-
                     setLastTrans({id: ref.id, ...transData});
                     setCart([]); setDiscount(0); setSelectedCustomer(null); setSelectedTable(null);
                 } catch (e) { alert("Gagal transaksi: " + e.message); }
@@ -538,7 +409,6 @@
                 const type = f.type.value;
                 const change = type === 'in' ? qty : -qty;
                 const prod = modalConfig.data;
-                
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'products', prod.id), { stock: prod.stock + change });
                 await addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'stock_history'), {
                     productId: prod.id, productName: prod.name, change: change, type: 'adjustment', reason: f.reason.value, createdAt: serverTimestamp()
@@ -560,13 +430,10 @@
                 e.preventDefault();
                 const f = e.target;
                 const type = modalConfig.type;
-                const isEdit = !!modalConfig.data;
                 const collPath = ['artifacts', APP_ID, 'users', user.uid];
-                
                 let collectionName = type + 's';
                 if (type === 'staff') collectionName = 'staff';
                 if (type === 'ingredient') collectionName = 'ingredients';
-
                 let payload = {};
 
                 try {
@@ -580,9 +447,7 @@
                          payload = { name: f.name.value, unit: f.unit.value, stock: Number(f.stock.value), costPerUnit: Number(f.costPerUnit.value) };
                     } else if (type === 'recipe_setup') {
                          const currentRecipe = modalConfig.data.recipe || [];
-                         const ingId = f.ingId.value;
-                         const qty = Number(f.qty.value);
-                         const newRecipe = [...currentRecipe, {ingId, qty}];
+                         const newRecipe = [...currentRecipe, {ingId: f.ingId.value, qty: Number(f.qty.value)}];
                          await updateDoc(doc(db, ...collPath, 'products', modalConfig.data.id), { recipe: newRecipe });
                          setModalConfig({ show: false });
                          return;
@@ -599,17 +464,13 @@
                         payload = { name: f.name.value, amount: Number(f.amount.value), category: f.category.value, date: serverTimestamp() };
                     }
 
-                    if (isEdit) {
-                        await updateDoc(doc(db, ...collPath, collectionName, modalConfig.data.id), { ...payload, updatedAt: serverTimestamp() });
-                    } else {
-                        await addDoc(collection(db, ...collPath, collectionName), { ...payload, createdAt: serverTimestamp() });
-                    }
+                    if (modalConfig.data?.id) await updateDoc(doc(db, ...collPath, collectionName, modalConfig.data.id), { ...payload, updatedAt: serverTimestamp() });
+                    else await addDoc(collection(db, ...collPath, collectionName), { ...payload, createdAt: serverTimestamp() });
                     
                     setModalConfig({ show: false });
                 } catch (err) { alert("GAGAL SIMPAN: " + err.message); }
             };
 
-            // --- RENDERERS ---
             if (loading) return <div className="h-screen flex items-center justify-center text-blue-600 font-bold">Loading Kasir Pro...</div>;
             if (!user) return <LoginScreen />;
             
@@ -674,12 +535,9 @@
                             </div>
 
                             <div className="text-xs font-bold text-slate-500 px-3 mb-2 uppercase hidden md:block">Utama</div>
-                            
-                            {/* [FIX ROLES] TUGAS TAMBAHAN KASIR & WAITER */}
                             {[
                                 {id: 'pos', icon: 'monitor', label: 'Kasir / POS', roles: ['admin', 'kasir', 'waiter']},
                                 {id: 'dashboard', icon: 'layout-dashboard', label: 'Dashboard', roles: ['admin']},
-                                // Kasir boleh buka Expenses & Pelanggan
                                 {id: 'expenses', icon: 'wallet', label: 'Pengeluaran', roles: ['admin', 'kasir']},
                                 {id: 'debts', icon: 'book', label: 'Hutang / Kasbon', roles: ['admin', 'kasir']},
                                 {id: 'customers', icon: 'users', label: 'Pelanggan', roles: ['admin', 'kasir']},
@@ -689,16 +547,13 @@
                                 </button>
                             ))}
                             
-                            {/* [FIX ROLES] GUDANG & DATA */}
                             {(activeStaff?.role === 'admin' || activeStaff?.role === 'gudang') && <>
                                 <div className="text-xs font-bold text-slate-500 px-3 mt-4 mb-2 uppercase hidden md:block">Gudang & Data</div>
-                                
                                 {['inventory', 'ingredients'].map(m => (
                                     <button key={m} onClick={() => setView(m)} className={`w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl transition ${view===m ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'} capitalize`}>
                                         <Icon name={m==='inventory'?'clipboard-list':'flask-conical'} size={18} /> <span className="hidden md:block font-medium">{m==='inventory'?'Stok Opname':'Bahan Baku'}</span>
                                     </button>
                                 ))}
-                                
                                 {['products', 'staff', 'tables', 'suppliers'].map(m => (
                                     <button key={m} onClick={() => setView(m)} className={`w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl transition ${view===m ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'} capitalize`}>
                                         <Icon name="database" size={18} /> <span className="hidden md:block font-medium">{m}</span>
@@ -706,7 +561,6 @@
                                 ))}
                             </>}
                             
-                            {/* [FIX ROLES] SETTING ADMIN ONLY */}
                             {activeStaff?.role === 'admin' && <>
                                 <div className="text-xs font-bold text-slate-500 px-3 mt-4 mb-2 uppercase hidden md:block">Sistem</div>
                                 <button onClick={() => {setSettingsTab('profile'); setModalConfig({show:true, type:'settings'})}} className="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl hover:bg-slate-800">
@@ -724,7 +578,7 @@
                     <main className="flex-1 flex flex-col overflow-hidden relative w-full">
                         {view === 'pos' && (
                             <div className="flex h-full flex-col md:flex-row">
-                                <div className="flex-1 bg-gray-50 flex flex-col min-w-0">
+                                <div className="flex-1 bg-gray-50 flex flex-col min-w-0 h-full overflow-hidden">
                                     <div className="p-4 bg-white border-b flex gap-3 items-center">
                                         <div className="relative flex-1">
                                             <Icon name="scan-barcode" className="absolute left-3 top-3 text-gray-400"/>
@@ -752,7 +606,7 @@
                                         })}
                                     </div>
                                 </div>
-                                <div className="w-full md:w-96 bg-white shadow-2xl z-10 flex flex-col border-l">
+                                <div className="w-full md:w-96 bg-white shadow-2xl z-20 flex flex-col border-l flex-shrink-0 h-auto md:h-full">
                                     <div className="p-4 border-b bg-gray-50 space-y-2">
                                         <div className="flex gap-2">
                                             <select className="flex-1 p-2 border rounded bg-white text-sm" value={orderType} onChange={e=>setOrderType(e.target.value)}><option>Dine In</option><option>Take Away</option></select>
@@ -760,7 +614,7 @@
                                         </div>
                                         <select className="w-full p-2 border rounded bg-white text-sm" value={selectedCustomer?.id||''} onChange={e=>setSelectedCustomer(customers.find(c=>c.id===e.target.value)||null)}><option value="">Pelanggan Umum</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select>
                                     </div>
-                                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                                    <div className="flex-1 overflow-y-auto p-4 space-y-2 max-h-[300px] md:max-h-full">
                                         {cart.map(i => (
                                             <div key={i.id} onClick={()=>{setEditingItem({...i}); setModalConfig({show:true, type:'edit_cart_item'})}} className="flex justify-between items-center bg-gray-50 p-2 rounded cursor-pointer hover:bg-gray-100">
                                                 <div className="flex-1">
@@ -771,18 +625,14 @@
                                                     </div>
                                                     {i.note && <div className="text-[10px] text-gray-500 italic">"{i.note}"</div>}
                                                 </div>
-                                                
                                                 <div className="flex items-center gap-2 mr-2" onClick={e=>e.stopPropagation()}>
                                                     <button onClick={()=>updateCartQty(i, -1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">-</button>
                                                     <span className="font-bold text-sm w-4 text-center">{i.qty}</span>
                                                     <button onClick={()=>updateCartQty(i, 1)} className="w-6 h-6 bg-gray-200 rounded text-sm hover:bg-gray-300">+</button>
-                                                    
-                                                    {/* TOMBOL HAPUS BARU (SAMPAH) */}
                                                     <button onClick={()=>removeFromCart(i.id)} className="ml-2 p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition">
                                                         <Icon name="trash-2" size={14}/>
                                                     </button>
                                                 </div>
-                                                
                                                 <div className="font-bold text-sm">{formatCurrency((i.price*i.qty)- (i.itemDiscount||0))}</div>
                                             </div>
                                         ))}
@@ -1070,7 +920,8 @@
 
                                     {modalConfig.type === 'staff' && <>
                                         <input name="pin" type="text" placeholder="PIN Akses" required defaultValue={modalConfig.data?.pin} className="w-full p-3 border rounded-lg"/>
-                                        {/* [FIX FORM STAFF] Tambah Opsi Gudang & Waiter */}
+                                        
+                                        {/* [ADD] OPSI ROLE TAMBAHAN DI SINI */}
                                         <select name="role" defaultValue={modalConfig.data?.role||'kasir'} className="w-full p-3 border rounded-lg">
                                             <option value="kasir">Kasir (Jualan)</option>
                                             <option value="admin">Admin (Full Akses)</option>
