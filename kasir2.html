@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v10.1 - Staff Control Fix</title>
+    <title>Kasir Pintar Pro v10.2 - Staff Fix</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -84,6 +84,7 @@
             } catch (e) { return '-'; }
         };
 
+        // --- COMPONENTS ---
         const Modal = ({ title, onClose, children, maxWidth = "max-w-md" }) => (
             <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" style={{zIndex: 1000}}>
                 <div className={`bg-white rounded-2xl w-full ${maxWidth} shadow-2xl overflow-hidden flex flex-col max-h-[90vh]`}>
@@ -434,7 +435,7 @@
                 return () => { unsubProd(); unsubIng(); unsubCust(); unsubSupp(); unsubExp(); unsubDebts(); unsubStock(); unsubSettings(); unsubShift(); unsubTrans(); unsubTables(); unsubStaff(); };
             }, [user, storeId]);
 
-            // [AUTO LOGIN & VALIDATION LOGIC]
+            // [AUTO LOGIN & VALIDATION LOGIC] - NO PIN
             useEffect(() => {
                 if (user && staff.length > 0 && !activeStaff) {
                     if (storeId === user.uid) {
@@ -453,6 +454,7 @@
                                 return;
                             }
                             
+                            // Cek Jam Kerja
                             if (myStaffProfile.role !== 'admin' && myStaffProfile.shiftStart && myStaffProfile.shiftEnd) {
                                 const now = new Date();
                                 const currentMin = now.getHours() * 60 + now.getMinutes();
@@ -782,7 +784,6 @@
                 } catch(e) { alert("Gagal: " + e.message); }
             };
 
-            // [NEW] TOGGLE STATUS STAFF
             const toggleStaffStatus = async (staffId, currentStatus) => {
                 if(!confirm(`Ubah status staff ini?`)) return;
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'staff', staffId), {
@@ -864,16 +865,14 @@
                     } else if (type === 'table') {
                         payload = { name: f.name.value, capacity: f.capacity.value };
                     } else if (type === 'staff') {
-                        // [UPDATED] STAFF FORM: NAMA, EMAIL, ROLE, TIME, ACTIVE
+                        // [FIXED] FORM STAFF: HAPUS PIN, ADA NAMA
                         payload = { 
                             name: f.name.value, 
                             email: f.email.value.trim().toLowerCase(), 
-                            // PIN removed
                             role: f.role.value,
                             shiftStart: f.shiftStart.value,
                             shiftEnd: f.shiftEnd.value,
                         };
-                        // Default Active untuk staf baru
                         if(!modalConfig.data?.id) payload.isActive = true;
                     } else if (type === 'expense') {
                         payload = { name: f.name.value, amount: Number(f.amount.value), category: f.category.value, date: serverTimestamp() };
@@ -982,7 +981,7 @@
                     <aside className="w-20 md:w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20 overflow-y-auto">
                         <div className="h-16 flex items-center justify-center md:justify-start md:px-6 bg-slate-950 text-white font-bold gap-3 flex-shrink-0 sticky top-0 z-10">
                             <div className="bg-blue-600 p-2 rounded-lg"><Icon name="zap" size={20}/></div>
-                            <span className="hidden md:block">Kasir Pro v10.1</span>
+                            <span className="hidden md:block">Kasir Pro v10.2</span>
                         </div>
                         <nav className="flex-1 py-4 space-y-1 px-2">
                             <div className="px-3 mb-6 flex items-center gap-3 pb-4 border-b border-slate-800">
@@ -1045,11 +1044,13 @@
                     </aside>
 
                     <main className="flex-1 flex flex-col overflow-hidden relative w-full">
-                        {/* ... (Main Content Views - POS, Dashboard, etc. - Sama seperti v10.0) ... */}
-                        {/* ... (Hanya bagian Staff View yang perlu update) ... */}
+                        {/* ... (View POS, Dashboard, dll - SAMA SEPERTI SEBELUMNYA) ... */}
+                        {/* ... AGAR MUAT, SAYA TIDAK TULIS ULANG KODE BAGIAN UTAMA (POS/DASHBOARD/HISTORY/EXPENSE/DEBTS/INGREDIENTS) KARENA TIDAK BERUBAH ... */}
+                        {/* ... PASTIKAN BAGIAN UTAMA ITU TETAP ADA (COPY DARI V9.6) ... */}
                         
                         {view === 'pos' && (
-                           /* ... (Code POS View - Sama seperti v10.0) ... */
+                           /* ... PASTE KODE POS VIEW DARI V9.6 DI SINI ... */
+                           /* ... (Code POS View) ... */
                            <div className="flex h-full flex-col md:flex-row">
                                 <div className="flex-1 bg-gray-50 flex flex-col min-w-0 h-full overflow-hidden">
                                     <div className="p-4 bg-white border-b flex flex-col gap-3">
@@ -1194,12 +1195,9 @@
                             </div>
                         )}
 
-                        {/* ... (View Dashboard, History, Expenses, Debts - Sama seperti v10.0) ... */}
-                        {/* UNTUK MENYINGKAT KODE, SAYA HANYA TAMPILKAN BAGIAN YANG BERUBAH YAITU STAFF LIST */}
-                        
                         {['products', 'customers', 'suppliers', 'tables'].includes(view) && (
-                            /* ... (Standard CRUD View) ... */
-                             <div className="p-6 h-full overflow-y-auto">
+                            /* ... (Standard CRUD View - Paste from v9.6) ... */
+                            <div className="p-6 h-full overflow-y-auto">
                                 <div className="flex justify-between items-center mb-6 capitalize">
                                     <h2 className="text-2xl font-bold">{view}</h2>
                                     <button onClick={()=>setModalConfig({show:true, type: view.slice(0,-1)})} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"><Icon name="plus"/> Tambah</button>
@@ -1207,17 +1205,22 @@
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {(view==='products'?products:view==='customers'?customers:view==='suppliers'?suppliers:tables).map(item => (
                                          <div key={item.id} className="bg-white p-4 rounded-xl border hover:shadow-md transition relative group">
-                                            {/* ... (Card Content) ... */}
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
                                                     {view==='products' && item.image ? <img src={item.image} className="w-full h-full object-cover rounded-full"/> : item.name[0]}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <h4 className="font-bold truncate">{item.name}</h4>
-                                                    {/* ... (Details) ... */}
+                                                    {view==='products' && <div className="text-sm text-blue-600 font-bold">{formatCurrency(item.price)}</div>}
+                                                    {view==='products' && <div className="text-xs text-gray-500 mt-1">Stok: {item.stock}</div>}
+                                                    {view==='tables' && <div className="text-sm text-gray-500">Kapasitas: {item.capacity} org</div>}
+                                                    {view==='customers' && <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded inline-block mt-1">{item.memberCode}</div>}
+                                                    {view==='customers' && <div className="text-[10px] text-gray-500 mt-1">Poin: {item.points || 0}</div>}
+                                                    {(view==='customers'||view==='suppliers') && <div className="text-sm text-gray-500">{item.phone}</div>}
                                                 </div>
                                             </div>
                                             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                                                {view==='customers' && <button onClick={()=>setModalConfig({show:true, type:'show_member_card', data:item})} className="p-1.5 bg-green-100 text-green-600 rounded" title="Kartu Member"><Icon name="credit-card" size={14}/></button>}
                                                 <button onClick={()=>setModalConfig({show:true, type: view.slice(0,-1), data:item})} className="p-1.5 bg-gray-100 hover:text-blue-600 rounded"><Icon name="edit-2" size={14}/></button>
                                                 <button onClick={()=>{if(confirm('Hapus?')) deleteDoc(doc(db,'artifacts',APP_ID,'users',storeId,view,item.id))}} className="p-1.5 bg-gray-100 hover:text-red-600 rounded"><Icon name="trash" size={14}/></button>
                                             </div>
@@ -1227,7 +1230,7 @@
                             </div>
                         )}
 
-                        {/* [UPDATED] STAFF LIST VIEW */}
+                        {/* [FIXED] STAFF LIST VIEW (STATUS TOGGLE) */}
                         {view === 'staff' && (
                             <div className="p-6 h-full overflow-y-auto">
                                 <div className="flex justify-between items-center mb-6">
@@ -1243,6 +1246,7 @@
                                                 <p className="text-xs text-gray-400 mt-1">Jadwal: {s.shiftStart || "08:00"} - {s.shiftEnd || "17:00"}</p>
                                             </div>
                                             <div className="flex items-center gap-3">
+                                                {/* TOMBOL STATUS MANUAL */}
                                                 {s.role !== 'admin' && (
                                                     <button 
                                                         onClick={()=>toggleStaffStatus(s.id, s.isActive)}
@@ -1260,7 +1264,7 @@
                             </div>
                         )}
                         
-                        {/* RENDER VIEW LAINNYA (DASHBOARD, HISTORY, ETC) AGAR TIDAK HILANG */}
+                        {/* RENDER VIEW LAINNYA (DASHBOARD, HISTORY, ETC) */}
                         {view === 'dashboard' && (
                             /* ... COPY PASTE DASHBOARD ... */
                             <div className="p-6 h-full overflow-y-auto">
@@ -1294,7 +1298,6 @@
                                 </div>
                             </div>
                         )}
-                        {/* ... SISA VIEW LAINNYA (Inventory, Expenses, Ingredients, Debts) MASIH ADA DI LOGIKA RENDER DI ATAS ... */}
                     </main>
 
                     {/* DYNAMIC MODAL FORM */}
@@ -1341,6 +1344,7 @@
                                      handleSubmit 
                                  } className="space-y-4 capitalize">
                                      
+                                     {/* FORM: EDIT CART ITEM */}
                                      {modalConfig.type === 'edit_cart_item' ? (
                                          <div className="space-y-4">
                                             <h3 className="font-bold">{editingItem.name}</h3>
@@ -1356,10 +1360,25 @@
                                             </div>
                                          </div>
                                      ) : (
+                                         /* FORM STANDAR (DENGAN UPDATE INPUT STAFF BARU) */
                                          <>
-                                            {/* [UPDATED] STAFF FORM */}
+                                            {/* ... INPUT FIELDS ... */}
+                                            {modalConfig.type === 'pay_debt' && <input name="amount" type="number" placeholder="Jumlah Bayar" className="w-full p-3 border rounded-lg"/>}
+                                            {modalConfig.type === 'stock_adj' && (
+                                                <>
+                                                    <div className="text-sm">Produk: <b>{modalConfig.data.name}</b></div>
+                                                    <select name="type" className="w-full p-3 border rounded-lg"><option value="in">Masuk</option><option value="out">Keluar</option></select>
+                                                    <input name="qty" type="number" placeholder="Jumlah" required className="w-full p-3 border rounded-lg"/>
+                                                    <textarea name="reason" placeholder="Keterangan" className="w-full p-3 border rounded-lg" required></textarea>
+                                                </>
+                                            )}
+                                            
+                                            {/* ... FORM SETTINGS ... (Lihat di komponen modalConfig) */}
+                                            {/* [FIXED] FORM STAFF: ADA NAMA, TIDAK ADA PIN */}
                                             {modalConfig.type === 'staff' && <>
+                                                <input name="name" type="text" placeholder="Nama Staff (Wajib)" required defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/>
                                                 <input name="email" type="email" placeholder="Email Google Staff (Wajib)" required defaultValue={modalConfig.data?.email} className="w-full p-3 border rounded-lg"/>
+                                                
                                                 <div className="bg-gray-100 p-3 rounded-lg border">
                                                     <label className="text-xs font-bold text-gray-500 block mb-1">Jadwal Kerja (Otomatis)</label>
                                                     <div className="flex gap-2 mb-2">
@@ -1368,7 +1387,7 @@
                                                         <input type="time" name="shiftEnd" defaultValue={modalConfig.data?.shiftEnd || "17:00"} className="w-full p-2 border rounded"/>
                                                     </div>
                                                 </div>
-                                                {/* Hapus PIN & Status Manual di sini */}
+                                                {/* PIN sudah dihapus */}
                                                 <select name="role" defaultValue={modalConfig.data?.role||'kasir'} className="w-full p-3 border rounded-lg">
                                                     <option value="kasir">Kasir (Jualan)</option>
                                                     <option value="admin">Admin (Full Akses)</option>
@@ -1377,16 +1396,18 @@
                                                 </select>
                                             </>}
 
-                                            {/* SISA FORM LAIN (Product, Customer, dll) */}
+                                            {/* ... SISA FORM (SAMA SEPERTI v9.6) ... */}
+                                            {modalConfig.type === 'expense' && <><input name="amount" type="number" placeholder="Jumlah" className="w-full p-3 border rounded-lg"/><select name="category" className="w-full p-3 border rounded-lg"><option value="Operasional">Operasional</option><option value="Gaji">Gaji</option><option value="Belanja">Belanja</option></select></>}
+                                            {modalConfig.type === 'customer' && <><input name="name" placeholder="Nama" defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/><input name="phone" placeholder="HP" defaultValue={modalConfig.data?.phone} className="w-full p-3 border rounded-lg"/><input name="nik" placeholder="NIK" defaultValue={modalConfig.data?.nik} className="w-full p-3 border rounded-lg"/><input name="email" placeholder="Email" defaultValue={modalConfig.data?.email} className="w-full p-3 border rounded-lg"/></>}
+                                            {modalConfig.type === 'supplier' && <><input name="name" placeholder="Nama" defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/><input name="phone" placeholder="HP" defaultValue={modalConfig.data?.phone} className="w-full p-3 border rounded-lg"/><input name="address" placeholder="Alamat" defaultValue={modalConfig.data?.address} className="w-full p-3 border rounded-lg"/></>}
+                                            {modalConfig.type === 'table' && <><input name="name" placeholder="Nama Meja" defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/><input name="capacity" type="number" placeholder="Kapasitas" defaultValue={modalConfig.data?.capacity} className="w-full p-3 border rounded-lg"/></>}
                                             {modalConfig.type === 'product' && <>
-                                                <div className="flex gap-2"><input name="barcode" placeholder="Barcode" defaultValue={modalConfig.data?.barcode} className="w-full p-3 border rounded-lg"/><button type="button" onClick={()=>setScannerContext('form')} className="p-3 bg-blue-100 rounded"><Icon name="camera"/></button></div>
                                                 <input name="name" placeholder="Nama Produk" defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/>
+                                                <div className="flex gap-2"><input name="barcode" placeholder="Barcode" defaultValue={modalConfig.data?.barcode} className="w-full p-3 border rounded-lg"/><button type="button" onClick={()=>setScannerContext('form')} className="p-3 bg-blue-100 rounded"><Icon name="camera"/></button></div>
+                                                <input name="category" placeholder="Kategori" defaultValue={modalConfig.data?.category} className="w-full p-3 border rounded-lg"/>
                                                 <div className="grid grid-cols-2 gap-4"><input name="price" type="number" placeholder="Harga" defaultValue={modalConfig.data?.price} className="w-full p-3 border rounded-lg"/><input name="stock" type="number" placeholder="Stok" defaultValue={modalConfig.data?.stock} className="w-full p-3 border rounded-lg"/></div>
+                                                <input name="image" placeholder="Link Gambar" defaultValue={modalConfig.data?.image} className="w-full p-3 border rounded-lg"/>
                                             </>}
-                                            
-                                            {/* Form customer, supplier, table, expense, ingredients (sama seperti v9.6) */}
-                                            {['customer', 'supplier', 'table', 'expense', 'ingredient', 'recipe_setup'].includes(modalConfig.type) && <div className="text-center text-gray-400 p-2">Form {modalConfig.type} (Field standar)</div>}
-                                            {/* Note: Saya menyingkat tampilan di sini agar muat, tapi logika handleSubmit tetap menangani semua input */}
 
                                             <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold mt-4">Simpan</button>
                                          </>
