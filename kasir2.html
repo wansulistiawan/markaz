@@ -475,7 +475,11 @@
                             setView('dashboard');
                         }
                     } else {
-                        const myStaffProfile = staff.find(s => s.email?.toLowerCase() === user.email?.toLowerCase());
+                        const myStaffProfile = staff.find(s => 
+                            (user.email && s.email && s.email.toLowerCase() === user.email.toLowerCase()) ||
+                            (user.phoneNumber && s.phone && s.phone === user.phoneNumber)
+                        );
+
                         if (myStaffProfile) {
                             if(myStaffProfile.isActive === false) {
                                 alert("Akun Anda dinonaktifkan oleh Owner.");
@@ -934,9 +938,13 @@
                         payload = { name: f.name.value, capacity: f.capacity.value };
                     } else if (type === 'staff') {
                         // [FIXED] FORM STAFF: HAPUS PIN, ADA NAMA
+                        let inputPhone = f.phone.value.trim();
+                        if(inputPhone.startsWith('0')) inputPhone = '+62' + inputPhone.slice(1);
+
                         payload = { 
                             name: f.name.value, 
                             email: f.email.value.trim().toLowerCase(), 
+                            phone: inputPhone, // Simpan No HP
                             role: f.role.value,
                             shiftStart: f.shiftStart.value,
                             shiftEnd: f.shiftEnd.value,
@@ -1734,8 +1742,13 @@
                                             {/* [FIXED] FORM STAFF: ADA NAMA, TIDAK ADA PIN */}
                                             {modalConfig.type === 'staff' && <>
                                                 <input name="name" type="text" placeholder="Nama Staff (Wajib)" required defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/>
-                                                <input name="email" type="email" placeholder="Email Google Staff (Wajib)" required defaultValue={modalConfig.data?.email} className="w-full p-3 border rounded-lg"/>
                                                 
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <input name="email" type="email" placeholder="Email Google (Opsional)" defaultValue={modalConfig.data?.email} className="w-full p-3 border rounded-lg"/>
+                                                    <input name="phone" type="tel" placeholder="No. HP (08xx) untuk Login" required defaultValue={modalConfig.data?.phone} className="w-full p-3 border rounded-lg"/>
+                                                </div>
+                                                <p className="text-xs text-gray-500 -mt-2 mb-2">*Isi minimal salah satu (Email atau No HP) untuk login.</p>
+												
                                                 <div className="bg-gray-100 p-3 rounded-lg border">
                                                     <label className="text-xs font-bold text-gray-500 block mb-1">Jadwal Kerja (Otomatis)</label>
                                                     <div className="flex gap-2 mb-2">
