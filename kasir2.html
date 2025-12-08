@@ -444,7 +444,9 @@
                 return () => { unsubProd(); unsubIng(); unsubCust(); unsubSupp(); unsubExp(); unsubDebts(); unsubStock(); unsubSettings(); unsubShift(); unsubTrans(); unsubTables(); unsubStaff(); };
             }, [user]);
 
-            const handleStaffLogin = (s) => {
+            
+            // [UBAH] Tambah parameter bypassPin untuk auto-login
+            const handleStaffLogin = (s, bypassPin = false) => {
                 // 1. Cek Status Manual (Aktif/Nonaktif)
                 if (s.isActive === false) {
                     return alert("Akun Anda sedang dinonaktifkan oleh Admin/Owner.");
@@ -453,7 +455,7 @@
                 // 2. Cek Jadwal Otomatis (Hanya jika bukan Admin)
                 if (s.role !== 'admin') {
                     const now = new Date();
-                    const currentTime = now.getHours() * 60 + now.getMinutes(); // Konversi ke menit
+                    const currentTime = now.getHours() * 60 + now.getMinutes(); 
                     
                     const [startHour, startMin] = (s.shiftStart || "00:00").split(':').map(Number);
                     const [endHour, endMin] = (s.shiftEnd || "23:59").split(':').map(Number);
@@ -466,18 +468,33 @@
                     }
                 }
 
-                // 3. Cek PIN
-                const pin = prompt(`Masukkan PIN untuk ${s.name}:`);
-                if(pin !== s.pin) return alert("PIN Salah!");
-
-                // 4. Cek Shift Kasir Lain
-                if (shift && shift.cashierName !== s.name && s.role !== 'admin') {
-                    alert(`Toko sedang dibuka oleh ${shift.cashierName}. \nSilahkan minta ${shift.cashierName} untuk Tutup Toko terlebih dahulu.`);
-                    return;
+                // 3. Cek PIN (Hanya jika TIDAK bypassPin)
+                if (!bypassPin) {
+                    const pin = prompt(`Masukkan PIN untuk ${s.name}:`);
+                    if(pin !== s.pin) return alert("PIN Salah!");
                 }
+
+                // [DIHAPUS] Pengecekan Shift Kasir Lain agar bisa Multi-Kasir
+                // if (shift && shift.cashierName !== s.name && s.role !== 'admin') { ... }
+
                 setActiveStaff(s);
                 if(s.role === 'admin') setView('dashboard'); else setView('pos');
             };
+			
+			useEffect(() => {
+                if (user && staff.length > 0 && !activeStaff) {
+                    // Cari staff yang emailnya sama dengan email login Google
+                    const matchedStaff = staff.find(s => 
+                        s.email && user.email && 
+                        s.email.toLowerCase() === user.email.toLowerCase()
+                    );
+
+                    if (matchedStaff) {
+                        // Login otomatis tanpa minta PIN
+                        handleStaffLogin(matchedStaff, true);
+                    }
+                }
+            }, [user, staff, activeStaff]);
 
             const getPrice = (prod, qty) => {
                 if (prod.wholesaleQty && prod.wholesalePrice && qty >= prod.wholesaleQty) {
