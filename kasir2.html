@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v8.1 - Camera Fix</title>
+    <title>Kasir Pintar Pro v8.2 - Camera Force Start</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -85,53 +85,54 @@
             </div>
         );
 
-        // [FIX] CAMERA SCANNER COMPONENT YANG LEBIH ROBUST
+        // [FIX FINAL] KAMERA LANGSUNG START TANPA KLIK TOMBOL
         const BarcodeScanner = ({ onScan, onClose }) => {
-            const scannerRef = useRef(null);
-
             useEffect(() => {
-                // Timeout penting: Tunggu DOM Modal muncul dulu baru init Scanner
-                const timer = setTimeout(() => {
-                    if (!scannerRef.current) {
-                        try {
-                            const scanner = new Html5QrcodeScanner(
-                                "reader", 
-                                { 
-                                    fps: 10, 
-                                    qrbox: {width: 250, height: 250}
-                                }, 
-                                /* verbose= */ false
-                            );
-                            
-                            scanner.render((decodedText) => {
-                                onScan(decodedText);
-                                // Jangan clear di sini, biarkan unmount yang clear
-                            }, (error) => {
-                                // scanning...
-                            });
-
-                            scannerRef.current = scanner;
-                        } catch (err) {
-                            console.error("Scanner init error:", err);
-                        }
+                const html5QrCode = new Html5Qrcode("reader");
+                
+                const startCamera = async () => {
+                    try {
+                        await html5QrCode.start(
+                            { facingMode: "environment" }, // Paksa kamera belakang
+                            {
+                                fps: 10,
+                                qrbox: { width: 250, height: 250 }
+                            },
+                            (decodedText) => {
+                                // Sukses Scan
+                                html5QrCode.stop().then(() => {
+                                    onScan(decodedText);
+                                }).catch(err => console.error("Stop failed", err));
+                            },
+                            (errorMessage) => {
+                                // Scanning... (abaikan error frame kosong)
+                            }
+                        );
+                    } catch (err) {
+                        console.error("Gagal start kamera:", err);
+                        alert("Gagal mengakses kamera. Pastikan browser diizinkan mengakses kamera. Error: " + err);
                     }
-                }, 300); // Jeda 300ms agar aman
+                };
 
+                // Beri jeda sedikit agar Modal render duluan, baru kamera nyala
+                setTimeout(() => {
+                    startCamera();
+                }, 100);
+
+                // Cleanup saat tutup modal
                 return () => {
-                    clearTimeout(timer);
-                    if (scannerRef.current) {
-                        try {
-                            scannerRef.current.clear().catch(error => console.log("Failed to clear scanner"));
-                        } catch (e) {}
-                        scannerRef.current = null;
+                    if (html5QrCode.isScanning) {
+                        html5QrCode.stop().catch(err => console.log("Stop error", err));
                     }
+                    html5QrCode.clear();
                 };
             }, []);
 
             return (
-                <Modal title="Scan Barcode Kamera" onClose={onClose}>
-                    <div id="reader" style={{width: "100%", minHeight: "300px", background: "#f0f0f0"}}></div>
-                    <p className="text-center text-sm text-gray-500 mt-2">Pastikan browser mengizinkan akses kamera.</p>
+                <Modal title="Scan Barcode" onClose={onClose}>
+                    {/* Area Kamera */}
+                    <div id="reader" className="w-full overflow-hidden rounded-lg bg-black" style={{minHeight: "300px"}}></div>
+                    <p className="text-center text-xs text-gray-500 mt-2">Arahkan kamera ke barcode produk</p>
                 </Modal>
             );
         };
@@ -196,7 +197,6 @@
             );
         };
 
-        // RECEIPT COMPONENT
         const Receipt = ({ data, storeProfile, onClose }) => {
             if (!data) return null;
             const paperWidth = storeProfile?.paperSize === '80mm' ? '80mm' : '58mm';
@@ -814,6 +814,7 @@
                                         <button onClick={()=>setShowScanner(true)} className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200" title="Scan Kamera"><Icon name="camera" size={20}/></button>
                                     </div>
                                     <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 content-start">
+                                        {/* [UPDATE 3] SORT: STOK HABIS PALING BAWAH */}
                                         {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.barcode && p.barcode.includes(searchQuery))).sort((a,b) => {
                                             const stockA = (a.recipe && a.recipe.length > 0) ? 999 : a.stock;
                                             const stockB = (b.recipe && b.recipe.length > 0) ? 999 : b.stock;
