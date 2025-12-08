@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v9.1 - Loyalty Points</title>
+    <title>Kasir Pintar Pro v9.2 - Image Share</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -13,8 +13,9 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
@@ -72,7 +73,6 @@
             } catch (e) { return '-'; }
         };
 
-        // --- COMPONENTS ---
         const Modal = ({ title, onClose, children, maxWidth = "max-w-md" }) => (
             <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" style={{zIndex: 1000}}>
                 <div className={`bg-white rounded-2xl w-full ${maxWidth} shadow-2xl overflow-hidden flex flex-col max-h-[90vh]`}>
@@ -85,47 +85,97 @@
             </div>
         );
 
+        // [UPDATE] MEMBER CARD DENGAN FITUR SHARE GAMBAR
         const MemberCardModal = ({ customer, storeProfile, onClose }) => {
+            const [isGenerating, setIsGenerating] = useState(false);
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${customer.memberCode}`;
-            const shareToWA = () => {
-                const text = `Halo ${customer.name}, ini kartu member digital Anda di ${storeProfile?.name}. Kode: ${customer.memberCode}. Poin Anda: ${customer.points || 0}`;
-                window.open(`https://wa.me/${customer.phone.replace(/\D/g,'').replace(/^0/,'62')}?text=${encodeURIComponent(text)}`, '_blank');
+            
+            const handleShareImage = async () => {
+                setIsGenerating(true);
+                const element = document.getElementById('printable-card');
+                
+                try {
+                    // 1. Ubah HTML ke Canvas
+                    const canvas = await html2canvas(element, { scale: 2, backgroundColor: null });
+                    
+                    // 2. Ubah Canvas ke Blob (File)
+                    canvas.toBlob(async (blob) => {
+                        const file = new File([blob], `Member-${customer.name}.png`, { type: 'image/png' });
+                        
+                        // 3. Cek apakah browser support Web Share API (Biasanya di HP Android/iOS)
+                        if (navigator.share && navigator.canShare({ files: [file] })) {
+                            try {
+                                await navigator.share({
+                                    title: 'Kartu Member Digital',
+                                    text: `Kartu member untuk ${customer.name} di ${storeProfile?.name || 'Toko'}`,
+                                    files: [file]
+                                });
+                            } catch (err) {
+                                console.log('Share dibatalkan user');
+                            }
+                        } else {
+                            // 4. Fallback untuk Desktop: Download gambar
+                            const link = document.createElement('a');
+                            link.download = `Member-${customer.name}.png`;
+                            link.href = canvas.toDataURL();
+                            link.click();
+                            alert("Gambar kartu berhasil didownload! Silakan kirim file tersebut ke WhatsApp pelanggan.");
+                        }
+                        setIsGenerating(false);
+                    }, 'image/png');
+                    
+                } catch (error) {
+                    console.error(error);
+                    alert("Gagal membuat gambar.");
+                    setIsGenerating(false);
+                }
             };
 
             return (
                 <Modal title="Kartu Member Digital" onClose={onClose}>
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-6 text-white shadow-xl relative overflow-hidden mb-4">
+                    {/* ID ini penting untuk html2canvas */}
+                    <div id="printable-card" className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-6 text-white shadow-xl relative overflow-hidden mb-6">
                         <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
                         <div className="flex justify-between items-start">
                             <div>
                                 <h3 className="font-bold text-xl">{storeProfile?.name || 'Toko Member'}</h3>
                                 <p className="text-xs text-blue-200 uppercase tracking-widest mt-1">Kartu Keanggotaan</p>
                             </div>
-                            <div className="bg-white p-1 rounded-lg">
-                                <img src={qrUrl} className="w-16 h-16" alt="QR"/>
+                            <div className="bg-white p-1 rounded-lg shadow-lg">
+                                {/* Gunakan crossOrigin anonymous agar tidak error saat canvas */}
+                                <img src={qrUrl} className="w-16 h-16" alt="QR" crossOrigin="anonymous"/>
                             </div>
                         </div>
-                        <div className="mt-6">
-                            <p className="text-2xl font-bold font-mono tracking-wider">{customer.memberCode}</p>
-                            <p className="text-sm mt-1">{customer.name}</p>
-                            <div className="flex justify-between items-end mt-2">
-                                <p className="text-xs text-blue-200">NIK: {customer.nik || '-'}</p>
+                        <div className="mt-8">
+                            <p className="text-2xl font-bold font-mono tracking-wider drop-shadow-md">{customer.memberCode}</p>
+                            <p className="text-sm mt-1 font-medium">{customer.name.toUpperCase()}</p>
+                            <div className="flex justify-between items-end mt-4 pt-4 border-t border-white/20">
+                                <p className="text-xs text-blue-100">NIK: {customer.nik || '-'}</p>
                                 <div className="text-right">
-                                    <span className="text-[10px] text-blue-200 block">POIN</span>
+                                    <span className="text-[10px] text-blue-200 block uppercase tracking-wider">Total Poin</span>
                                     <span className="font-bold text-xl">{customer.points || 0}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <button onClick={shareToWA} className="w-full bg-green-500 text-white py-3 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-green-600">
-                        <Icon name="send" size={18}/> Kirim ke WhatsApp
+
+                    <button onClick={handleShareImage} disabled={isGenerating} className="w-full bg-green-600 text-white py-3 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-green-700 transition shadow-lg">
+                        {isGenerating ? (
+                            <span>Memproses Gambar...</span>
+                        ) : (
+                            <>
+                                <Icon name="share-2" size={20}/> Bagikan Gambar Kartu (WA)
+                            </>
+                        )}
                     </button>
+                    <p className="text-center text-xs text-gray-400 mt-3">
+                        Klik tombol di atas untuk membagikan gambar kartu ke WhatsApp.
+                    </p>
                 </Modal>
             );
         };
 
         const BarcodeScanner = ({ onScan, onClose, isInline = false }) => {
-            const scannerRef = useRef(null);
             const html5QrCodeRef = useRef(null);
 
             useEffect(() => {
@@ -268,15 +318,12 @@
                             <div className="border-t border-dashed border-gray-400 pt-2 text-right">
                                 <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(data.subtotal)}</span></div>
                                 <div className="flex justify-between font-bold text-lg border-t border-dotted mt-2 pt-1"><span>Total</span><span>{formatCurrency(data.total)}</span></div>
-                                
-                                {/* [NEW] INFO POIN DI STRUK */}
                                 {data.pointsEarned > 0 && (
                                     <div className="mt-2 pt-2 border-t border-dashed text-xs">
                                         <div className="flex justify-between"><span>Poin Transaksi:</span><span>+{data.pointsEarned}</span></div>
                                         <div className="flex justify-between font-bold"><span>Total Poin Anda:</span><span>{data.customerPointsTotal}</span></div>
                                     </div>
                                 )}
-
                                 <div className="text-center mt-4 italic text-gray-500">{storeProfile?.footerMessage}</div>
                             </div>
                         </div>
@@ -448,13 +495,16 @@
                         if (i.id !== item.id) return i;
                         const newQty = i.qty + change;
                         if (newQty <= 0) return null;
+                        
                         const prod = products.find(p => p.id === i.id);
                         if (!prod) return i;
+
                         const hasRecipe = prod.recipe && prod.recipe.length > 0;
                         if (!hasRecipe && change > 0 && newQty > prod.stock) {
                             alert(`Maksimal stok tersedia: ${prod.stock}`);
                             return i; 
                         }
+
                         return { ...i, qty: newQty, price: getPrice(prod, newQty) }; 
                     }).filter(Boolean);
                 });
@@ -520,7 +570,6 @@
                     const totals = calculateTotals();
                     const profit = totals.total - totals.tax - totals.serviceCharge - totals.hppTotal;
 
-                    // [NEW] Hitung Poin
                     const pointRate = storeProfile?.pointConversion || 10000;
                     const pointsEarned = selectedCustomer ? Math.floor(totals.total / pointRate) : 0;
 
@@ -529,7 +578,7 @@
                         table: selectedTable ? selectedTable.name : null,
                         customerId: selectedCustomer ? selectedCustomer.id : null,
                         customerName: selectedCustomer ? selectedCustomer.name : 'Umum',
-                        pointsEarned, // Simpan histori poin
+                        pointsEarned, 
                         customerPointsTotal: selectedCustomer ? (selectedCustomer.points || 0) + pointsEarned : 0,
                         shiftId: shift.id, createdAt: serverTimestamp(), status: 'success'
                     };
@@ -543,7 +592,6 @@
                         });
                     }
 
-                    // [NEW] Update Poin Member
                     if(selectedCustomer) {
                         const custRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'customers', selectedCustomer.id);
                         await updateDoc(custRef, { points: increment(pointsEarned) });
@@ -614,8 +662,12 @@
             const handleCloseShift = async (e) => {
                 e.preventDefault();
                 const endCash = Number(e.target.endCash.value);
-                const cashSales = transactions.filter(t => t.paymentMethod === 'Tunai' && t.shiftId === shift.id).reduce((a,b) => a + (b.total || 0), 0);
-                const totalExpenses = expenses.filter(ex => ex.date?.seconds >= shift.startTime?.seconds).reduce((a,b) => a + (b.amount || 0), 0);
+                const cashSales = transactions
+                    .filter(t => t.paymentMethod === 'Tunai' && t.shiftId === shift.id)
+                    .reduce((a,b) => a + (b.total || 0), 0);
+                const totalExpenses = expenses
+                    .filter(ex => ex.date?.seconds >= shift.startTime?.seconds) 
+                    .reduce((a,b) => a + (b.amount || 0), 0);
                 const expectedCash = (shift.startCash || 0) + cashSales - totalExpenses;
                 const difference = endCash - expectedCash;
 
@@ -647,7 +699,6 @@
                     const debtSnap = await getDocs(qDebt);
                     debtSnap.forEach(d => batchPromises.push(deleteDoc(d.ref)));
                     
-                    // [NEW] Kurangi Poin Member jika transaksi dihapus
                     if(t.customerId && t.pointsEarned > 0) {
                         const custRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'customers', t.customerId);
                         batchPromises.push(updateDoc(custRef, { points: increment(-t.pointsEarned) }));
@@ -692,7 +743,7 @@
                     footerMessage: f.footerMessage.value, 
                     taxRate: Number(f.taxRate.value), serviceRate: Number(f.serviceRate.value),
                     paperSize: f.paperSize.value,
-                    pointConversion: Number(f.pointConversion.value) // [NEW] Save conversion rate
+                    pointConversion: Number(f.pointConversion.value) 
                 });
                 setModalConfig({ show: false });
             };
@@ -927,14 +978,6 @@
                                             {orderType === 'Dine In' && <select className="flex-1 p-2 border rounded bg-white text-sm" value={selectedTable?.name||''} onChange={e=>setSelectedTable(tables.find(t=>t.name===e.target.value)||null)}><option value="">Pilih Meja</option>{tables.map(t=><option key={t.id} value={t.name}>{t.name}</option>)}</select>}
                                         </div>
                                         <select className="w-full p-2 border rounded bg-white text-sm" value={selectedCustomer?.id||''} onChange={e=>setSelectedCustomer(customers.find(c=>c.id===e.target.value)||null)}><option value="">Pelanggan Umum</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select>
-                                        
-                                        {/* [NEW] INFO POIN DI CART */}
-                                        {selectedCustomer && (
-                                            <div className="text-xs bg-green-50 text-green-700 p-2 rounded flex justify-between">
-                                                <span>Poin Member: <b>{selectedCustomer.points || 0}</b></span>
-                                                <span>Dapat +{Math.floor(calculateTotals().total / (storeProfile?.pointConversion || 10000))} Poin</span>
-                                            </div>
-                                        )}
                                     </div>
                                     <div className="flex-1 overflow-y-auto p-4 space-y-2 max-h-[300px] md:max-h-full">
                                         {cart.map(i => (
@@ -1250,6 +1293,7 @@
                                         <div><label className="text-xs">Service (%)</label><input name="serviceRate" type="number" step="0.1" defaultValue={storeProfile?.serviceRate || 0} className="w-full p-3 border rounded-lg"/></div>
                                     </div>
                                     
+                                    {/* [NEW] PILIHAN UKURAN KERTAS */}
                                     <div>
                                         <label className="text-xs font-bold text-gray-500">Ukuran Kertas Printer</label>
                                         <select name="paperSize" defaultValue={storeProfile?.paperSize || '58mm'} className="w-full p-3 border rounded-lg">
@@ -1340,7 +1384,6 @@
                                     
                                     {modalConfig.type === 'customer' && <>
                                         <input name="phone" placeholder="No HP" defaultValue={modalConfig.data?.phone} className="w-full p-3 border rounded-lg"/>
-                                        {/* [NEW] INPUT NIK */}
                                         <input name="nik" placeholder="NIK (KTP)" defaultValue={modalConfig.data?.nik} className="w-full p-3 border rounded-lg"/>
                                         <input name="email" placeholder="Email (Opsional)" defaultValue={modalConfig.data?.email} className="w-full p-3 border rounded-lg"/>
                                     </>}
