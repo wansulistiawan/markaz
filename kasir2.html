@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v8.2 - Camera Force Start</title>
+    <title>Kasir Pintar Pro v8.3 - Embedded Scanner</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
 
         // --- COMPONENTS ---
         const Modal = ({ title, onClose, children, maxWidth = "max-w-md" }) => (
-            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" style={{zIndex: 1000}}>
                 <div className={`bg-white rounded-2xl w-full ${maxWidth} shadow-2xl overflow-hidden flex flex-col max-h-[90vh]`}>
                     <div className="p-4 border-b flex justify-between items-center bg-gray-50">
                         <h3 className="font-bold text-lg text-gray-800 uppercase">{title}</h3>
@@ -85,54 +85,67 @@
             </div>
         );
 
-        // [FIX FINAL] KAMERA LANGSUNG START TANPA KLIK TOMBOL
-        const BarcodeScanner = ({ onScan, onClose }) => {
+        // [FIXED] SCANNER COMPONENT (FLEXIBLE: INLINE OR MODAL)
+        const BarcodeScanner = ({ onScan, onClose, isInline = false }) => {
+            const scannerRef = useRef(null);
+            const html5QrCodeRef = useRef(null);
+
             useEffect(() => {
-                const html5QrCode = new Html5Qrcode("reader");
-                
-                const startCamera = async () => {
-                    try {
-                        await html5QrCode.start(
-                            { facingMode: "environment" }, // Paksa kamera belakang
-                            {
-                                fps: 10,
-                                qrbox: { width: 250, height: 250 }
-                            },
-                            (decodedText) => {
-                                // Sukses Scan
-                                html5QrCode.stop().then(() => {
-                                    onScan(decodedText);
-                                }).catch(err => console.error("Stop failed", err));
-                            },
-                            (errorMessage) => {
-                                // Scanning... (abaikan error frame kosong)
-                            }
-                        );
-                    } catch (err) {
-                        console.error("Gagal start kamera:", err);
-                        alert("Gagal mengakses kamera. Pastikan browser diizinkan mengakses kamera. Error: " + err);
-                    }
-                };
+                // Gunakan timeout untuk memastikan elemen DOM #reader sudah siap
+                const timer = setTimeout(() => {
+                    const html5QrCode = new Html5Qrcode("reader");
+                    html5QrCodeRef.current = html5QrCode;
 
-                // Beri jeda sedikit agar Modal render duluan, baru kamera nyala
-                setTimeout(() => {
-                    startCamera();
-                }, 100);
+                    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+                    
+                    html5QrCode.start({ facingMode: "environment" }, config, 
+                        (decodedText) => {
+                            // Panggil callback
+                            onScan(decodedText);
+                            // KITA TIDAK STOP KAMERA DI SINI AGAR BISA CONTINUOUS SCAN
+                        },
+                        (errorMessage) => {
+                            // ignore errors
+                        }
+                    ).catch(err => {
+                        console.error("Camera start failed", err);
+                        alert("Gagal membuka kamera. Pastikan izin diberikan.");
+                        onClose(); // Tutup jika gagal
+                    });
+                }, 300);
 
-                // Cleanup saat tutup modal
                 return () => {
-                    if (html5QrCode.isScanning) {
-                        html5QrCode.stop().catch(err => console.log("Stop error", err));
+                    clearTimeout(timer);
+                    // Cleanup aman
+                    if (html5QrCodeRef.current) {
+                        if (html5QrCodeRef.current.isScanning) {
+                            html5QrCodeRef.current.stop().then(() => {
+                                html5QrCodeRef.current.clear();
+                            }).catch(err => console.log("Stop failed", err));
+                        } else {
+                            html5QrCodeRef.current.clear();
+                        }
                     }
-                    html5QrCode.clear();
                 };
             }, []);
 
+            const content = (
+                <div className="flex flex-col items-center w-full">
+                    <div id="reader" className="w-full bg-black overflow-hidden rounded-lg relative" style={{minHeight: isInline ? '250px' : '300px'}}></div>
+                    <p className="text-xs text-gray-500 mt-2 animate-pulse">Arahkan kamera ke barcode...</p>
+                    {isInline && (
+                        <button onClick={onClose} className="mt-3 bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                            <Icon name="x-circle" size={16}/> Tutup Kamera
+                        </button>
+                    )}
+                </div>
+            );
+
+            if (isInline) return <div className="mb-4 p-4 bg-gray-100 rounded-xl border border-blue-200 shadow-inner">{content}</div>;
+
             return (
                 <Modal title="Scan Barcode" onClose={onClose}>
-                    {/* Area Kamera */}
-                    <div id="reader" className="w-full overflow-hidden rounded-lg bg-black" style={{minHeight: "300px"}}></div>
-                    <p className="text-center text-xs text-gray-500 mt-2">Arahkan kamera ke barcode produk</p>
+                    {content}
                 </Modal>
             );
         };
@@ -208,7 +221,6 @@
                             <h3 className="font-bold flex items-center gap-2"><Icon name="check-circle" size={18}/> Transaksi Sukses</h3>
                             <button onClick={onClose}><Icon name="x"/></button>
                         </div>
-                        
                         <div id="print-area" className="p-4 bg-white overflow-y-auto max-h-[70vh] mx-auto" style={{width: paperWidth, fontFamily: 'monospace', fontSize: '12px'}}>
                             <div className="text-center mb-4">
                                 {storeProfile?.logo && <img src={storeProfile.logo} className="h-12 mx-auto mb-2 object-contain" />}
@@ -239,7 +251,6 @@
                                 <div className="text-center mt-4 italic text-gray-500">{storeProfile?.footerMessage}</div>
                             </div>
                         </div>
-
                         <div className="p-4 bg-white border-t no-print">
                             <button onClick={() => {
                                 const printContent = document.getElementById('print-area').innerHTML;
@@ -290,7 +301,7 @@
             const [editingItem, setEditingItem] = useState(null);
             const [modalConfig, setModalConfig] = useState({ show: false, type: '', data: null });
             const [settingsTab, setSettingsTab] = useState('profile');
-            const [showScanner, setShowScanner] = useState(false);
+            const [scannerContext, setScannerContext] = useState(null); // 'pos' or 'form'
 
             useEffect(() => {
                 const unsubscribe = onAuthStateChanged(auth, (u) => { setUser(u); setLoading(false); });
@@ -368,14 +379,26 @@
                 });
             };
 
+            // [NEW] CENTRALIZED SCAN HANDLER
             const handleScanResult = (code) => {
-                const prod = products.find(p => p.barcode === code);
-                if (prod) {
-                    addToCart(prod);
-                    setShowScanner(false);
-                } else {
-                    alert("Barcode tidak ditemukan: " + code);
-                    setShowScanner(false);
+                if (scannerContext === 'pos') {
+                    // Logic untuk POS (Add to Cart)
+                    const prod = products.find(p => p.barcode === code);
+                    if (prod) {
+                        addToCart(prod);
+                        // Play beep sound (optional)
+                        // Tidak tutup scanner agar bisa lanjut scan
+                    } else {
+                        alert("Barcode tidak ditemukan: " + code);
+                    }
+                } else if (scannerContext === 'form') {
+                    // Logic untuk Form Tambah Produk
+                    // Update data modalConfig agar input terisi
+                    setModalConfig(prev => ({
+                        ...prev,
+                        data: { ...prev.data, barcode: code }
+                    }));
+                    setScannerContext(null); // Tutup scanner setelah dapat kode
                 }
             };
 
@@ -806,15 +829,25 @@
                         {view === 'pos' && (
                             <div className="flex h-full flex-col md:flex-row">
                                 <div className="flex-1 bg-gray-50 flex flex-col min-w-0 h-full overflow-hidden">
-                                    <div className="p-4 bg-white border-b flex gap-3 items-center">
-                                        <div className="relative flex-1">
-                                            <Icon name="scan-barcode" className="absolute left-3 top-3 text-gray-400"/>
-                                            <input className="w-full pl-10 p-2.5 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Scan Barcode / Cari nama..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} autoFocus/>
-                                        </div>
-                                        <button onClick={()=>setShowScanner(true)} className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200" title="Scan Kamera"><Icon name="camera" size={20}/></button>
+                                    
+                                    {/* [UPDATED] POS HEADER WITH EMBEDDED SCANNER */}
+                                    <div className="p-4 bg-white border-b flex flex-col gap-3">
+                                        {scannerContext === 'pos' ? (
+                                            <BarcodeScanner onScan={handleScanResult} onClose={()=>setScannerContext(null)} isInline={true} />
+                                        ) : (
+                                            <div className="flex gap-3 items-center">
+                                                <div className="relative flex-1">
+                                                    <Icon name="search" className="absolute left-3 top-3 text-gray-400"/>
+                                                    <input className="w-full pl-10 p-2.5 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Cari nama atau barcode..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} autoFocus/>
+                                                </div>
+                                                <button onClick={()=>setScannerContext('pos')} className="p-2.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 flex items-center gap-2 font-bold" title="Scan Kamera">
+                                                    <Icon name="camera" size={20}/> <span className="hidden md:inline">Scan</span>
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
+
                                     <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 content-start">
-                                        {/* [UPDATE 3] SORT: STOK HABIS PALING BAWAH */}
                                         {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.barcode && p.barcode.includes(searchQuery))).sort((a,b) => {
                                             const stockA = (a.recipe && a.recipe.length > 0) ? 999 : a.stock;
                                             const stockB = (b.recipe && b.recipe.length > 0) ? 999 : b.stock;
@@ -1202,7 +1235,10 @@
                                     <input name="name" placeholder="Nama" required defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/>
                                     
                                     {modalConfig.type === 'product' && <>
-                                        <input name="barcode" placeholder="Barcode" defaultValue={modalConfig.data?.barcode} className="w-full p-3 border rounded-lg"/>
+                                        <div className="flex gap-2">
+                                            <input name="barcode" placeholder="Barcode" defaultValue={modalConfig.data?.barcode} className="w-full p-3 border rounded-lg"/>
+                                            <button type="button" onClick={()=>setScannerContext('form')} className="p-3 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"><Icon name="camera"/></button>
+                                        </div>
                                         <input name="category" placeholder="Kategori" defaultValue={modalConfig.data?.category} className="w-full p-3 border rounded-lg"/>
                                         <div className="grid grid-cols-2 gap-4">
                                             <input name="price" type="number" placeholder="Harga" required defaultValue={modalConfig.data?.price} className="w-full p-3 border rounded-lg"/>
@@ -1247,7 +1283,10 @@
                         </Modal>
                     )}
 
-                    {showScanner && <BarcodeScanner onScan={handleScanResult} onClose={()=>setShowScanner(false)} />}
+                    {scannerContext === 'form' && (
+                        <BarcodeScanner onScan={handleScanResult} onClose={()=>setScannerContext(null)} isInline={false} />
+                    )}
+
                     <Receipt data={lastTrans} storeProfile={storeProfile} onClose={()=>setLastTrans(null)} />
                 </div>
             );
