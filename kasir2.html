@@ -407,7 +407,8 @@
             const [stockHistory, setStockHistory] = useState([]); 
 
             const [cart, setCart] = useState([]);
-            const [heldCarts, setHeldCarts] = useState([]); 
+            const [activeOrders, setActiveOrders] = useState([]); 
+            const [selectedOrderId, setSelectedOrderId] = useState(null); 
             const [selectedCustomer, setSelectedCustomer] = useState(null);
             const [selectedTable, setSelectedTable] = useState(null); 
             const [discount, setDiscount] = useState(0); 
@@ -445,7 +446,8 @@
                 const unsubDebts = onSnapshot(collection(db, ...basePath, 'debts'), s => setDebts(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubStock = onSnapshot(query(collection(db, ...basePath, 'stock_history'), orderBy('createdAt', 'desc'), limit(50)), s => setStockHistory(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubTrans = onSnapshot(query(collection(db, ...basePath, 'transactions'), orderBy('createdAt', 'desc'), limit(50)), s => setTransactions(s.docs.map(d => ({id:d.id, ...d.data()}))));
-                const unsubTables = onSnapshot(query(collection(db, ...basePath, 'tables'), orderBy('name', 'asc')), s => setTables(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                const unsubOrders = onSnapshot(query(collection(db, ...basePath, 'orders'), orderBy('createdAt', 'asc')), s => setActiveOrders(s.docs.map(d => ({id:d.id, ...d.data()}))));
+				const unsubTables = onSnapshot(query(collection(db, ...basePath, 'tables'), orderBy('name', 'asc')), s => setTables(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 
                 const unsubStaff = onSnapshot(collection(db, ...basePath, 'staff'), s => {
                     const staffData = s.docs.map(d => ({id:d.id, ...d.data()}));
@@ -573,21 +575,54 @@
                 alert("Transaksi ditunda. Silakan layani konsumen berikutnya.");
             };
 
-            const handleOrderToKitchen = () => {
+            const handleOrderToKitchen = async () => {
                 if(cart.length === 0) return alert("Keranjang kosong!");
                 if(!selectedTable && orderType === 'Dine In') return alert("Pilih Meja untuk Dine In!");
-                const newHold = { 
-                    id: Date.now(), cust: selectedCustomer, cart: cart, table: selectedTable, orderType: orderType, time: new Date(), waiter: activeStaff.name 
-                };
-                setHeldCarts(prev => [...prev, newHold]);
-                setCart([]); setSelectedCustomer(null); setSelectedTable(null); setCashReceived('');
-                alert("Pesanan berhasil disimpan & dikirim ke dapur!");
+                
+                setIsProcessing(true);
+                try {
+                    // [BARU] Simpan ke Firebase collection 'orders'
+                    const orderData = {
+                        cust: selectedCustomer, 
+                        cart: cart, 
+                        table: selectedTable, 
+                        orderType: orderType, 
+                        createdAt: serverTimestamp(), 
+                        waiter: activeStaff.name,
+                        status: 'cooking' // Status awal
+                    };
+                    
+                    // Jika ini update pesanan yg sudah ada (tambah item), update doc lama
+                    if (selectedOrderId) {
+                        await updateDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'orders', selectedOrderId), {
+                            cart: cart, // Update keranjang penuh
+                            updatedAt: serverTimestamp()
+                        });
+                        alert("Pesanan Dapur Diperbarui!");
+                    } else {
+                        // Pesanan baru
+                        await addDoc(collection(db, 'artifacts', APP_ID, 'users', storeId, 'orders'), orderData);
+                        alert("Pesanan Terkirim ke Dapur!");
+                    }
+                    
+                    // Reset POS
+                    setCart([]); setSelectedCustomer(null); setSelectedTable(null); 
+                    setCashReceived(''); setSelectedOrderId(null);
+                } catch(e) {
+                    alert("Gagal kirim: " + e.message);
+                } finally {
+                    setIsProcessing(false);
+                }
             };
 
             const restoreTransaction = (h) => {
-                if(cart.length > 0) { if(!confirm("Ada transaksi aktif. Timpa?")) return; }
-                setCart(h.cart); setSelectedCustomer(h.cust); setSelectedTable(h.table); setOrderType(h.orderType || 'Dine In'); setCashReceived('');
-                setHeldCarts(prev => prev.filter(x => x.id !== h.id));
+                if(cart.length > 0) { if(!confirm("Ada transaksi aktif di layar. Timpa?")) return; }
+                setCart(h.cart); 
+                setSelectedCustomer(h.cust); 
+                setSelectedTable(h.table); 
+                setOrderType(h.orderType || 'Dine In'); 
+                setCashReceived('');
+                setSelectedOrderId(h.id); // Simpan ID agar nanti bisa dihapus/diupdate
                 setModalConfig({show: false});
             };
 
@@ -690,7 +725,12 @@
                     };
 
                     const ref = await addDoc(collection(db, 'artifacts', APP_ID, 'users', storeId, 'transactions'), transData);
-                    
+                    // [BARU] Jika ini berasal dari pesanan dapur (Antrean), hapus dari list aktif karena sudah bayar
+                    if (selectedOrderId) {
+                        await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'orders', selectedOrderId));
+                        setSelectedOrderId(null);
+                    }
+					
                     if (paymentMethod === 'Hutang') {
                         await addDoc(collection(db, 'artifacts', APP_ID, 'users', storeId, 'debts'), {
                             transactionId: ref.id, customerId: selectedCustomer.id, customerName: selectedCustomer.name,
@@ -1031,6 +1071,7 @@
                             
                             {[
                                 {id: 'pos', icon: 'monitor', label: 'Kasir / POS', roles: ['admin', 'kasir', 'waiter']},
+                                {id: 'kitchen', icon: 'chef-hat', label: 'Layar Dapur', roles: ['admin', 'dapur', 'waiter']}, // MENU BARU
                                 {id: 'dashboard', icon: 'layout-dashboard', label: 'Dashboard', roles: ['admin']},
                                 {id: 'history', icon: 'history', label: 'Riwayat Transaksi', roles: ['admin', 'kasir']},
                                 {id: 'expenses', icon: 'wallet', label: 'Pengeluaran', roles: ['admin', 'kasir']},
@@ -1219,6 +1260,79 @@
                                             {isProcessing ? 'Memproses...' : (activeStaff?.role === 'waiter' ? 'Simpan Pesanan (Dapur)' : 'Bayar')}
                                         </button>
                                     </div>
+                                </div>
+                            </div>
+                        )}
+						
+						{view === 'kitchen' && (
+                            <div className="p-4 h-full overflow-y-auto bg-gray-100">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-bold flex items-center gap-3">
+                                        <Icon name="chef-hat" className="text-orange-600"/> 
+                                        Daftar Pesanan Dapur
+                                    </h2>
+                                    <div className="bg-white px-4 py-2 rounded-lg shadow font-bold text-blue-600">
+                                        {activeOrders.length} Pesanan Aktif
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                    {activeOrders.length === 0 && (
+                                        <div className="col-span-full h-64 flex flex-col items-center justify-center text-gray-400">
+                                            <Icon name="coffee" size={48} className="mb-2"/>
+                                            <p>Tidak ada pesanan masuk.</p>
+                                        </div>
+                                    )}
+                                    
+                                    {activeOrders.map(order => (
+                                        <div key={order.id} className="bg-white rounded-xl shadow-md border-l-4 border-l-orange-500 overflow-hidden flex flex-col animate-fade-in">
+                                            <div className="p-3 bg-orange-50 border-b flex justify-between items-start">
+                                                <div>
+                                                    <h3 className="font-bold text-lg">{order.table ? order.table.name : `${order.orderType} #${order.id.slice(-4)}`}</h3>
+                                                    <p className="text-xs text-gray-500">{order.cust ? order.cust.name : 'Pelanggan Umum'}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-xs font-bold bg-white px-2 py-1 rounded border shadow-sm">{formatDate(order.createdAt).split(' ')[1]}</span>
+                                                    <div className="text-[10px] text-gray-400 mt-1">{order.waiter}</div>
+                                                </div>
+                                            </div>
+                                            <div className="p-4 flex-1 overflow-y-auto max-h-64">
+                                                <ul className="space-y-3">
+                                                    {order.cart.map((item, idx) => (
+                                                        <li key={idx} className="flex justify-between items-start border-b border-dashed pb-2 last:border-0">
+                                                            <div className="flex gap-3">
+                                                                <div className="font-bold text-lg w-6 h-6 flex items-center justify-center bg-gray-100 rounded">{item.qty}</div>
+                                                                <div>
+                                                                    <div className="font-bold text-gray-800">{item.name}</div>
+                                                                    {item.note && <div className="text-xs text-red-500 italic bg-red-50 px-1 rounded mt-1">Catatan: {item.note}</div>}
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                            <div className="p-3 bg-gray-50 border-t grid grid-cols-2 gap-2">
+                                                 {/* Tombol Print Struk Dapur (Opsional) */}
+                                                <button onClick={()=>{
+                                                    const content = `DAPUR: ${order.table?.name||order.orderType}\nItems:\n${order.cart.map(i=>`${i.qty}x ${i.name} ${i.note?`(${i.note})`:''}`).join('\n')}`;
+                                                    alert("Simulasi Print ke Printer Dapur:\n\n" + content);
+                                                }} className="bg-white border text-gray-600 py-2 rounded-lg font-bold text-sm hover:bg-gray-100">
+                                                    Print
+                                                </button>
+                                                <button onClick={async ()=>{
+                                                    if(confirm("Pesanan selesai dimasak?")) {
+                                                        // Opsi A: Hapus langsung (Simple)
+                                                        // await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'orders', order.id));
+                                                        
+                                                        // Opsi B: Ubah status jadi 'ready' (Agar kasir tahu)
+                                                        await updateDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'orders', order.id), { status: 'ready' });
+                                                    }
+                                                }} className={`text-white py-2 rounded-lg font-bold text-sm ${order.status==='ready'?'bg-green-600':'bg-orange-600 hover:bg-orange-700'}`}>
+                                                    {order.status==='ready' ? 'Siap Saji' : 'Selesai Masak'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         )}
@@ -1508,12 +1622,19 @@
                              
                              {modalConfig.type === 'hold_list' && (
                                 <div className="space-y-3">
-                                    {heldCarts.length === 0 && <p className="text-center text-gray-400">Tidak ada antrean.</p>}
-                                    {heldCarts.map(h => (
-                                        <div key={h.id} onClick={()=>restoreTransaction(h)} className="p-3 border rounded-lg hover:bg-blue-50 cursor-pointer flex justify-between items-center">
+                                    <div className="bg-blue-50 p-2 rounded text-xs text-blue-800 mb-2">
+                                        Data diambil dari server (Real-time). Klik untuk memproses pembayaran.
+                                    </div>
+                                    {activeOrders.length === 0 && <p className="text-center text-gray-400 py-4">Tidak ada pesanan aktif.</p>}
+                                    {activeOrders.map(h => (
+                                        <div key={h.id} onClick={()=>restoreTransaction(h)} className={`p-3 border rounded-lg hover:bg-blue-50 cursor-pointer flex justify-between items-center relative ${h.status==='ready' ? 'bg-green-50 border-green-200' : ''}`}>
+                                            {h.status==='ready' && <span className="absolute top-0 right-0 bg-green-600 text-white text-[10px] px-2 rounded-bl-lg">SIAP SAJI</span>}
                                             <div>
-                                                <div className="font-bold">{h.cust?.name || 'Umum'}</div>
-                                                <div className="text-xs text-gray-500">{h.cart.length} item • {h.time.toLocaleTimeString()}</div>
+                                                <div className="font-bold text-lg">{h.table ? h.table.name : h.orderType}</div>
+                                                <div className="font-medium">{h.cust?.name || 'Pelanggan Umum'}</div>
+                                                <div className="text-xs text-gray-500">
+                                                    {h.cart.reduce((a,b)=>a+b.qty,0)} Item • Waiter: {h.waiter} • {formatDate(h.createdAt)}
+                                                </div>
                                             </div>
                                             <Icon name="arrow-right-circle" className="text-blue-600"/>
                                         </div>
@@ -1629,6 +1750,7 @@
                                                     <option value="admin">Admin (Full Akses)</option>
                                                     <option value="gudang">Gudang (Stok)</option>
                                                     <option value="waiter">Waiter (Input Order)</option>
+													<option value="dapur">Dapur (Lihat Pesanan)</option>
                                                 </select>
                                             </>}
 											
