@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v9.2 - Image Share</title>
+    <title>Kasir Pintar Pro v9.3 - Stable Share & Change Calc</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -17,6 +17,8 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
@@ -87,57 +89,75 @@
             </div>
         );
 
-        // [UPDATE] MEMBER CARD MODAL (HTML TO IMAGE SHARE)
+        // [FIXED] MEMBER CARD MODAL (LOCAL QR GENERATOR - NO CORS)
         const MemberCardModal = ({ customer, storeProfile, onClose }) => {
             const [isSharing, setIsSharing] = useState(false);
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${customer.memberCode}`;
+            const qrRef = useRef(null);
+
+            // Generate QR Code Locally saat Modal muncul
+            useEffect(() => {
+                if (qrRef.current) {
+                    qrRef.current.innerHTML = ""; // Clear prev
+                    new QRCode(qrRef.current, {
+                        text: customer.memberCode,
+                        width: 100,
+                        height: 100,
+                        colorDark : "#000000",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H
+                    });
+                }
+            }, [customer]);
             
             const handleShare = async () => {
                 setIsSharing(true);
                 const element = document.getElementById('member-card-capture');
                 
+                // Tunggu sebentar agar render QR sempurna
+                await new Promise(resolve => setTimeout(resolve, 500));
+
                 try {
-                    // Convert HTML to Canvas
                     const canvas = await html2canvas(element, {
-                        useCORS: true, // Wajib agar QR code (external image) ikut ter-render
-                        scale: 2, // Kualitas HD
-                        backgroundColor: null // Transparan background
+                        scale: 2, 
+                        backgroundColor: null,
+                        logging: false,
+                        useCORS: true // Tetap pakai ini, tapi sekarang sumber gambar lokal aman
                     });
 
                     canvas.toBlob(async (blob) => {
+                        if (!blob) throw new Error("Canvas is empty");
+                        
                         const file = new File([blob], `Member-${customer.name}.png`, { type: "image/png" });
 
-                        // Cek apakah browser support fitur Share native
                         if (navigator.share) {
                             try {
                                 await navigator.share({
                                     title: `Kartu Member ${customer.name}`,
-                                    text: `Kartu Member ${storeProfile?.name || 'Toko'}. Tunjukkan QR ini saat bertransaksi.`,
+                                    text: `Kartu Member ${storeProfile?.name || 'Toko'}.`,
                                     files: [file]
                                 });
                             } catch (err) {
-                                console.error("Share failed/cancelled", err);
+                                // Share cancelled or failed
                             }
                         } else {
-                            // Fallback: Download manual jika tidak support share
                             const link = document.createElement('a');
                             link.href = canvas.toDataURL();
                             link.download = `Member-${customer.name}.png`;
                             link.click();
-                            alert("Browser tidak mendukung fitur Share langsung. Gambar telah didownload.");
+                            alert("Gambar disimpan ke Download.");
                         }
                         setIsSharing(false);
-                    });
+                    }, 'image/png');
                 } catch (err) {
-                    console.error("Gagal membuat gambar", err);
-                    alert("Gagal memproses gambar. Coba lagi.");
+                    console.error("Gagal capture:", err);
+                    alert("Gagal memproses gambar. Error: " + err.message);
                     setIsSharing(false);
                 }
             };
 
             return (
                 <Modal title="Kartu Member Digital" onClose={onClose}>
-                    {/* Area yang akan di-capture menjadi gambar */}
+                    {/* Area yang akan di-capture */}
                     <div id="member-card-capture" className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-6 text-white shadow-xl relative overflow-hidden mb-4">
                         <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
                         <div className="flex justify-between items-start">
@@ -145,17 +165,16 @@
                                 <h3 className="font-bold text-xl">{storeProfile?.name || 'Toko Member'}</h3>
                                 <p className="text-xs text-blue-200 uppercase tracking-widest mt-1">Kartu Keanggotaan</p>
                             </div>
-                            <div className="bg-white p-1 rounded-lg">
-                                {/* crossOrigin='anonymous' WAJIB agar html2canvas bisa baca gambar */}
-                                <img src={qrUrl} className="w-16 h-16" alt="QR" crossOrigin="anonymous"/>
+                            <div className="bg-white p-2 rounded-lg">
+                                {/* Container untuk QR Code Lokal */}
+                                <div ref={qrRef}></div>
                             </div>
                         </div>
                         <div className="mt-6">
                             <p className="text-2xl font-bold font-mono tracking-wider">{customer.memberCode}</p>
                             <p className="text-sm mt-1 font-bold uppercase">{customer.name}</p>
                             <div className="flex justify-between items-end mt-2">
-                                {/* [UPDATE] NIK disembunyikan dari kartu visual */}
-                                <p className="text-xs text-blue-200">Bergabung: {new Date().getFullYear()}</p>
+                                <p className="text-xs text-blue-200">Member Sejak: {new Date().getFullYear()}</p>
                                 <div className="text-right">
                                     <span className="text-[10px] text-blue-200 block">POIN</span>
                                     <span className="font-bold text-xl">{customer.points || 0}</span>
@@ -167,7 +186,7 @@
                     <button onClick={handleShare} disabled={isSharing} className="w-full bg-green-600 text-white py-3 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-green-700 transition">
                         {isSharing ? 'Memproses...' : <><Icon name="share-2" size={18}/> Bagikan Kartu (Gambar)</>}
                     </button>
-                    <p className="text-[10px] text-center text-gray-400 mt-2">*Klik tombol di atas untuk mengirim ke WA/Email atau Simpan ke Galeri.</p>
+                    <p className="text-[10px] text-center text-gray-400 mt-2">*Aman dari CORS (Anti-Crash)</p>
                 </Modal>
             );
         };
@@ -284,6 +303,9 @@
             if (!data) return null;
             const paperWidth = storeProfile?.paperSize === '80mm' ? '80mm' : '58mm';
             
+            // [NEW] Hitung Kembalian di Struk
+            const change = (data.cashReceived || 0) - data.total;
+
             return (
                 <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
                     <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in" style={{maxWidth: '400px'}}>
@@ -317,10 +339,18 @@
                                 <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(data.subtotal)}</span></div>
                                 <div className="flex justify-between font-bold text-lg border-t border-dotted mt-2 pt-1"><span>Total</span><span>{formatCurrency(data.total)}</span></div>
                                 
+                                {/* TAMPILKAN UANG DITERIMA & KEMBALIAN DI STRUK */}
+                                {data.paymentMethod === 'Tunai' && (
+                                    <>
+                                        <div className="flex justify-between text-xs mt-1"><span>Tunai:</span><span>{formatCurrency(data.cashReceived)}</span></div>
+                                        <div className="flex justify-between text-xs"><span>Kembali:</span><span>{formatCurrency(change)}</span></div>
+                                    </>
+                                )}
+
                                 {data.pointsEarned > 0 && (
                                     <div className="mt-2 pt-2 border-t border-dashed text-xs">
                                         <div className="flex justify-between"><span>Poin Transaksi:</span><span>+{data.pointsEarned}</span></div>
-                                        <div className="flex justify-between font-bold"><span>Total Poin Anda:</span><span>{data.customerPointsTotal}</span></div>
+                                        <div className="flex justify-between font-bold"><span>Total Poin:</span><span>{data.customerPointsTotal}</span></div>
                                     </div>
                                 )}
 
@@ -371,6 +401,9 @@
             const [orderType, setOrderType] = useState('Dine In'); 
             const [lastTrans, setLastTrans] = useState(null);
             const [searchQuery, setSearchQuery] = useState("");
+            
+            // [NEW] STATE UNTUK HITUNG KEMBALIAN
+            const [cashReceived, setCashReceived] = useState(''); 
             
             const [staff, setStaff] = useState([]); 
             const [activeStaff, setActiveStaff] = useState(null); 
@@ -478,13 +511,13 @@
                 if(cart.length === 0) return alert("Keranjang kosong!");
                 const newHold = { id: Date.now(), cust: selectedCustomer, cart: cart, table: selectedTable, time: new Date() };
                 setHeldCarts(prev => [...prev, newHold]);
-                setCart([]); setSelectedCustomer(null); setSelectedTable(null);
+                setCart([]); setSelectedCustomer(null); setSelectedTable(null); setCashReceived('');
                 alert("Transaksi ditunda. Silakan layani konsumen berikutnya.");
             };
 
             const restoreTransaction = (h) => {
                 if(cart.length > 0) { if(!confirm("Ada transaksi aktif. Timpa?")) return; }
-                setCart(h.cart); setSelectedCustomer(h.cust); setSelectedTable(h.table);
+                setCart(h.cart); setSelectedCustomer(h.cust); setSelectedTable(h.table); setCashReceived('');
                 setHeldCarts(prev => prev.filter(x => x.id !== h.id));
                 setModalConfig({show: false});
             };
@@ -562,9 +595,16 @@
 
                     if(paymentMethod === 'Hutang' && !selectedCustomer) { alert("Pilih Pelanggan!"); return; }
                     
-                    setIsProcessing(true);
-
                     const totals = calculateTotals();
+
+                    // [NEW] Validasi Uang Diterima (Hanya Tunai)
+                    const received = Number(cashReceived);
+                    if (paymentMethod === 'Tunai' && received < totals.total) {
+                        alert(`Uang kurang! Total: ${formatCurrency(totals.total)}`);
+                        return;
+                    }
+
+                    setIsProcessing(true);
                     const profit = totals.total - totals.tax - totals.serviceCharge - totals.hppTotal;
 
                     const pointRate = storeProfile?.pointConversion || 10000;
@@ -577,6 +617,8 @@
                         customerName: selectedCustomer ? selectedCustomer.name : 'Umum',
                         pointsEarned, 
                         customerPointsTotal: selectedCustomer ? (selectedCustomer.points || 0) + pointsEarned : 0,
+                        // [NEW] Simpan data uang diterima
+                        cashReceived: paymentMethod === 'Tunai' ? received : totals.total,
                         shiftId: shift.id, createdAt: serverTimestamp(), status: 'success'
                     };
 
@@ -632,7 +674,7 @@
                     });
 
                     setLastTrans({id: ref.id, ...transData, createdAt: new Date()});
-                    setCart([]); setDiscount(0); setSelectedCustomer(null); setSelectedTable(null);
+                    setCart([]); setDiscount(0); setSelectedCustomer(null); setSelectedTable(null); setCashReceived('');
 
                     if(paymentMethod === 'QRIS') window.open("https://qris.id", "_blank");
 
@@ -972,7 +1014,6 @@
                                         </div>
                                         <select className="w-full p-2 border rounded bg-white text-sm" value={selectedCustomer?.id||''} onChange={e=>setSelectedCustomer(customers.find(c=>c.id===e.target.value)||null)}><option value="">Pelanggan Umum</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select>
                                         
-                                        {/* [NEW] INFO POIN DI CART */}
                                         {selectedCustomer && (
                                             <div className="text-xs bg-green-50 text-green-700 p-2 rounded flex justify-between">
                                                 <span>Poin Member: <b>{selectedCustomer.points || 0}</b></span>
@@ -1011,9 +1052,26 @@
                                             {calculateTotals().serviceCharge > 0 && <div className="flex justify-between text-gray-500"><span>Service ({calculateTotals().serviceRate}%)</span><span>{formatCurrency(calculateTotals().serviceCharge)}</span></div>}
                                             <div className="flex justify-between font-bold text-lg pt-2"><span>Total</span><span>{formatCurrency(calculateTotals().total)}</span></div>
                                         </div>
+                                        
+                                        {/* [NEW] INPUT UANG & KEMBALIAN */}
+                                        {paymentMethod === 'Tunai' && (
+                                            <div className="bg-gray-100 p-2 rounded-lg border flex flex-col gap-1">
+                                                <div className="flex items-center">
+                                                    <span className="text-xs font-bold w-20">Diterima:</span>
+                                                    <input type="number" value={cashReceived} onChange={e=>setCashReceived(e.target.value)} className="flex-1 p-1 text-right text-sm border rounded" placeholder="0"/>
+                                                </div>
+                                                <div className="flex justify-between items-center text-sm font-bold">
+                                                    <span>Kembalian:</span>
+                                                    <span className={Number(cashReceived) < calculateTotals().total ? "text-red-500" : "text-green-600"}>
+                                                        {formatCurrency(Math.max(0, Number(cashReceived) - calculateTotals().total))}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <div className="grid grid-cols-2 gap-2 text-xs">
                                             {['Tunai', 'Hutang', 'QRIS'].map(m => (
-                                                <button key={m} onClick={()=>setPaymentMethod(m)} className={`py-2 rounded border font-medium ${paymentMethod===m ? 'bg-slate-800 text-white' : 'bg-white'}`}>{m}</button>
+                                                <button key={m} onClick={()=>{setPaymentMethod(m); setCashReceived('');}} className={`py-2 rounded border font-medium ${paymentMethod===m ? 'bg-slate-800 text-white' : 'bg-white'}`}>{m}</button>
                                             ))}
                                         </div>
                                         <button onClick={handleCheckout} disabled={!cart.length || isProcessing} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 disabled:bg-gray-300">
@@ -1193,7 +1251,6 @@
                                                     {view==='staff' && <div className="text-sm text-gray-500 uppercase font-bold text-blue-600">{item.role} (PIN: {item.pin})</div>}
                                                     {view==='tables' && <div className="text-sm text-gray-500">Kapasitas: {item.capacity} org</div>}
                                                     {view==='customers' && <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded inline-block mt-1">{item.memberCode}</div>}
-                                                    {/* [NEW] INFO POIN MEMBER DI LIST */}
                                                     {view==='customers' && <div className="text-[10px] text-gray-500 mt-1">Poin: {item.points || 0}</div>}
                                                     {(view==='customers'||view==='suppliers') && <div className="text-sm text-gray-500">{item.phone}</div>}
                                                 </div>
