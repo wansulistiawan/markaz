@@ -447,12 +447,12 @@
             
             // [UBAH] Tambah parameter bypassPin untuk auto-login
             const handleStaffLogin = (s, bypassPin = false) => {
-                // 1. Cek Status Manual (Aktif/Nonaktif)
+                // A. Cek Status Manual (Aktif/Nonaktif)
                 if (s.isActive === false) {
                     return alert("Akun Anda sedang dinonaktifkan oleh Admin/Owner.");
                 }
 
-                // 2. Cek Jadwal Otomatis (Hanya jika bukan Admin)
+                // B. Cek Jadwal Otomatis (Hanya jika bukan Admin)
                 if (s.role !== 'admin') {
                     const now = new Date();
                     const currentTime = now.getHours() * 60 + now.getMinutes(); 
@@ -463,35 +463,39 @@
                     const startTime = startHour * 60 + startMin;
                     const endTime = endHour * 60 + endMin;
 
+                    // Logika lintas hari (misal masuk 22:00 pulang 04:00) belum dicover sederhana, 
+                    // tapi aman untuk jam kerja normal.
                     if (currentTime < startTime || currentTime > endTime) {
                         return alert(`Akses Ditolak!\nJam Kerja Anda: ${s.shiftStart} - ${s.shiftEnd}\nSekarang: ${now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}`);
                     }
                 }
 
-                // 3. Cek PIN (Hanya jika TIDAK bypassPin)
+                // C. Cek PIN (Hanya jika TIDAK bypassPin)
                 if (!bypassPin) {
                     const pin = prompt(`Masukkan PIN untuk ${s.name}:`);
                     if(pin !== s.pin) return alert("PIN Salah!");
                 }
 
-                // [DIHAPUS] Pengecekan Shift Kasir Lain agar bisa Multi-Kasir
-                // if (shift && shift.cashierName !== s.name && s.role !== 'admin') { ... }
-
+                // D. Set Staff Aktif & Pindah View
                 setActiveStaff(s);
                 if(s.role === 'admin') setView('dashboard'); else setView('pos');
             };
-			
-			useEffect(() => {
-                if (user && staff.length > 0 && !activeStaff) {
-                    // Cari staff yang emailnya sama dengan email login Google
-                    const matchedStaff = staff.find(s => 
-                        s.email && user.email && 
-                        s.email.toLowerCase() === user.email.toLowerCase()
-                    );
 
-                    if (matchedStaff) {
-                        // Login otomatis tanpa minta PIN
-                        handleStaffLogin(matchedStaff, true);
+            // 2. Auto-Login Effect (WAJIB diletakkan SETELAH const handleStaffLogin)
+            useEffect(() => {
+                // Pastikan user ada, data staff sudah loading, dan belum ada yang login
+                if (user && staff.length > 0 && !activeStaff) {
+                    // Cek apakah user login pakai Google & punya email
+                    if (user.email) {
+                        const matchedStaff = staff.find(s => 
+                            s.email && 
+                            s.email.toLowerCase() === user.email.toLowerCase()
+                        );
+
+                        if (matchedStaff) {
+                            // Login otomatis tanpa minta PIN
+                            handleStaffLogin(matchedStaff, true);
+                        }
                     }
                 }
             }, [user, staff, activeStaff]);
