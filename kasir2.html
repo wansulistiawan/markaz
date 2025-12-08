@@ -445,8 +445,32 @@
             }, [user]);
 
             const handleStaffLogin = (s) => {
+                // 1. Cek Status Manual (Aktif/Nonaktif)
+                if (s.isActive === false) {
+                    return alert("Akun Anda sedang dinonaktifkan oleh Admin/Owner.");
+                }
+
+                // 2. Cek Jadwal Otomatis (Hanya jika bukan Admin)
+                if (s.role !== 'admin') {
+                    const now = new Date();
+                    const currentTime = now.getHours() * 60 + now.getMinutes(); // Konversi ke menit
+                    
+                    const [startHour, startMin] = (s.shiftStart || "00:00").split(':').map(Number);
+                    const [endHour, endMin] = (s.shiftEnd || "23:59").split(':').map(Number);
+                    
+                    const startTime = startHour * 60 + startMin;
+                    const endTime = endHour * 60 + endMin;
+
+                    if (currentTime < startTime || currentTime > endTime) {
+                        return alert(`Akses Ditolak!\nJam Kerja Anda: ${s.shiftStart} - ${s.shiftEnd}\nSekarang: ${now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}`);
+                    }
+                }
+
+                // 3. Cek PIN
                 const pin = prompt(`Masukkan PIN untuk ${s.name}:`);
                 if(pin !== s.pin) return alert("PIN Salah!");
+
+                // 4. Cek Shift Kasir Lain
                 if (shift && shift.cashierName !== s.name && s.role !== 'admin') {
                     alert(`Toko sedang dibuka oleh ${shift.cashierName}. \nSilahkan minta ${shift.cashierName} untuk Tutup Toko terlebih dahulu.`);
                     return;
@@ -822,12 +846,16 @@
                         payload = { name: f.name.value, capacity: f.capacity.value };
                     } else if (type === 'staff') {
                         if(!f.pin.value) throw new Error("PIN Wajib diisi!");
-                        // [UPDATE] Simpan Email juga
+                        
+                        // [UPDATE] Simpan Jadwal & Status
                         payload = { 
                             name: f.name.value, 
-                            email: f.email.value.trim().toLowerCase(), // Email penting untuk login
+                            email: f.email.value.trim().toLowerCase(),
                             pin: f.pin.value, 
-                            role: f.role.value 
+                            role: f.role.value,
+                            shiftStart: f.shiftStart.value, // Simpan jam masuk
+                            shiftEnd: f.shiftEnd.value,     // Simpan jam pulang
+                            isActive: f.isActive.value === "true" // Simpan status (true/false)
                         };
                     } else if (type === 'expense') {
                         payload = { name: f.name.value, amount: Number(f.amount.value), category: f.category.value, date: serverTimestamp() };
@@ -1504,8 +1532,23 @@
                                     </>}
 
                                     {modalConfig.type === 'staff' && <>
-                                        {/* [ADD] KOLOM EMAIL STAFF */}
                                         <input name="email" type="email" placeholder="Email Google Staff (Wajib)" required defaultValue={modalConfig.data?.email} className="w-full p-3 border rounded-lg"/>
+                                        
+                                        {/* [NEW] PENGATURAN JADWAL & STATUS */}
+                                        <div className="bg-gray-100 p-3 rounded-lg border">
+                                            <label className="text-xs font-bold text-gray-500 block mb-1">Jadwal Kerja (Otomatis)</label>
+                                            <div className="flex gap-2 mb-2">
+                                                <input type="time" name="shiftStart" defaultValue={modalConfig.data?.shiftStart || "08:00"} className="w-full p-2 border rounded"/>
+                                                <span className="self-center">-</span>
+                                                <input type="time" name="shiftEnd" defaultValue={modalConfig.data?.shiftEnd || "17:00"} className="w-full p-2 border rounded"/>
+                                            </div>
+                                            
+                                            <label className="text-xs font-bold text-gray-500 block mb-1">Status Akun (Manual)</label>
+                                            <select name="isActive" defaultValue={modalConfig.data?.isActive === false ? "false" : "true"} className="w-full p-2 border rounded bg-white">
+                                                <option value="true">Aktif (Bisa Login)</option>
+                                                <option value="false">Nonaktif (Blokir)</option>
+                                            </select>
+                                        </div>
                                         <input name="pin" type="text" placeholder="PIN Akses" required defaultValue={modalConfig.data?.pin} className="w-full p-3 border rounded-lg"/>
                                         <select name="role" defaultValue={modalConfig.data?.role||'kasir'} className="w-full p-3 border rounded-lg">
                                             <option value="kasir">Kasir (Jualan)</option>
