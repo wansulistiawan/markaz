@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v7.1 - Shift & Stock Fix</title>
+    <title>Kasir Pintar Pro v8.0 - Camera & Printer Support</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
@@ -18,7 +22,13 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        @media print { .no-print { display: none !important; } }
+        
+        /* [NEW] Style Khusus Printer Thermal */
+        @media print { 
+            .no-print { display: none !important; }
+            @page { margin: 0; }
+            body { margin: 0; padding: 0; }
+        }
     </style>
 </head>
 <body>
@@ -35,7 +45,6 @@
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithPhoneNumber, RecaptchaVerifier } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // [UPDATE IMPORTS] Tambah 'increment', 'getDocs' untuk logika stok & hapus hutang
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, query, where, orderBy, setDoc, limit, enableIndexedDbPersistence, increment, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -77,12 +86,31 @@
             </div>
         );
 
+        // [NEW] CAMERA SCANNER COMPONENT
+        const BarcodeScanner = ({ onScan, onClose }) => {
+            useEffect(() => {
+                const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, false);
+                scanner.render((decodedText) => {
+                    onScan(decodedText);
+                    scanner.clear();
+                }, (error) => {}); // Ignore errors
+                return () => { try { scanner.clear(); } catch(e){} };
+            }, []);
+
+            return (
+                <Modal title="Scan Barcode Kamera" onClose={onClose}>
+                    <div id="reader" className="w-full"></div>
+                    <p className="text-center text-sm text-gray-500 mt-2">Arahkan kamera ke barcode produk</p>
+                </Modal>
+            );
+        };
+
         const LoginScreen = () => {
             const [phone, setPhone] = useState('');
             const [otp, setOtp] = useState('');
             const [showOtp, setShowOtp] = useState(false);
-            const [confirmObj, setConfirmObj] = useState(null);
             const [loading, setLoading] = useState(false);
+            const [confirmObj, setConfirmObj] = useState(null);
             const recaptchaRef = useRef(null);
 
             useEffect(() => {
@@ -137,61 +165,61 @@
             );
         };
 
+        // [UPDATE] RECEIPT WITH DYNAMIC WIDTH
         const Receipt = ({ data, storeProfile, onClose }) => {
             if (!data) return null;
+            // Gunakan lebar dari setting, default 58mm
+            const paperWidth = storeProfile?.paperSize === '80mm' ? '80mm' : '58mm';
+            
             return (
                 <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in">
+                    <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in" style={{maxWidth: '400px'}}>
                         <div className="bg-gray-900 text-white p-4 flex justify-between items-center no-print">
                             <h3 className="font-bold flex items-center gap-2"><Icon name="check-circle" size={18}/> Transaksi Sukses</h3>
                             <button onClick={onClose}><Icon name="x"/></button>
                         </div>
-                        <div className="p-6 font-mono text-sm bg-gray-50 overflow-y-auto max-h-[70vh]">
-                            <div className="text-center mb-6">
-                                {storeProfile?.logo && <img src={storeProfile.logo} className="h-16 mx-auto mb-2 object-contain" />}
-                                <h2 className="text-xl font-bold uppercase">{storeProfile?.name || 'Toko Kasir Pro'}</h2>
-                                <p className="text-gray-500 text-xs">{storeProfile?.address || 'Alamat Belum Diatur'}</p>
-                                <p className="text-gray-500 text-xs">{storeProfile?.phone || ''}</p>
+                        
+                        {/* AREA CETAK */}
+                        <div id="print-area" className="p-4 bg-white overflow-y-auto max-h-[70vh] mx-auto" style={{width: paperWidth, fontFamily: 'monospace', fontSize: '12px'}}>
+                            <div className="text-center mb-4">
+                                {storeProfile?.logo && <img src={storeProfile.logo} className="h-12 mx-auto mb-2 object-contain" />}
+                                <h2 className="text-lg font-bold uppercase">{storeProfile?.name || 'Toko Kasir Pro'}</h2>
+                                <p className="text-gray-500">{storeProfile?.address}</p>
+                                <p className="text-gray-500">{storeProfile?.phone}</p>
                             </div>
-                            <div className="border-b border-dashed border-gray-400 pb-2 mb-2 text-xs">
-                                <p>No: #{data.id.slice(0,8).toUpperCase()}</p>
-                                <p>{formatDate(data.createdAt)}</p>
-                                <p>Tipe: <span className="font-bold">{data.orderType || 'Dine In'}</span> {data.table ? `(Meja ${data.table})` : ''}</p>
-                                <p>Plg: {data.customerName || 'Umum'}</p>
+                            <div className="border-b border-dashed border-gray-400 pb-2 mb-2">
+                                <p>#{data.id.slice(0,8).toUpperCase()} | {formatDate(data.createdAt)}</p>
+                                <p>Cst: {data.customerName}</p>
                             </div>
                             <div className="space-y-2 mb-4">
                                 {data.items.map((item, i) => (
                                     <div key={i} className="flex justify-between">
-                                        <div className="flex-1">
-                                            <div className="font-bold">{item.name}</div>
-                                            <div className="text-xs text-gray-500">
-                                                {item.qty} x {formatCurrency(item.price)}
-                                                {item.wholesaleQty && item.qty >= item.wholesaleQty && <span className="ml-1 text-[10px] font-bold">(Grosir)</span>}
-                                            </div>
-                                            {item.itemDiscount > 0 && <div className="text-[10px] text-green-600">Disc: -{formatCurrency(item.itemDiscount)}</div>}
-                                            {item.note && <div className="text-[10px] italic text-gray-400">"{item.note}"</div>}
+                                        <div className="flex-1 pr-2">
+                                            <div>{item.name}</div>
+                                            <div className="text-gray-500">{item.qty} x {formatCurrency(item.price)}</div>
                                         </div>
-                                        <div className="font-bold">{formatCurrency((item.price * item.qty) - (item.itemDiscount || 0))}</div>
+                                        <div>{formatCurrency((item.price * item.qty) - (item.itemDiscount || 0))}</div>
                                     </div>
                                 ))}
                             </div>
-                            <div className="border-t border-dashed border-gray-400 pt-2 space-y-1 text-right">
-                                <div className="flex justify-between text-gray-500"><span>Subtotal</span><span>{formatCurrency(data.subtotal)}</span></div>
-                                {data.discount > 0 && <div className="flex justify-between text-green-600"><span>Diskon Global</span><span>-{formatCurrency(data.discount)}</span></div>}
-                                {data.serviceCharge > 0 && <div className="flex justify-between text-gray-500"><span>Service ({data.serviceRate}%)</span><span>{formatCurrency(data.serviceCharge)}</span></div>}
-                                {data.tax > 0 && <div className="flex justify-between text-gray-500"><span>Pajak ({data.taxRate}%)</span><span>{formatCurrency(data.tax)}</span></div>}
-                                <div className="flex justify-between text-xl font-bold mt-2 pt-2 border-t border-dotted"><span>Total</span><span>{formatCurrency(data.total)}</span></div>
-                                <div className="flex justify-between text-xs text-gray-500 mt-2">
-                                    <span>Metode: {data.paymentMethod}</span>
-                                    <span>{data.paymentMethod === 'Hutang' ? 'Belum Lunas' : 'Lunas'}</span>
-                                </div>
-                            </div>
-                            <div className="mt-6 text-center text-xs text-gray-400 italic">
-                                {storeProfile?.footerMessage || "Terima kasih atas kunjungan Anda!"}
+                            <div className="border-t border-dashed border-gray-400 pt-2 text-right">
+                                <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(data.subtotal)}</span></div>
+                                {data.tax > 0 && <div className="flex justify-between"><span>Tax</span><span>{formatCurrency(data.tax)}</span></div>}
+                                {data.serviceCharge > 0 && <div className="flex justify-between"><span>Svc</span><span>{formatCurrency(data.serviceCharge)}</span></div>}
+                                <div className="flex justify-between font-bold text-lg border-t border-dotted mt-2 pt-1"><span>Total</span><span>{formatCurrency(data.total)}</span></div>
+                                <div className="text-center mt-4 italic text-gray-500">{storeProfile?.footerMessage}</div>
                             </div>
                         </div>
+
                         <div className="p-4 bg-white border-t no-print">
-                            <button onClick={() => window.print()} className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-blue-700">
+                            <button onClick={() => {
+                                const printContent = document.getElementById('print-area').innerHTML;
+                                const originalContents = document.body.innerHTML;
+                                document.body.innerHTML = printContent;
+                                window.print();
+                                document.body.innerHTML = originalContents;
+                                window.location.reload(); // Reload to restore React state safely
+                            }} className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-blue-700">
                                 <Icon name="printer" size={18}/> Cetak Struk
                             </button>
                         </div>
@@ -233,6 +261,7 @@
             const [editingItem, setEditingItem] = useState(null);
             const [modalConfig, setModalConfig] = useState({ show: false, type: '', data: null });
             const [settingsTab, setSettingsTab] = useState('profile');
+            const [showScanner, setShowScanner] = useState(false); // [NEW] Camera state
 
             useEffect(() => {
                 const unsubscribe = onAuthStateChanged(auth, (u) => { setUser(u); setLoading(false); });
@@ -271,92 +300,20 @@
                 return () => { unsubProd(); unsubIng(); unsubCust(); unsubSupp(); unsubExp(); unsubDebts(); unsubStock(); unsubSettings(); unsubShift(); unsubTrans(); unsubTables(); unsubStaff(); };
             }, [user]);
 
-            // --- FUNGSI BARU UNTUK SHIFT (KASIR MASUK/KELUAR) ---
-            const handleOpenShift = async (e) => {
-                e.preventDefault();
-                await addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'shifts'), {
-                    startCash: Number(e.target.startCash.value),
-                    startTime: serverTimestamp(),
-                    status: 'open',
-                    transactionsCount: 0,
-                    totalSales: 0,
-                    cashierName: activeStaff?.name || 'Unknown'
-                });
-            };
+            // --- LOGIC AUTH STAFF ---
+            const handleStaffLogin = (s) => {
+                const pin = prompt(`Masukkan PIN untuk ${s.name}:`);
+                if(pin !== s.pin) return alert("PIN Salah!");
 
-            const handleCloseShift = async (e) => {
-                e.preventDefault();
-                const endCash = Number(e.target.endCash.value);
-                // Hitung Penjualan Tunai di shift ini
-                const cashSales = transactions
-                    .filter(t => t.paymentMethod === 'Tunai' && t.shiftId === shift.id)
-                    .reduce((a,b) => a + (b.total || 0), 0);
-                
-                // Hitung Pengeluaran di shift ini (Asumsi semua pengeluaran ambil uang kasir)
-                const totalExpenses = expenses
-                    .filter(ex => ex.date?.seconds >= shift.startTime?.seconds) 
-                    .reduce((a,b) => a + (b.amount || 0), 0);
-
-                const expectedCash = (shift.startCash || 0) + cashSales - totalExpenses;
-                const difference = endCash - expectedCash;
-
-                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'shifts', shift.id), {
-                    endCash,
-                    expectedCash,
-                    difference,
-                    cashSales,
-                    totalExpenses,
-                    status: 'closed',
-                    endTime: serverTimestamp()
-                });
-                
-                setModalConfig({show: false});
-                alert(`Shift Ditutup.\n\nSaldo Seharusnya: ${formatCurrency(expectedCash)}\nSaldo Fisik: ${formatCurrency(endCash)}\nSelisih: ${formatCurrency(difference)}`);
-                setActiveStaff(null); // Logout staff setelah tutup shift
-            };
-
-            // --- FUNGSI HAPUS TRANSAKSI (DENGAN PENGEMBALIAN STOK) ---
-            const handleDeleteTransaction = async (t) => {
-                if(!confirm(`Hapus transaksi #${t.id.slice(0,6)}? \n\nPERHATIAN: Stok akan DIKEMBALIKAN ke sistem!`)) return;
-                
-                try {
-                    const batchPromises = [];
-                    
-                    // 1. Loop item untuk kembalikan stok
-                    t.items.forEach(item => {
-                        // Cek apakah item punya resep (F&B)
-                        if(item.recipe && item.recipe.length > 0) {
-                            // Kembalikan bahan baku
-                            item.recipe.forEach(r => {
-                                const ingRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'ingredients', r.ingId);
-                                // Gunakan 'increment' agar aman
-                                batchPromises.push(updateDoc(ingRef, { stock: increment(r.qty * item.qty) }));
-                            });
-                        } else {
-                            // Kembalikan produk jadi (Ritel)
-                            const prodRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'products', item.id);
-                            batchPromises.push(updateDoc(prodRef, { stock: increment(item.qty) }));
-                        }
-                    });
-
-                    // 2. Hapus dokumen transaksi
-                    batchPromises.push(deleteDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'transactions', t.id)));
-
-                    // 3. Hapus hutang terkait (jika ada)
-                    const qDebt = query(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'debts'), where('transactionId', '==', t.id));
-                    const debtSnap = await getDocs(qDebt);
-                    debtSnap.forEach(d => {
-                        batchPromises.push(deleteDoc(d.ref));
-                    });
-
-                    // Eksekusi semua
-                    await Promise.all(batchPromises);
-                    alert("Transaksi dihapus. Stok telah dikembalikan.");
-
-                } catch(e) {
-                    console.error(e);
-                    alert("Gagal menghapus: " + e.message);
+                // [UPDATE 1] Cek Shift yang sedang aktif
+                // Jika shift BUKAN milik staff ini DAN staff ini BUKAN admin -> Tolak
+                if (shift && shift.cashierName !== s.name && s.role !== 'admin') {
+                    alert(`Toko sedang dibuka oleh ${shift.cashierName}. \nSilahkan minta ${shift.cashierName} untuk Tutup Toko terlebih dahulu.`);
+                    return;
                 }
+
+                setActiveStaff(s);
+                if(s.role === 'admin') setView('dashboard'); else setView('pos');
             };
 
             const getPrice = (prod, qty) => {
@@ -383,6 +340,17 @@
                         return [...prev,{...p, qty:1, price: getPrice(p, 1), itemDiscount:0}];
                     }
                 });
+            };
+
+            const handleScanResult = (code) => {
+                const prod = products.find(p => p.barcode === code);
+                if (prod) {
+                    addToCart(prod);
+                    setShowScanner(false);
+                } else {
+                    alert("Barcode tidak ditemukan: " + code);
+                    setShowScanner(false);
+                }
             };
 
             const updateCartQty = (item, change) => {
@@ -542,6 +510,82 @@
                 }
             };
 
+            const handleOpenShift = async (e) => {
+                e.preventDefault();
+                await addDoc(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'shifts'), {
+                    startCash: Number(e.target.startCash.value),
+                    startTime: serverTimestamp(),
+                    status: 'open',
+                    transactionsCount: 0,
+                    totalSales: 0,
+                    cashierName: activeStaff?.name || 'Unknown'
+                });
+            };
+
+            const handleCloseShift = async (e) => {
+                e.preventDefault();
+                const endCash = Number(e.target.endCash.value);
+                const cashSales = transactions
+                    .filter(t => t.paymentMethod === 'Tunai' && t.shiftId === shift.id)
+                    .reduce((a,b) => a + (b.total || 0), 0);
+                
+                const totalExpenses = expenses
+                    .filter(ex => ex.date?.seconds >= shift.startTime?.seconds) 
+                    .reduce((a,b) => a + (b.amount || 0), 0);
+
+                const expectedCash = (shift.startCash || 0) + cashSales - totalExpenses;
+                const difference = endCash - expectedCash;
+
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'shifts', shift.id), {
+                    endCash,
+                    expectedCash,
+                    difference,
+                    cashSales,
+                    totalExpenses,
+                    status: 'closed',
+                    endTime: serverTimestamp()
+                });
+                
+                setModalConfig({show: false});
+                alert(`Shift Ditutup.\n\nSaldo Seharusnya: ${formatCurrency(expectedCash)}\nSaldo Fisik: ${formatCurrency(endCash)}\nSelisih: ${formatCurrency(difference)}`);
+                setActiveStaff(null);
+            };
+
+            const handleDeleteTransaction = async (t) => {
+                if(!confirm(`Hapus transaksi #${t.id.slice(0,6)}? \n\nPERHATIAN: Stok akan DIKEMBALIKAN ke sistem!`)) return;
+                
+                try {
+                    const batchPromises = [];
+                    
+                    t.items.forEach(item => {
+                        if(item.recipe && item.recipe.length > 0) {
+                            item.recipe.forEach(r => {
+                                const ingRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'ingredients', r.ingId);
+                                batchPromises.push(updateDoc(ingRef, { stock: increment(r.qty * item.qty) }));
+                            });
+                        } else {
+                            const prodRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'products', item.id);
+                            batchPromises.push(updateDoc(prodRef, { stock: increment(item.qty) }));
+                        }
+                    });
+
+                    batchPromises.push(deleteDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'transactions', t.id)));
+
+                    const qDebt = query(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'debts'), where('transactionId', '==', t.id));
+                    const debtSnap = await getDocs(qDebt);
+                    debtSnap.forEach(d => {
+                        batchPromises.push(deleteDoc(d.ref));
+                    });
+
+                    await Promise.all(batchPromises);
+                    alert("Transaksi dihapus. Stok telah dikembalikan.");
+
+                } catch(e) {
+                    console.error(e);
+                    alert("Gagal menghapus: " + e.message);
+                }
+            };
+
             const handlePaymentSubmit = async (e) => {
                 e.preventDefault();
                 const amount = Number(e.target.amount.value);
@@ -573,7 +617,9 @@
                 const f = e.target;
                 await setDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'settings', 'profile'), {
                     name: f.name.value, address: f.address.value, phone: f.phone.value, logo: f.logo.value,
-                    footerMessage: f.footerMessage.value, taxRate: Number(f.taxRate.value), serviceRate: Number(f.serviceRate.value)
+                    footerMessage: f.footerMessage.value, 
+                    taxRate: Number(f.taxRate.value), serviceRate: Number(f.serviceRate.value),
+                    paperSize: f.paperSize.value // [NEW] Save paper size
                 });
                 setModalConfig({ show: false });
             };
@@ -639,11 +685,7 @@
                             ) : (
                                 <div className="grid grid-cols-2 gap-3 mb-6">
                                     {staff.map(s => (
-                                        <button key={s.id} onClick={() => {
-                                            const pin = prompt(`Masukkan PIN untuk ${s.name}:`);
-                                            if(pin === s.pin) { setActiveStaff(s); if(s.role==='admin') setView('dashboard'); else setView('pos'); } 
-                                            else alert("PIN Salah!");
-                                        }} className="p-4 border rounded-xl hover:bg-blue-50 hover:border-blue-500 transition group">
+                                        <button key={s.id} onClick={() => handleStaffLogin(s)} className="p-4 border rounded-xl hover:bg-blue-50 hover:border-blue-500 transition group">
                                             <div className="font-bold text-lg group-hover:text-blue-600">{s.name}</div>
                                             <div className="text-xs text-gray-400 uppercase">{s.role}</div>
                                         </button>
@@ -659,7 +701,6 @@
                 );
             }
 
-            // [MODAL MODAL AWAL - KASIR BARU LOGIN]
             if (user && !shift && (activeStaff?.role === 'kasir' || activeStaff?.role === 'admin' || activeStaff?.role === 'waiter') && view === 'pos') {
                 return (
                     <Modal title="Buka Toko / Shift Baru" onClose={()=>{}}>
@@ -679,7 +720,7 @@
                     <aside className="w-20 md:w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20 overflow-y-auto">
                         <div className="h-16 flex items-center justify-center md:justify-start md:px-6 bg-slate-950 text-white font-bold gap-3 flex-shrink-0 sticky top-0 z-10">
                             <div className="bg-blue-600 p-2 rounded-lg"><Icon name="zap" size={20}/></div>
-                            <span className="hidden md:block">Kasir Pro v7</span>
+                            <span className="hidden md:block">Kasir Pro v8</span>
                         </div>
                         <nav className="flex-1 py-4 space-y-1 px-2">
                             <div className="px-3 mb-6 flex items-center gap-3 pb-4 border-b border-slate-800">
@@ -688,7 +729,7 @@
                                     <div className="text-sm font-bold text-white">{activeStaff?.name}</div>
                                     <div className="text-xs text-slate-500 uppercase">{activeStaff?.role}</div>
                                 </div>
-                                <button onClick={()=>setActiveStaff(null)} className="ml-auto text-slate-500 hover:text-white"><Icon name="log-out" size={16}/></button>
+                                <button onClick={()=>setActiveStaff(null)} className="ml-auto text-slate-500 hover:text-white" title="Keluar / Ganti Akun"><Icon name="log-out" size={16}/></button>
                             </div>
 
                             <div className="text-xs font-bold text-slate-500 px-3 mb-2 uppercase hidden md:block">Utama</div>
@@ -728,7 +769,6 @@
                             </>}
                         </nav>
                         
-                        {/* [UPDATE] Tombol Tutup Shift dengan Modal Setoran */}
                         <div className="p-4 border-t border-slate-800">
                             <button onClick={()=>setModalConfig({show:true, type:'close_shift'})} className="w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl bg-red-900/30 text-red-400 hover:bg-red-900/50 transition">
                                 <Icon name="power" /> <span className="hidden md:block">Tutup Toko</span>
@@ -745,9 +785,17 @@
                                             <Icon name="scan-barcode" className="absolute left-3 top-3 text-gray-400"/>
                                             <input className="w-full pl-10 p-2.5 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Scan Barcode / Cari nama..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} autoFocus/>
                                         </div>
+                                        <button onClick={()=>setShowScanner(true)} className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200" title="Scan Kamera"><Icon name="camera" size={20}/></button>
                                     </div>
                                     <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 content-start">
-                                        {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.barcode && p.barcode.includes(searchQuery))).map(p => {
+                                        {/* [UPDATE 3] SORT: STOK HABIS PALING BAWAH */}
+                                        {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.barcode && p.barcode.includes(searchQuery))).sort((a,b) => {
+                                            const stockA = (a.recipe && a.recipe.length > 0) ? 999 : a.stock;
+                                            const stockB = (b.recipe && b.recipe.length > 0) ? 999 : b.stock;
+                                            if (stockA > 0 && stockB <= 0) return -1;
+                                            if (stockA <= 0 && stockB > 0) return 1;
+                                            return 0;
+                                        }).map(p => {
                                             const hasRecipe = p.recipe && p.recipe.length > 0;
                                             return (
                                                 <div key={p.id} onClick={() => addToCart(p)} className={`relative bg-white rounded-xl shadow-sm border p-3 cursor-pointer hover:shadow-md transition ${!hasRecipe && p.stock<=0 && 'opacity-50'} ${!hasRecipe && p.stock<=5 && p.stock > 0 ? 'border-red-300 bg-red-50' : ''}`}>
@@ -1082,6 +1130,16 @@
                                         <div><label className="text-xs">Pajak (%)</label><input name="taxRate" type="number" step="0.1" defaultValue={storeProfile?.taxRate || 0} className="w-full p-3 border rounded-lg"/></div>
                                         <div><label className="text-xs">Service (%)</label><input name="serviceRate" type="number" step="0.1" defaultValue={storeProfile?.serviceRate || 0} className="w-full p-3 border rounded-lg"/></div>
                                     </div>
+                                    
+                                    {/* [NEW] PILIHAN UKURAN KERTAS */}
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500">Ukuran Kertas Printer</label>
+                                        <select name="paperSize" defaultValue={storeProfile?.paperSize || '58mm'} className="w-full p-3 border rounded-lg">
+                                            <option value="58mm">58mm (Thermal Kecil)</option>
+                                            <option value="80mm">80mm (Thermal Besar)</option>
+                                        </select>
+                                    </div>
+
                                     <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan Pengaturan</button>
                                 </form>
                             )}
@@ -1163,6 +1221,7 @@
                         </Modal>
                     )}
 
+                    {showScanner && <BarcodeScanner onScan={handleScanResult} onClose={()=>setShowScanner(false)} />}
                     <Receipt data={lastTrans} storeProfile={storeProfile} onClose={()=>setLastTrans(null)} />
                 </div>
             );
