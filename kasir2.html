@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v10.4 - Staff Fix</title>
+    <title>Kasir Pintar Pro v10.5 - Staff Fix</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -1240,6 +1240,22 @@
                                                     <h4 className="font-bold truncate">{item.name}</h4>
                                                     {view==='products' && <div className="text-sm text-blue-600 font-bold">{formatCurrency(item.price)}</div>}
                                                     {view==='products' && <div className="text-xs text-gray-500 mt-1">Stok: {item.stock}</div>}
+                                                    
+                                                    {view==='products' && (
+                                                        <div className="mt-2 pt-2 border-t border-dashed">
+                                                            {item.recipe && item.recipe.length > 0 ? (
+                                                                <div className="text-[10px] space-y-1">
+                                                                    <div className="font-bold text-gray-400">RESEP:</div>
+                                                                    {item.recipe.map((r,idx) => {
+                                                                        const ing = ingredients.find(i=>i.id===r.ingId);
+                                                                        return <div key={idx} className="flex justify-between bg-purple-50 text-purple-700 px-1 rounded"><span>{ing?.name}</span><span>{r.qty} {ing?.unit}</span></div>
+                                                                    })}
+                                                                    <button onClick={()=>updateDoc(doc(db,'artifacts',APP_ID,'users',user.uid,'products',item.id), {recipe: []})} className="text-red-500 hover:underline w-full text-center mt-1">Reset Resep</button>
+                                                                </div>
+                                                            ) : <div className="text-[10px] text-gray-400 italic">Tanpa Resep (Stok Langsung)</div>}
+                                                            <button onClick={()=>setModalConfig({show:true, type:'recipe_setup', data:item})} className="w-full mt-1 bg-gray-100 text-xs py-1 rounded font-bold hover:bg-gray-200">+ Atur Resep</button>
+                                                        </div>
+                                                    )}
                                                     {view==='tables' && <div className="text-sm text-gray-500">Kapasitas: {item.capacity} org</div>}
                                                     {view==='customers' && <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded inline-block mt-1">{item.memberCode}</div>}
                                                     {view==='customers' && <div className="text-[10px] text-gray-500 mt-1">Poin: {item.points || 0}</div>}
@@ -1501,6 +1517,14 @@
                                             
                                             {modalConfig.type === 'settings' && (
                                 <form onSubmit={saveSettings} className="space-y-4">
+                                    {/* [ADD] INFORMASI ID TOKO */}
+                                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                        <label className="text-xs font-bold text-blue-600 uppercase">ID Toko Anda (Berikan ke Staff)</label>
+                                        <div className="flex gap-2 mt-1">
+                                            <input readOnly value={user.uid} className="w-full p-2 bg-white rounded text-sm font-mono border" onClick={e=>e.target.select()}/>
+                                            <button type="button" onClick={()=>{navigator.clipboard.writeText(user.uid); alert("ID Disalin!")}} className="p-2 bg-blue-600 text-white rounded"><Icon name="copy" size={16}/></button>
+                                        </div>
+                                    </div>
                                     <input name="name" placeholder="Nama Toko" defaultValue={storeProfile?.name} className="w-full p-3 border rounded-lg"/>
                                     <input name="address" placeholder="Alamat Lengkap" defaultValue={storeProfile?.address} className="w-full p-3 border rounded-lg"/>
                                     <input name="phone" placeholder="No. Telepon" defaultValue={storeProfile?.phone} className="w-full p-3 border rounded-lg"/>
