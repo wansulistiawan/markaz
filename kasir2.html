@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v10.3 - Staff Fix</title>
+    <title>Kasir Pintar Pro v10.4 - Staff Fix</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -1194,6 +1194,33 @@
                                 </div>
                             </div>
                         )}
+						
+						{view === 'inventory' && (
+                            <div className="p-6 h-full overflow-y-auto">
+                                <h2 className="text-2xl font-bold mb-4">Stok Opname (Produk Jadi)</h2>
+                                <div className="bg-white p-4 rounded-xl border">
+                                    <div className="flex justify-between text-sm font-bold text-gray-500 mb-2 border-b pb-2">
+                                        <span>Nama Produk</span>
+                                        <span>Stok Saat Ini</span>
+                                    </div>
+                                    {products.map(p => (
+                                        <div key={p.id} className="flex justify-between items-center border-b last:border-0 p-3 hover:bg-gray-50">
+                                            <div>
+                                                <div className="font-bold">{p.name}</div>
+                                                <div className="text-xs text-gray-400">{p.category}</div>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <span className="font-bold text-lg">{p.stock}</span>
+                                                <button onClick={()=>setModalConfig({show:true, type:'stock_adj', data:p})} className="text-blue-600 text-xs border border-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
+                                                    Sesuaikan
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {products.length === 0 && <p className="text-center text-gray-400 py-4">Belum ada produk.</p>}
+                                </div>
+                            </div>
+                        )}
 
                         {['products', 'customers', 'suppliers', 'tables'].includes(view) && (
                             /* ... (Standard CRUD View - Paste from v9.6) ... */
@@ -1396,59 +1423,7 @@
                                 </div>
                             </div>
                         )}
-						
-						
-                        {['products', 'customers', 'suppliers', 'tables'].includes(view) && (
-                            <div className="p-6 h-full overflow-y-auto">
-                                <div className="flex justify-between items-center mb-6 capitalize">
-                                    <h2 className="text-2xl font-bold">{view}</h2>
-                                    <button onClick={()=>setModalConfig({show:true, type: view === 'staff' ? 'staff' : view.slice(0,-1)})} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"><Icon name="plus"/> Tambah</button>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {(view==='products'?products:view==='customers'?customers:view==='suppliers'?suppliers:view==='staff'?staff:tables).map(item => (
-                                        <div key={item.id} className="bg-white p-4 rounded-xl border hover:shadow-md transition relative group">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
-                                                    {view==='products' && item.image ? <img src={item.image} className="w-full h-full object-cover rounded-full"/> : item.name[0]}
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <h4 className="font-bold truncate">{item.name}</h4>
-                                                    {view==='products' && <div className="text-sm text-blue-600 font-bold">{formatCurrency(item.price)}</div>}
-                                                    {view==='products' && <div className="text-xs text-gray-500 mt-1">Stok: {item.stock}</div>}
-                                                    
-                                                    {view==='products' && (
-                                                        <div className="mt-2 pt-2 border-t border-dashed">
-                                                            {item.recipe && item.recipe.length > 0 ? (
-                                                                <div className="text-[10px] space-y-1">
-                                                                    <div className="font-bold text-gray-400">RESEP:</div>
-                                                                    {item.recipe.map((r,idx) => {
-                                                                        const ing = ingredients.find(i=>i.id===r.ingId);
-                                                                        return <div key={idx} className="flex justify-between bg-purple-50 text-purple-700 px-1 rounded"><span>{ing?.name}</span><span>{r.qty} {ing?.unit}</span></div>
-                                                                    })}
-                                                                    <button onClick={()=>updateDoc(doc(db,'artifacts',APP_ID,'users',user.uid,'products',item.id), {recipe: []})} className="text-red-500 hover:underline w-full text-center mt-1">Reset Resep</button>
-                                                                </div>
-                                                            ) : <div className="text-[10px] text-gray-400 italic">Tanpa Resep (Stok Langsung)</div>}
-                                                            <button onClick={()=>setModalConfig({show:true, type:'recipe_setup', data:item})} className="w-full mt-1 bg-gray-100 text-xs py-1 rounded font-bold hover:bg-gray-200">+ Atur Resep</button>
-                                                        </div>
-                                                    )}
 
-                                                    {view==='staff' && <div className="text-sm text-gray-500 uppercase font-bold text-blue-600">{item.role} (PIN: {item.pin})</div>}
-                                                    {view==='tables' && <div className="text-sm text-gray-500">Kapasitas: {item.capacity} org</div>}
-                                                    {view==='customers' && <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded inline-block mt-1">{item.memberCode}</div>}
-                                                    {view==='customers' && <div className="text-[10px] text-gray-500 mt-1">Poin: {item.points || 0}</div>}
-                                                    {(view==='customers'||view==='suppliers') && <div className="text-sm text-gray-500">{item.phone}</div>}
-                                                </div>
-                                            </div>
-                                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                                                {view==='customers' && <button onClick={()=>setModalConfig({show:true, type:'show_member_card', data:item})} className="p-1.5 bg-green-100 text-green-600 rounded" title="Kartu Member"><Icon name="credit-card" size={14}/></button>}
-                                                <button onClick={()=>setModalConfig({show:true, type: view === 'staff' ? 'staff' : view.slice(0,-1), data:item})} className="p-1.5 bg-gray-100 hover:text-blue-600 rounded"><Icon name="edit-2" size={14}/></button>
-                                                <button onClick={()=>{if(confirm('Hapus?')) deleteDoc(doc(db,'artifacts',APP_ID,'users',user.uid,view,item.id))}} className="p-1.5 bg-gray-100 hover:text-red-600 rounded"><Icon name="trash" size={14}/></button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </main>
 
                     {/* DYNAMIC MODAL FORM */}
@@ -1524,7 +1499,35 @@
                                                 </>
                                             )}
                                             
-                                            {/* ... FORM SETTINGS ... (Lihat di komponen modalConfig) */}
+                                            {modalConfig.type === 'settings' && (
+                                <form onSubmit={saveSettings} className="space-y-4">
+                                    <input name="name" placeholder="Nama Toko" defaultValue={storeProfile?.name} className="w-full p-3 border rounded-lg"/>
+                                    <input name="address" placeholder="Alamat Lengkap" defaultValue={storeProfile?.address} className="w-full p-3 border rounded-lg"/>
+                                    <input name="phone" placeholder="No. Telepon" defaultValue={storeProfile?.phone} className="w-full p-3 border rounded-lg"/>
+                                    <input name="logo" placeholder="URL Logo (Link Gambar)" defaultValue={storeProfile?.logo} className="w-full p-3 border rounded-lg"/>
+                                    <textarea name="footerMessage" placeholder="Pesan di Bawah Struk" defaultValue={storeProfile?.footerMessage} className="w-full p-3 border rounded-lg"/>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="text-xs">Pajak (%)</label><input name="taxRate" type="number" step="0.1" defaultValue={storeProfile?.taxRate || 0} className="w-full p-3 border rounded-lg"/></div>
+                                        <div><label className="text-xs">Service (%)</label><input name="serviceRate" type="number" step="0.1" defaultValue={storeProfile?.serviceRate || 0} className="w-full p-3 border rounded-lg"/></div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500">Ukuran Kertas Printer</label>
+                                        <select name="paperSize" defaultValue={storeProfile?.paperSize || '58mm'} className="w-full p-3 border rounded-lg">
+                                            <option value="58mm">58mm (Thermal Kecil)</option>
+                                            <option value="80mm">80mm (Thermal Besar)</option>
+                                        </select>
+                                    </div>
+
+                                    {/* [NEW] KONVERSI POIN */}
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500">Konversi Poin (Rp untuk 1 Poin)</label>
+                                        <input name="pointConversion" type="number" defaultValue={storeProfile?.pointConversion || 10000} className="w-full p-3 border rounded-lg"/>
+                                    </div>
+
+                                    <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan Pengaturan</button>
+                                </form>
+                            )}
                                             {/* [FIXED] FORM STAFF: ADA NAMA, TIDAK ADA PIN */}
                                             {modalConfig.type === 'staff' && <>
                                                 <input name="name" type="text" placeholder="Nama Staff (Wajib)" required defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/>
