@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v8.3 - Embedded Scanner</title>
+    <title>Kasir Pintar Pro v9.1 - Loyalty Points</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -85,43 +85,70 @@
             </div>
         );
 
-        // [FIXED] SCANNER COMPONENT (FLEXIBLE: INLINE OR MODAL)
+        const MemberCardModal = ({ customer, storeProfile, onClose }) => {
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${customer.memberCode}`;
+            const shareToWA = () => {
+                const text = `Halo ${customer.name}, ini kartu member digital Anda di ${storeProfile?.name}. Kode: ${customer.memberCode}. Poin Anda: ${customer.points || 0}`;
+                window.open(`https://wa.me/${customer.phone.replace(/\D/g,'').replace(/^0/,'62')}?text=${encodeURIComponent(text)}`, '_blank');
+            };
+
+            return (
+                <Modal title="Kartu Member Digital" onClose={onClose}>
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-6 text-white shadow-xl relative overflow-hidden mb-4">
+                        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h3 className="font-bold text-xl">{storeProfile?.name || 'Toko Member'}</h3>
+                                <p className="text-xs text-blue-200 uppercase tracking-widest mt-1">Kartu Keanggotaan</p>
+                            </div>
+                            <div className="bg-white p-1 rounded-lg">
+                                <img src={qrUrl} className="w-16 h-16" alt="QR"/>
+                            </div>
+                        </div>
+                        <div className="mt-6">
+                            <p className="text-2xl font-bold font-mono tracking-wider">{customer.memberCode}</p>
+                            <p className="text-sm mt-1">{customer.name}</p>
+                            <div className="flex justify-between items-end mt-2">
+                                <p className="text-xs text-blue-200">NIK: {customer.nik || '-'}</p>
+                                <div className="text-right">
+                                    <span className="text-[10px] text-blue-200 block">POIN</span>
+                                    <span className="font-bold text-xl">{customer.points || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onClick={shareToWA} className="w-full bg-green-500 text-white py-3 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-green-600">
+                        <Icon name="send" size={18}/> Kirim ke WhatsApp
+                    </button>
+                </Modal>
+            );
+        };
+
         const BarcodeScanner = ({ onScan, onClose, isInline = false }) => {
             const scannerRef = useRef(null);
             const html5QrCodeRef = useRef(null);
 
             useEffect(() => {
-                // Gunakan timeout untuk memastikan elemen DOM #reader sudah siap
                 const timer = setTimeout(() => {
                     const html5QrCode = new Html5Qrcode("reader");
                     html5QrCodeRef.current = html5QrCode;
-
                     const config = { fps: 10, qrbox: { width: 250, height: 250 } };
                     
                     html5QrCode.start({ facingMode: "environment" }, config, 
-                        (decodedText) => {
-                            // Panggil callback
-                            onScan(decodedText);
-                            // KITA TIDAK STOP KAMERA DI SINI AGAR BISA CONTINUOUS SCAN
-                        },
-                        (errorMessage) => {
-                            // ignore errors
-                        }
+                        (decodedText) => onScan(decodedText),
+                        (errorMessage) => {}
                     ).catch(err => {
-                        console.error("Camera start failed", err);
-                        alert("Gagal membuka kamera. Pastikan izin diberikan.");
-                        onClose(); // Tutup jika gagal
+                        console.error(err);
+                        alert("Gagal membuka kamera.");
+                        onClose();
                     });
                 }, 300);
 
                 return () => {
                     clearTimeout(timer);
-                    // Cleanup aman
                     if (html5QrCodeRef.current) {
                         if (html5QrCodeRef.current.isScanning) {
-                            html5QrCodeRef.current.stop().then(() => {
-                                html5QrCodeRef.current.clear();
-                            }).catch(err => console.log("Stop failed", err));
+                            html5QrCodeRef.current.stop().then(() => html5QrCodeRef.current.clear()).catch(e=>{});
                         } else {
                             html5QrCodeRef.current.clear();
                         }
@@ -132,7 +159,7 @@
             const content = (
                 <div className="flex flex-col items-center w-full">
                     <div id="reader" className="w-full bg-black overflow-hidden rounded-lg relative" style={{minHeight: isInline ? '250px' : '300px'}}></div>
-                    <p className="text-xs text-gray-500 mt-2 animate-pulse">Arahkan kamera ke barcode...</p>
+                    <p className="text-xs text-gray-500 mt-2 animate-pulse">Scan Barcode Produk / Member...</p>
                     {isInline && (
                         <button onClick={onClose} className="mt-3 bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
                             <Icon name="x-circle" size={16}/> Tutup Kamera
@@ -142,12 +169,7 @@
             );
 
             if (isInline) return <div className="mb-4 p-4 bg-gray-100 rounded-xl border border-blue-200 shadow-inner">{content}</div>;
-
-            return (
-                <Modal title="Scan Barcode" onClose={onClose}>
-                    {content}
-                </Modal>
-            );
+            return <Modal title="Scan Barcode" onClose={onClose}>{content}</Modal>;
         };
 
         const LoginScreen = () => {
@@ -245,9 +267,16 @@
                             </div>
                             <div className="border-t border-dashed border-gray-400 pt-2 text-right">
                                 <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(data.subtotal)}</span></div>
-                                {data.tax > 0 && <div className="flex justify-between"><span>Tax</span><span>{formatCurrency(data.tax)}</span></div>}
-                                {data.serviceCharge > 0 && <div className="flex justify-between"><span>Svc</span><span>{formatCurrency(data.serviceCharge)}</span></div>}
                                 <div className="flex justify-between font-bold text-lg border-t border-dotted mt-2 pt-1"><span>Total</span><span>{formatCurrency(data.total)}</span></div>
+                                
+                                {/* [NEW] INFO POIN DI STRUK */}
+                                {data.pointsEarned > 0 && (
+                                    <div className="mt-2 pt-2 border-t border-dashed text-xs">
+                                        <div className="flex justify-between"><span>Poin Transaksi:</span><span>+{data.pointsEarned}</span></div>
+                                        <div className="flex justify-between font-bold"><span>Total Poin Anda:</span><span>{data.customerPointsTotal}</span></div>
+                                    </div>
+                                )}
+
                                 <div className="text-center mt-4 italic text-gray-500">{storeProfile?.footerMessage}</div>
                             </div>
                         </div>
@@ -287,6 +316,7 @@
             const [stockHistory, setStockHistory] = useState([]); 
 
             const [cart, setCart] = useState([]);
+            const [heldCarts, setHeldCarts] = useState([]); 
             const [selectedCustomer, setSelectedCustomer] = useState(null);
             const [selectedTable, setSelectedTable] = useState(null); 
             const [discount, setDiscount] = useState(0); 
@@ -301,7 +331,7 @@
             const [editingItem, setEditingItem] = useState(null);
             const [modalConfig, setModalConfig] = useState({ show: false, type: '', data: null });
             const [settingsTab, setSettingsTab] = useState('profile');
-            const [scannerContext, setScannerContext] = useState(null); // 'pos' or 'form'
+            const [scannerContext, setScannerContext] = useState(null); 
 
             useEffect(() => {
                 const unsubscribe = onAuthStateChanged(auth, (u) => { setUser(u); setLoading(false); });
@@ -343,12 +373,10 @@
             const handleStaffLogin = (s) => {
                 const pin = prompt(`Masukkan PIN untuk ${s.name}:`);
                 if(pin !== s.pin) return alert("PIN Salah!");
-
                 if (shift && shift.cashierName !== s.name && s.role !== 'admin') {
                     alert(`Toko sedang dibuka oleh ${shift.cashierName}. \nSilahkan minta ${shift.cashierName} untuk Tutup Toko terlebih dahulu.`);
                     return;
                 }
-
                 setActiveStaff(s);
                 if(s.role === 'admin') setView('dashboard'); else setView('pos');
             };
@@ -379,27 +407,39 @@
                 });
             };
 
-            // [NEW] CENTRALIZED SCAN HANDLER
             const handleScanResult = (code) => {
                 if (scannerContext === 'pos') {
-                    // Logic untuk POS (Add to Cart)
                     const prod = products.find(p => p.barcode === code);
                     if (prod) {
                         addToCart(prod);
-                        // Play beep sound (optional)
-                        // Tidak tutup scanner agar bisa lanjut scan
-                    } else {
-                        alert("Barcode tidak ditemukan: " + code);
+                        return;
                     }
+                    const cust = customers.find(c => c.memberCode === code);
+                    if (cust) {
+                        setSelectedCustomer(cust);
+                        alert(`Pelanggan terdeteksi: ${cust.name} (Poin: ${cust.points||0})`);
+                        return;
+                    }
+                    alert("Barcode tidak ditemukan (Produk/Member): " + code);
                 } else if (scannerContext === 'form') {
-                    // Logic untuk Form Tambah Produk
-                    // Update data modalConfig agar input terisi
-                    setModalConfig(prev => ({
-                        ...prev,
-                        data: { ...prev.data, barcode: code }
-                    }));
-                    setScannerContext(null); // Tutup scanner setelah dapat kode
+                    setModalConfig(prev => ({ ...prev, data: { ...prev.data, barcode: code } }));
+                    setScannerContext(null); 
                 }
+            };
+
+            const holdTransaction = () => {
+                if(cart.length === 0) return alert("Keranjang kosong!");
+                const newHold = { id: Date.now(), cust: selectedCustomer, cart: cart, table: selectedTable, time: new Date() };
+                setHeldCarts(prev => [...prev, newHold]);
+                setCart([]); setSelectedCustomer(null); setSelectedTable(null);
+                alert("Transaksi ditunda. Silakan layani konsumen berikutnya.");
+            };
+
+            const restoreTransaction = (h) => {
+                if(cart.length > 0) { if(!confirm("Ada transaksi aktif. Timpa?")) return; }
+                setCart(h.cart); setSelectedCustomer(h.cust); setSelectedTable(h.table);
+                setHeldCarts(prev => prev.filter(x => x.id !== h.id));
+                setModalConfig({show: false});
             };
 
             const updateCartQty = (item, change) => {
@@ -408,16 +448,13 @@
                         if (i.id !== item.id) return i;
                         const newQty = i.qty + change;
                         if (newQty <= 0) return null;
-                        
                         const prod = products.find(p => p.id === i.id);
                         if (!prod) return i;
-
                         const hasRecipe = prod.recipe && prod.recipe.length > 0;
                         if (!hasRecipe && change > 0 && newQty > prod.stock) {
                             alert(`Maksimal stok tersedia: ${prod.stock}`);
                             return i; 
                         }
-
                         return { ...i, qty: newQty, price: getPrice(prod, newQty) }; 
                     }).filter(Boolean);
                 });
@@ -463,40 +500,37 @@
                 });
                 for (const [id, needed] of Object.entries(requiredIngs)) {
                     const ing = ingredients.find(i => i.id === id);
-                    if (!ing || ing.stock < needed) return `Stok Bahan Baku '${ing?.name||'Unknown'}' Kurang! (Butuh: ${needed}, Ada: ${ing?.stock||0})`;
+                    if (!ing || ing.stock < needed) return `Stok Bahan Baku Kurang!`;
                 }
                 return null;
             };
 
             const handleCheckout = async () => {
                 try {
-                    if(!shift) {
-                        alert("Shift Kasir belum dibuka! Silakan Buka Toko dulu.");
-                        return;
-                    }
+                    if(!shift) { alert("Buka Shift dulu!"); return; }
                     if(cart.length === 0) return;
                     
                     const stockError = checkIngredientsAvailability();
-                    if (stockError) {
-                        alert(stockError);
-                        return;
-                    }
+                    if (stockError) { alert(stockError); return; }
 
-                    if(paymentMethod === 'Hutang' && !selectedCustomer) {
-                        alert("Pembayaran Hutang wajib memilih Pelanggan!");
-                        return;
-                    }
+                    if(paymentMethod === 'Hutang' && !selectedCustomer) { alert("Pilih Pelanggan!"); return; }
                     
                     setIsProcessing(true);
 
                     const totals = calculateTotals();
                     const profit = totals.total - totals.tax - totals.serviceCharge - totals.hppTotal;
 
+                    // [NEW] Hitung Poin
+                    const pointRate = storeProfile?.pointConversion || 10000;
+                    const pointsEarned = selectedCustomer ? Math.floor(totals.total / pointRate) : 0;
+
                     const transData = {
                         items: cart, ...totals, profit, paymentMethod, orderType,
                         table: selectedTable ? selectedTable.name : null,
                         customerId: selectedCustomer ? selectedCustomer.id : null,
                         customerName: selectedCustomer ? selectedCustomer.name : 'Umum',
+                        pointsEarned, // Simpan histori poin
+                        customerPointsTotal: selectedCustomer ? (selectedCustomer.points || 0) + pointsEarned : 0,
                         shiftId: shift.id, createdAt: serverTimestamp(), status: 'success'
                     };
 
@@ -507,6 +541,12 @@
                             transactionId: ref.id, customerId: selectedCustomer.id, customerName: selectedCustomer.name,
                             amount: totals.total, paid: 0, status: 'unpaid', createdAt: serverTimestamp()
                         });
+                    }
+
+                    // [NEW] Update Poin Member
+                    if(selectedCustomer) {
+                        const custRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'customers', selectedCustomer.id);
+                        await updateDoc(custRef, { points: increment(pointsEarned) });
                     }
 
                     const batchPromises = [];
@@ -527,11 +567,8 @@
 
                     for (const [id, qty] of Object.entries(ingUpdates)) {
                         const ing = ingredients.find(i => i.id === id);
-                        if (ing) {
-                            batchPromises.push(updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'ingredients', id), { stock: ing.stock - qty }));
-                        }
+                        if (ing) batchPromises.push(updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'ingredients', id), { stock: ing.stock - qty }));
                     }
-                    
                     for (const [id, qty] of Object.entries(prodUpdates)) {
                         const prod = products.find(p => p.id === id);
                         if (prod) {
@@ -551,9 +588,12 @@
 
                     setLastTrans({id: ref.id, ...transData, createdAt: new Date()});
                     setCart([]); setDiscount(0); setSelectedCustomer(null); setSelectedTable(null);
+
+                    if(paymentMethod === 'QRIS') window.open("https://qris.id", "_blank");
+
                 } catch (e) { 
                     console.error(e);
-                    alert("Terjadi kesalahan saat proses bayar: " + e.message); 
+                    alert("Error: " + e.message); 
                 } finally {
                     setIsProcessing(false);
                 }
@@ -574,38 +614,23 @@
             const handleCloseShift = async (e) => {
                 e.preventDefault();
                 const endCash = Number(e.target.endCash.value);
-                const cashSales = transactions
-                    .filter(t => t.paymentMethod === 'Tunai' && t.shiftId === shift.id)
-                    .reduce((a,b) => a + (b.total || 0), 0);
-                
-                const totalExpenses = expenses
-                    .filter(ex => ex.date?.seconds >= shift.startTime?.seconds) 
-                    .reduce((a,b) => a + (b.amount || 0), 0);
-
+                const cashSales = transactions.filter(t => t.paymentMethod === 'Tunai' && t.shiftId === shift.id).reduce((a,b) => a + (b.total || 0), 0);
+                const totalExpenses = expenses.filter(ex => ex.date?.seconds >= shift.startTime?.seconds).reduce((a,b) => a + (b.amount || 0), 0);
                 const expectedCash = (shift.startCash || 0) + cashSales - totalExpenses;
                 const difference = endCash - expectedCash;
 
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'shifts', shift.id), {
-                    endCash,
-                    expectedCash,
-                    difference,
-                    cashSales,
-                    totalExpenses,
-                    status: 'closed',
-                    endTime: serverTimestamp()
+                    endCash, expectedCash, difference, cashSales, totalExpenses, status: 'closed', endTime: serverTimestamp()
                 });
-                
                 setModalConfig({show: false});
-                alert(`Shift Ditutup.\n\nSaldo Seharusnya: ${formatCurrency(expectedCash)}\nSaldo Fisik: ${formatCurrency(endCash)}\nSelisih: ${formatCurrency(difference)}`);
+                alert(`Shift Ditutup.`);
                 setActiveStaff(null);
             };
 
             const handleDeleteTransaction = async (t) => {
-                if(!confirm(`Hapus transaksi #${t.id.slice(0,6)}? \n\nPERHATIAN: Stok akan DIKEMBALIKAN ke sistem!`)) return;
-                
+                if(!confirm(`Hapus transaksi? Stok akan KEMBALI.`)) return;
                 try {
                     const batchPromises = [];
-                    
                     t.items.forEach(item => {
                         if(item.recipe && item.recipe.length > 0) {
                             item.recipe.forEach(r => {
@@ -617,22 +642,20 @@
                             batchPromises.push(updateDoc(prodRef, { stock: increment(item.qty) }));
                         }
                     });
-
                     batchPromises.push(deleteDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'transactions', t.id)));
-
                     const qDebt = query(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'debts'), where('transactionId', '==', t.id));
                     const debtSnap = await getDocs(qDebt);
-                    debtSnap.forEach(d => {
-                        batchPromises.push(deleteDoc(d.ref));
-                    });
+                    debtSnap.forEach(d => batchPromises.push(deleteDoc(d.ref)));
+                    
+                    // [NEW] Kurangi Poin Member jika transaksi dihapus
+                    if(t.customerId && t.pointsEarned > 0) {
+                        const custRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'customers', t.customerId);
+                        batchPromises.push(updateDoc(custRef, { points: increment(-t.pointsEarned) }));
+                    }
 
                     await Promise.all(batchPromises);
-                    alert("Transaksi dihapus. Stok telah dikembalikan.");
-
-                } catch(e) {
-                    console.error(e);
-                    alert("Gagal menghapus: " + e.message);
-                }
+                    alert("Transaksi dihapus.");
+                } catch(e) { alert("Gagal: " + e.message); }
             };
 
             const handlePaymentSubmit = async (e) => {
@@ -668,7 +691,8 @@
                     name: f.name.value, address: f.address.value, phone: f.phone.value, logo: f.logo.value,
                     footerMessage: f.footerMessage.value, 
                     taxRate: Number(f.taxRate.value), serviceRate: Number(f.serviceRate.value),
-                    paperSize: f.paperSize.value 
+                    paperSize: f.paperSize.value,
+                    pointConversion: Number(f.pointConversion.value) // [NEW] Save conversion rate
                 });
                 setModalConfig({ show: false });
             };
@@ -696,10 +720,13 @@
                          const currentRecipe = modalConfig.data.recipe || [];
                          const newRecipe = [...currentRecipe, {ingId: f.ingId.value, qty: Number(f.qty.value)}];
                          await updateDoc(doc(db, ...collPath, 'products', modalConfig.data.id), { recipe: newRecipe });
-                         setModalConfig({ show: false });
-                         return;
+                         setModalConfig({ show: false }); return;
                     } else if (type === 'customer') {
-                        payload = { name: f.name.value, phone: f.phone.value, email: f.email.value };
+                        const timestamp = Date.now().toString().slice(-6);
+                        payload = { 
+                            name: f.name.value, phone: f.phone.value, email: f.email.value, 
+                            nik: f.nik.value, memberCode: `MBR-${timestamp}` 
+                        };
                     } else if (type === 'supplier') {
                         payload = { name: f.name.value, phone: f.phone.value, address: f.address.value };
                     } else if (type === 'table') {
@@ -712,7 +739,14 @@
                     }
 
                     if (modalConfig.data?.id) await updateDoc(doc(db, ...collPath, collectionName, modalConfig.data.id), { ...payload, updatedAt: serverTimestamp() });
-                    else await addDoc(collection(db, ...collPath, collectionName), { ...payload, createdAt: serverTimestamp() });
+                    else {
+                        const ref = await addDoc(collection(db, ...collPath, collectionName), { ...payload, createdAt: serverTimestamp() });
+                        if(type === 'customer') {
+                            setModalConfig({show: false});
+                            setTimeout(() => setModalConfig({show: true, type: 'show_member_card', data: {...payload, id: ref.id}}), 500);
+                            return;
+                        }
+                    }
                     
                     setModalConfig({ show: false });
                 } catch (err) { alert("GAGAL SIMPAN: " + err.message); }
@@ -769,7 +803,7 @@
                     <aside className="w-20 md:w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20 overflow-y-auto">
                         <div className="h-16 flex items-center justify-center md:justify-start md:px-6 bg-slate-950 text-white font-bold gap-3 flex-shrink-0 sticky top-0 z-10">
                             <div className="bg-blue-600 p-2 rounded-lg"><Icon name="zap" size={20}/></div>
-                            <span className="hidden md:block">Kasir Pro v8</span>
+                            <span className="hidden md:block">Kasir Pro v9</span>
                         </div>
                         <nav className="flex-1 py-4 space-y-1 px-2">
                             <div className="px-3 mb-6 flex items-center gap-3 pb-4 border-b border-slate-800">
@@ -829,8 +863,6 @@
                         {view === 'pos' && (
                             <div className="flex h-full flex-col md:flex-row">
                                 <div className="flex-1 bg-gray-50 flex flex-col min-w-0 h-full overflow-hidden">
-                                    
-                                    {/* [UPDATED] POS HEADER WITH EMBEDDED SCANNER */}
                                     <div className="p-4 bg-white border-b flex flex-col gap-3">
                                         {scannerContext === 'pos' ? (
                                             <BarcodeScanner onScan={handleScanResult} onClose={()=>setScannerContext(null)} isInline={true} />
@@ -838,7 +870,7 @@
                                             <div className="flex gap-3 items-center">
                                                 <div className="relative flex-1">
                                                     <Icon name="search" className="absolute left-3 top-3 text-gray-400"/>
-                                                    <input className="w-full pl-10 p-2.5 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Cari nama atau barcode..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} autoFocus/>
+                                                    <input className="w-full pl-10 p-2.5 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Cari nama, barcode, atau member..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} autoFocus/>
                                                 </div>
                                                 <button onClick={()=>setScannerContext('pos')} className="p-2.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 flex items-center gap-2 font-bold" title="Scan Kamera">
                                                     <Icon name="camera" size={20}/> <span className="hidden md:inline">Scan</span>
@@ -875,12 +907,34 @@
                                     </div>
                                 </div>
                                 <div className="w-full md:w-96 bg-white shadow-2xl z-20 flex flex-col border-l flex-shrink-0 h-auto md:h-full">
-                                    <div className="p-4 border-b bg-gray-50 space-y-2">
+                                    
+                                    <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
+                                        <div className="flex gap-2">
+                                            {heldCarts.length > 0 && (
+                                                <button onClick={()=>setModalConfig({show: true, type: 'hold_list'})} className="bg-orange-100 text-orange-600 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1 animate-pulse">
+                                                    <Icon name="list" size={16}/> Antrean ({heldCarts.length})
+                                                </button>
+                                            )}
+                                        </div>
+                                        <button onClick={holdTransaction} className="text-gray-500 hover:text-blue-600 p-2 rounded-lg" title="Tunda Transaksi (Ganti Orang)">
+                                            <Icon name="clock" size={20}/>
+                                        </button>
+                                    </div>
+
+                                    <div className="p-4 border-b bg-white space-y-2">
                                         <div className="flex gap-2">
                                             <select className="flex-1 p-2 border rounded bg-white text-sm" value={orderType} onChange={e=>setOrderType(e.target.value)}><option>Dine In</option><option>Take Away</option></select>
                                             {orderType === 'Dine In' && <select className="flex-1 p-2 border rounded bg-white text-sm" value={selectedTable?.name||''} onChange={e=>setSelectedTable(tables.find(t=>t.name===e.target.value)||null)}><option value="">Pilih Meja</option>{tables.map(t=><option key={t.id} value={t.name}>{t.name}</option>)}</select>}
                                         </div>
                                         <select className="w-full p-2 border rounded bg-white text-sm" value={selectedCustomer?.id||''} onChange={e=>setSelectedCustomer(customers.find(c=>c.id===e.target.value)||null)}><option value="">Pelanggan Umum</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select>
+                                        
+                                        {/* [NEW] INFO POIN DI CART */}
+                                        {selectedCustomer && (
+                                            <div className="text-xs bg-green-50 text-green-700 p-2 rounded flex justify-between">
+                                                <span>Poin Member: <b>{selectedCustomer.points || 0}</b></span>
+                                                <span>Dapat +{Math.floor(calculateTotals().total / (storeProfile?.pointConversion || 10000))} Poin</span>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="flex-1 overflow-y-auto p-4 space-y-2 max-h-[300px] md:max-h-full">
                                         {cart.map(i => (
@@ -1094,27 +1148,17 @@
 
                                                     {view==='staff' && <div className="text-sm text-gray-500 uppercase font-bold text-blue-600">{item.role} (PIN: {item.pin})</div>}
                                                     {view==='tables' && <div className="text-sm text-gray-500">Kapasitas: {item.capacity} org</div>}
+                                                    {view==='customers' && <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded inline-block mt-1">{item.memberCode}</div>}
+                                                    {/* [NEW] INFO POIN MEMBER DI LIST */}
+                                                    {view==='customers' && <div className="text-[10px] text-gray-500 mt-1">Poin: {item.points || 0}</div>}
                                                     {(view==='customers'||view==='suppliers') && <div className="text-sm text-gray-500">{item.phone}</div>}
                                                 </div>
                                             </div>
                                             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                                                {view==='customers' && <button onClick={()=>setModalConfig({show:true, type:'show_member_card', data:item})} className="p-1.5 bg-green-100 text-green-600 rounded" title="Kartu Member"><Icon name="credit-card" size={14}/></button>}
                                                 <button onClick={()=>setModalConfig({show:true, type: view === 'staff' ? 'staff' : view.slice(0,-1), data:item})} className="p-1.5 bg-gray-100 hover:text-blue-600 rounded"><Icon name="edit-2" size={14}/></button>
                                                 <button onClick={()=>{if(confirm('Hapus?')) deleteDoc(doc(db,'artifacts',APP_ID,'users',user.uid,view,item.id))}} className="p-1.5 bg-gray-100 hover:text-red-600 rounded"><Icon name="trash" size={14}/></button>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        
-                        {view === 'inventory' && (
-                            <div className="p-6 h-full overflow-y-auto">
-                                <h2 className="text-2xl font-bold mb-4">Stok Opname (Produk Jadi)</h2>
-                                <div className="bg-white p-4 rounded-xl border">
-                                    {products.map(p => (
-                                        <div key={p.id} className="flex justify-between items-center border-b p-2">
-                                            <div>{p.name} <span className="text-xs bg-gray-100 px-1 rounded">{p.stock}</span></div>
-                                            <button onClick={()=>setModalConfig({show:true, type:'stock_adj', data:p})} className="text-blue-600 text-xs border border-blue-600 px-2 py-1 rounded">Sesuaikan</button>
                                         </div>
                                     ))}
                                 </div>
@@ -1126,7 +1170,23 @@
                     {modalConfig.show && (
                         <Modal title={modalConfig.type.replace('_', ' ')} onClose={()=>setModalConfig({show:false})}>
                             
-                            {/* [UPDATE] MODAL TUTUP SHIFT / SETORAN */}
+                            {modalConfig.type === 'show_member_card' && <MemberCardModal customer={modalConfig.data} storeProfile={storeProfile} onClose={()=>setModalConfig({show:false})} />}
+
+                            {modalConfig.type === 'hold_list' && (
+                                <div className="space-y-3">
+                                    {heldCarts.length === 0 && <p className="text-center text-gray-400">Tidak ada antrean.</p>}
+                                    {heldCarts.map(h => (
+                                        <div key={h.id} onClick={()=>restoreTransaction(h)} className="p-3 border rounded-lg hover:bg-blue-50 cursor-pointer flex justify-between items-center">
+                                            <div>
+                                                <div className="font-bold">{h.cust?.name || 'Umum'}</div>
+                                                <div className="text-xs text-gray-500">{h.cart.length} item • {h.time.toLocaleTimeString()}</div>
+                                            </div>
+                                            <Icon name="arrow-right-circle" className="text-blue-600"/>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
                             {modalConfig.type === 'close_shift' && (
                                 <form onSubmit={handleCloseShift} className="space-y-4">
                                     <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4 text-sm">
@@ -1190,13 +1250,18 @@
                                         <div><label className="text-xs">Service (%)</label><input name="serviceRate" type="number" step="0.1" defaultValue={storeProfile?.serviceRate || 0} className="w-full p-3 border rounded-lg"/></div>
                                     </div>
                                     
-                                    {/* [NEW] PILIHAN UKURAN KERTAS */}
                                     <div>
                                         <label className="text-xs font-bold text-gray-500">Ukuran Kertas Printer</label>
                                         <select name="paperSize" defaultValue={storeProfile?.paperSize || '58mm'} className="w-full p-3 border rounded-lg">
                                             <option value="58mm">58mm (Thermal Kecil)</option>
                                             <option value="80mm">80mm (Thermal Besar)</option>
                                         </select>
+                                    </div>
+
+                                    {/* [NEW] KONVERSI POIN */}
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500">Konversi Poin (Rp untuk 1 Poin)</label>
+                                        <input name="pointConversion" type="number" defaultValue={storeProfile?.pointConversion || 10000} className="w-full p-3 border rounded-lg"/>
                                     </div>
 
                                     <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan Pengaturan</button>
@@ -1273,7 +1338,13 @@
                                         <select name="category" defaultValue={modalConfig.data?.category} className="w-full p-3 border rounded-lg"><option value="Operasional">Operasional</option><option value="Gaji">Gaji Karyawan</option><option value="Belanja">Belanja Bahan</option><option value="Lainnya">Lainnya</option></select>
                                     </>}
                                     
-                                    {modalConfig.type === 'customer' && <><input name="phone" placeholder="No HP" defaultValue={modalConfig.data?.phone} className="w-full p-3 border rounded-lg"/><input name="email" placeholder="Email (Opsional)" defaultValue={modalConfig.data?.email} className="w-full p-3 border rounded-lg"/></>}
+                                    {modalConfig.type === 'customer' && <>
+                                        <input name="phone" placeholder="No HP" defaultValue={modalConfig.data?.phone} className="w-full p-3 border rounded-lg"/>
+                                        {/* [NEW] INPUT NIK */}
+                                        <input name="nik" placeholder="NIK (KTP)" defaultValue={modalConfig.data?.nik} className="w-full p-3 border rounded-lg"/>
+                                        <input name="email" placeholder="Email (Opsional)" defaultValue={modalConfig.data?.email} className="w-full p-3 border rounded-lg"/>
+                                    </>}
+                                    
                                     {modalConfig.type === 'supplier' && <><input name="phone" placeholder="No HP" defaultValue={modalConfig.data?.phone} className="w-full p-3 border rounded-lg"/><input name="address" placeholder="Alamat" defaultValue={modalConfig.data?.address} className="w-full p-3 border rounded-lg"/></>}
                                     {modalConfig.type === 'table' && <input name="capacity" type="number" placeholder="Kapasitas (Orang)" defaultValue={modalConfig.data?.capacity} className="w-full p-3 border rounded-lg"/>}
 
