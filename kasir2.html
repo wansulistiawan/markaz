@@ -822,7 +822,13 @@
                         payload = { name: f.name.value, capacity: f.capacity.value };
                     } else if (type === 'staff') {
                         if(!f.pin.value) throw new Error("PIN Wajib diisi!");
-                        payload = { name: f.name.value, pin: f.pin.value, role: f.role.value };
+                        // [UPDATE] Simpan Email juga
+                        payload = { 
+                            name: f.name.value, 
+                            email: f.email.value.trim().toLowerCase(), // Email penting untuk login
+                            pin: f.pin.value, 
+                            role: f.role.value 
+                        };
                     } else if (type === 'expense') {
                         payload = { name: f.name.value, amount: Number(f.amount.value), category: f.category.value, date: serverTimestamp() };
                     }
@@ -1498,6 +1504,8 @@
                                     </>}
 
                                     {modalConfig.type === 'staff' && <>
+                                        {/* [ADD] KOLOM EMAIL STAFF */}
+                                        <input name="email" type="email" placeholder="Email Google Staff (Wajib)" required defaultValue={modalConfig.data?.email} className="w-full p-3 border rounded-lg"/>
                                         <input name="pin" type="text" placeholder="PIN Akses" required defaultValue={modalConfig.data?.pin} className="w-full p-3 border rounded-lg"/>
                                         <select name="role" defaultValue={modalConfig.data?.role||'kasir'} className="w-full p-3 border rounded-lg">
                                             <option value="kasir">Kasir (Jualan)</option>
