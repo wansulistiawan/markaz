@@ -430,7 +430,10 @@
             const [selectedVariantTemp, setSelectedVariantTemp] = useState(null); 
             const [tempModifiers, setTempModifiers] = useState([]); // Checkbox modifier yg dipilih
 			const [splitSelection, setSplitSelection] = useState({}); // Item yg dipilih untuk Split Bill
+
 			const [isMovingTable, setIsMovingTable] = useState(null);
+			const [promos, setPromos] = useState([]); // Daftar semua promo
+            const [appliedPromo, setAppliedPromo] = useState(null); // Promo yang dipakai saat ini
             const [modalConfig, setModalConfig] = useState({ show: false, type: '', data: null });
             const [settingsTab, setSettingsTab] = useState('profile');
             const [scannerContext, setScannerContext] = useState(null); 
@@ -457,7 +460,8 @@
                 const unsubTrans = onSnapshot(query(collection(db, ...basePath, 'transactions'), orderBy('createdAt', 'desc'), limit(50)), s => setTransactions(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubOrders = onSnapshot(query(collection(db, ...basePath, 'orders'), orderBy('createdAt', 'asc')), s => setActiveOrders(s.docs.map(d => ({id:d.id, ...d.data()}))));
 				const unsubTables = onSnapshot(query(collection(db, ...basePath, 'tables'), orderBy('name', 'asc')), s => setTables(s.docs.map(d => ({id:d.id, ...d.data()}))));
-                
+                // [BARU] Listener Promo
+                const unsubPromos = onSnapshot(query(collection(db, ...basePath, 'promos')), s => setPromos(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 const unsubStaff = onSnapshot(collection(db, ...basePath, 'staff'), s => {
                     const staffData = s.docs.map(d => ({id:d.id, ...d.data()}));
                     if(s.empty && storeId === user.uid) {
@@ -708,7 +712,39 @@
             const calculateTotals = () => {
                 const subtotalRaw = cart.reduce((a,b) => a + (b.price * b.qty), 0);
                 const itemDiscounts = cart.reduce((a,b) => a + (b.itemDiscount || 0), 0);
-                const subtotal = subtotalRaw - itemDiscounts;
+                let subtotal = subtotalRaw - itemDiscounts;
+                
+                // [BARU] LOGIKA PROMO OTOMATIS
+                let promoDiscount = 0;
+                let bonusItems = []; // Untuk promo Beli X Gratis Y (nanti ditampilkan di struk)
+
+                if (appliedPromo) {
+                    // Cek Syarat Minimum Belanja
+                    if (subtotal >= (appliedPromo.minSpend || 0)) {
+                        
+                        // Tipe 1: Diskon Persen
+                        if (appliedPromo.type === 'percent') {
+                            promoDiscount = (subtotal * appliedPromo.value) / 100;
+                            // Cek Maksimal Diskon (Cap)
+                            if (appliedPromo.maxDiscount && promoDiscount > appliedPromo.maxDiscount) {
+                                promoDiscount = appliedPromo.maxDiscount;
+                            }
+                        }
+                        
+                        // Tipe 2: Potongan Harga Tetap
+                        else if (appliedPromo.type === 'fixed') {
+                            promoDiscount = appliedPromo.value;
+                        }
+                    }
+                }
+
+                // Jangan sampai diskon lebih besar dari total belanja
+                if (promoDiscount > subtotal) promoDiscount = subtotal;
+
+                // Gabungkan Diskon Manual + Diskon Promo
+                const totalDiscount = (Number(discount) || 0) + promoDiscount;
+
+                // Hitung HPP (Logika Lama)
                 const hppTotal = cart.reduce((a,b) => {
                      let itemHPP = b.hpp || 0;
                      if (b.recipe && b.recipe.length > 0) {
@@ -720,13 +756,21 @@
                      }
                      return a + (itemHPP * b.qty);
                 }, 0);
+
                 const serviceRate = storeProfile?.serviceRate || 0;
                 const taxRate = storeProfile?.taxRate || 0;
-                const taxableAmount = Math.max(0, subtotal - discount);
+                
+                const taxableAmount = Math.max(0, subtotal - totalDiscount);
+                
                 const serviceCharge = (taxableAmount * serviceRate) / 100;
                 const tax = ((taxableAmount + serviceCharge) * taxRate) / 100;
                 const total = taxableAmount + serviceCharge + tax;
-                return { subtotal, hppTotal, tax, serviceCharge, total, serviceRate, taxRate, discount }; 
+                
+                return { 
+                    subtotal, hppTotal, tax, serviceCharge, total, serviceRate, taxRate, 
+                    discount: totalDiscount, // Total gabungan
+                    promoDetails: appliedPromo ? { name: appliedPromo.name, amount: promoDiscount } : null 
+                }; 
             };
 
             const checkIngredientsAvailability = () => {
@@ -1112,6 +1156,16 @@
                         payload = { name: f.name.value, phone: f.phone.value, address: f.address.value };
                     } else if (type === 'table') {
                         payload = { name: f.name.value, capacity: f.capacity.value };
+					} else if (type === 'promo') {
+                        payload = { 
+                            name: f.name.value, 
+                            type: f.type.value, 
+                            value: Number(f.value.value), 
+                            minSpend: Number(f.minSpend.value),
+                            maxDiscount: Number(f.maxDiscount.value) || 0,
+                            isActive: true 
+                        };
+              
                     } else if (type === 'staff') {
                         // [FIXED] FORM STAFF: HAPUS PIN, ADA NAMA
                         let inputPhone = f.phone.value.trim();
@@ -1261,7 +1315,8 @@
                                 {id: 'expenses', icon: 'wallet', label: 'Pengeluaran', roles: ['admin', 'kasir']},
                                 {id: 'debts', icon: 'book', label: 'Hutang / Kasbon', roles: ['admin', 'kasir']},
                                 {id: 'customers', icon: 'users', label: 'Pelanggan', roles: ['admin', 'kasir']},
-                            ].filter(m => m.roles.includes(activeStaff?.role)).map(m => (
+								{id: 'promos', icon: 'ticket', label: 'Voucher & Promo', roles: ['admin']},
+							].filter(m => m.roles.includes(activeStaff?.role)).map(m => (
                                 <button key={m.id} onClick={() => setView(m.id)} className={`w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl transition ${view===m.id ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}>
                                     <Icon name={m.icon} /> <span className="hidden md:block font-medium">{m.label}</span>
                                 </button>
@@ -1406,9 +1461,28 @@
                                     {/* PANEL PEMBAYARAN BAWAH */}
                                     <div className="p-3 bg-white border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-30">
                                         {/* INPUT DISKON */}
-                                        <div className="flex gap-2 mb-2">
-                                            <input type="number" placeholder="Diskon (Rp)" className="w-full p-2 border rounded text-xs bg-gray-50" value={discount > 0 ? discount : ''} onChange={e=>setDiscount(Number(e.target.value))} />
-                                        </div>
+                                        {/* PILIH PROMO & DISKON */}
+                                            <div className="flex gap-2 mb-2">
+                                                <div className="flex-1 relative">
+                                                    <select className={`w-full p-2 border rounded text-xs appearance-none font-bold ${appliedPromo ? 'bg-purple-100 text-purple-700 border-purple-300' : 'bg-gray-50 text-gray-600'}`} 
+                                                        value={appliedPromo ? appliedPromo.id : ''} 
+                                                        onChange={(e) => {
+                                                            const p = promos.find(pr => pr.id === e.target.value);
+                                                            setAppliedPromo(p || null);
+                                                        }}
+                                                    >
+                                                        <option value="">-- Pilih Promo / Voucher --</option>
+                                                        {promos.filter(p => p.isActive).map(p => (
+                                                            <option key={p.id} value={p.id}>
+                                                                {p.name} ({p.type==='percent'?`${p.value}%`:formatCurrency(p.value)})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <Icon name="ticket" size={14} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none"/>
+                                                </div>
+                                                {/* Input Diskon Manual Tetap Ada (Opsional) */}
+                                                <input type="number" placeholder="Manual (Rp)" className="w-24 p-2 border rounded text-xs bg-gray-50" value={discount > 0 ? discount : ''} onChange={e=>setDiscount(Number(e.target.value))} />
+                                            </div>
 
                                         {/* TOTAL HARGA */}
                                         <div className="space-y-1 text-xs pb-2 border-b border-dashed mb-2">
@@ -1836,6 +1910,40 @@
                                 </div>
                             </div>
                         )}
+						
+						{view === 'promos' && (
+                            <div className="p-6 h-full overflow-y-auto">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-bold">Voucher & Promo</h2>
+                                    <button onClick={()=>setModalConfig({show:true, type:'promo'})} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"><Icon name="plus"/> Buat Promo Baru</button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {promos.map(p => (
+                                        <div key={p.id} className="bg-white p-4 rounded-xl border shadow-sm relative overflow-hidden">
+                                            <div className={`absolute top-0 right-0 px-3 py-1 text-[10px] font-bold text-white rounded-bl-xl ${p.isActive ? 'bg-green-500' : 'bg-gray-400'}`}>
+                                                {p.isActive ? 'AKTIF' : 'NON-AKTIF'}
+                                            </div>
+                                            <h3 className="font-bold text-lg text-purple-700">{p.name}</h3>
+                                            <div className="text-sm text-gray-600 mt-1">
+                                                {p.type === 'percent' ? `Diskon ${p.value}%` : `Potongan ${formatCurrency(p.value)}`}
+                                            </div>
+                                            <div className="mt-3 text-xs text-gray-500 space-y-1">
+                                                <p>Min. Belanja: {formatCurrency(p.minSpend)}</p>
+                                                {p.maxDiscount > 0 && <p>Maks. Diskon: {formatCurrency(p.maxDiscount)}</p>}
+                                            </div>
+                                            <div className="mt-4 pt-3 border-t flex justify-end gap-2">
+                                                <button onClick={async ()=>{
+                                                    await updateDoc(doc(db,'artifacts',APP_ID,'users',storeId,'promos',p.id), {isActive: !p.isActive});
+                                                }} className="text-xs font-bold text-blue-600 border border-blue-200 px-3 py-1 rounded hover:bg-blue-50">
+                                                    {p.isActive ? 'Matikan' : 'Aktifkan'}
+                                                </button>
+                                                <button onClick={()=>{if(confirm('Hapus promo ini?')) deleteDoc(doc(db,'artifacts',APP_ID,'users',storeId,'promos',p.id))}} className="text-red-500 hover:bg-red-50 p-1 rounded"><Icon name="trash" size={16}/></button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                     </main>
 
@@ -1990,6 +2098,39 @@
                                         <input name="costPerUnit" type="number" placeholder="Harga Beli / Satuan" required defaultValue={modalConfig.data?.costPerUnit} className="w-full p-3 border rounded-lg"/>
                                     </div>
                                     <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan Bahan</button>
+                                </form>
+                            )}
+							
+							{modalConfig.type === 'promo' && (
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                    <div className="bg-purple-50 p-3 rounded border border-purple-200 mb-2">
+                                        <h4 className="font-bold text-purple-800 text-sm mb-1">Jenis Promo</h4>
+                                        <select name="type" className="w-full p-2 border rounded text-sm">
+                                            <option value="percent">Diskon Persen (%)</option>
+                                            <option value="fixed">Potongan Rupiah (Rp)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <input name="name" placeholder="Nama Promo (Cth: Diskon Merdeka)" required className="w-full p-3 border rounded-lg"/>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500">Nilai (Rp / %)</label>
+                                            <input name="value" type="number" required placeholder="Contoh: 10 atau 5000" className="w-full p-3 border rounded-lg"/>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500">Min. Belanja (Rp)</label>
+                                            <input name="minSpend" type="number" defaultValue="0" className="w-full p-3 border rounded-lg"/>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500">Maksimal Diskon (Rp) - Opsional</label>
+                                        <input name="maxDiscount" type="number" placeholder="Kosongkan jika tanpa batas" className="w-full p-3 border rounded-lg"/>
+                                        <p className="text-[10px] text-gray-400 mt-1">*Hanya berlaku untuk diskon persen</p>
+                                    </div>
+
+                                    <button className="w-full bg-purple-600 text-white p-3 rounded-lg font-bold">Buat Promo</button>
                                 </form>
                             )}
                              
