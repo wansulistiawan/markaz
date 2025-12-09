@@ -426,6 +426,8 @@
             const [activeStaff, setActiveStaff] = useState(null); 
             
             const [editingItem, setEditingItem] = useState(null);
+			const [tempVariantProduct, setTempVariantProduct] = useState(null); // Produk yg sedang dipilih variannya
+            const [splitSelection, setSplitSelection] = useState({}); // Item yg dipilih untuk Split Bill
             const [modalConfig, setModalConfig] = useState({ show: false, type: '', data: null });
             const [settingsTab, setSettingsTab] = useState('profile');
             const [scannerContext, setScannerContext] = useState(null); 
@@ -536,23 +538,50 @@
                 return Number(prod.price);
             };
 
-            const addToCart = (p) => {
+            const addToCart = (p, variant = null) => {
+                // [BARU] Cek Varian
+                if (!variant && p.variants && p.variants.length > 0) {
+                    setTempVariantProduct(p);
+                    setModalConfig({show: true, type: 'variant_select'});
+                    return;
+                }
+
                 const hasRecipe = p.recipe && p.recipe.length > 0;
+                // Jika pakai varian, stok ikut induknya
                 if (!hasRecipe && p.stock <= 0) return alert("Stok Produk Habis!");
 
+                // [BARU] Buat ID unik untuk varian agar tidak tertumpuk dengan produk biasa
+                const cartItemId = variant ? `${p.id}-${variant.name}` : p.id;
+                const finalPrice = variant ? Number(variant.price) : getPrice(p, 1);
+                const finalName = variant ? `${p.name} (${variant.name})` : p.name;
+
                 setCart(prev => { 
-                    const ex = prev.find(i=>i.id===p.id); 
+                    const ex = prev.find(i => i.id === cartItemId); 
                     if (ex) {
                         const newQty = ex.qty + 1;
                         if (!hasRecipe && newQty > p.stock) {
                             alert(`Stok tidak cukup! (Sisa: ${p.stock})`);
                             return prev;
                         }
-                        return prev.map(i=>i.id===p.id ? {...i, qty: newQty, price: getPrice(p, newQty)} : i);
+                        // Update harga jika qty berubah (untuk grosir non-varian)
+                        const updatedPrice = variant ? finalPrice : getPrice(p, newQty);
+                        return prev.map(i => i.id === cartItemId ? {...i, qty: newQty, price: updatedPrice} : i);
                     } else {
-                        return [...prev,{...p, qty:1, price: getPrice(p, 1), itemDiscount:0}];
+                        return [...prev, {
+                            ...p, 
+                            id: cartItemId, // ID Baru
+                            name: finalName, // Nama Baru
+                            price: finalPrice, 
+                            qty: 1, 
+                            itemDiscount: 0,
+                            originalId: p.id, // Simpan ID asli untuk potong stok
+                            isVariant: !!variant
+                        }];
                     }
                 });
+                
+                // Tutup modal varian jika ada
+                if(variant) setModalConfig({show: false});
             };
 
             const handleScanResult = (code) => {
@@ -800,6 +829,86 @@
                     setIsProcessing(false);
                 }
             };
+			
+			// [BARU] Fungsi Bayar Sebagian (Split Bill)
+            const handleSplitCheckout = async () => {
+                const selectedItems = cart.filter((_, idx) => splitSelection[idx]);
+                if(selectedItems.length === 0) return alert("Pilih item yang mau dibayar!");
+                
+                if(!confirm(`Bayar ${selectedItems.length} item terpilih saja?`)) return;
+
+                // 1. Simpan cart asli
+                const originalCart = [...cart];
+                
+                // 2. Manipulasi cart sementara agar fungsi handleCheckout memproses item terpilih saja
+                setCart(selectedItems);
+                
+                // 3. Jalankan checkout (tunggu sampai selesai)
+                // Kita bungkus handleCheckout agar tidak mereset cart sepenuhnya
+                // Karena handleCheckout didesain membersihkan cart, kita perlu trik sedikit
+                // ATAU: Kita copy logika core checkout. Agar aman, kita gunakan logika manual disini:
+                
+                try {
+                    // Hitung total khusus item terpilih
+                    const subtotal = selectedItems.reduce((a,b) => a + (b.price * b.qty), 0);
+                    const itemDiscounts = selectedItems.reduce((a,b) => a + (b.itemDiscount || 0), 0);
+                    const taxableAmount = Math.max(0, (subtotal - itemDiscounts) - discount);
+                    const serviceCharge = (taxableAmount * (storeProfile?.serviceRate||0)) / 100;
+                    const tax = ((taxableAmount + serviceCharge) * (storeProfile?.taxRate||0)) / 100;
+                    const total = taxableAmount + serviceCharge + tax;
+
+                    // Buat Data Transaksi
+                    const transData = {
+                        items: selectedItems,
+                        subtotal, tax, serviceCharge, total, discount,
+                        profit: 0, // Disederhanakan untuk split
+                        paymentMethod, orderType,
+                        table: selectedTable ? selectedTable.name : null,
+                        customerId: selectedCustomer ? selectedCustomer.id : null,
+                        customerName: selectedCustomer ? selectedCustomer.name : 'Umum (Split)',
+                        pointsEarned: 0,
+                        cashReceived: total, // Asumsi pas/lunas untuk split
+                        cashierName: activeStaff.name, 
+                        shiftId: shift.id, createdAt: serverTimestamp(), status: 'success',
+                        note: 'Split Bill'
+                    };
+
+                    const ref = await addDoc(collection(db, 'artifacts', APP_ID, 'users', storeId, 'transactions'), transData);
+                    
+                    // Update Stok (Penting!)
+                    const batchPromises = [];
+                    selectedItems.forEach(item => {
+                        // Logika potong stok sama seperti checkout biasa...
+                        // Menggunakan item.originalId jika varian, atau item.id jika biasa
+                        const realId = item.originalId || item.id;
+                        const prod = products.find(p => p.id === realId);
+                        if(prod && !prod.recipe) {
+                             batchPromises.push(updateDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'products', realId), { stock: increment(-item.qty) }));
+                        }
+                    });
+                    await Promise.all(batchPromises);
+
+                    // Update Shift
+                    await updateDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'shifts', shift.id), {
+                        transactionsCount: increment(1),
+                        totalSales: increment(total)
+                    });
+
+                    // 4. KEMBALIKAN SISA CART
+                    const remainingItems = originalCart.filter((_, idx) => !splitSelection[idx]);
+                    setCart(remainingItems);
+                    setSplitSelection({});
+                    setModalConfig({show: false});
+                    setLastTrans({id: ref.id, ...transData, createdAt: new Date()});
+                    
+                    alert("Split Payment Berhasil!");
+
+                } catch (e) {
+                    alert("Gagal Split: " + e.message);
+                    setCart(originalCart); // Restore jika gagal
+                }
+            };
+
 
             const handleOpenShift = async (e) => {
                 e.preventDefault();
@@ -918,9 +1027,20 @@
 
                 try {
                     if (type === 'product') {
+						
+						let variants = [];
+                        const vStr = f.variants_str.value;
+                        if(vStr) {
+                            variants = vStr.split(',').map(s => {
+                                const [vName, vPrice] = s.split(':');
+                                return { name: vName.trim(), price: Number(vPrice) || 0 };
+                            }).filter(v => v.name);
+                        }
+						
                         payload = { 
                             name: f.name.value, barcode: f.barcode.value, category: f.category.value, 
-                            price: Number(f.price.value), hpp: Number(f.hpp.value), stock: Number(f.stock.value), image: f.image.value,
+                            variants: variants, // Simpan array varian
+							price: Number(f.price.value), hpp: Number(f.hpp.value), stock: Number(f.stock.value), image: f.image.value,
                             wholesaleQty: Number(f.wholesaleQty.value), wholesalePrice: Number(f.wholesalePrice.value)
                         };
                     } else if (type === 'ingredient') {
@@ -1286,6 +1406,14 @@
                                             {/* Tombol Tunda (Logo) */}
                                             <button onClick={holdTransaction} className="w-12 h-full bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center hover:bg-gray-200 transition border border-gray-200" title="Tunda Transaksi">
                                                 <Icon name="clock" size={24}/>
+                                            </button>
+											{/* [BARU] Tombol Split Bill */}
+                                            <button onClick={()=>{
+                                                if(cart.length === 0) return alert("Keranjang kosong");
+                                                setSplitSelection({}); // Reset pilihan
+                                                setModalConfig({show: true, type: 'split_bill'});
+                                            }} className="w-12 h-full bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center hover:bg-purple-200 transition border border-purple-200" title="Split Bill (Bayar Terpisah)">
+                                                <Icon name="scissors" size={24}/>
                                             </button>
 
                                             {/* Tombol Bayar / Kirim ke Dapur */}
@@ -1823,6 +1951,15 @@
                                         {/* Input Nama Wajib Ada agar tombol Simpan berfungsi */}
                                         <input name="name" placeholder="Nama Produk" required defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/>
                                         
+										{/* [BARU] Input Varian Sederhana */}
+                                                <div className="bg-gray-50 p-3 rounded border">
+                                                    <label className="text-xs font-bold text-gray-500 block mb-2">Varian Produk (Opsional)</label>
+                                                    <p className="text-[10px] text-gray-400 mb-2">Pisahkan dengan koma. Contoh Format: <b>Panas:5000, Dingin:7000</b></p>
+                                                    <input name="variants_str" placeholder="Contoh: Panas:10000, Dingin:12000" 
+                                                        defaultValue={modalConfig.data?.variants ? modalConfig.data.variants.map(v => `${v.name}:${v.price}`).join(', ') : ''} 
+                                                        className="w-full p-2 border rounded text-sm"/>
+                                                </div>
+										
                                         <div className="flex gap-2">
                                             <input name="barcode" placeholder="Barcode" defaultValue={modalConfig.data?.barcode} className="w-full p-3 border rounded-lg"/>
                                             <button type="button" onClick={()=>setScannerContext('form')} className="p-3 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"><Icon name="camera"/></button>
@@ -1851,6 +1988,63 @@
                                      )}
                                  </form>
                              )}
+							 
+							 {/* [BARU] MODAL PILIH VARIAN */}
+                             {modalConfig.type === 'variant_select' && (
+                                <div className="space-y-3">
+                                    <div className="text-center mb-4">
+                                        <h4 className="font-bold text-lg">{tempVariantProduct?.name}</h4>
+                                        <p className="text-sm text-gray-500">Pilih salah satu varian:</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {tempVariantProduct?.variants?.map((v, i) => (
+                                            <button key={i} onClick={() => addToCart(tempVariantProduct, v)} className="p-4 border rounded-xl hover:bg-blue-50 hover:border-blue-500 transition text-center">
+                                                <div className="font-bold">{v.name}</div>
+                                                <div className="text-blue-600 font-bold">{formatCurrency(v.price)}</div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                             )}
+
+                             {/* [BARU] MODAL SPLIT BILL */}
+                             {modalConfig.type === 'split_bill' && (
+                                <div className="flex flex-col h-[60vh]">
+                                    <div className="bg-purple-50 p-3 rounded mb-3 text-xs text-purple-800">
+                                        Pilih item yang ingin dibayar sekarang. Sisanya akan tetap di keranjang.
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                                        {cart.map((item, idx) => (
+                                            <label key={idx} className={`flex items-center p-3 border rounded-lg cursor-pointer transition ${splitSelection[idx] ? 'bg-blue-50 border-blue-500' : 'hover:bg-gray-50'}`}>
+                                                <input type="checkbox" 
+                                                    checked={!!splitSelection[idx]} 
+                                                    onChange={e => setSplitSelection({...splitSelection, [idx]: e.target.checked})}
+                                                    className="w-5 h-5 text-blue-600 rounded mr-3"
+                                                />
+                                                <div className="flex-1">
+                                                    <div className="font-bold text-sm">{item.name}</div>
+                                                    <div className="text-xs text-gray-500">{item.qty} x {formatCurrency(item.price)}</div>
+                                                </div>
+                                                <div className="font-bold">{formatCurrency(item.price * item.qty)}</div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                    <div className="pt-4 border-t mt-2">
+                                        <div className="flex justify-between font-bold text-lg mb-4">
+                                            <span>Total Split:</span>
+                                            <span>
+                                                {formatCurrency(cart.reduce((a,b,i) => splitSelection[i] ? a + (b.price * b.qty) : a, 0))}
+                                            </span>
+                                        </div>
+                                        <button onClick={handleSplitCheckout} className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold hover:bg-purple-700">
+                                            Bayar Item Terpilih
+                                        </button>
+                                    </div>
+                                </div>
+                             )}
+							 
+							 
+							 
                         </Modal>
                     )}
 
