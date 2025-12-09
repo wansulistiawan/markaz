@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v10.6.1 - Desain Fix</title>
+    <title>Kasir Pintar Pro v10.6 - Desain Fix</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -38,36 +38,9 @@
         const { useState, useEffect, useRef } = React;
         
         const Icon = ({ name, size = 20, className = "" }) => {
-            const [svgHtml, setSvgHtml] = useState('');
-
-            useEffect(() => {
-                if (window.lucide && window.lucide.icons) {
-                    // Konversi nama dari "shopping-cart" (kebab-case) ke "ShoppingCart" (PascalCase)
-                    // karena library Lucide menyimpan icon dengan nama PascalCase
-                    const pascalName = name
-                        .split('-')
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                        .join('');
-                    
-                    const iconNode = window.lucide.icons[pascalName];
-                    
-                    if (iconNode) {
-                        // Generate SVG string tanpa mengganti elemen DOM parent
-                        const svg = iconNode.toSvg({
-                            width: size,
-                            height: size,
-                            class: className,
-                            "stroke-width": 2
-                        });
-                        setSvgHtml(svg);
-                    } else {
-                        console.warn(`Icon tidak ditemukan: ${name}`);
-                    }
-                }
-            }, [name, size, className]);
-
-            // Render SVG sebagai HTML string yang aman
-            return <span dangerouslySetInnerHTML={{ __html: svgHtml }} style={{ display: 'inline-flex', alignItems: 'center' }} />;
+            const iconRef = useRef(null);
+            useEffect(() => { lucide.createIcons({ root: iconRef.current ? iconRef.current.parentNode : document, nameAttr: 'data-lucide', attrs: {class: className} }); }, [name]);
+            return <i ref={iconRef} data-lucide={name} width={size} height={size} className={className}></i>;
         };
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
