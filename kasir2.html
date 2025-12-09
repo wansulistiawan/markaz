@@ -1825,46 +1825,9 @@
                                     <button className="w-full bg-red-600 text-white p-3 rounded-lg font-bold">Setor & Tutup Toko</button>
                                 </form>
                             )}
-                             
-                             {/* FORM DINAMIS LAINNYA */}
-                             {['pay_debt', 'stock_adj', 'edit_cart_item', 'settings', 'ingredient', 'recipe_setup', 'product', 'customer', 'supplier', 'expense', 'table', 'staff'].includes(modalConfig.type) && (
-                                 <form onSubmit={
-                                     ['settings'].includes(modalConfig.type) ? saveSettings :
-                                     ['pay_debt'].includes(modalConfig.type) ? handlePaymentSubmit :
-                                     ['stock_adj'].includes(modalConfig.type) ? handleAdjustStock :
-                                     handleSubmit 
-                                 } className="space-y-4 capitalize">
-                                     
-                                     {/* FORM: EDIT CART ITEM */}
-                                     {modalConfig.type === 'edit_cart_item' ? (
-                                         <div className="space-y-4">
-                                            <h3 className="font-bold">{editingItem.name}</h3>
-                                            <div className="flex gap-4 items-center">
-                                                <button type="button" onClick={()=>setEditingItem(p=>({...p, qty: Math.max(1, p.qty-1)}))} className="p-2 bg-gray-200 rounded">-</button>
-                                                <span className="font-bold">{editingItem.qty}</span>
-                                                <button type="button" onClick={()=>setEditingItem(p=>({...p, qty: p.qty+1}))} className="p-2 bg-gray-200 rounded">+</button>
-                                            </div>
-                                            <input type="text" placeholder="Catatan Item" value={editingItem.note||''} onChange={e=>setEditingItem(p=>({...p, note:e.target.value}))} className="w-full p-2 border rounded text-sm"/>
-                                            <div className="flex gap-2">
-                                                <button type="button" onClick={()=>{setCart(cart.filter(c=>c.id!==editingItem.id)); setModalConfig({show:false});}} className="flex-1 bg-red-100 text-red-600 py-3 rounded">Hapus</button>
-                                                <button type="button" onClick={()=>{setCart(cart.map(c=>c.id===editingItem.id ? editingItem : c)); setModalConfig({show:false});}} className="flex-1 bg-blue-600 text-white py-3 rounded">Simpan</button>
-                                            </div>
-                                         </div>
-                                     ) : (
-                                         /* FORM STANDAR (DENGAN UPDATE INPUT STAFF BARU) */
-                                         <>
-                                            {/* ... INPUT FIELDS ... */}
-                                            {modalConfig.type === 'pay_debt' && <input name="amount" type="number" placeholder="Jumlah Bayar" className="w-full p-3 border rounded-lg"/>}
-                                            {modalConfig.type === 'stock_adj' && (
-                                                <>
-                                                    <div className="text-sm">Produk: <b>{modalConfig.data.name}</b></div>
-                                                    <select name="type" className="w-full p-3 border rounded-lg"><option value="in">Masuk</option><option value="out">Keluar</option></select>
-                                                    <input name="qty" type="number" placeholder="Jumlah" required className="w-full p-3 border rounded-lg"/>
-                                                    <textarea name="reason" placeholder="Keterangan" className="w-full p-3 border rounded-lg" required></textarea>
-                                                </>
-                                            )}
-                                            
-                                            {modalConfig.type === 'settings' && (
+							
+							
+							{modalConfig.type === 'settings' && (
                                 <form onSubmit={async (e) => {
                                     e.preventDefault();
                                     const f = e.target;
@@ -1952,6 +1915,46 @@
                                     <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan & Update</button>
                                 </form>
                             )}
+                             
+                             {/* FORM DINAMIS LAINNYA */}
+                             {['pay_debt', 'stock_adj', 'edit_cart_item', 'ingredient', 'recipe_setup', 'product', 'customer', 'supplier', 'expense', 'table', 'staff'].includes(modalConfig.type) && (
+                                 <form onSubmit={
+                                     ['settings'].includes(modalConfig.type) ? saveSettings :
+                                     ['pay_debt'].includes(modalConfig.type) ? handlePaymentSubmit :
+                                     ['stock_adj'].includes(modalConfig.type) ? handleAdjustStock :
+                                     handleSubmit 
+                                 } className="space-y-4 capitalize">
+                                     
+                                     {/* FORM: EDIT CART ITEM */}
+                                     {modalConfig.type === 'edit_cart_item' ? (
+                                         <div className="space-y-4">
+                                            <h3 className="font-bold">{editingItem.name}</h3>
+                                            <div className="flex gap-4 items-center">
+                                                <button type="button" onClick={()=>setEditingItem(p=>({...p, qty: Math.max(1, p.qty-1)}))} className="p-2 bg-gray-200 rounded">-</button>
+                                                <span className="font-bold">{editingItem.qty}</span>
+                                                <button type="button" onClick={()=>setEditingItem(p=>({...p, qty: p.qty+1}))} className="p-2 bg-gray-200 rounded">+</button>
+                                            </div>
+                                            <input type="text" placeholder="Catatan Item" value={editingItem.note||''} onChange={e=>setEditingItem(p=>({...p, note:e.target.value}))} className="w-full p-2 border rounded text-sm"/>
+                                            <div className="flex gap-2">
+                                                <button type="button" onClick={()=>{setCart(cart.filter(c=>c.id!==editingItem.id)); setModalConfig({show:false});}} className="flex-1 bg-red-100 text-red-600 py-3 rounded">Hapus</button>
+                                                <button type="button" onClick={()=>{setCart(cart.map(c=>c.id===editingItem.id ? editingItem : c)); setModalConfig({show:false});}} className="flex-1 bg-blue-600 text-white py-3 rounded">Simpan</button>
+                                            </div>
+                                         </div>
+                                     ) : (
+                                         /* FORM STANDAR (DENGAN UPDATE INPUT STAFF BARU) */
+                                         <>
+                                            {/* ... INPUT FIELDS ... */}
+                                            {modalConfig.type === 'pay_debt' && <input name="amount" type="number" placeholder="Jumlah Bayar" className="w-full p-3 border rounded-lg"/>}
+                                            {modalConfig.type === 'stock_adj' && (
+                                                <>
+                                                    <div className="text-sm">Produk: <b>{modalConfig.data.name}</b></div>
+                                                    <select name="type" className="w-full p-3 border rounded-lg"><option value="in">Masuk</option><option value="out">Keluar</option></select>
+                                                    <input name="qty" type="number" placeholder="Jumlah" required className="w-full p-3 border rounded-lg"/>
+                                                    <textarea name="reason" placeholder="Keterangan" className="w-full p-3 border rounded-lg" required></textarea>
+                                                </>
+                                            )}
+                                            
+                                            
                                             {/* [FIXED] FORM STAFF: ADA NAMA, TIDAK ADA PIN */}
                                             {modalConfig.type === 'staff' && <>
                                                 <input name="name" type="text" placeholder="Nama Staff (Wajib)" required defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/>
