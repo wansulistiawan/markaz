@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pintar Pro v10.6.2 - Desain Fix</title>
+    <title>Kasir Pintar Pro v10.6 - Desain Fix</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -1397,18 +1397,21 @@
                                             {/* Tombol Antrean (Logo) */}
                                             <button onClick={()=>setModalConfig({show: true, type: 'hold_list'})} className="w-12 h-full bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center relative hover:bg-orange-200 transition border border-orange-200">
                                                 <Icon name="list" size={24}/>
-                                                
-                                                {/* [FIX] GANTI 'activeOrders' KEMBALI JADI 'heldCarts' */}
-                                                {heldCarts.length > 0 && (
-                                                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white">
-                                                        {heldCarts.length}
-                                                    </span>
-                                                )}
+                                                {activeOrders.length > 0 && <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white">{activeOrders.length}</span>}
                                             </button>
 
                                             {/* Tombol Tunda (Logo) */}
                                             <button onClick={holdTransaction} className="w-12 h-full bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center hover:bg-gray-200 transition border border-gray-200" title="Tunda Transaksi">
                                                 <Icon name="clock" size={24}/>
+                                            </button>
+                                            
+                                            {/* [BARU] Tombol Split Bill */}
+                                            <button onClick={()=>{
+                                                if(cart.length === 0) return alert("Keranjang kosong");
+                                                setSplitSelection({}); // Reset pilihan
+                                                setModalConfig({show: true, type: 'split_bill'});
+                                            }} className="w-12 h-full bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center hover:bg-purple-200 transition border border-purple-200" title="Split Bill (Bayar Terpisah)">
+                                                <Icon name="scissors" size={24}/>
                                             </button>
 
                                             {/* Tombol Bayar / Kirim ke Dapur */}
