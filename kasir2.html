@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pro v10.6.3 - Desain Fix</title>
+    <title>Kasir Pro v10.7</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -428,6 +428,7 @@
             const [editingItem, setEditingItem] = useState(null);
 			const [tempVariantProduct, setTempVariantProduct] = useState(null); // Produk yg sedang dipilih variannya
             const [splitSelection, setSplitSelection] = useState({}); // Item yg dipilih untuk Split Bill
+			const [isMovingTable, setIsMovingTable] = useState(null);
             const [modalConfig, setModalConfig] = useState({ show: false, type: '', data: null });
             const [settingsTab, setSettingsTab] = useState('profile');
             const [scannerContext, setScannerContext] = useState(null); 
@@ -908,6 +909,31 @@
                     setCart(originalCart); // Restore jika gagal
                 }
             };
+			
+			// [BARU] Fungsi Pindah Meja (Move Table)
+            const handleMoveTable = async (targetTable) => {
+                if (!isMovingTable) return;
+                
+                try {
+                    // Cek apakah meja target sudah terisi?
+                    const isOccupied = activeOrders.some(o => o.table?.name === targetTable.name && o.status !== 'completed');
+                    if (isOccupied) return alert("Meja tujuan sedang terisi! Silakan pilih meja kosong.");
+
+                    if(!confirm(`Pindahkan pesanan ke ${targetTable.name}?`)) return;
+
+                    // Update di Firebase
+                    await updateDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'orders', isMovingTable.id), {
+                        table: targetTable,
+                        updatedAt: serverTimestamp()
+                    });
+
+                    alert("Berhasil pindah meja!");
+                    setIsMovingTable(null); // Reset mode pindah
+                    setModalConfig({show: false}); // Tutup modal
+                } catch (e) {
+                    alert("Gagal pindah: " + e.message);
+                }
+            };
 
             const handleOpenShift = async (e) => {
                 e.preventDefault();
@@ -1178,7 +1204,7 @@
                     <aside className="w-20 md:w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20 overflow-y-auto">
                         <div className="h-16 flex items-center justify-center md:justify-start md:px-6 bg-slate-950 text-white font-bold gap-3 flex-shrink-0 sticky top-0 z-10">
                             <div className="bg-blue-600 p-2 rounded-lg"><Icon name="zap" size={20}/></div>
-                            <span className="hidden md:block">Kasir Pro v10.6.3</span>
+                            <span className="hidden md:block">Kasir Pro v10.7</span>
                         </div>
                         <nav className="flex-1 py-4 space-y-1 px-2">
                             <div className="px-3 mb-6 flex items-center gap-3 pb-4 border-b border-slate-800">
@@ -1305,10 +1331,10 @@
                                         </select>
                                         
                                         {orderType === 'Dine In' && (
-                                            <select className="w-24 p-2 border rounded bg-gray-50 text-xs" value={selectedTable?.name||''} onChange={e=>setSelectedTable(tables.find(t=>t.name===e.target.value)||null)}>
-                                                <option value="">Meja</option>
-                                                {tables.map(t=><option key={t.id} value={t.name}>{t.name}</option>)}
-                                            </select>
+                                            <button onClick={()=>{setIsMovingTable(null); setModalConfig({show:true, type:'table_map'})}} className={`px-3 py-2 border rounded text-xs font-bold flex items-center gap-1 ${selectedTable ? 'bg-yellow-100 text-yellow-700 border-yellow-300' : 'bg-gray-50 text-gray-600'}`}>
+                                                <Icon name="layout-grid" size={14}/>
+                                                {selectedTable ? selectedTable.name : 'Pilih Meja'}
+                                            </button>
                                         )}
 
                                         <select className="flex-1 p-2 border rounded bg-gray-50 text-xs truncate" value={selectedCustomer?.id||''} onChange={e=>setSelectedCustomer(customers.find(c=>c.id===e.target.value)||null)}>
@@ -1915,9 +1941,21 @@
                                     <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan & Update</button>
                                 </form>
                             )}
+							
+							{modalConfig.type === 'ingredient' && (
+                                <form onSubmit={handleSubmit} className="space-y-4 capitalize">
+                                    <input name="name" placeholder="Nama Bahan (Misal: Beras)" required defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/>
+                                    <input name="unit" placeholder="Satuan (kg, gram, butir)" required defaultValue={modalConfig.data?.unit} className="w-full p-3 border rounded-lg"/>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <input name="stock" type="number" placeholder="Stok Awal" required defaultValue={modalConfig.data?.stock} className="w-full p-3 border rounded-lg"/>
+                                        <input name="costPerUnit" type="number" placeholder="Harga Beli / Satuan" required defaultValue={modalConfig.data?.costPerUnit} className="w-full p-3 border rounded-lg"/>
+                                    </div>
+                                    <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan Bahan</button>
+                                </form>
+                            )}
                              
                              {/* FORM DINAMIS LAINNYA */}
-                             {['pay_debt', 'stock_adj', 'edit_cart_item', 'ingredient', 'recipe_setup', 'product', 'customer', 'supplier', 'expense', 'table', 'staff'].includes(modalConfig.type) && (
+                             {['pay_debt', 'stock_adj', 'edit_cart_item', 'recipe_setup', 'product', 'customer', 'supplier', 'expense', 'table', 'staff'].includes(modalConfig.type) && (
                                  <form onSubmit={
                                      ['settings'].includes(modalConfig.type) ? saveSettings :
                                      ['pay_debt'].includes(modalConfig.type) ? handlePaymentSubmit :
@@ -1983,17 +2021,7 @@
                                                 </select>
                                             </>}
 											
-											{modalConfig.type === 'ingredient' && (
-                                <form onSubmit={handleSubmit} className="space-y-4 capitalize">
-                                    <input name="name" placeholder="Nama Bahan (Misal: Beras)" required defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/>
-                                    <input name="unit" placeholder="Satuan (kg, gram, butir)" required defaultValue={modalConfig.data?.unit} className="w-full p-3 border rounded-lg"/>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <input name="stock" type="number" placeholder="Stok Awal" required defaultValue={modalConfig.data?.stock} className="w-full p-3 border rounded-lg"/>
-                                        <input name="costPerUnit" type="number" placeholder="Harga Beli / Satuan" required defaultValue={modalConfig.data?.costPerUnit} className="w-full p-3 border rounded-lg"/>
-                                    </div>
-                                    <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan Bahan</button>
-                                </form>
-                            )}
+											
 
                                             {/* ... SISA FORM (SAMA SEPERTI v9.6) ... */}
                                             {modalConfig.type === 'expense' && <><input name="amount" type="number" placeholder="Jumlah" className="w-full p-3 border rounded-lg"/><select name="category" className="w-full p-3 border rounded-lg"><option value="Operasional">Operasional</option><option value="Gaji">Gaji</option><option value="Belanja">Belanja</option></select></>}
@@ -2093,6 +2121,71 @@
                                     </div>
                                 </div>
                              )}
+							 
+							 {/* [BARU] MODAL VISUAL FLOOR PLAN (DENAH MEJA) */}
+                             {modalConfig.type === 'table_map' && (
+                                <div className="p-2">
+                                    <div className="flex justify-between items-center mb-4 bg-gray-50 p-2 rounded">
+                                        <div className="flex gap-4 text-sm">
+                                            <div className="flex items-center gap-1"><div className="w-4 h-4 bg-green-100 border border-green-500 rounded"></div> Kosong</div>
+                                            <div className="flex items-center gap-1"><div className="w-4 h-4 bg-red-100 border border-red-500 rounded"></div> Terisi</div>
+                                            <div className="flex items-center gap-1"><div className="w-4 h-4 bg-yellow-100 border border-yellow-500 rounded animate-pulse"></div> Dipilih</div>
+                                        </div>
+                                        {isMovingTable && <div className="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded">Mode Pindah Meja</div>}
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto">
+                                        {tables.map(t => {
+                                            // Cek status meja berdasarkan activeOrders
+                                            const activeOrder = activeOrders.find(o => o.table?.name === t.name && o.status !== 'completed');
+                                            const isOccupied = !!activeOrder;
+                                            const isSelected = selectedTable?.name === t.name;
+
+                                            return (
+                                                <div key={t.id} 
+                                                    onClick={() => {
+                                                        if (isMovingTable) {
+                                                            handleMoveTable(t);
+                                                        } else if (isOccupied) {
+                                                            // Jika terisi, tawarkan opsi lihat order / pindah
+                                                            if(confirm(`Meja ${t.name} terisi oleh ${activeOrder.cust?.name || 'Umum'}.\n\nKlik OK untuk MEMINDAHKAN meja ini.`)) {
+                                                                setIsMovingTable(activeOrder); // Aktifkan mode pindah
+                                                                alert(`Silakan klik MEJA KOSONG tujuan untuk memindahkan ${t.name}.`);
+                                                            }
+                                                        } else {
+                                                            // Pilih meja untuk order baru
+                                                            setSelectedTable(t);
+                                                            setModalConfig({show: false});
+                                                        }
+                                                    }}
+                                                    className={`p-4 rounded-xl border-2 flex flex-col items-center justify-center cursor-pointer transition relative min-h-[100px]
+                                                        ${isOccupied 
+                                                            ? 'bg-red-50 border-red-500 text-red-700' 
+                                                            : (isSelected ? 'bg-yellow-50 border-yellow-500' : 'bg-green-50 border-green-500 text-green-700 hover:bg-green-100')
+                                                        }
+                                                    `}
+                                                >
+                                                    <div className="font-bold text-lg">{t.name}</div>
+                                                    <div className="text-xs opacity-70">{t.capacity} Kursi</div>
+                                                    
+                                                    {isOccupied && (
+                                                        <div className="absolute bottom-1 w-full text-center text-[10px] font-bold bg-red-200 py-0.5 truncate px-1">
+                                                            {activeOrder.cust?.name || 'Umum'}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                        
+                                        {/* Tombol Tambah Meja Cepat */}
+                                        <div onClick={()=>setModalConfig({show:true, type:'table'})} className="p-4 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 text-gray-400">
+                                            <Icon name="plus" size={24}/>
+                                            <span className="text-xs mt-1">Tambah</span>
+                                        </div>
+                                    </div>
+                                </div>
+                             )}
+							 
 							 
                         </Modal>
                     )}
