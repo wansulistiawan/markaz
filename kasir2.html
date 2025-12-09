@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pro v10.7</title>
+    <title>Kasir Pro v10.7.1.1.1</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -427,7 +427,9 @@
             
             const [editingItem, setEditingItem] = useState(null);
 			const [tempVariantProduct, setTempVariantProduct] = useState(null); // Produk yg sedang dipilih variannya
-            const [splitSelection, setSplitSelection] = useState({}); // Item yg dipilih untuk Split Bill
+            const [selectedVariantTemp, setSelectedVariantTemp] = useState(null); 
+            const [tempModifiers, setTempModifiers] = useState([]); // Checkbox modifier yg dipilih
+			const [splitSelection, setSplitSelection] = useState({}); // Item yg dipilih untuk Split Bill
 			const [isMovingTable, setIsMovingTable] = useState(null);
             const [modalConfig, setModalConfig] = useState({ show: false, type: '', data: null });
             const [settingsTab, setSettingsTab] = useState('profile');
@@ -539,50 +541,67 @@
                 return Number(prod.price);
             };
 
-            const addToCart = (p, variant = null) => {
-                // [BARU] Cek Varian
+            const addToCart = (p, variant = null, modifiers = null) => {
+                // 1. Cek Varian (Jika produk punya varian tapi belum dipilih)
                 if (!variant && p.variants && p.variants.length > 0) {
                     setTempVariantProduct(p);
                     setModalConfig({show: true, type: 'variant_select'});
                     return;
                 }
 
-                const hasRecipe = p.recipe && p.recipe.length > 0;
-                // Jika pakai varian, stok ikut induknya
-                if (!hasRecipe && p.stock <= 0) return alert("Stok Produk Habis!");
+                // 2. [BARU] Cek Modifier (Jika produk punya modifier, tapi belum ada list modifier yg dikirim)
+                // Kita cek 'modifiers' === null artinya ini panggilan pertama, bukan callback dari modal modifier
+                if (modifiers === null && p.modifiers && p.modifiers.length > 0) {
+                    setTempVariantProduct(p);
+                    setSelectedVariantTemp(variant); // Simpan varian yg sudah dipilih (kalau ada)
+                    setTempModifiers([]); // Reset pilihan
+                    setModalConfig({show: true, type: 'modifier_select'});
+                    return;
+                }
 
-                // [BARU] Buat ID unik untuk varian agar tidak tertumpuk dengan produk biasa
-                const cartItemId = variant ? `${p.id}-${variant.name}` : p.id;
-                const finalPrice = variant ? Number(variant.price) : getPrice(p, 1);
-                const finalName = variant ? `${p.name} (${variant.name})` : p.name;
+                const finalModifiers = modifiers || []; // Pastikan array
+                
+                // Hitung Harga Akhir (Harga Dasar/Varian + Total Harga Modifier)
+                const basePrice = variant ? Number(variant.price) : getPrice(p, 1);
+                const modifiersPrice = finalModifiers.reduce((a,b) => a + Number(b.price), 0);
+                const finalPrice = basePrice + modifiersPrice;
+
+                // Buat Nama Unik: "Nasi Goreng (Jumbo) + Telur + Pedas"
+                let nameSuffix = variant ? ` (${variant.name})` : '';
+                if(finalModifiers.length > 0) nameSuffix += ` + ${finalModifiers.map(m=>m.name).join(' + ')}`;
+                const finalName = p.name + nameSuffix;
+
+                // ID Unik Cart (ProdukID - Varian - ListModifierSorted)
+                const modId = finalModifiers.map(m=>m.name).sort().join('-');
+                const cartItemId = `${p.id}${variant ? '-'+variant.name : ''}${modId ? '-'+modId : ''}`;
+
+                const hasRecipe = p.recipe && p.recipe.length > 0;
+                if (!hasRecipe && p.stock <= 0) return alert("Stok Produk Habis!");
 
                 setCart(prev => { 
                     const ex = prev.find(i => i.id === cartItemId); 
                     if (ex) {
                         const newQty = ex.qty + 1;
-                        if (!hasRecipe && newQty > p.stock) {
-                            alert(`Stok tidak cukup! (Sisa: ${p.stock})`);
-                            return prev;
-                        }
-                        // Update harga jika qty berubah (untuk grosir non-varian)
-                        const updatedPrice = variant ? finalPrice : getPrice(p, newQty);
-                        return prev.map(i => i.id === cartItemId ? {...i, qty: newQty, price: updatedPrice} : i);
+                        if (!hasRecipe && newQty > p.stock) return alert(`Stok Habis!`) || prev;
+                        // Update harga total jika qty berubah
+                        return prev.map(i => i.id === cartItemId ? {...i, qty: newQty} : i);
                     } else {
                         return [...prev, {
                             ...p, 
-                            id: cartItemId, // ID Baru
-                            name: finalName, // Nama Baru
-                            price: finalPrice, 
+                            id: cartItemId, 
+                            name: finalName, 
+                            price: finalPrice, // Harga sudah termasuk modifier
                             qty: 1, 
                             itemDiscount: 0,
-                            originalId: p.id, // Simpan ID asli untuk potong stok
-                            isVariant: !!variant
+                            originalId: p.id,
+                            isVariant: !!variant,
+                            selectedModifiers: finalModifiers // Simpan data modifier
                         }];
                     }
                 });
                 
-                // Tutup modal varian jika ada
-                if(variant) setModalConfig({show: false});
+                // Tutup semua modal
+                setModalConfig({show: false});
             };
 
             const handleScanResult = (code) => {
@@ -1061,8 +1080,18 @@
                                 return { name: vName.trim(), price: Number(vPrice) || 0 };
                             }).filter(v => v.name);
                         }
+						let modifiers = [];
+                        const mStr = f.modifiers_str.value;
+                        if(mStr) {
+                            modifiers = mStr.split(',').map(s => {
+                                const [mName, mPrice] = s.split(':');
+                                return { name: mName.trim(), price: Number(mPrice) || 0 };
+                            }).filter(m => m.name);
+                        }
                         payload = { 
                             name: f.name.value, barcode: f.barcode.value, category: f.category.value, 
+                            variants: variants,
+                            modifiers: modifiers, // Simpan ke DB
                             price: Number(f.price.value), hpp: Number(f.hpp.value), stock: Number(f.stock.value), image: f.image.value,
                             wholesaleQty: Number(f.wholesaleQty.value), wholesalePrice: Number(f.wholesalePrice.value)
                         };
@@ -1204,7 +1233,7 @@
                     <aside className="w-20 md:w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20 overflow-y-auto">
                         <div className="h-16 flex items-center justify-center md:justify-start md:px-6 bg-slate-950 text-white font-bold gap-3 flex-shrink-0 sticky top-0 z-10">
                             <div className="bg-blue-600 p-2 rounded-lg"><Icon name="zap" size={20}/></div>
-                            <span className="hidden md:block">Kasir Pro v10.7</span>
+                            <span className="hidden md:block">Kasir Pro v10.7.1.1.1</span>
                         </div>
                         <nav className="flex-1 py-4 space-y-1 px-2">
                             <div className="px-3 mb-6 flex items-center gap-3 pb-4 border-b border-slate-800">
@@ -1823,16 +1852,26 @@
                                     </div>
                                     {activeOrders.length === 0 && <p className="text-center text-gray-400 py-4">Tidak ada pesanan aktif.</p>}
                                     {activeOrders.map(h => (
-                                        <div key={h.id} onClick={()=>restoreTransaction(h)} className={`p-3 border rounded-lg hover:bg-blue-50 cursor-pointer flex justify-between items-center relative ${h.status==='ready' ? 'bg-green-50 border-green-200' : ''}`}>
-                                            {h.status==='ready' && <span className="absolute top-0 right-0 bg-green-600 text-white text-[10px] px-2 rounded-bl-lg">SIAP SAJI</span>}
-                                            <div>
+                                        <div key={h.id} className={`p-3 border rounded-lg hover:bg-blue-50 flex justify-between items-center relative group ${h.status==='ready' ? 'bg-green-50 border-green-200' : ''}`}>
+                                            {/* Klik area kiri untuk restore/bayar */}
+                                            <div className="flex-1 cursor-pointer" onClick={()=>restoreTransaction(h)}>
+                                                {h.status==='ready' && <span className="absolute top-0 right-10 bg-green-600 text-white text-[10px] px-2 rounded-bl-lg">SIAP SAJI</span>}
                                                 <div className="font-bold text-lg">{h.table ? h.table.name : h.orderType}</div>
                                                 <div className="font-medium">{h.cust?.name || 'Pelanggan Umum'}</div>
                                                 <div className="text-xs text-gray-500">
-                                                    {h.cart.reduce((a,b)=>a+b.qty,0)} Item • Waiter: {h.waiter} • {formatDate(h.createdAt)}
+                                                    {h.cart.reduce((a,b)=>a+b.qty,0)} Item • {formatDate(h.createdAt)}
                                                 </div>
                                             </div>
-                                            <Icon name="arrow-right-circle" className="text-blue-600"/>
+
+                                            {/* [BARU] Tombol Hapus / Batal Pesanan */}
+                                            <button onClick={async (e) => {
+                                                e.stopPropagation(); // Agar tidak men-trigger restoreTransaction
+                                                if(confirm(`Batalkan pesanan ${h.table?.name || h.orderType}? Data akan dihapus permanen.`)) {
+                                                    await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'orders', h.id));
+                                                }
+                                            }} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-100 rounded-full transition z-10" title="Batalkan Pesanan">
+                                                <Icon name="x-circle" size={24}/>
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
@@ -2038,6 +2077,13 @@
                                                     <input name="variants_str" placeholder="Contoh: Panas:10000, Dingin:12000" 
                                                         defaultValue={modalConfig.data?.variants ? modalConfig.data.variants.map(v => `${v.name}:${v.price}`).join(', ') : ''} 
                                                         className="w-full p-2 border rounded text-sm"/>
+													<div className="bg-orange-50 p-3 rounded border border-orange-200 mt-2">
+                                                    <label className="text-xs font-bold text-orange-800 block mb-2">Add-ons / Toping (Opsional)</label>
+                                                    <p className="text-[10px] text-gray-500 mb-2">Format: Nama:Harga Tambahan (Pisahkan koma).</p>
+                                                    <input name="modifiers_str" placeholder="Contoh: Telur:3000, Keju:2000, Pedas:0" 
+                                                        defaultValue={modalConfig.data?.modifiers ? modalConfig.data.modifiers.map(m => `${m.name}:${m.price}`).join(', ') : ''} 
+                                                        className="w-full p-2 border rounded text-sm"/>
+                                                </div>
                                                 </div>
                                         <div className="flex gap-2">
                                             <input name="barcode" placeholder="Barcode" defaultValue={modalConfig.data?.barcode} className="w-full p-3 border rounded-lg"/>
@@ -2082,6 +2128,43 @@
                                                 <div className="text-blue-600 font-bold">{formatCurrency(v.price)}</div>
                                             </button>
                                         ))}
+                                    </div>
+                                </div>
+                             )}
+							 
+							 {/* [BARU] MODAL PILIH MODIFIER / ADD-ONS */}
+                             {modalConfig.type === 'modifier_select' && (
+                                <div className="flex flex-col h-[60vh]">
+                                    <div className="bg-orange-50 p-3 rounded mb-3 text-center">
+                                        <h4 className="font-bold text-gray-800">{tempVariantProduct?.name} {selectedVariantTemp ? `(${selectedVariantTemp.name})` : ''}</h4>
+                                        <p className="text-xs text-gray-500">Pilih tambahan (Boleh lebih dari satu)</p>
+                                    </div>
+                                    
+                                    <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                                        {tempVariantProduct?.modifiers?.map((m, i) => {
+                                            const isSelected = tempModifiers.some(tm => tm.name === m.name);
+                                            return (
+                                                <div key={i} onClick={()=>{
+                                                    if(isSelected) setTempModifiers(prev => prev.filter(x => x.name !== m.name));
+                                                    else setTempModifiers(prev => [...prev, m]);
+                                                }} className={`p-3 border rounded-xl cursor-pointer flex justify-between items-center transition ${isSelected ? 'bg-orange-100 border-orange-500' : 'hover:bg-gray-50'}`}>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-5 h-5 rounded border flex items-center justify-center ${isSelected ? 'bg-orange-500 border-orange-500' : 'border-gray-400'}`}>
+                                                            {isSelected && <Icon name="check" size={14} className="text-white"/>}
+                                                        </div>
+                                                        <span className="font-bold text-sm">{m.name}</span>
+                                                    </div>
+                                                    <span className="text-xs font-bold text-orange-600">+{formatCurrency(m.price)}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div className="pt-4 border-t mt-2">
+                                        <button onClick={() => addToCart(tempVariantProduct, selectedVariantTemp, tempModifiers)} className="w-full bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 flex justify-center gap-2">
+                                            <span>Simpan & Masuk Keranjang</span>
+                                            {tempModifiers.length > 0 && <span className="bg-white/20 px-2 rounded text-xs py-0.5">+{formatCurrency(tempModifiers.reduce((a,b)=>a+b.price,0))}</span>}
+                                        </button>
                                     </div>
                                 </div>
                              )}
