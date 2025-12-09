@@ -1827,7 +1827,7 @@
                             )}
                              
                              {/* FORM DINAMIS LAINNYA */}
-                             {['pay_debt', 'stock_adj', 'edit_cart_item', 'settings', 'ingredient', 'recipe_setup', 'product', 'customer', 'supplier', 'expense', 'table', 'staff'].includes(modalConfig.type) && (
+                             {['pay_debt', 'stock_adj', 'edit_cart_item', 'ingredient', 'recipe_setup', 'product', 'customer', 'supplier', 'expense', 'table', 'staff'].includes(modalConfig.type) && (
                                  <form onSubmit={
                                      ['settings'].includes(modalConfig.type) ? saveSettings :
                                      ['pay_debt'].includes(modalConfig.type) ? handlePaymentSubmit :
@@ -1868,22 +1868,24 @@
                                 <form onSubmit={async (e) => {
                                     e.preventDefault();
                                     const f = e.target;
-                                    const isPublic = f.isPublic.checked;
+                                    const isPublic = f.isPublic.checked; // Ambil nilai checkbox terkini
                                     
-                                    // 1. Simpan Setting Lokal
+                                    // 1. Simpan Setting Lokal (Profile Toko)
                                     const profileData = {
                                         name: f.name.value, address: f.address.value, phone: f.phone.value, logo: f.logo.value,
                                         footerMessage: f.footerMessage.value, 
                                         taxRate: Number(f.taxRate.value), serviceRate: Number(f.serviceRate.value),
                                         paperSize: f.paperSize.value,
                                         pointConversion: Number(f.pointConversion.value),
-                                        isPublic: isPublic // Simpan status
+                                        isPublic: isPublic // Simpan status ini agar saat dibuka lagi tetap nyala
                                     };
                                     
+                                    // Update State Lokal dulu biar UI langsung berubah (Optimistic Update)
+                                    setStoreProfile(prev => ({...prev, ...profileData}));
+
                                     await setDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'settings', 'profile'), profileData);
                                     
                                     // 2. LOGIKA MARKETPLACE (GO ONLINE)
-                                    // Simpan ke koleksi GLOBAL 'market_shops' agar muncul di store.html
                                     const publicRef = doc(db, 'artifacts', APP_ID, 'market_shops', storeId);
                                     
                                     if (isPublic) {
@@ -1896,24 +1898,25 @@
                                             isOpen: true,
                                             updatedAt: serverTimestamp()
                                         });
-                                        alert("Pengaturan Disimpan. Toko Anda SEKARANG ONLINE di Marketplace!");
+                                        alert("BERHASIL: Toko Anda KINI ONLINE di Marketplace!");
                                     } else {
                                         await deleteDoc(publicRef);
-                                        alert("Pengaturan Disimpan. Toko Anda disembunyikan dari Marketplace.");
+                                        alert("Toko Anda sekarang SEMBUNYI dari Marketplace.");
                                     }
 
                                     setModalConfig({ show: false });
                                 }} className="space-y-4">
                                     
                                     {/* FITUR MARKETPLACE TOGGLE */}
-                                    <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-4 rounded-xl text-white shadow-lg flex justify-between items-center">
+                                    <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-4 rounded-xl text-white shadow-lg flex justify-between items-center">
                                         <div>
                                             <h4 className="font-bold flex items-center gap-2"><Icon name="globe" size={18}/> Publikasikan Toko</h4>
-                                            <p className="text-xs text-purple-100 opacity-90">Tampil di halaman depan Toko Online.</p>
+                                            <p className="text-xs text-purple-100 opacity-90">Aktifkan agar muncul di Toko Online.</p>
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" name="isPublic" defaultChecked={storeProfile?.isPublic} className="sr-only peer"/>
-                                            <div className="w-11 h-6 bg-purple-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-400"></div>
+                                            {/* Gunakan key agar re-render saat profile berubah */}
+                                            <input key={storeProfile?.isPublic} type="checkbox" name="isPublic" defaultChecked={!!storeProfile?.isPublic} className="sr-only peer"/>
+                                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-400"></div>
                                         </label>
                                     </div>
 
@@ -1949,7 +1952,7 @@
                                         <input name="pointConversion" type="number" defaultValue={storeProfile?.pointConversion || 10000} className="w-full p-3 border rounded-lg"/>
                                     </div>
 
-                                    <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan & Update</button>
+                                    <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition">Simpan & Update</button>
                                 </form>
                             )}
                                             {/* [FIXED] FORM STAFF: ADA NAMA, TIDAK ADA PIN */}
