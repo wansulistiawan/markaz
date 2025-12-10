@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pro v10.7.1.1.1</title>
+    <title>Kasir Pro v10.7.1.2</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -434,6 +434,9 @@
 			const [isMovingTable, setIsMovingTable] = useState(null);
 			const [promos, setPromos] = useState([]); // Daftar semua promo
             const [appliedPromo, setAppliedPromo] = useState(null); // Promo yang dipakai saat ini
+			const [transfers, setTransfers] = useState([]); // Riwayat transfer (Masuk & Keluar)
+            const [transferCart, setTransferCart] = useState([]); // Barang yg mau dikirim
+            const [targetStoreId, setTargetStoreId] = useState(''); // ID Toko Tujuan
             const [modalConfig, setModalConfig] = useState({ show: false, type: '', data: null });
             const [settingsTab, setSettingsTab] = useState('profile');
             const [scannerContext, setScannerContext] = useState(null); 
@@ -462,7 +465,27 @@
 				const unsubTables = onSnapshot(query(collection(db, ...basePath, 'tables'), orderBy('name', 'asc')), s => setTables(s.docs.map(d => ({id:d.id, ...d.data()}))));
                 // [BARU] Listener Promo
                 const unsubPromos = onSnapshot(query(collection(db, ...basePath, 'promos')), s => setPromos(s.docs.map(d => ({id:d.id, ...d.data()}))));
-                const unsubStaff = onSnapshot(collection(db, ...basePath, 'staff'), s => {
+                // [BARU] Listener Transfer (Gabungan Masuk & Keluar)
+                // 1. Barang Masuk (Ke Toko Ini)
+                const qIn = query(collection(db, 'artifacts', APP_ID, 'transfers'), where('toId', '==', storeId), orderBy('createdAt', 'desc'));
+                const unsubIn = onSnapshot(qIn, s => {
+                    const inData = s.docs.map(d => ({id:d.id, dir:'in', ...d.data()}));
+                    setTransfers(prev => {
+                        const others = prev.filter(p => p.dir !== 'in'); // Hapus data lama yg 'in'
+                        return [...others, ...inData].sort((a,b) => b.createdAt - a.createdAt);
+                    });
+                });
+
+                // 2. Barang Keluar (Dari Toko Ini)
+                const qOut = query(collection(db, 'artifacts', APP_ID, 'transfers'), where('fromId', '==', storeId), orderBy('createdAt', 'desc'));
+                const unsubOut = onSnapshot(qOut, s => {
+                    const outData = s.docs.map(d => ({id:d.id, dir:'out', ...d.data()}));
+                    setTransfers(prev => {
+                        const others = prev.filter(p => p.dir !== 'out'); // Hapus data lama yg 'out'
+                        return [...others, ...outData].sort((a,b) => b.createdAt - a.createdAt);
+                    });
+                });
+				const unsubStaff = onSnapshot(collection(db, ...basePath, 'staff'), s => {
                     const staffData = s.docs.map(d => ({id:d.id, ...d.data()}));
                     if(s.empty && storeId === user.uid) {
                         addDoc(collection(db, ...basePath, 'staff'), { name: 'Owner', email: user.email, role: 'admin', isActive: true });
@@ -628,12 +651,43 @@
                 }
             };
 
-            const holdTransaction = () => {
+            const holdTransaction = async () => {
                 if(cart.length === 0) return alert("Keranjang kosong!");
-                const newHold = { id: Date.now(), cust: selectedCustomer, cart: cart, table: selectedTable, orderType, time: new Date(), waiter: activeStaff.name };
-                setHeldCarts(prev => [...prev, newHold]);
-                setCart([]); setSelectedCustomer(null); setSelectedTable(null); setCashReceived('');
-                alert("Transaksi ditunda. Silakan layani konsumen berikutnya.");
+                
+                setIsProcessing(true);
+                try {
+                    // Siapkan data pesanan
+                    const orderData = {
+                        cust: selectedCustomer, 
+                        cart: cart, 
+                        table: selectedTable, 
+                        orderType: orderType, 
+                        createdAt: serverTimestamp(), 
+                        waiter: activeStaff.name,
+                        status: 'pending' // Kita pakai status 'pending' untuk tunda
+                    };
+                    
+                    if (selectedOrderId) {
+                        // Jika ini adalah pesanan lama yang diedit, kita update
+                        await updateDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'orders', selectedOrderId), {
+                            ...orderData,
+                            updatedAt: serverTimestamp()
+                        });
+                        alert("Pesanan Antrean Diperbarui!");
+                    } else {
+                        // Jika pesanan baru, buat dokumen baru di Firebase
+                        await addDoc(collection(db, 'artifacts', APP_ID, 'users', storeId, 'orders'), orderData);
+                        alert("Transaksi Berhasil Ditunda (Tersimpan di Server).");
+                    }
+
+                    // Reset Layar POS
+                    setCart([]); setSelectedCustomer(null); setSelectedTable(null); 
+                    setCashReceived(''); setSelectedOrderId(null); setDiscount(0);
+                } catch(e) {
+                    alert("Gagal menunda transaksi: " + e.message);
+                } finally {
+                    setIsProcessing(false);
+                }
             };
 
             const handleOrderToKitchen = async () => {
@@ -973,6 +1027,88 @@
                 }
             };
 			
+			// [BARU] Fungsi Transfer Stok
+            const handleSendTransfer = async () => {
+                if(!targetStoreId || transferCart.length === 0) return alert("Data transfer belum lengkap!");
+                if(!confirm(`Kirim ${transferCart.length} jenis produk ke Toko ID: ${targetStoreId}? Stok lokal akan berkurang.`)) return;
+                
+                setIsProcessing(true);
+                try {
+                    // 1. Kurangi Stok Lokal (Pengirim)
+                    const batchPromises = transferCart.map(item => {
+                         return updateDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'products', item.id), {
+                             stock: increment(-item.qty)
+                         });
+                    });
+                    
+                    // 2. Buat Catatan Transfer di Database Global
+                    // Kita simpan data produk lengkap agar toko penerima bisa bikin produk baru jika belum ada
+                    batchPromises.push(addDoc(collection(db, 'artifacts', APP_ID, 'transfers'), {
+                        fromId: storeId,
+                        fromName: storeProfile?.name || 'Unknown',
+                        toId: targetStoreId.trim(),
+                        items: transferCart,
+                        status: 'pending', // pending -> completed
+                        note: 'Transfer Antar Cabang',
+                        createdAt: serverTimestamp()
+                    }));
+
+                    await Promise.all(batchPromises);
+                    
+                    alert("Berhasil! Barang sedang dalam pengiriman.");
+                    setTransferCart([]);
+                    setTargetStoreId('');
+                } catch(e) {
+                    alert("Gagal kirim: " + e.message);
+                } finally {
+                    setIsProcessing(false);
+                }
+            };
+
+            const handleAcceptTransfer = async (t) => {
+                if(!confirm(`Terima barang dari ${t.fromName}? Stok akan ditambahkan ke gudang.`)) return;
+                
+                setIsProcessing(true);
+                try {
+                    const batchPromises = [];
+                    
+                    // 1. Tambah Stok Lokal (Penerima)
+                    for (const item of t.items) {
+                        // Cek apakah produk sudah ada (Cek Barcode dulu, lalu Nama)
+                        const exist = products.find(p => (p.barcode && p.barcode === item.barcode) || p.name === item.name);
+                        
+                        if(exist) {
+                             // Update produk ada
+                             batchPromises.push(updateDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'products', exist.id), {
+                                 stock: increment(item.qty)
+                             }));
+                        } else {
+                             // Buat produk baru jika belum ada
+                             const newProdData = {
+                                 ...item,
+                                 stock: item.qty,
+                                 id: undefined // Hapus ID lama agar dibuatkan ID baru
+                             };
+                             delete newProdData.id; 
+                             batchPromises.push(addDoc(collection(db, 'artifacts', APP_ID, 'users', storeId, 'products'), newProdData));
+                        }
+                    }
+
+                    // 2. Update Status Transfer jadi Selesai
+                    batchPromises.push(updateDoc(doc(db, 'artifacts', APP_ID, 'transfers', t.id), { 
+                        status: 'completed', 
+                        receivedAt: serverTimestamp() 
+                    }));
+
+                    await Promise.all(batchPromises);
+                    alert("Stok berhasil diterima dan masuk gudang!");
+                } catch(e) {
+                    alert("Gagal terima: " + e.message);
+                } finally {
+                    setIsProcessing(false);
+                }
+            };
+			
 			// [BARU] Fungsi Pindah Meja (Move Table)
             const handleMoveTable = async (targetTable) => {
                 if (!isMovingTable) return;
@@ -1287,7 +1423,7 @@
                     <aside className="w-20 md:w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20 overflow-y-auto">
                         <div className="h-16 flex items-center justify-center md:justify-start md:px-6 bg-slate-950 text-white font-bold gap-3 flex-shrink-0 sticky top-0 z-10">
                             <div className="bg-blue-600 p-2 rounded-lg"><Icon name="zap" size={20}/></div>
-                            <span className="hidden md:block">Kasir Pro v10.7.1.1.1</span>
+                            <span className="hidden md:block">Kasir Pro v10.7.1.2</span>
                         </div>
                         <nav className="flex-1 py-4 space-y-1 px-2">
                             <div className="px-3 mb-6 flex items-center gap-3 pb-4 border-b border-slate-800">
@@ -1316,6 +1452,7 @@
                                 {id: 'debts', icon: 'book', label: 'Hutang / Kasbon', roles: ['admin', 'kasir']},
                                 {id: 'customers', icon: 'users', label: 'Pelanggan', roles: ['admin', 'kasir']},
 								{id: 'promos', icon: 'ticket', label: 'Voucher & Promo', roles: ['admin']},
+								{id: 'transfer', icon: 'arrow-right-left', label: 'Transfer Stok', roles: ['admin', 'gudang']},
 							].filter(m => m.roles.includes(activeStaff?.role)).map(m => (
                                 <button key={m.id} onClick={() => setView(m.id)} className={`w-full flex items-center justify-center md:justify-start gap-3 p-3 rounded-xl transition ${view===m.id ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}>
                                     <Icon name={m.icon} /> <span className="hidden md:block font-medium">{m.label}</span>
@@ -1941,6 +2078,119 @@
                                             </div>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+                        )}
+						
+						{view === 'transfer' && (
+                            <div className="p-6 h-full overflow-y-auto flex flex-col md:flex-row gap-6">
+                                {/* BAGIAN KIRI: KIRIM BARANG */}
+                                <div className="flex-1 bg-white p-6 rounded-xl border shadow-sm">
+                                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Icon name="send" size={18}/> Kirim Barang Keluar</h3>
+                                    
+                                    <div className="mb-4">
+                                        <label className="text-xs font-bold text-gray-500">ID Toko Tujuan</label>
+                                        <input value={targetStoreId} onChange={e=>setTargetStoreId(e.target.value)} placeholder="Tempel ID Toko Cabang disini..." className="w-full p-3 border rounded-lg bg-gray-50 font-mono text-sm"/>
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <label className="text-xs font-bold text-gray-500 mb-1 block">Pilih Produk</label>
+                                        <div className="relative">
+                                            <Icon name="search" className="absolute left-3 top-3 text-gray-400" size={18}/>
+                                            <input className="w-full pl-10 p-3 border rounded-lg text-sm" placeholder="Cari produk untuk dikirim..." 
+                                                onChange={(e)=>{
+                                                    const kw = e.target.value.toLowerCase();
+                                                    if(!kw) return;
+                                                    // Simple autocomplete logic could go here, for now using direct add logic via search is tricky.
+                                                    // Let's iterate products
+                                                }}
+                                            />
+                                            {/* Dropdown Hasil Pencarian Simple */}
+                                            <div className="border rounded-lg mt-2 max-h-40 overflow-y-auto bg-gray-50">
+                                                {products.map(p => (
+                                                    <div key={p.id} onClick={()=>{
+                                                        if(p.stock <= 0) return alert("Stok habis!");
+                                                        setTransferCart(prev => {
+                                                            const ex = prev.find(x=>x.id===p.id);
+                                                            return ex ? prev.map(x=>x.id===p.id?{...x, qty:x.qty+1}:x) : [...prev, {...p, qty:1}];
+                                                        });
+                                                    }} className="p-2 hover:bg-blue-50 cursor-pointer flex justify-between text-sm border-b last:border-0">
+                                                        <span>{p.name}</span>
+                                                        <span className="font-bold text-blue-600">Stok: {p.stock}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* List Keranjang Transfer */}
+                                    <div className="bg-gray-50 rounded-lg p-3 min-h-[150px] mb-4">
+                                        {transferCart.length === 0 && <p className="text-center text-gray-400 text-xs py-10">Belum ada barang dipilih</p>}
+                                        {transferCart.map((item, idx) => (
+                                            <div key={idx} className="flex justify-between items-center border-b border-dashed last:border-0 py-2">
+                                                <div className="text-sm">
+                                                    <div className="font-bold">{item.name}</div>
+                                                    <div className="text-xs text-gray-500">Stok Awal: {item.stock}</div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <input type="number" min="1" max={item.stock} value={item.qty} 
+                                                        onChange={(e)=> {
+                                                            const val = Number(e.target.value);
+                                                            if(val > item.stock) return alert("Melebihi stok tersedia");
+                                                            setTransferCart(prev => prev.map(x=>x.id===item.id?{...x, qty:val}:x));
+                                                        }}
+                                                        className="w-16 p-1 border rounded text-center text-sm"
+                                                    />
+                                                    <button onClick={()=>setTransferCart(prev=>prev.filter(x=>x.id!==item.id))} className="text-red-500"><Icon name="x" size={16}/></button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <button onClick={handleSendTransfer} disabled={isProcessing || transferCart.length===0} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 disabled:bg-gray-300">
+                                        {isProcessing ? 'Mengirim...' : 'Kirim Stok Sekarang'}
+                                    </button>
+                                </div>
+
+                                {/* BAGIAN KANAN: RIWAYAT & BARANG MASUK */}
+                                <div className="w-full md:w-96 flex flex-col gap-4">
+                                    <div className="bg-white p-4 rounded-xl border shadow-sm flex-1 overflow-y-auto">
+                                        <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Icon name="history" size={18}/> Riwayat Transfer</h3>
+                                        
+                                        {transfers.length === 0 && <p className="text-center text-gray-400 text-xs">Belum ada riwayat.</p>}
+
+                                        <div className="space-y-3">
+                                            {transfers.map(t => (
+                                                <div key={t.id} className={`p-3 rounded-lg border text-sm ${t.dir==='in'?'bg-green-50 border-green-200':'bg-blue-50 border-blue-200'}`}>
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div>
+                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${t.dir==='in'?'bg-green-200 text-green-800':'bg-blue-200 text-blue-800'}`}>
+                                                                {t.dir==='in' ? 'MASUK' : 'KELUAR'}
+                                                            </span>
+                                                            <div className="font-bold mt-1 text-gray-700">
+                                                                {t.dir==='in' ? `Dari: ${t.fromName}` : `Ke: ${t.toId.slice(0,6)}...`}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="text-[10px] text-gray-400">{formatDate(t.createdAt)}</div>
+                                                            <span className={`text-[10px] font-bold uppercase ${t.status==='completed'?'text-green-600':'text-orange-500'}`}>{t.status}</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="text-xs text-gray-500 mb-2">
+                                                        {t.items.map(i=> `${i.qty}x ${i.name}`).join(', ')}
+                                                    </div>
+
+                                                    {/* TOMBOL TERIMA (Hanya jika barang masuk & belum diterima) */}
+                                                    {t.dir === 'in' && t.status === 'pending' && (
+                                                        <button onClick={()=>handleAcceptTransfer(t)} className="w-full bg-green-600 text-white py-2 rounded font-bold text-xs hover:bg-green-700 flex items-center justify-center gap-1">
+                                                            <Icon name="check-circle" size={14}/> Terima Barang
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
