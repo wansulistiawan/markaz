@@ -1352,20 +1352,42 @@
                         };
               
                     } else if (type === 'staff') {
-                        // [FIXED] FORM STAFF: HAPUS PIN, ADA NAMA
-                        let inputPhone = f.phone.value.trim();
-                        if(inputPhone.startsWith('0')) inputPhone = '+62' + inputPhone.slice(1);
+    let inputPhone = f.phone.value.trim();
+    if(inputPhone.startsWith('0')) inputPhone = '+62' + inputPhone.slice(1);
 
-                        payload = { 
-                            name: f.name.value, 
-                            email: f.email.value.trim().toLowerCase(), 
-                            phone: inputPhone, // Simpan No HP
-                            role: f.role.value,
-                            shiftStart: f.shiftStart.value,
-                            shiftEnd: f.shiftEnd.value,
-                        };
-                        if(!modalConfig.data?.id) payload.isActive = true;
-                    } else if (type === 'expense') {
+    payload = { 
+        name: f.name.value, 
+        email: f.email.value.trim().toLowerCase(), 
+        phone: inputPhone, 
+        role: f.role.value,
+        shiftStart: f.shiftStart.value,
+        shiftEnd: f.shiftEnd.value,
+    };
+    if(!modalConfig.data?.id) payload.isActive = true;
+
+    // --- PERUBAHAN DIMULAI DI SINI ---
+    
+    // Jika Edit Data Lama
+    if (modalConfig.data?.id) {
+        await updateDoc(doc(db, ...collPath, collectionName, modalConfig.data.id), { ...payload, updatedAt: serverTimestamp() });
+    } 
+    // Jika Tambah Staff Baru
+    else {
+        // [PENTING] Kita gunakan EMAIL sebagai ID Dokumen
+        // Kita ganti titik (.) jadi underscore (_) karena titik tidak disarankan di ID URL
+        // Pastikan email wajib diisi untuk staff
+        if(!payload.email) return alert("Email Wajib Diisi untuk Staff!");
+        
+        const staffId = payload.email.replace(/\./g, '_'); // Contoh: budi@gmail.com -> budi@gmail_com
+        
+        await setDoc(doc(db, ...collPath, 'staff', staffId), { ...payload, createdAt: serverTimestamp() });
+    }
+    
+    setModalConfig({ show: false });
+    return; // Stop fungsi di sini agar tidak lanjut ke logika addDoc di bawah
+    
+    // --- PERUBAHAN SELESAI ---
+} else if (type === 'expense') {
                         payload = { name: f.name.value, amount: Number(f.amount.value), category: f.category.value, date: serverTimestamp() };
                     }
 
