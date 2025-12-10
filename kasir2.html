@@ -1314,6 +1314,9 @@
                         }
                         payload = { 
                             name: f.name.value, barcode: f.barcode.value, category: f.category.value, 
+							description: f.description.value, // [BARU] Simpan Deskripsi
+                            isAdvertised: f.isAdvertised.checked, // [BARU] Simpan Status Iklan
+                            isFeatured: f.isFeatured.checked, // [BARU] Simpan Status Unggulan (Opsional, agar lengkap)
                             variants: variants,
                             modifiers: modifiers, // Simpan ke DB
                             price: Number(f.price.value), hpp: Number(f.hpp.value), stock: Number(f.stock.value), image: f.image.value,
@@ -2576,7 +2579,21 @@
                                             {modalConfig.type === 'product' && <>
                                         {/* Input Nama Wajib Ada agar tombol Simpan berfungsi */}
                                         <input name="name" placeholder="Nama Produk" required defaultValue={modalConfig.data?.name} className="w-full p-3 border rounded-lg"/>
-                                        {/* [BARU] Input Varian Sederhana */}
+                                        {/* [BARU] INPUT DESKRIPSI & OPSI PROMOSI */}
+                                        <textarea name="description" placeholder="Deskripsi Singkat (Cth: Pedas nampol, porsi jumbo...)" defaultValue={modalConfig.data?.description} className="w-full p-3 border rounded-lg text-sm h-20"></textarea>
+                                        
+                                        <div className="flex gap-4 my-2">
+                                            <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer bg-blue-50 border-blue-200 flex-1 hover:bg-blue-100 transition">
+                                                <input type="checkbox" name="isAdvertised" defaultChecked={modalConfig.data?.isAdvertised} className="w-4 h-4 text-blue-600"/>
+                                                <span className="text-xs font-bold text-blue-800">Iklankan (Ads)</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer bg-yellow-50 border-yellow-200 flex-1 hover:bg-yellow-100 transition">
+                                                <input type="checkbox" name="isFeatured" defaultChecked={modalConfig.data?.isFeatured} className="w-4 h-4 text-yellow-600"/>
+                                                <span className="text-xs font-bold text-yellow-800">Produk Unggulan</span>
+                                            </label>
+                                        </div>
+										
+										{/* [BARU] Input Varian Sederhana */}
                                                 <div className="bg-gray-50 p-3 rounded border">
                                                     <label className="text-xs font-bold text-gray-500 block mb-2">Varian Produk (Opsional)</label>
                                                     <p className="text-[10px] text-gray-400 mb-2">Pisahkan dengan koma. Contoh Format: <b>Panas:5000, Dingin:7000</b></p>
