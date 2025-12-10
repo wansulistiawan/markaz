@@ -498,7 +498,15 @@
                 const unsubShift = onSnapshot(qShift, s => {}); 
                 
                 setTimeout(() => setLoading(false), 1000);
-                return () => { unsubProd(); unsubIng(); unsubCust(); unsubSupp(); unsubExp(); unsubDebts(); unsubStock(); unsubSettings(); unsubShift(); unsubTrans(); unsubTables(); unsubStaff(); };
+                // [FIX] Tambahkan unsubPromos, unsubIn, dan unsubOut ke sini:
+                return () => { 
+                    unsubProd(); unsubIng(); unsubCust(); unsubSupp(); unsubExp(); 
+                    unsubDebts(); unsubStock(); unsubSettings(); unsubShift(); 
+                    unsubTrans(); unsubTables(); unsubStaff(); 
+                    if(unsubPromos) unsubPromos(); // Tambahan
+                    if(unsubIn) unsubIn();         // Tambahan
+                    if(unsubOut) unsubOut();       // Tambahan
+                };
             }, [user, storeId]);
 
             // [AUTO LOGIN & VALIDATION LOGIC] - NO PIN
