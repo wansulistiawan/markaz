@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pro v10.7.1.2</title>
+    <title>Kasir Pro v10.7.1.3</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -872,8 +872,37 @@
 
                     setIsProcessing(true);
                     const profit = totals.total - totals.tax - totals.serviceCharge - totals.hppTotal;
-                    const pointRate = storeProfile?.pointConversion || 10000;
-                    const pointsEarned = selectedCustomer ? Math.floor(totals.total / pointRate) : 0;
+                    
+                    // [BARU] LOGIKA TIER & POIN
+                    let pointsEarned = 0;
+                    let newTier = selectedCustomer?.tier || 'Basic';
+                    
+                    if (selectedCustomer) {
+                        const pointRate = storeProfile?.pointConversion || 10000;
+                        const basePoints = Math.floor(totals.total / pointRate);
+                        
+                        // Multiplier berdasarkan Tier
+                        let multiplier = 1;
+                        if (selectedCustomer.tier === 'Platinum') multiplier = 2;
+                        else if (selectedCustomer.tier === 'Gold') multiplier = 1.5;
+                        else if (selectedCustomer.tier === 'Silver') multiplier = 1.2;
+                        
+                        pointsEarned = Math.floor(basePoints * multiplier);
+
+                        // [BARU] Cek Naik Level (Dinamis dari Settings)
+                        const currentSpending = (selectedCustomer.totalSpending || 0) + totals.total;
+                        
+                        // Ambil config dari storeProfile (atau default jika belum diset)
+                        const tierLimit = {
+                            silver: storeProfile?.tierSilver || 1000000,
+                            gold: storeProfile?.tierGold || 5000000,
+                            platinum: storeProfile?.tierPlatinum || 10000000
+                        };
+
+                        if (currentSpending >= tierLimit.platinum) newTier = 'Platinum';
+                        else if (currentSpending >= tierLimit.gold) newTier = 'Gold';
+                        else if (currentSpending >= tierLimit.silver) newTier = 'Silver';
+                    }
 
                     const transData = {
                         items: cart, ...totals, profit, paymentMethod, orderType,
@@ -903,7 +932,14 @@
 
                     if(selectedCustomer) {
                         const custRef = doc(db, 'artifacts', APP_ID, 'users', storeId, 'customers', selectedCustomer.id);
-                        await updateDoc(custRef, { points: increment(pointsEarned) });
+                        await updateDoc(custRef, { 
+                            points: increment(pointsEarned),
+                            totalSpending: increment(totals.total), // Catat total belanja
+                            tier: newTier // Update level member
+                        });
+                        if (newTier !== (selectedCustomer.tier || 'Basic')) {
+                            alert(`Selamat! Pelanggan naik level menjadi ${newTier}!`);
+                        }
                     }
 
                     const batchPromises = [];
@@ -1431,7 +1467,7 @@
                     <aside className="w-20 md:w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20 overflow-y-auto">
                         <div className="h-16 flex items-center justify-center md:justify-start md:px-6 bg-slate-950 text-white font-bold gap-3 flex-shrink-0 sticky top-0 z-10">
                             <div className="bg-blue-600 p-2 rounded-lg"><Icon name="zap" size={20}/></div>
-                            <span className="hidden md:block">Kasir Pro v10.7.1.2</span>
+                            <span className="hidden md:block">Kasir Pro v10.7.1.3</span>
                         </div>
                         <nav className="flex-1 py-4 space-y-1 px-2">
                             <div className="px-3 mb-6 flex items-center gap-3 pb-4 border-b border-slate-800">
@@ -1574,9 +1610,25 @@
 
                                     {/* INFO POIN MEMBER (JIKA ADA) */}
                                     {selectedCustomer && (
-                                        <div className="px-3 py-1 bg-green-50 text-green-700 text-[10px] flex justify-between border-b border-green-100">
-                                            <span>Poin: <b>{selectedCustomer.points || 0}</b></span>
-                                            <span>Est: +{Math.floor(calculateTotals().total / (storeProfile?.pointConversion || 10000))}</span>
+                                        <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 text-[10px] flex justify-between items-center border-b border-blue-100">
+                                            <div className="flex items-center gap-2">
+                                                <span className={`font-bold px-1.5 py-0.5 rounded text-white ${
+                                                    selectedCustomer.tier === 'Platinum' ? 'bg-slate-800' :
+                                                    selectedCustomer.tier === 'Gold' ? 'bg-yellow-500' :
+                                                    selectedCustomer.tier === 'Silver' ? 'bg-gray-400' : 'bg-blue-400'
+                                                }`}>
+                                                    {selectedCustomer.tier || 'Basic'}
+                                                </span>
+                                                <span>Poin: <b>{selectedCustomer.points || 0}</b></span>
+                                            </div>
+                                            {/* Hitung estimasi poin dengan multiplier tier */}
+                                            <span>
+                                                Est: +{(() => {
+                                                    const base = Math.floor(calculateTotals().total / (storeProfile?.pointConversion || 10000));
+                                                    const mult = selectedCustomer.tier==='Platinum'?2 : selectedCustomer.tier==='Gold'?1.5 : selectedCustomer.tier==='Silver'?1.2 : 1;
+                                                    return Math.floor(base * mult);
+                                                })()}
+                                            </span>
                                         </div>
                                     )}
 
@@ -1667,30 +1719,38 @@
                                         </div>
 
                                         {/* [UBAH] TOMBOL AKSI UTAMA (ANTREAN, TUNDA, BAYAR) */}
-                                        <div className="flex gap-2 h-12">
-                                        {/* Tombol Antrean (Logo) */}
-                                        <button onClick={()=>setModalConfig({show: true, type: 'hold_list'})} className="w-12 h-full bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center relative hover:bg-orange-200 transition border border-orange-200">
+                                        {/* [UBAH] TOMBOL AKSI UTAMA (ANTREAN, TUNDA, SPLIT, BAYAR) */}
+                                    <div className="flex gap-2 h-12">
+                                        {/* 1. Tombol Antrean (Logo) */}
+                                        <button onClick={()=>setModalConfig({show: true, type: 'hold_list'})} className="w-12 h-full bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center relative hover:bg-orange-200 transition border border-orange-200" title="Daftar Antrean">
                                             <Icon name="list" size={24}/>
                                             {activeOrders.length > 0 && <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white">{activeOrders.length}</span>}
                                         </button>
 
-                                        {/* Tombol Tunda (Logo) */}
+                                        {/* 2. Tombol Tunda (Logo) */}
                                         <button onClick={holdTransaction} className="w-12 h-full bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center hover:bg-gray-200 transition border border-gray-200" title="Tunda Transaksi">
                                             <Icon name="clock" size={24}/>
                                         </button>
 
-                                        {/* Tombol Bayar / Kirim ke Dapur */}
+                                        {/* 3. [KEMBALIKAN] Tombol Split Bill (Logo) */}
+                                        <button onClick={()=>{
+                                            if(cart.length === 0) return alert("Keranjang kosong");
+                                            setSplitSelection({}); 
+                                            setModalConfig({show: true, type: 'split_bill'});
+                                        }} className="w-12 h-full bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center hover:bg-purple-200 transition border border-purple-200" title="Split Bill">
+                                            <Icon name="scissors" size={24}/>
+                                        </button>
+
+                                        {/* 4. Tombol Bayar / Kirim ke Dapur (Versi Anti-Crash) */}
                                         <button 
                                             onClick={activeStaff?.role === 'waiter' ? handleOrderToKitchen : handleCheckout} 
                                             disabled={!cart.length || isProcessing} 
                                             className={`flex-1 text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition disabled:bg-gray-300 disabled:shadow-none ${activeStaff?.role === 'waiter' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'}`}
                                         >
-                                            {/* PERBAIKAN DI SINI: Mengganti Icon loader dengan Teks atau Icon yang aman */}
                                             {isProcessing ? (
                                                 <span className="animate-pulse">Memproses...</span> 
                                             ) : (
                                                 activeStaff?.role === 'waiter' ? (
-                                                    // Hapus Icon chef-hat jika membuat error, atau ganti ke icon yang pasti ada
                                                     <span>Ke Dapur</span> 
                                                 ) : (
                                                     'Bayar'
@@ -1838,8 +1898,17 @@
                                                         </div>
                                                     )}
                                                     {view==='tables' && <div className="text-sm text-gray-500">Kapasitas: {item.capacity} org</div>}
-                                                    {view==='customers' && <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded inline-block mt-1">{item.memberCode}</div>}
-                                                    {view==='customers' && <div className="text-[10px] text-gray-500 mt-1">Poin: {item.points || 0}</div>}
+                                                    {view==='customers' && (
+                                                        <div className="mt-1 flex flex-wrap gap-1">
+                                                            <div className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded inline-block">{item.memberCode}</div>
+                                                            <div className={`text-[10px] px-2 py-0.5 rounded font-bold text-white ${
+                                                                item.tier === 'Platinum' ? 'bg-slate-800' :
+                                                                item.tier === 'Gold' ? 'bg-yellow-500' :
+                                                                item.tier === 'Silver' ? 'bg-gray-400' : 'bg-green-500'
+                                                            }`}>{item.tier || 'Basic'}</div>
+                                                        </div>
+                                                    )}
+                                                    {view==='customers' && <div className="text-[10px] text-gray-500 mt-1">Poin: {item.points || 0} | Total Belanja: {formatCurrency(item.totalSpending || 0)}</div>}
                                                     {(view==='customers'||view==='suppliers') && <div className="text-sm text-gray-500">{item.phone}</div>}
                                                 </div>
                                             </div>
@@ -2272,6 +2341,11 @@
                                         paperSize: f.paperSize.value,
                                         pointConversion: Number(f.pointConversion.value),
                                         isPublic: isPublic // Simpan status
+										tierSilver: Number(f.tierSilver.value),
+                                        tierGold: Number(f.tierGold.value),
+                                        tierPlatinum: Number(f.tierPlatinum.value),
+                                        tierAchieveWindow: Number(f.tierAchieveWindow.value),
+                                        tierValidity: Number(f.tierValidity.value)
                                     };
                                     
                                     await setDoc(doc(db, 'artifacts', APP_ID, 'users', storeId, 'settings', 'profile'), profileData);
@@ -2341,6 +2415,39 @@
                                     <div>
                                         <label className="text-xs font-bold text-gray-500">Konversi Poin (Rp untuk 1 Poin)</label>
                                         <input name="pointConversion" type="number" defaultValue={storeProfile?.pointConversion || 10000} className="w-full p-3 border rounded-lg"/>
+                                    </div>
+									
+									{/* [BARU] KONFIGURASI TIER MEMBERSHIP */}
+                                    <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                                        <h4 className="font-bold text-yellow-800 text-sm mb-3 flex items-center gap-2"><Icon name="crown" size={16}/> Aturan Membership</h4>
+                                        
+                                        <div className="grid grid-cols-3 gap-3 mb-3">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase">Silver (Rp)</label>
+                                                <input name="tierSilver" type="number" defaultValue={storeProfile?.tierSilver || 1000000} className="w-full p-2 border rounded text-sm font-bold text-gray-700"/>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase">Gold (Rp)</label>
+                                                <input name="tierGold" type="number" defaultValue={storeProfile?.tierGold || 5000000} className="w-full p-2 border rounded text-sm font-bold text-yellow-600"/>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase">Platinum (Rp)</label>
+                                                <input name="tierPlatinum" type="number" defaultValue={storeProfile?.tierPlatinum || 10000000} className="w-full p-2 border rounded text-sm font-bold text-slate-700"/>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase">Periode Evaluasi (Bulan)</label>
+                                                <input name="tierAchieveWindow" type="number" placeholder="12" defaultValue={storeProfile?.tierAchieveWindow || 12} className="w-full p-2 border rounded text-sm"/>
+                                                <p className="text-[9px] text-gray-400 mt-1">Batas waktu mengumpulkan poin/belanja.</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase">Masa Aktif Tier (Bulan)</label>
+                                                <input name="tierValidity" type="number" placeholder="12" defaultValue={storeProfile?.tierValidity || 12} className="w-full p-2 border rounded text-sm"/>
+                                                <p className="text-[9px] text-gray-400 mt-1">Lama status tier bertahan setelah didapat.</p>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <button className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Simpan & Update</button>
@@ -2600,6 +2707,7 @@
                                         <button onClick={handleSplitCheckout} className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold hover:bg-purple-700">
                                             Bayar Item Terpilih
                                         </button>
+										<button onClick={()=>setModalConfig({show:false})} className="w-full mt-2 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl">Batal</button>
                                     </div>
                                 </div>
                              )}
