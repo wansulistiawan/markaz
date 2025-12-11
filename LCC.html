@@ -508,9 +508,13 @@
                 if (currentRole === 'client') {
                     window.game.handleClientTypewriter(data);
                 } else if (currentRole === 'host') {
-                     document.getElementById('host-active-q').textContent = data.currentQuestion || "(Belum ada soal)";
-                     document.getElementById('host-active-a').querySelector('span').innerText = data.currentAnswer || "-";
-                     document.getElementById('host-active-a').classList.remove('hidden');
+                    // Host always sees the active question from DB if available, otherwise staged (handled in DOM)
+                    // If DB has question, sync it.
+                    if (data.currentQuestion) {
+                         document.getElementById('host-active-q').textContent = data.currentQuestion;
+                         document.getElementById('host-active-a').querySelector('span').innerText = data.currentAnswer || "-";
+                         document.getElementById('host-active-a').classList.remove('hidden');
+                    }
                 }
 
                 window.game.updateBuzzerUI(data);
@@ -534,7 +538,7 @@
                             clearInterval(typewriterInterval);
                             cursorEl.classList.add('hidden');
                         }
-                    }, 50); 
+                    }, 100); // SLOWED DOWN from 50ms to 100ms
                 } else {
                     cursorEl.classList.add('hidden');
                     // If not typing but text exists (e.g. joined late or buzzer locked), show full text
@@ -599,7 +603,10 @@
                     if(currentRole === 'admin') document.getElementById('admin-winner-controls').classList.remove('hidden');
 
                     if (overlay.dataset.lastWinner !== data.winner.id) {
-                        audioSys.playBuzzer();
+                        // Play sound ONLY if Host OR if I am the Winner
+                        if (currentRole === 'host' || (currentRole === 'client' && myTeamId === data.winner.id)) {
+                            audioSys.playBuzzer();
+                        }
                         overlay.dataset.lastWinner = data.winner.id;
                     }
                 } else {
@@ -760,26 +767,24 @@
             },
 
             stageQuestion: (q, a) => {
+                // BUG FIX: Only update DOM, do NOT send to DB yet.
                 document.getElementById('host-active-q').textContent = q;
                 const ansEl = document.getElementById('host-active-a');
                 ansEl.classList.remove('hidden');
                 ansEl.querySelector('span').innerText = a;
-
-                setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
-                    currentQuestion: q,
-                    currentAnswer: a,
-                    status: 'idle', 
-                    isTyping: false,
-                    winner: null,
-                    lockedTeams: []
-                }, { merge: true });
+                // We keep it local. 'displayQuestionWithTypewriter' will push it.
             },
 
             displayQuestionWithTypewriter: async () => {
                 const qText = document.getElementById('host-active-q').textContent;
+                const aText = document.getElementById('host-active-a').querySelector('span').innerText;
+                
                 if (!qText || qText.includes("Belum ada")) return alert("Pilih soal dulu!");
 
+                // Push to DB now
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    currentQuestion: qText,
+                    currentAnswer: aText,
                     status: 'open',
                     isTyping: true, 
                     winner: null
@@ -788,7 +793,13 @@
             },
 
             activateBuzzer: async () => {
+                const qText = document.getElementById('host-active-q').textContent;
+                const aText = document.getElementById('host-active-a').querySelector('span').innerText;
+
+                // Push text too in case it wasn't pushed
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    currentQuestion: qText,
+                    currentAnswer: aText,
                     status: 'open',
                     isTyping: false, 
                     winner: null
@@ -822,6 +833,7 @@
                 const { increment } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
                 await updateDoc(teamRef, { score: increment(points) });
 
+                // Play Host-only sounds here
                 if (points > 0) {
                     audioSys.playCorrect();
                     await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
