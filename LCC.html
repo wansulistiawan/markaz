@@ -28,20 +28,23 @@
             animation: pulse-ring 2s infinite;
         }
 
-        .buzzer-hit {
-            animation: bounce 0.5s ease infinite alternate;
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
         }
-
-        @keyframes bounce {
-            from { transform: scale(1); }
-            to { transform: scale(1.1); }
-        }
+        
+        @keyframes blink { 50% { opacity: 0; } }
 
         /* Modal Winner */
         .winner-overlay {
             background: rgba(0,0,0,0.85);
             backdrop-filter: blur(5px);
         }
+
+        /* Scrollbar custom */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex flex-col">
@@ -74,33 +77,54 @@
     <div id="admin-panel" class="hidden h-full flex flex-col">
         <header class="bg-slate-800 text-white p-4 flex justify-between items-center shadow-md">
             <h2 class="text-xl font-bold"><i class="fas fa-cog"></i> Panel Admin</h2>
-            <button onclick="location.reload()" class="text-xs bg-red-500 hover:bg-red-600 px-3 py-1 rounded">Logout</button>
+            <div class="flex gap-2">
+                <button onclick="game.resetBuzzer()" class="bg-yellow-500 hover:bg-yellow-600 px-3 py-1 rounded text-xs font-bold">Reset Bel</button>
+                <button onclick="location.reload()" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-xs">Logout</button>
+            </div>
         </header>
-        <div class="flex-1 overflow-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Settings -->
-            <div class="bg-white p-6 rounded-xl shadow-sm">
-                <h3 class="font-bold text-lg mb-4 border-b pb-2">Kontrol Game</h3>
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="game.resetBuzzer()" class="p-3 bg-yellow-500 text-white rounded hover:bg-yellow-600 font-bold">
-                        <i class="fas fa-undo"></i> Reset Bel
+        <div class="flex-1 overflow-hidden p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Input Bank Soal -->
+            <div class="bg-white p-6 rounded-xl shadow-sm flex flex-col h-full overflow-hidden">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800"><i class="fas fa-database"></i> Input Bank Soal</h3>
+                <div class="space-y-4 overflow-y-auto pr-2">
+                    <div>
+                        <label class="block text-sm font-bold mb-1">Kategori</label>
+                        <select id="admin-q-category" class="w-full p-2 border rounded bg-gray-50">
+                            <option value="Umum">Pengetahuan Umum</option>
+                            <option value="Agama">Agama</option>
+                            <option value="Matematika">Matematika</option>
+                            <option value="IPA">IPA</option>
+                            <option value="IPS">IPS</option>
+                            <option value="Bahasa">Bahasa</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1">Pertanyaan</label>
+                        <textarea id="admin-q-text" class="w-full p-2 border rounded h-24" placeholder="Tulis soal lengkap di sini..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1">Kunci Jawaban</label>
+                        <input type="text" id="admin-q-answer" class="w-full p-2 border rounded" placeholder="Jawaban singkat">
+                    </div>
+                    <button onclick="game.saveToBank()" class="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 font-bold shadow">
+                        <i class="fas fa-save"></i> Simpan ke Bank Soal
                     </button>
-                    <button onclick="game.resetScores()" class="p-3 bg-red-600 text-white rounded hover:bg-red-700 font-bold">
-                        <i class="fas fa-trash"></i> Reset Semua Skor
-                    </button>
-                </div>
-                <div class="mt-4">
-                    <label class="block text-sm font-bold mb-1">Set Pertanyaan Aktif</label>
-                    <textarea id="admin-question-text" class="w-full p-2 border rounded" rows="3" placeholder="Ketik soal di sini..."></textarea>
-                    <button onclick="game.updateQuestion()" class="mt-2 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Update Soal ke Layar</button>
+                    <div id="admin-save-status" class="text-center text-sm text-green-600 h-5"></div>
                 </div>
             </div>
 
-            <!-- Team Management -->
-            <div class="bg-white p-6 rounded-xl shadow-sm">
-                <h3 class="font-bold text-lg mb-4 border-b pb-2">Daftar Tim & Skor</h3>
-                <div id="admin-team-list" class="space-y-2 max-h-64 overflow-y-auto">
+            <!-- Team & Control -->
+            <div class="bg-white p-6 rounded-xl shadow-sm flex flex-col h-full">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2">Manajemen Tim</h3>
+                <div id="admin-team-list" class="space-y-2 flex-1 overflow-y-auto">
                     <!-- Teams injected here -->
                     <div class="text-gray-400 text-center italic">Belum ada tim bergabung</div>
+                </div>
+                <div class="mt-4 pt-4 border-t">
+                    <button onclick="game.resetScores()" class="w-full p-3 bg-red-100 text-red-700 rounded hover:bg-red-200 font-bold border border-red-200">
+                        <i class="fas fa-trash"></i> Reset Semua Skor (0)
+                    </button>
                 </div>
             </div>
         </div>
@@ -108,43 +132,67 @@
 
     <!-- Host / Juri Panel -->
     <div id="host-panel" class="hidden h-full flex flex-col bg-slate-900 text-white">
-        <header class="bg-black/30 p-4 flex justify-between items-center backdrop-blur-sm">
+        <header class="bg-black/30 p-3 flex justify-between items-center backdrop-blur-sm">
             <div class="text-sm font-mono text-indigo-400">HOST MODE</div>
             <div class="flex gap-2">
                 <button onclick="game.toggleSound()" id="sound-toggle" class="bg-white/10 p-2 rounded hover:bg-white/20"><i class="fas fa-volume-up"></i></button>
             </div>
         </header>
 
-        <div class="flex-1 flex flex-col md:flex-row">
-            <!-- Main Display Area -->
-            <div class="flex-1 flex flex-col items-center justify-center p-8 text-center relative">
-                
-                <!-- Status Badge -->
-                <div id="host-status-badge" class="mb-6 px-4 py-1 rounded-full text-sm font-bold bg-gray-700 text-gray-300">
-                    MENUNGGU SOAL
+        <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+            
+            <!-- LEFT: Question Bank Selector -->
+            <div class="w-full md:w-1/3 bg-slate-800 border-r border-slate-700 flex flex-col">
+                <div class="p-4 border-b border-slate-700 bg-slate-800/50">
+                    <label class="text-xs text-gray-400 uppercase font-bold">Pilih Kategori</label>
+                    <select id="host-category-select" onchange="game.loadQuestions(this.value)" class="w-full mt-1 p-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-indigo-500">
+                        <option value="">-- Pilih Kategori --</option>
+                        <option value="Umum">Pengetahuan Umum</option>
+                        <option value="Agama">Agama</option>
+                        <option value="Matematika">Matematika</option>
+                        <option value="IPA">IPA</option>
+                        <option value="IPS">IPS</option>
+                        <option value="Bahasa">Bahasa</option>
+                    </select>
                 </div>
-
-                <!-- Question -->
-                <div id="host-question-display" class="text-3xl md:text-5xl font-bold leading-tight mb-8 drop-shadow-lg">
-                    Selamat Datang di Lomba Cerdas Cermat
-                </div>
-
-                <!-- Controls -->
-                <div class="flex gap-4 mt-8 z-10">
-                    <button onclick="game.activateBuzzer()" class="px-8 py-4 bg-green-500 hover:bg-green-600 text-white text-xl font-bold rounded-xl shadow-lg transform hover:scale-105 transition">
-                        <i class="fas fa-play"></i> MULAI BEL
-                    </button>
-                    <button onclick="game.lockBuzzer()" class="px-8 py-4 bg-red-500 hover:bg-red-600 text-white text-xl font-bold rounded-xl shadow-lg transform hover:scale-105 transition">
-                        <i class="fas fa-stop"></i> STOP / KUNCI
-                    </button>
+                <div id="host-question-list" class="flex-1 overflow-y-auto p-2 space-y-2">
+                    <div class="text-center text-gray-500 text-sm mt-10">Pilih kategori untuk memuat soal</div>
                 </div>
             </div>
 
-            <!-- Score Sidebar -->
-            <div class="w-full md:w-80 bg-slate-800 border-l border-slate-700 p-6 overflow-y-auto">
-                <h3 class="text-xl font-bold mb-4 text-indigo-400 border-b border-indigo-500/30 pb-2">Papan Skor</h3>
-                <div id="host-score-list" class="space-y-3">
-                    <!-- Scores injected here -->
+            <!-- RIGHT: Active Question & Controls -->
+            <div class="flex-1 flex flex-col relative bg-slate-900">
+                
+                <!-- Active Question Preview -->
+                <div class="flex-1 p-8 flex flex-col items-center justify-center text-center">
+                    <div id="host-status-badge" class="mb-4 px-4 py-1 rounded-full text-xs font-bold bg-gray-700 text-gray-300">
+                        IDLE
+                    </div>
+                    
+                    <div class="w-full max-w-3xl bg-slate-800/50 p-6 rounded-xl border border-slate-700/50 mb-6">
+                        <p class="text-xs text-indigo-400 font-bold uppercase mb-2">Soal Terpilih</p>
+                        <div id="host-active-q" class="text-2xl md:text-3xl font-bold leading-relaxed min-h-[3rem]">
+                            (Belum ada soal dipilih)
+                        </div>
+                        <div id="host-active-a" class="mt-4 text-xl text-green-400 font-mono border-t border-slate-700 pt-2 hidden">
+                            Jawaban: <span>-</span>
+                        </div>
+                    </div>
+
+                    <!-- Main Action Button -->
+                    <div class="flex gap-4 z-10">
+                        <button onclick="game.displayQuestionWithTypewriter()" class="px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg flex items-center gap-2">
+                            <i class="fas fa-keyboard"></i> <span>Tampilkan & Efek Ketik</span>
+                        </button>
+                        <button onclick="game.activateBuzzer()" class="px-6 py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg flex items-center gap-2">
+                             <i class="fas fa-play"></i> <span>Buka Bel (Tanpa Ketik)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Footer Score Ticker -->
+                <div class="h-16 bg-slate-950 border-t border-slate-800 flex items-center px-4 overflow-x-auto whitespace-nowrap gap-6" id="host-score-ticker">
+                    <!-- Scores running here -->
                 </div>
             </div>
         </div>
@@ -152,55 +200,70 @@
 
     <!-- Client / Peserta Panel -->
     <div id="client-panel" class="hidden h-full flex flex-col bg-slate-50 relative">
-        <div class="absolute top-4 left-4 bg-white px-4 py-2 rounded-full shadow font-bold text-blue-600">
+        <div class="absolute top-4 left-4 bg-white px-4 py-2 rounded-full shadow font-bold text-blue-600 z-20">
             <i class="fas fa-user-shield"></i> <span id="client-team-name">Tim Saya</span>
         </div>
-        <div class="absolute top-4 right-4 bg-white px-4 py-2 rounded-full shadow font-bold text-green-600">
+        <div class="absolute top-4 right-4 bg-white px-4 py-2 rounded-full shadow font-bold text-green-600 z-20">
             Skor: <span id="client-my-score">0</span>
         </div>
 
-        <div class="flex-1 flex flex-col items-center justify-center p-6">
+        <div class="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-5xl mx-auto">
             <!-- Question Display for Client -->
-            <div class="mb-10 w-full max-w-2xl text-center bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pertanyaan</h4>
-                <p id="client-question-text" class="text-xl font-medium text-slate-800">Menunggu pertanyaan...</p>
+            <div class="mb-12 w-full text-center">
+                <div class="bg-white p-8 rounded-3xl shadow-lg border border-slate-200 min-h-[200px] flex items-center justify-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                    <p id="client-question-text" class="text-3xl md:text-5xl font-bold text-slate-800 leading-tight">
+                        <!-- Text injected via JS Typewriter -->
+                    </p>
+                    <span id="client-cursor" class="inline-block w-1 h-8 md:h-12 bg-slate-800 ml-1 cursor-blink hidden"></span>
+                </div>
             </div>
 
             <!-- THE BIG BUTTON -->
-            <div class="relative">
-                <div id="buzzer-status-text" class="absolute -top-12 left-0 right-0 text-center font-bold text-gray-400 animate-pulse">
+            <div class="relative group">
+                <div id="buzzer-status-text" class="absolute -top-16 left-0 right-0 text-center font-bold text-gray-400 text-xl tracking-widest transition-all">
                     TOMBOL TERKUNCI
                 </div>
+                <!-- Circle Background Effect -->
+                <div class="absolute inset-0 bg-red-200 rounded-full scale-0 group-hover:scale-110 transition-transform opacity-20"></div>
+                
                 <button id="client-buzzer-btn" onmousedown="game.buzz()" ontouchstart="game.buzz()" disabled 
-                    class="w-64 h-64 rounded-full bg-gray-300 shadow-[0_10px_0_rgb(156,163,175)] border-8 border-gray-200 
-                           flex items-center justify-center transition-all duration-100 transform active:scale-95 active:shadow-none
-                           disabled:cursor-not-allowed text-white text-4xl font-extrabold">
-                    <i class="fas fa-hand-pointer text-6xl"></i>
+                    class="w-72 h-72 rounded-full bg-gray-300 shadow-[0_15px_0_rgb(156,163,175)] border-8 border-white 
+                           flex flex-col items-center justify-center transition-all duration-100 transform active:scale-95 active:shadow-none active:translate-y-4
+                           disabled:cursor-not-allowed text-white relative z-10 outline-none ring-4 ring-transparent focus:ring-blue-300/50">
+                    <i class="fas fa-hand-pointer text-7xl mb-2 drop-shadow-md"></i>
+                    <span class="text-lg font-bold uppercase tracking-widest opacity-80">Tekan / Spasi</span>
                 </button>
             </div>
+            
+            <p class="mt-8 text-gray-400 text-sm font-mono text-center">
+                Tips: Anda bisa menekan tombol <strong>SPASI</strong> di keyboard.
+            </p>
         </div>
     </div>
 
-    <!-- Winner Overlay (Hidden by default) -->
+    <!-- Winner Overlay -->
     <div id="winner-overlay" class="hidden fixed inset-0 winner-overlay z-50 flex flex-col items-center justify-center text-white">
-        <div class="text-2xl font-light mb-4 tracking-widest uppercase">Tim Tercepat</div>
-        <div id="winner-name" class="text-6xl md:text-8xl font-black text-yellow-400 drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)] scale-150 transition-transform duration-500">
+        <div class="text-3xl font-light mb-4 tracking-widest uppercase">Tim Tercepat</div>
+        <div id="winner-name" class="text-7xl md:text-9xl font-black text-yellow-400 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] scale-150 transition-transform duration-500">
             REGU A
         </div>
-        <div class="mt-12 flex gap-4">
-            <!-- Host Controls Only Visible to Host -->
-            <div id="host-winner-controls" class="hidden flex gap-4">
-                <button onclick="game.awardPoints(100)" class="bg-green-500 hover:bg-green-600 px-6 py-3 rounded-lg font-bold shadow-lg">
-                    <i class="fas fa-check"></i> Benar (+100)
+        
+        <div class="mt-16 flex flex-col items-center gap-3">
+            <!-- Host Controls -->
+            <div id="host-winner-controls" class="hidden flex gap-6 scale-125">
+                <button onclick="game.awardPoints(100)" class="bg-green-500 hover:bg-green-600 text-white w-20 h-20 rounded-full font-bold shadow-xl flex items-center justify-center text-3xl transition transform hover:scale-110 border-4 border-white/20" title="Benar (+100)">
+                    <i class="fas fa-check"></i>
                 </button>
-                <button onclick="game.awardPoints(-50)" class="bg-red-500 hover:bg-red-600 px-6 py-3 rounded-lg font-bold shadow-lg">
-                    <i class="fas fa-times"></i> Salah (-50)
-                </button>
-                <button onclick="game.resetBuzzer()" class="bg-gray-500 hover:bg-gray-600 px-6 py-3 rounded-lg font-bold shadow-lg">
-                    Tutup
+                <button onclick="game.awardPoints(-50)" class="bg-red-500 hover:bg-red-600 text-white w-20 h-20 rounded-full font-bold shadow-xl flex items-center justify-center text-3xl transition transform hover:scale-110 border-4 border-white/20" title="Salah (-50)">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
-             <!-- Admin Close Button -->
+            <div id="host-winner-text" class="hidden text-sm mt-4 font-mono bg-black/50 px-4 py-1 rounded">
+                Tombol MERAH = Salah & Lanjut soal
+            </div>
+
+             <!-- Admin Close -->
              <div id="admin-winner-controls" class="hidden">
                 <button onclick="game.resetBuzzer()" class="bg-gray-500 hover:bg-gray-600 px-6 py-3 rounded-lg font-bold shadow-lg">
                     Tutup Overlay
@@ -213,7 +276,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, query, where, getDocs, orderBy, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Configuration
         const firebaseConfig = {
@@ -226,237 +289,276 @@
             appId: "1:5529883980:web:792ce6d869070e9a79ebe9"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        // App ID logic
         const APP_ID = "lcc_session_v1"; 
 
-        // Global State
+        // Global Vars
         let currentUser = null;
         let currentRole = null;
         let myTeamId = null;
         let audioContext = null;
         let isMuted = false;
+        
+        // Typewriter Vars
+        let typewriterInterval = null;
+        let typewriterIndex = 0;
+        let currentFullText = "";
 
-        // --- Audio System (Web Audio API - No External Files) ---
+        // --- Audio System ---
         const audioSys = {
             init: () => {
-                if (!audioContext) {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
+                if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioContext.state === 'suspended') audioContext.resume();
+            },
+            playTone: (freq, type, duration) => {
+                if (isMuted || !audioContext) return;
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+                gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.start();
+                osc.stop(audioContext.currentTime + duration);
             },
             playBuzzer: () => {
+                // Sirine effect
                 if (isMuted || !audioContext) return;
                 const osc = audioContext.createOscillator();
                 const gain = audioContext.createGain();
                 osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(440, audioContext.currentTime); // A4
-                osc.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.1);
-                
+                osc.frequency.setValueAtTime(440, audioContext.currentTime);
+                osc.frequency.linearRampToValueAtTime(880, audioContext.currentTime + 0.3);
                 gain.gain.setValueAtTime(0.5, audioContext.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
-
+                gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1.5);
                 osc.connect(gain);
                 gain.connect(audioContext.destination);
                 osc.start();
                 osc.stop(audioContext.currentTime + 1.5);
             },
-            playCorrect: () => {
-                if (isMuted || !audioContext) return;
-                const osc = audioContext.createOscillator();
-                const gain = audioContext.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(600, audioContext.currentTime);
-                osc.frequency.setValueAtTime(1200, audioContext.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
-                osc.connect(gain);
-                gain.connect(audioContext.destination);
-                osc.start();
-                osc.stop(audioContext.currentTime + 0.5);
-            }
+            playCorrect: () => audioSys.playTone(800, 'sine', 0.5),
+            playWrong: () => audioSys.playTone(150, 'square', 0.4),
+            playType: () => audioSys.playTone(600, 'triangle', 0.05) // Tick sound
         };
 
-        // --- Application Logic ---
+        // --- Main App Logic ---
         window.app = {
             selectRole: async (role) => {
                 const teamNameInput = document.getElementById('team-name-input');
-                
-                if (role === 'client') {
-                    if (!teamNameInput.value.trim()) {
-                        alert("Harap masukkan Nama Tim!");
-                        return;
-                    }
+                if (role === 'client' && !teamNameInput.value.trim()) {
+                    alert("Harap masukkan Nama Tim!"); return;
                 }
-
-                audioSys.init(); // Init audio on first interaction
-
+                audioSys.init();
+                
                 try {
                     document.getElementById('connection-status').innerText = "Menghubungkan...";
-                    
-                    if (!currentUser) {
-                        await signInAnonymously(auth);
-                    }
-                    
+                    if (!currentUser) await signInAnonymously(auth);
                     currentRole = role;
 
-                    // Setup User/Team Data
                     if (role === 'client') {
                         myTeamId = currentUser.uid;
-                        // Register team in Firestore
                         await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'teams', myTeamId), {
                             name: teamNameInput.value.trim(),
                             score: 0,
                             joinedAt: serverTimestamp()
-                        }, { merge: true }); // Merge to not overwrite score if rejoining
-                        
+                        }, { merge: true });
                         document.getElementById('client-team-name').innerText = teamNameInput.value.trim();
+                        // Enable Keyboard Listener for Client
+                        window.addEventListener('keydown', (e) => {
+                            if (e.code === 'Space' && !e.repeat) {
+                                e.preventDefault(); // prevent scroll
+                                window.game.buzz();
+                            }
+                        });
                     }
 
-                    // Switch UI
                     document.getElementById('setup-screen').classList.add('hidden');
                     if (role === 'admin') document.getElementById('admin-panel').classList.remove('hidden');
                     else if (role === 'host') document.getElementById('host-panel').classList.remove('hidden');
                     else if (role === 'client') document.getElementById('client-panel').classList.remove('hidden');
 
-                    // Start Listeners
                     window.game.initListeners();
-
                 } catch (error) {
                     console.error(error);
-                    alert("Gagal koneksi ke server: " + error.message);
+                    alert("Error: " + error.message);
                 }
             }
         };
 
-        // --- Game Logic & Firestore ---
+        // --- Game Logic ---
         window.game = {
-            state: {
-                buzzerActive: false,
-                currentQuestion: "",
-                winner: null
-            },
-
+            state: {},
+            
             initListeners: () => {
-                // Listener 1: Game State (Question, Buzzer Status)
+                // Game State Listener
                 onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), (docSnap) => {
                     const data = docSnap.exists() ? docSnap.data() : {};
                     window.game.handleStateUpdate(data);
-                }, (error) => console.error("State Error", error));
-
-                // Listener 2: Teams (Scores)
+                });
+                
+                // Teams Listener
                 onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'teams'), (snapshot) => {
                     const teams = [];
                     snapshot.forEach(doc => teams.push({ id: doc.id, ...doc.data() }));
-                    // Sort by score descending
                     teams.sort((a, b) => (b.score || 0) - (a.score || 0));
                     window.game.renderScores(teams);
-                }, (error) => console.error("Teams Error", error));
+                });
             },
 
             handleStateUpdate: (data) => {
+                const oldState = window.game.state;
                 window.game.state = data;
                 
-                // Update Questions Text
-                const qText = data.currentQuestion || "Menunggu soal...";
-                if (document.getElementById('host-question-display')) 
-                    document.getElementById('host-question-display').innerText = qText;
-                if (document.getElementById('client-question-text')) 
-                    document.getElementById('client-question-text').innerText = qText;
-                if (document.getElementById('admin-question-text') && document.activeElement.id !== 'admin-question-text') 
-                    document.getElementById('admin-question-text').value = data.currentQuestion || "";
-
-                // Handle Buzzer Active/Inactive
-                const clientBtn = document.getElementById('client-buzzer-btn');
-                const statusBadge = document.getElementById('host-status-badge');
-                const buzzerText = document.getElementById('buzzer-status-text');
-
-                if (data.status === 'open') {
-                    // Buzzer Open
-                    if (clientBtn) {
-                        clientBtn.disabled = false;
-                        clientBtn.classList.remove('bg-gray-300', 'shadow-[0_10px_0_rgb(156,163,175)]');
-                        clientBtn.classList.add('bg-red-500', 'shadow-[0_10px_0_rgb(185,28,28)]', 'buzzer-btn-active');
-                    }
-                    if (statusBadge) {
-                        statusBadge.innerText = "BEL DIBUKA - SILAKAN TEKAN";
-                        statusBadge.className = "mb-6 px-4 py-1 rounded-full text-sm font-bold bg-green-500 text-white animate-pulse";
-                    }
-                    if (buzzerText) {
-                        buzzerText.innerText = "TEKAN SEKARANG!";
-                        buzzerText.className = "absolute -top-12 left-0 right-0 text-center font-bold text-red-500 animate-bounce text-xl";
-                    }
-                } else {
-                    // Buzzer Locked
-                    if (clientBtn) {
-                        clientBtn.disabled = true;
-                        clientBtn.classList.add('bg-gray-300', 'shadow-[0_10px_0_rgb(156,163,175)]');
-                        clientBtn.classList.remove('bg-red-500', 'shadow-[0_10px_0_rgb(185,28,28)]', 'buzzer-btn-active');
-                    }
-                    if (statusBadge) {
-                        statusBadge.innerText = "BEL TERKUNCI";
-                        statusBadge.className = "mb-6 px-4 py-1 rounded-full text-sm font-bold bg-gray-700 text-gray-300";
-                    }
-                    if (buzzerText) {
-                        buzzerText.innerText = "TOMBOL TERKUNCI";
-                        buzzerText.className = "absolute -top-12 left-0 right-0 text-center font-bold text-gray-400";
+                // 1. Check if Question Changed (Reset Typewriter)
+                if (data.currentQuestion !== currentFullText) {
+                    currentFullText = data.currentQuestion || "";
+                    typewriterIndex = 0; // Reset index for new question
+                    if(document.getElementById('client-question-text')) {
+                        document.getElementById('client-question-text').innerText = ""; 
                     }
                 }
 
-                // Handle Winner
-                const winnerOverlay = document.getElementById('winner-overlay');
+                // 2. Client-Side Typewriter Logic
+                if (currentRole === 'client') {
+                    window.game.handleClientTypewriter(data);
+                } else if (currentRole === 'host') {
+                     document.getElementById('host-active-q').innerText = data.currentQuestion || "(Belum ada soal)";
+                     document.getElementById('host-active-a').querySelector('span').innerText = data.currentAnswer || "-";
+                     document.getElementById('host-active-a').classList.remove('hidden');
+                }
+
+                // 3. Buzzer State UI
+                window.game.updateBuzzerUI(data);
+
+                // 4. Winner UI
+                window.game.updateWinnerUI(data);
+            },
+
+            handleClientTypewriter: (data) => {
+                const qEl = document.getElementById('client-question-text');
+                const cursorEl = document.getElementById('client-cursor');
+                
+                // Stop interval if it exists to prevent overlap
+                if (typewriterInterval) clearInterval(typewriterInterval);
+
+                if (data.isTyping && data.status === 'open') {
+                    cursorEl.classList.remove('hidden');
+                    
+                    // Resume typing
+                    typewriterInterval = setInterval(() => {
+                        if (typewriterIndex < currentFullText.length) {
+                            qEl.innerText += currentFullText.charAt(typewriterIndex);
+                            typewriterIndex++;
+                            // Optional: Tick sound
+                            // audioSys.playType(); 
+                        } else {
+                            clearInterval(typewriterInterval);
+                            cursorEl.classList.add('hidden');
+                        }
+                    }, 50); // Speed: 50ms per char
+                } else {
+                    // Not typing (paused or finished)
+                    cursorEl.classList.add('hidden');
+                    // If locked/paused, we just stop the interval (already done above)
+                    // If we want to ensure text is visible up to current point, we do nothing, HTML preserves it.
+                }
+            },
+
+            updateBuzzerUI: (data) => {
+                const clientBtn = document.getElementById('client-buzzer-btn');
+                const statusBadge = document.getElementById('host-status-badge');
+                const buzzerText = document.getElementById('buzzer-status-text');
+                const lockedTeams = data.lockedTeams || [];
+                const amILocked = myTeamId && lockedTeams.includes(myTeamId);
+
+                // HOST UI
+                if (statusBadge) {
+                    if (data.status === 'open') {
+                        statusBadge.innerText = data.isTyping ? "MENGETIK SOAL..." : "BEL DIBUKA";
+                        statusBadge.className = "mb-4 px-4 py-1 rounded-full text-xs font-bold bg-green-500 text-white animate-pulse";
+                    } else {
+                        statusBadge.innerText = "TERKUNCI";
+                        statusBadge.className = "mb-4 px-4 py-1 rounded-full text-xs font-bold bg-gray-700 text-gray-300";
+                    }
+                }
+
+                // CLIENT UI
+                if (clientBtn) {
+                    if (data.status === 'open' && !amILocked) {
+                        clientBtn.disabled = false;
+                        clientBtn.classList.remove('bg-gray-300', 'border-gray-200', 'shadow-[0_15px_0_rgb(156,163,175)]');
+                        clientBtn.classList.add('bg-red-500', 'border-white', 'shadow-[0_15px_0_rgb(185,28,28)]', 'buzzer-btn-active');
+                        buzzerText.innerText = "TEKAN SEKARANG!";
+                        buzzerText.className = "absolute -top-16 left-0 right-0 text-center font-bold text-red-500 animate-bounce text-2xl tracking-widest";
+                    } else {
+                        clientBtn.disabled = true;
+                        clientBtn.classList.add('bg-gray-300', 'border-gray-200', 'shadow-[0_15px_0_rgb(156,163,175)]');
+                        clientBtn.classList.remove('bg-red-500', 'border-white', 'shadow-[0_15px_0_rgb(185,28,28)]', 'buzzer-btn-active');
+                        
+                        if (amILocked) {
+                            buzzerText.innerText = "ANDA DIKUNCI";
+                            buzzerText.className = "absolute -top-16 left-0 right-0 text-center font-bold text-gray-400 text-xl";
+                        } else {
+                            buzzerText.innerText = "TOMBOL TERKUNCI";
+                            buzzerText.className = "absolute -top-16 left-0 right-0 text-center font-bold text-gray-400 text-xl";
+                        }
+                    }
+                }
+            },
+
+            updateWinnerUI: (data) => {
+                const overlay = document.getElementById('winner-overlay');
                 if (data.winner) {
                     document.getElementById('winner-name').innerText = data.winner.name;
-                    winnerOverlay.classList.remove('hidden');
+                    overlay.classList.remove('hidden');
                     
-                    // Show controls based on role
-                    if(currentRole === 'host') document.getElementById('host-winner-controls').classList.remove('hidden');
+                    if(currentRole === 'host') {
+                        document.getElementById('host-winner-controls').classList.remove('hidden');
+                        document.getElementById('host-winner-text').classList.remove('hidden');
+                    }
                     if(currentRole === 'admin') document.getElementById('admin-winner-controls').classList.remove('hidden');
 
-                    // Play sound only once per winner trigger (simple logic: check if newly displayed)
-                    if (winnerOverlay.dataset.lastWinner !== data.winner.id) {
+                    if (overlay.dataset.lastWinner !== data.winner.id) {
                         audioSys.playBuzzer();
-                        winnerOverlay.dataset.lastWinner = data.winner.id;
+                        overlay.dataset.lastWinner = data.winner.id;
                     }
                 } else {
-                    winnerOverlay.classList.add('hidden');
+                    overlay.classList.add('hidden');
                     document.getElementById('host-winner-controls').classList.add('hidden');
+                    document.getElementById('host-winner-text').classList.add('hidden');
                     document.getElementById('admin-winner-controls').classList.add('hidden');
-                    winnerOverlay.dataset.lastWinner = "";
+                    overlay.dataset.lastWinner = "";
                 }
             },
 
             renderScores: (teams) => {
-                // Admin List
+                // Admin
                 const adminList = document.getElementById('admin-team-list');
                 if (adminList) {
                     adminList.innerHTML = teams.map(t => `
-                        <div class="flex justify-between items-center bg-gray-100 p-3 rounded">
-                            <span class="font-bold">${t.name}</span>
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded border border-gray-200">
+                            <span class="font-bold text-slate-700">${t.name}</span>
                             <div class="flex items-center gap-2">
-                                <input type="number" value="${t.score}" onchange="game.manualScore('${t.id}', this.value)" class="w-16 p-1 border rounded text-center">
-                                <span class="text-sm text-gray-500">pts</span>
+                                <span class="font-mono font-bold bg-slate-200 px-2 py-1 rounded">${t.score}</span>
+                                <button onclick="game.manualUpdateScore('${t.id}', 10)" class="text-green-500 hover:bg-green-100 p-1 rounded"><i class="fas fa-plus"></i></button>
+                                <button onclick="game.manualUpdateScore('${t.id}', -10)" class="text-red-500 hover:bg-red-100 p-1 rounded"><i class="fas fa-minus"></i></button>
                             </div>
                         </div>
                     `).join('');
                 }
-
-                // Host List
-                const hostList = document.getElementById('host-score-list');
-                if (hostList) {
-                    hostList.innerHTML = teams.map((t, idx) => `
-                        <div class="flex justify-between items-center bg-slate-700/50 p-4 rounded-lg border-l-4 ${idx === 0 ? 'border-yellow-400' : 'border-indigo-500'}">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center font-bold text-sm">${idx + 1}</div>
-                                <span class="font-bold text-lg text-white">${t.name}</span>
-                            </div>
-                            <span class="text-2xl font-black ${idx === 0 ? 'text-yellow-400' : 'text-indigo-300'}">${t.score}</span>
+                
+                // Host Ticker
+                const hostTicker = document.getElementById('host-score-ticker');
+                if (hostTicker) {
+                    hostTicker.innerHTML = teams.map((t, i) => `
+                        <div class="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg border border-slate-700">
+                            <div class="w-6 h-6 bg-${i===0?'yellow-500':'slate-600'} rounded-full flex items-center justify-center text-xs font-bold text-white">${i+1}</div>
+                            <span class="font-bold text-indigo-200">${t.name}</span>
+                            <span class="font-black text-white text-xl">${t.score}</span>
                         </div>
                     `).join('');
                 }
@@ -464,132 +566,211 @@
                 // Client My Score
                 if (currentRole === 'client' && myTeamId) {
                     const myTeam = teams.find(t => t.id === myTeamId);
-                    if (myTeam) {
-                        document.getElementById('client-my-score').innerText = myTeam.score;
-                    }
+                    if (myTeam) document.getElementById('client-my-score').innerText = myTeam.score;
                 }
             },
 
-            // --- Actions (Triggers Write to Firestore) ---
+            // --- Database Actions ---
             
-            // Client Action
-            buzz: async () => {
-                if (window.game.state.status !== 'open') return;
+            // ADMIN: Save Question
+            saveToBank: async () => {
+                const cat = document.getElementById('admin-q-category').value;
+                const q = document.getElementById('admin-q-text').value;
+                const a = document.getElementById('admin-q-answer').value;
+
+                if (!q || !a) return alert("Isi soal dan jawaban!");
+
+                const statusEl = document.getElementById('admin-save-status');
+                statusEl.innerText = "Menyimpan...";
                 
-                // Optimistic UI update (optional, but good for feeling responsive)
+                await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions'), {
+                    category: cat,
+                    question: q,
+                    answer: a,
+                    createdAt: serverTimestamp()
+                });
+
+                statusEl.innerText = "Tersimpan!";
+                document.getElementById('admin-q-text').value = "";
+                document.getElementById('admin-q-answer').value = "";
+                setTimeout(() => statusEl.innerText = "", 2000);
+            },
+
+            // HOST: Load Questions
+            loadQuestions: async (category) => {
+                if (!category) return;
+                const qList = document.getElementById('host-question-list');
+                qList.innerHTML = '<div class="text-center mt-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>';
+                
+                const qRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions');
+                const qQuery = query(qRef, where("category", "==", category), orderBy("createdAt", "desc"));
+                
+                const snapshot = await getDocs(qQuery);
+                qList.innerHTML = "";
+                
+                if (snapshot.empty) {
+                    qList.innerHTML = '<div class="text-center mt-4 text-gray-500">Tidak ada soal di kategori ini</div>';
+                    return;
+                }
+
+                snapshot.forEach(d => {
+                    const data = d.data();
+                    const el = document.createElement('div');
+                    el.className = "p-3 bg-slate-700 hover:bg-slate-600 rounded cursor-pointer border border-slate-600 hover:border-indigo-400 transition group";
+                    el.onclick = () => window.game.stageQuestion(data.question, data.answer);
+                    el.innerHTML = `
+                        <div class="text-sm text-white line-clamp-2 font-medium">${data.question}</div>
+                        <div class="text-xs text-green-400 mt-1 hidden group-hover:block">Jwb: ${data.answer}</div>
+                    `;
+                    qList.appendChild(el);
+                });
+            },
+
+            // HOST: Stage Question (Local Pre-select)
+            stageQuestion: (q, a) => {
+                // Update Local UI
+                document.getElementById('host-active-q').innerText = q;
+                const ansEl = document.getElementById('host-active-a');
+                ansEl.classList.remove('hidden');
+                ansEl.querySelector('span').innerText = a;
+
+                // Save to Firestore so admin/others know current targeted question
+                setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    currentQuestion: q,
+                    currentAnswer: a,
+                    status: 'idle', // Reset status
+                    isTyping: false,
+                    winner: null,
+                    lockedTeams: []
+                }, { merge: true });
+            },
+
+            // HOST: Trigger Typewriter Effect (Lempar Soal)
+            displayQuestionWithTypewriter: async () => {
+                const qText = document.getElementById('host-active-q').innerText;
+                if (!qText || qText.includes("Belum ada")) return alert("Pilih soal dulu!");
+
+                // Set status open AND typing true
+                // Note: We use merge:true to keep currentQuestion intact
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    status: 'open',
+                    isTyping: true, // Trigger client animation
+                    winner: null
+                    // lockedTeams is NOT cleared here if resuming? 
+                    // No, usually "Lempar Soal" implies new round or resume.
+                    // If it is a new question, lockedTeams was cleared in stageQuestion.
+                    // If it is a resume after wrong answer, we keep lockedTeams.
+                });
+                audioSys.playTone(600, 'sine', 0.2); // Start chime
+            },
+
+            // HOST: Activate Buzzer Only (Instant Show)
+            activateBuzzer: async () => {
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    status: 'open',
+                    isTyping: false, // Show full text instantly (logic needs client to handle this if not typing)
+                    winner: null
+                });
+                // Force client to show full text if not typing
+                // Client logic handles: if !isTyping, we assume full text is shown or static.
+                // In this simplified version, client typewriter only runs if isTyping=true. 
+                // If isTyping=false, client just shows empty? 
+                // Correction: Client should show full text if isTyping is false but status is open/locked?
+                // Let's keep it simple: Client always shows `currentQuestion` in DOM. 
+                // The Typewriter just appends char by char. 
+                // If we want instant, we rely on the HandleStateUpdate logic:
+                // "If data.currentQuestion !== currentFullText -> reset".
+                // If we want instant show, we need a flag or just let the text render naturally.
+                // For this implementation, "Efek Ketik" clears text and types.
+                // "Buka Bel" just opens buzzer. Assuming text is already there or we don't care about effect.
+                audioSys.playCorrect();
+            },
+
+            // CLIENT: Buzz
+            buzz: async () => {
+                const state = window.game.state;
+                if (state.status !== 'open') return;
+                if (state.lockedTeams && state.lockedTeams.includes(myTeamId)) return;
+
                 document.getElementById('client-buzzer-btn').classList.add('scale-95');
 
-                try {
-                    // Use a transaction or simple check-and-set. 
-                    // For simplicity in this demo, we assume the backend (Firestore rule or first-come logic) handles it, 
-                    // but here we check client side state first to save bandwidth.
-                    // We write to 'winner' field. Only if it's currently null.
-                    
-                    // Note: In a production app, use Firestore Transactions to prevent race conditions perfectly.
-                    // Here we rely on the host respecting the first update seen or a simple update check.
-                    
-                    // We will update the state document directly.
-                    const stateRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main');
-                    
-                    // We rely on the "status" being open.
-                    // We attempt to set the winner. If another client set it ms before, our UI will update via snapshot.
-                    await updateDoc(stateRef, {
-                        status: 'locked',
-                        winner: {
-                            id: myTeamId,
-                            name: document.getElementById('client-team-name').innerText,
-                            timestamp: serverTimestamp()
-                        }
-                    });
-                } catch (e) {
-                    console.log("Buzz failed or closed", e);
-                }
-            },
-
-            // Admin/Host Actions
-            updateQuestion: async () => {
-                const text = document.getElementById('admin-question-text').value;
-                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
-                    currentQuestion: text
-                }, { merge: true });
-            },
-
-            activateBuzzer: async () => {
-                // Reset winner, set status open
-                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
-                    status: 'open',
-                    winner: null
-                }, { merge: true });
-                audioSys.playCorrect(); // Sound cue that buzzer is open
-            },
-
-            lockBuzzer: async () => {
+                // STOP TYPING immediately on server (updates all clients)
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
-                    status: 'locked'
+                    status: 'locked',
+                    isTyping: false, // Stop typing everywhere
+                    winner: {
+                        id: myTeamId,
+                        name: document.getElementById('client-team-name').innerText,
+                        timestamp: serverTimestamp()
+                    }
                 });
             },
 
-            resetBuzzer: async () => {
-                // Close modal, reset winner, keep question
-                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
-                    status: 'idle',
-                    winner: null
-                });
-            },
-
+            // HOST: Award Points
             awardPoints: async (points) => {
                 const winnerId = window.game.state.winner?.id;
                 if (!winnerId) return;
 
-                // 1. Get current score
-                // In a real app, use increment(), but we need to read first to be safe or use increment directly
+                // Update Score
                 const teamRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'teams', winnerId);
-                
-                // Using Firestore increment for atomic update
                 const { increment } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-                
-                await updateDoc(teamRef, {
-                    score: increment(points)
-                });
+                await updateDoc(teamRef, { score: increment(points) });
 
-                // 2. Reset buzzer after scoring
-                await window.game.resetBuzzer();
+                if (points > 0) {
+                    // Correct -> Finish
+                    audioSys.playCorrect();
+                    await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                        status: 'idle',
+                        winner: null,
+                        isTyping: false
+                    });
+                } else {
+                    // Wrong -> Resume (Lempar Soal)
+                    audioSys.playWrong();
+                    
+                    // Resume logic: Open buzzer, resume typing
+                    await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                        status: 'open',
+                        winner: null,
+                        lockedTeams: arrayUnion(winnerId), // Lock wrong team
+                        isTyping: true // Resume typing if not finished
+                    });
+                }
             },
 
-            manualScore: async (teamId, newScore) => {
-                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'teams', teamId), {
-                    score: parseInt(newScore)
-                });
+            manualUpdateScore: async (id, val) => {
+                 const teamRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'teams', id);
+                 const { increment } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                 await updateDoc(teamRef, { score: increment(val) });
             },
-
+            
             resetScores: async () => {
-                if(!confirm("Yakin reset semua skor tim?")) return;
-                const snapshot = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'teams'));
-                const batch = writeBatch(db); // Need writeBatch import or just loop
-                // Simple loop for this demo
-                snapshot.forEach(d => {
-                    updateDoc(d.ref, { score: 0 });
+                if(!confirm("Reset semua skor?")) return;
+                const { getDocs, writeBatch } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                // Simplified reset
+                const q = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'teams'));
+                q.forEach(d => updateDoc(d.ref, {score:0}));
+            },
+
+            resetBuzzer: async () => {
+                 await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    status: 'idle', winner: null, isTyping: false
                 });
             },
 
             toggleSound: () => {
                 isMuted = !isMuted;
-                const btn = document.getElementById('sound-toggle');
-                btn.innerHTML = isMuted ? '<i class="fas fa-volume-mute text-red-400"></i>' : '<i class="fas fa-volume-up"></i>';
+                document.getElementById('sound-toggle').innerHTML = isMuted ? '<i class="fas fa-volume-mute text-red-400"></i>' : '<i class="fas fa-volume-up"></i>';
             }
         };
 
-        // Listen for auth state
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('connection-status').innerText = "Terhubung ke Server ✅";
-                document.getElementById('connection-status').classList.replace('text-orange-500', 'text-green-500');
-            } else {
-                currentUser = null;
+        onAuthStateChanged(auth, u => {
+            if(u) {
+                currentUser = u;
+                document.getElementById('connection-status').innerText = "Terhubung ✅";
+                document.getElementById('connection-status').className = "mt-4 text-xs text-green-600 font-bold";
             }
         });
-
     </script>
 </body>
 </html>
