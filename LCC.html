@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Cerdas Cermat Realtime</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        
+        /* Animasi Bel */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        
+        .buzzer-btn-active {
+            animation: pulse-ring 2s infinite;
+        }
+
+        .buzzer-hit {
+            animation: bounce 0.5s ease infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        /* Modal Winner */
+        .winner-overlay {
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex flex-col">
+
+    <!-- Auth / Setup Screen -->
+    <div id="setup-screen" class="flex-1 flex flex-col items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border-t-4 border-blue-600">
+            <h1 class="text-3xl font-bold mb-6 text-blue-700"><i class="fas fa-graduation-cap"></i> Cerdas Cermat</h1>
+            <p class="mb-6 text-gray-500 text-sm">Silakan pilih peran Anda untuk bergabung ke dalam sistem.</p>
+            
+            <div class="space-y-3">
+                <button onclick="app.selectRole('admin')" class="w-full py-3 px-4 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                    <i class="fas fa-cog"></i> Masuk sebagai Admin
+                </button>
+                <button onclick="app.selectRole('host')" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                    <i class="fas fa-tv"></i> Masuk sebagai Host/Juri
+                </button>
+                <div class="border-t pt-4 mt-2">
+                    <input type="text" id="team-name-input" placeholder="Nama Tim (Contoh: Regu A)" class="w-full p-3 border border-gray-300 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <button onclick="app.selectRole('client')" class="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-lg hover:shadow-green-500/30">
+                        <i class="fas fa-users"></i> Masuk sebagai Peserta
+                    </button>
+                </div>
+            </div>
+            <p id="connection-status" class="mt-4 text-xs text-orange-500 font-mono">Menunggu koneksi server...</p>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="hidden h-full flex flex-col">
+        <header class="bg-slate-800 text-white p-4 flex justify-between items-center shadow-md">
+            <h2 class="text-xl font-bold"><i class="fas fa-cog"></i> Panel Admin</h2>
+            <button onclick="location.reload()" class="text-xs bg-red-500 hover:bg-red-600 px-3 py-1 rounded">Logout</button>
+        </header>
+        <div class="flex-1 overflow-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Settings -->
+            <div class="bg-white p-6 rounded-xl shadow-sm">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2">Kontrol Game</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="game.resetBuzzer()" class="p-3 bg-yellow-500 text-white rounded hover:bg-yellow-600 font-bold">
+                        <i class="fas fa-undo"></i> Reset Bel
+                    </button>
+                    <button onclick="game.resetScores()" class="p-3 bg-red-600 text-white rounded hover:bg-red-700 font-bold">
+                        <i class="fas fa-trash"></i> Reset Semua Skor
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm font-bold mb-1">Set Pertanyaan Aktif</label>
+                    <textarea id="admin-question-text" class="w-full p-2 border rounded" rows="3" placeholder="Ketik soal di sini..."></textarea>
+                    <button onclick="game.updateQuestion()" class="mt-2 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Update Soal ke Layar</button>
+                </div>
+            </div>
+
+            <!-- Team Management -->
+            <div class="bg-white p-6 rounded-xl shadow-sm">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2">Daftar Tim & Skor</h3>
+                <div id="admin-team-list" class="space-y-2 max-h-64 overflow-y-auto">
+                    <!-- Teams injected here -->
+                    <div class="text-gray-400 text-center italic">Belum ada tim bergabung</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Host / Juri Panel -->
+    <div id="host-panel" class="hidden h-full flex flex-col bg-slate-900 text-white">
+        <header class="bg-black/30 p-4 flex justify-between items-center backdrop-blur-sm">
+            <div class="text-sm font-mono text-indigo-400">HOST MODE</div>
+            <div class="flex gap-2">
+                <button onclick="game.toggleSound()" id="sound-toggle" class="bg-white/10 p-2 rounded hover:bg-white/20"><i class="fas fa-volume-up"></i></button>
+            </div>
+        </header>
+
+        <div class="flex-1 flex flex-col md:flex-row">
+            <!-- Main Display Area -->
+            <div class="flex-1 flex flex-col items-center justify-center p-8 text-center relative">
+                
+                <!-- Status Badge -->
+                <div id="host-status-badge" class="mb-6 px-4 py-1 rounded-full text-sm font-bold bg-gray-700 text-gray-300">
+                    MENUNGGU SOAL
+                </div>
+
+                <!-- Question -->
+                <div id="host-question-display" class="text-3xl md:text-5xl font-bold leading-tight mb-8 drop-shadow-lg">
+                    Selamat Datang di Lomba Cerdas Cermat
+                </div>
+
+                <!-- Controls -->
+                <div class="flex gap-4 mt-8 z-10">
+                    <button onclick="game.activateBuzzer()" class="px-8 py-4 bg-green-500 hover:bg-green-600 text-white text-xl font-bold rounded-xl shadow-lg transform hover:scale-105 transition">
+                        <i class="fas fa-play"></i> MULAI BEL
+                    </button>
+                    <button onclick="game.lockBuzzer()" class="px-8 py-4 bg-red-500 hover:bg-red-600 text-white text-xl font-bold rounded-xl shadow-lg transform hover:scale-105 transition">
+                        <i class="fas fa-stop"></i> STOP / KUNCI
+                    </button>
+                </div>
+            </div>
+
+            <!-- Score Sidebar -->
+            <div class="w-full md:w-80 bg-slate-800 border-l border-slate-700 p-6 overflow-y-auto">
+                <h3 class="text-xl font-bold mb-4 text-indigo-400 border-b border-indigo-500/30 pb-2">Papan Skor</h3>
+                <div id="host-score-list" class="space-y-3">
+                    <!-- Scores injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client / Peserta Panel -->
+    <div id="client-panel" class="hidden h-full flex flex-col bg-slate-50 relative">
+        <div class="absolute top-4 left-4 bg-white px-4 py-2 rounded-full shadow font-bold text-blue-600">
+            <i class="fas fa-user-shield"></i> <span id="client-team-name">Tim Saya</span>
+        </div>
+        <div class="absolute top-4 right-4 bg-white px-4 py-2 rounded-full shadow font-bold text-green-600">
+            Skor: <span id="client-my-score">0</span>
+        </div>
+
+        <div class="flex-1 flex flex-col items-center justify-center p-6">
+            <!-- Question Display for Client -->
+            <div class="mb-10 w-full max-w-2xl text-center bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pertanyaan</h4>
+                <p id="client-question-text" class="text-xl font-medium text-slate-800">Menunggu pertanyaan...</p>
+            </div>
+
+            <!-- THE BIG BUTTON -->
+            <div class="relative">
+                <div id="buzzer-status-text" class="absolute -top-12 left-0 right-0 text-center font-bold text-gray-400 animate-pulse">
+                    TOMBOL TERKUNCI
+                </div>
+                <button id="client-buzzer-btn" onmousedown="game.buzz()" ontouchstart="game.buzz()" disabled 
+                    class="w-64 h-64 rounded-full bg-gray-300 shadow-[0_10px_0_rgb(156,163,175)] border-8 border-gray-200 
+                           flex items-center justify-center transition-all duration-100 transform active:scale-95 active:shadow-none
+                           disabled:cursor-not-allowed text-white text-4xl font-extrabold">
+                    <i class="fas fa-hand-pointer text-6xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Winner Overlay (Hidden by default) -->
+    <div id="winner-overlay" class="hidden fixed inset-0 winner-overlay z-50 flex flex-col items-center justify-center text-white">
+        <div class="text-2xl font-light mb-4 tracking-widest uppercase">Tim Tercepat</div>
+        <div id="winner-name" class="text-6xl md:text-8xl font-black text-yellow-400 drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)] scale-150 transition-transform duration-500">
+            REGU A
+        </div>
+        <div class="mt-12 flex gap-4">
+            <!-- Host Controls Only Visible to Host -->
+            <div id="host-winner-controls" class="hidden flex gap-4">
+                <button onclick="game.awardPoints(100)" class="bg-green-500 hover:bg-green-600 px-6 py-3 rounded-lg font-bold shadow-lg">
+                    <i class="fas fa-check"></i> Benar (+100)
+                </button>
+                <button onclick="game.awardPoints(-50)" class="bg-red-500 hover:bg-red-600 px-6 py-3 rounded-lg font-bold shadow-lg">
+                    <i class="fas fa-times"></i> Salah (-50)
+                </button>
+                <button onclick="game.resetBuzzer()" class="bg-gray-500 hover:bg-gray-600 px-6 py-3 rounded-lg font-bold shadow-lg">
+                    Tutup
+                </button>
+            </div>
+             <!-- Admin Close Button -->
+             <div id="admin-winner-controls" class="hidden">
+                <button onclick="game.resetBuzzer()" class="bg-gray-500 hover:bg-gray-600 px-6 py-3 rounded-lg font-bold shadow-lg">
+                    Tutup Overlay
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4t1Gya_QHDzTkYsF7U-pw1Uo1oQUABpM",
+            authDomain: "websitemarkaz.firebaseapp.com",
+            databaseURL: "https://websitemarkaz-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "websitemarkaz",
+            storageBucket: "websitemarkaz.firebasestorage.app",
+            messagingSenderId: "5529883980",
+            appId: "1:5529883980:web:792ce6d869070e9a79ebe9"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // App ID logic
+        const APP_ID = "lcc_session_v1"; 
+
+        // Global State
+        let currentUser = null;
+        let currentRole = null;
+        let myTeamId = null;
+        let audioContext = null;
+        let isMuted = false;
+
+        // --- Audio System (Web Audio API - No External Files) ---
+        const audioSys = {
+            init: () => {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            },
+            playBuzzer: () => {
+                if (isMuted || !audioContext) return;
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(440, audioContext.currentTime); // A4
+                osc.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.1);
+                
+                gain.gain.setValueAtTime(0.5, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
+
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.start();
+                osc.stop(audioContext.currentTime + 1.5);
+            },
+            playCorrect: () => {
+                if (isMuted || !audioContext) return;
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioContext.currentTime);
+                osc.frequency.setValueAtTime(1200, audioContext.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.5);
+            }
+        };
+
+        // --- Application Logic ---
+        window.app = {
+            selectRole: async (role) => {
+                const teamNameInput = document.getElementById('team-name-input');
+                
+                if (role === 'client') {
+                    if (!teamNameInput.value.trim()) {
+                        alert("Harap masukkan Nama Tim!");
+                        return;
+                    }
+                }
+
+                audioSys.init(); // Init audio on first interaction
+
+                try {
+                    document.getElementById('connection-status').innerText = "Menghubungkan...";
+                    
+                    if (!currentUser) {
+                        await signInAnonymously(auth);
+                    }
+                    
+                    currentRole = role;
+
+                    // Setup User/Team Data
+                    if (role === 'client') {
+                        myTeamId = currentUser.uid;
+                        // Register team in Firestore
+                        await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'teams', myTeamId), {
+                            name: teamNameInput.value.trim(),
+                            score: 0,
+                            joinedAt: serverTimestamp()
+                        }, { merge: true }); // Merge to not overwrite score if rejoining
+                        
+                        document.getElementById('client-team-name').innerText = teamNameInput.value.trim();
+                    }
+
+                    // Switch UI
+                    document.getElementById('setup-screen').classList.add('hidden');
+                    if (role === 'admin') document.getElementById('admin-panel').classList.remove('hidden');
+                    else if (role === 'host') document.getElementById('host-panel').classList.remove('hidden');
+                    else if (role === 'client') document.getElementById('client-panel').classList.remove('hidden');
+
+                    // Start Listeners
+                    window.game.initListeners();
+
+                } catch (error) {
+                    console.error(error);
+                    alert("Gagal koneksi ke server: " + error.message);
+                }
+            }
+        };
+
+        // --- Game Logic & Firestore ---
+        window.game = {
+            state: {
+                buzzerActive: false,
+                currentQuestion: "",
+                winner: null
+            },
+
+            initListeners: () => {
+                // Listener 1: Game State (Question, Buzzer Status)
+                onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), (docSnap) => {
+                    const data = docSnap.exists() ? docSnap.data() : {};
+                    window.game.handleStateUpdate(data);
+                }, (error) => console.error("State Error", error));
+
+                // Listener 2: Teams (Scores)
+                onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'teams'), (snapshot) => {
+                    const teams = [];
+                    snapshot.forEach(doc => teams.push({ id: doc.id, ...doc.data() }));
+                    // Sort by score descending
+                    teams.sort((a, b) => (b.score || 0) - (a.score || 0));
+                    window.game.renderScores(teams);
+                }, (error) => console.error("Teams Error", error));
+            },
+
+            handleStateUpdate: (data) => {
+                window.game.state = data;
+                
+                // Update Questions Text
+                const qText = data.currentQuestion || "Menunggu soal...";
+                if (document.getElementById('host-question-display')) 
+                    document.getElementById('host-question-display').innerText = qText;
+                if (document.getElementById('client-question-text')) 
+                    document.getElementById('client-question-text').innerText = qText;
+                if (document.getElementById('admin-question-text') && document.activeElement.id !== 'admin-question-text') 
+                    document.getElementById('admin-question-text').value = data.currentQuestion || "";
+
+                // Handle Buzzer Active/Inactive
+                const clientBtn = document.getElementById('client-buzzer-btn');
+                const statusBadge = document.getElementById('host-status-badge');
+                const buzzerText = document.getElementById('buzzer-status-text');
+
+                if (data.status === 'open') {
+                    // Buzzer Open
+                    if (clientBtn) {
+                        clientBtn.disabled = false;
+                        clientBtn.classList.remove('bg-gray-300', 'shadow-[0_10px_0_rgb(156,163,175)]');
+                        clientBtn.classList.add('bg-red-500', 'shadow-[0_10px_0_rgb(185,28,28)]', 'buzzer-btn-active');
+                    }
+                    if (statusBadge) {
+                        statusBadge.innerText = "BEL DIBUKA - SILAKAN TEKAN";
+                        statusBadge.className = "mb-6 px-4 py-1 rounded-full text-sm font-bold bg-green-500 text-white animate-pulse";
+                    }
+                    if (buzzerText) {
+                        buzzerText.innerText = "TEKAN SEKARANG!";
+                        buzzerText.className = "absolute -top-12 left-0 right-0 text-center font-bold text-red-500 animate-bounce text-xl";
+                    }
+                } else {
+                    // Buzzer Locked
+                    if (clientBtn) {
+                        clientBtn.disabled = true;
+                        clientBtn.classList.add('bg-gray-300', 'shadow-[0_10px_0_rgb(156,163,175)]');
+                        clientBtn.classList.remove('bg-red-500', 'shadow-[0_10px_0_rgb(185,28,28)]', 'buzzer-btn-active');
+                    }
+                    if (statusBadge) {
+                        statusBadge.innerText = "BEL TERKUNCI";
+                        statusBadge.className = "mb-6 px-4 py-1 rounded-full text-sm font-bold bg-gray-700 text-gray-300";
+                    }
+                    if (buzzerText) {
+                        buzzerText.innerText = "TOMBOL TERKUNCI";
+                        buzzerText.className = "absolute -top-12 left-0 right-0 text-center font-bold text-gray-400";
+                    }
+                }
+
+                // Handle Winner
+                const winnerOverlay = document.getElementById('winner-overlay');
+                if (data.winner) {
+                    document.getElementById('winner-name').innerText = data.winner.name;
+                    winnerOverlay.classList.remove('hidden');
+                    
+                    // Show controls based on role
+                    if(currentRole === 'host') document.getElementById('host-winner-controls').classList.remove('hidden');
+                    if(currentRole === 'admin') document.getElementById('admin-winner-controls').classList.remove('hidden');
+
+                    // Play sound only once per winner trigger (simple logic: check if newly displayed)
+                    if (winnerOverlay.dataset.lastWinner !== data.winner.id) {
+                        audioSys.playBuzzer();
+                        winnerOverlay.dataset.lastWinner = data.winner.id;
+                    }
+                } else {
+                    winnerOverlay.classList.add('hidden');
+                    document.getElementById('host-winner-controls').classList.add('hidden');
+                    document.getElementById('admin-winner-controls').classList.add('hidden');
+                    winnerOverlay.dataset.lastWinner = "";
+                }
+            },
+
+            renderScores: (teams) => {
+                // Admin List
+                const adminList = document.getElementById('admin-team-list');
+                if (adminList) {
+                    adminList.innerHTML = teams.map(t => `
+                        <div class="flex justify-between items-center bg-gray-100 p-3 rounded">
+                            <span class="font-bold">${t.name}</span>
+                            <div class="flex items-center gap-2">
+                                <input type="number" value="${t.score}" onchange="game.manualScore('${t.id}', this.value)" class="w-16 p-1 border rounded text-center">
+                                <span class="text-sm text-gray-500">pts</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Host List
+                const hostList = document.getElementById('host-score-list');
+                if (hostList) {
+                    hostList.innerHTML = teams.map((t, idx) => `
+                        <div class="flex justify-between items-center bg-slate-700/50 p-4 rounded-lg border-l-4 ${idx === 0 ? 'border-yellow-400' : 'border-indigo-500'}">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center font-bold text-sm">${idx + 1}</div>
+                                <span class="font-bold text-lg text-white">${t.name}</span>
+                            </div>
+                            <span class="text-2xl font-black ${idx === 0 ? 'text-yellow-400' : 'text-indigo-300'}">${t.score}</span>
+                        </div>
+                    `).join('');
+                }
+
+                // Client My Score
+                if (currentRole === 'client' && myTeamId) {
+                    const myTeam = teams.find(t => t.id === myTeamId);
+                    if (myTeam) {
+                        document.getElementById('client-my-score').innerText = myTeam.score;
+                    }
+                }
+            },
+
+            // --- Actions (Triggers Write to Firestore) ---
+            
+            // Client Action
+            buzz: async () => {
+                if (window.game.state.status !== 'open') return;
+                
+                // Optimistic UI update (optional, but good for feeling responsive)
+                document.getElementById('client-buzzer-btn').classList.add('scale-95');
+
+                try {
+                    // Use a transaction or simple check-and-set. 
+                    // For simplicity in this demo, we assume the backend (Firestore rule or first-come logic) handles it, 
+                    // but here we check client side state first to save bandwidth.
+                    // We write to 'winner' field. Only if it's currently null.
+                    
+                    // Note: In a production app, use Firestore Transactions to prevent race conditions perfectly.
+                    // Here we rely on the host respecting the first update seen or a simple update check.
+                    
+                    // We will update the state document directly.
+                    const stateRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main');
+                    
+                    // We rely on the "status" being open.
+                    // We attempt to set the winner. If another client set it ms before, our UI will update via snapshot.
+                    await updateDoc(stateRef, {
+                        status: 'locked',
+                        winner: {
+                            id: myTeamId,
+                            name: document.getElementById('client-team-name').innerText,
+                            timestamp: serverTimestamp()
+                        }
+                    });
+                } catch (e) {
+                    console.log("Buzz failed or closed", e);
+                }
+            },
+
+            // Admin/Host Actions
+            updateQuestion: async () => {
+                const text = document.getElementById('admin-question-text').value;
+                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    currentQuestion: text
+                }, { merge: true });
+            },
+
+            activateBuzzer: async () => {
+                // Reset winner, set status open
+                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    status: 'open',
+                    winner: null
+                }, { merge: true });
+                audioSys.playCorrect(); // Sound cue that buzzer is open
+            },
+
+            lockBuzzer: async () => {
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    status: 'locked'
+                });
+            },
+
+            resetBuzzer: async () => {
+                // Close modal, reset winner, keep question
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    status: 'idle',
+                    winner: null
+                });
+            },
+
+            awardPoints: async (points) => {
+                const winnerId = window.game.state.winner?.id;
+                if (!winnerId) return;
+
+                // 1. Get current score
+                // In a real app, use increment(), but we need to read first to be safe or use increment directly
+                const teamRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'teams', winnerId);
+                
+                // Using Firestore increment for atomic update
+                const { increment } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                
+                await updateDoc(teamRef, {
+                    score: increment(points)
+                });
+
+                // 2. Reset buzzer after scoring
+                await window.game.resetBuzzer();
+            },
+
+            manualScore: async (teamId, newScore) => {
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'teams', teamId), {
+                    score: parseInt(newScore)
+                });
+            },
+
+            resetScores: async () => {
+                if(!confirm("Yakin reset semua skor tim?")) return;
+                const snapshot = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'teams'));
+                const batch = writeBatch(db); // Need writeBatch import or just loop
+                // Simple loop for this demo
+                snapshot.forEach(d => {
+                    updateDoc(d.ref, { score: 0 });
+                });
+            },
+
+            toggleSound: () => {
+                isMuted = !isMuted;
+                const btn = document.getElementById('sound-toggle');
+                btn.innerHTML = isMuted ? '<i class="fas fa-volume-mute text-red-400"></i>' : '<i class="fas fa-volume-up"></i>';
+            }
+        };
+
+        // Listen for auth state
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('connection-status').innerText = "Terhubung ke Server ✅";
+                document.getElementById('connection-status').classList.replace('text-orange-500', 'text-green-500');
+            } else {
+                currentUser = null;
+            }
+        });
+
+    </script>
+</body>
+</html>
