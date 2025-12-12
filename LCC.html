@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Cerdas Cermat v.2.6</title>
+    <title>Aplikasi Cerdas Cermat v.2.6.1</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -277,7 +277,33 @@
 
             <!-- Team & Control -->
             <div class="bg-white p-6 rounded-xl shadow-sm flex flex-col h-full">
-                <h3 class="font-bold text-lg mb-4 border-b pb-2">Manajemen Tim</h3>
+                <h3 class="font-bold text-lg mb-4 border-b pb-2 text-slate-700"><i class="fas fa-sliders-h"></i> Aturan Main</h3>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Timer (Detik)</label>
+                        <input type="number" id="conf-timer" class="w-full border p-2 rounded text-sm font-mono font-bold bg-gray-50" value="15">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Mode Soal</label>
+                        <select id="conf-mode" class="w-full border p-2 rounded text-sm bg-gray-50">
+                            <option value="manual">Manual (Pilih Host)</option>
+                            <option value="auto">Otomatis (Acak)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-green-600 mb-1">Poin Benar (+)</label>
+                        <input type="number" id="conf-poin-plus" class="w-full border border-green-200 p-2 rounded text-sm font-bold text-green-700 bg-green-50" value="100">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-red-600 mb-1">Poin Salah (-)</label>
+                        <input type="number" id="conf-poin-min" class="w-full border border-red-200 p-2 rounded text-sm font-bold text-red-700 bg-red-50" value="-50">
+                    </div>
+                </div>
+                <button onclick="game.saveGameConfig()" class="w-full py-2 bg-slate-700 hover:bg-slate-800 text-white rounded mb-6 font-bold text-sm shadow">
+                    <i class="fas fa-save"></i> Simpan Konfigurasi
+                </button>
+
+                <h3 class="font-bold text-lg mb-4 border-b pb-2 text-slate-700"><i class="fas fa-users"></i> Manajemen Tim</h3>
                 <div id="admin-team-list" class="space-y-2 flex-1 overflow-y-auto">
                     <div class="text-gray-400 text-center italic">Belum ada tim bergabung</div>
                 </div>
@@ -705,6 +731,22 @@
 
                 const oldState = window.game.state || {};
                 window.game.state = data;
+				
+				// --- UPDATE KOLOM CONFIG ADMIN (Jika ada) ---
+                if (data.config && document.getElementById('conf-timer')) {
+                    // Hanya update jika Admin tidak sedang mengetik (agar tidak konflik)
+                    if(document.activeElement.id !== 'conf-timer') 
+                        document.getElementById('conf-timer').value = data.config.timerDuration || 15;
+                    
+                    if(document.activeElement.id !== 'conf-mode')
+                        document.getElementById('conf-mode').value = data.config.gameMode || 'manual';
+
+                    if(document.activeElement.id !== 'conf-poin-plus')
+                        document.getElementById('conf-poin-plus').value = data.config.pointCorrect || 100;
+
+                    if(document.activeElement.id !== 'conf-poin-min')
+                        document.getElementById('conf-poin-min').value = data.config.pointWrong || -50;
+                }
 
                 // --- 2. RENDER LIST BABAK DI ADMIN ---
                 if (document.getElementById('admin-round-list')) {
@@ -1411,6 +1453,27 @@
 					lockedTeams: [] // <--- TAMBAHAN PENTING: Reset daftar terkunci
                 });
                 audioSys.playCorrect();
+            },
+			
+			// Admin: Simpan Konfigurasi Game (Timer, Poin, Mode)
+            saveGameConfig: async () => {
+                if(!confirm("Simpan perubahan aturan main?")) return;
+                
+                const timer = parseInt(document.getElementById('conf-timer').value) || 15;
+                const ptsPlus = parseInt(document.getElementById('conf-poin-plus').value) || 100;
+                const ptsMin = parseInt(document.getElementById('conf-poin-min').value) || -50;
+                const mode = document.getElementById('conf-mode').value;
+
+                // Simpan ke database 'gameState' agar bisa dibaca Host/Client
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    config: {
+                        timerDuration: timer,
+                        pointCorrect: ptsPlus,
+                        pointWrong: ptsMin,
+                        gameMode: mode
+                    }
+                });
+                alert("Aturan permainan berhasil disimpan!");
             },
 
             buzz: async () => {
