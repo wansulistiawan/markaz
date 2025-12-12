@@ -464,8 +464,8 @@
             </div>
 
         <button onclick="document.getElementById('round-summary-overlay').classList.add('hidden')" class="mt-8 px-6 py-2 border border-white/20 rounded hover:bg-white/10 text-sm font-mono text-gray-400">
-            Tutup Tampilan
-        </button>
+    Tutup Tampilan
+</button>
     </div>
 
     <!-- Firebase SDKs -->
@@ -1403,9 +1403,13 @@
             },
 
             resetBuzzer: async () => {
-				if(currentRole === 'host') window.game.stopTimer();
-                 await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
-                    status: 'idle', winner: null, isTyping: false
+                if(currentRole === 'host') window.game.stopTimer();
+                
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    status: 'idle', 
+                    winner: null, 
+                    isTyping: false,
+                    showRoundSummary: false // <--- TAMBAHAN: Paksa overlay hilang saat reset bel
                 });
             },
 			
@@ -1475,7 +1479,7 @@
                     isGameActive: isActive,
                     currentQuestion: isActive ? "PERMAINAN DIMULAI!" : "PERMAINAN SELESAI",
                     status: 'idle',
-                    showRoundSummary: false // <--- PERBAIKAN: Matikan overlay saat mulai/stop
+                    showRoundSummary: false // <--- Pastikan ini ada
                 });
             },
 
@@ -1511,8 +1515,7 @@
                     roundConfig: nextRound, // Update config aktif
                     currentQuestion: `BABAK ${nextIdx + 1}:\n${nextRound.name}`,
                     status: 'idle',
-                    currentQuestionNumber: 0, // Reset counter soal
-					showRoundSummary: false
+                    currentQuestionNumber: 0 // Reset counter soal
                 });
             },
 			
@@ -1551,7 +1554,20 @@
                     showRoundSummary: true,
                     status: 'idle'
                 });
+            },
+			
+			forceCloseSummary: async () => {
+                // Sembunyikan lokal dulu biar cepat
+                document.getElementById('round-summary-overlay').classList.add('hidden');
+                
+                // Jika Admin/Host, update ke DB agar hilang di semua client
+                if (currentRole === 'admin' || currentRole === 'host') {
+                    await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                        showRoundSummary: false
+                    });
+                }
             }
+			
         };
 
         onAuthStateChanged(auth, u => {
