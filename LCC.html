@@ -45,6 +45,54 @@
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+		
+		/* --- Tambahkan ini di bagian Style --- */
+
+/* Animasi Skor */
+@keyframes score-up-pop {
+    0% { transform: scale(1); color: white; }
+    50% { transform: scale(1.5); color: #4ade80; /* green-400 */ text-shadow: 0 0 10px #4ade80; }
+    100% { transform: scale(1); color: white; }
+}
+
+@keyframes score-down-pop {
+    0% { transform: scale(1); color: white; }
+    50% { transform: scale(1.5); color: #f87171; /* red-400 */ text-shadow: 0 0 10px #f87171; }
+    100% { transform: scale(1); color: white; }
+}
+
+.anim-score-up { animation: score-up-pop 0.8s ease-out; }
+.anim-score-down { animation: score-down-pop 0.8s ease-out; }
+		
+		/* --- Tambahkan di dalam <style> --- */
+        
+        /* Animasi Mahkota */
+        @keyframes float-crown {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+        .crown-icon {
+            animation: float-crown 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px gold);
+        }
+
+        /* Timer Bar */
+        .timer-bar { transition: width 1s linear; }
+        .timer-warning { background-color: #ef4444; } /* Merah */
+		
+		        
+        /* Admin Question List */
+        .admin-q-item { transition: all 0.2s; }
+        .admin-q-item:hover { transform: translateX(5px); border-left-color: #2563eb; }
+        
+        /* Round Counter Badge */
+        .round-badge {
+            background: linear-gradient(45deg, #1e293b, #0f172a);
+            border: 1px solid #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+		
+
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex flex-col">
@@ -88,28 +136,55 @@
     <!-- Admin Panel -->
     <div id="admin-panel" class="hidden h-full flex flex-col">
         <header class="bg-slate-800 text-white p-4 flex justify-between items-center shadow-md">
-            <h2 class="text-xl font-bold"><i class="fas fa-cog"></i> Panel Admin</h2>
-            <div class="flex gap-2">
-                <button onclick="game.resetBuzzer()" class="bg-yellow-500 hover:bg-yellow-600 px-3 py-1 rounded text-xs font-bold">Reset Bel</button>
-                <button onclick="location.reload()" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-xs">Logout</button>
+        <h2 class="text-xl font-bold"><i class="fas fa-cog"></i> Panel Admin</h2>
+        <div class="flex gap-2">
+            <button onclick="game.toggleGameSession(true)" id="btn-start-game" class="bg-green-600 hover:bg-green-700 px-4 py-1 rounded text-sm font-bold">Mulai Game</button>
+            <button onclick="game.toggleGameSession(false)" id="btn-stop-game" class="hidden bg-red-600 hover:bg-red-700 px-4 py-1 rounded text-sm font-bold">Game Over</button>
+            
+            <div class="w-px h-6 bg-gray-600 mx-1"></div>
+            <button onclick="game.resetBuzzer()" class="bg-yellow-500 hover:bg-yellow-600 px-3 py-1 rounded text-xs font-bold text-black">Reset Bel</button>
+        </div>
+    </header>
+
+    <div class="col-span-1 md:col-span-2 bg-white p-4 rounded-xl shadow-sm mb-4 border border-blue-100">
+        <h3 class="font-bold text-blue-800 mb-2"><i class="fas fa-list-ol"></i> Konfigurasi Babak</h3>
+        <div class="flex flex-wrap gap-4 items-end">
+            <div>
+                <label class="text-xs font-bold text-gray-500">Nama Babak</label>
+                <input type="text" id="conf-round-name" class="block w-40 p-2 border rounded text-sm" value="Babak Penyisihan">
             </div>
-        </header>
+            <div>
+                <label class="text-xs font-bold text-gray-500">Jml Pertanyaan</label>
+                <input type="number" id="conf-q-limit" class="block w-20 p-2 border rounded text-sm" value="10">
+            </div>
+            <button onclick="game.saveRoundConfig()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-bold h-10">
+                <i class="fas fa-save"></i> Set Babak
+            </button>
+            <button onclick="game.endRound()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-bold h-10 ml-auto">
+                <i class="fas fa-flag-checkered"></i> Akhiri Babak Ini
+            </button>
+        </div>
+        <div id="active-round-info" class="mt-2 text-xs text-green-600 font-mono"></div>
+    </div>
+	
         <div class="flex-1 overflow-hidden p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             
             <!-- Input Bank Soal -->
-            <div class="bg-white p-6 rounded-xl shadow-sm flex flex-col h-full overflow-hidden">
-                <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800"><i class="fas fa-database"></i> Input Bank Soal</h3>
+            <div class="bg-white p-6 rounded-xl shadow-sm flex flex-col h-full overflow-hidden relative">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800 flex justify-between">
+                    <span><i class="fas fa-database"></i> Bank Soal</span>
+                    <span id="edit-mode-indicator" class="hidden text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Mode Edit</span>
+                </h3>
                 
-                <!-- Tab Switcher -->
                 <div class="flex border-b mb-4">
-                    <button onclick="app.switchTab('single')" id="tab-btn-single" class="flex-1 py-2 border-b-2 border-blue-600 font-bold text-blue-600">Satu Per Satu</button>
-                    <button onclick="app.switchTab('bulk')" id="tab-btn-bulk" class="flex-1 py-2 text-gray-500 hover:text-blue-600">Import Banyak (Bulk)</button>
+                    <button onclick="app.switchTab('single')" id="tab-btn-single" class="flex-1 py-2 border-b-2 border-blue-600 font-bold text-blue-600">Input / Edit</button>
+                    <button onclick="app.switchTab('list')" id="tab-btn-list" class="flex-1 py-2 text-gray-500 hover:text-blue-600">Daftar Soal</button>
                 </div>
 
-                <div class="space-y-4 overflow-y-auto pr-2 flex-1">
-                    <div>
-                        <label class="block text-sm font-bold mb-1">Kategori</label>
-                        <select id="admin-q-category" class="w-full p-2 border rounded bg-gray-50 mb-2">
+                <div id="input-mode-single" class="space-y-3 overflow-y-auto pr-2 flex-1">
+                    <input type="hidden" id="edit-q-id"> <div>
+                        <label class="block text-xs font-bold mb-1">Kategori</label>
+                        <select id="admin-q-category" class="w-full p-2 border rounded bg-gray-50 text-sm">
                             <option value="Pengetahuan Umum">Pengetahuan Umum</option>
                             <option value="Sirah">Sirah</option>
                             <option value="Tauhid">Tauhid</option>
@@ -119,36 +194,33 @@
                             <option value="Lainnya">Lainnya</option>
                         </select>
                     </div>
-
-                    <!-- Single Mode -->
-                    <div id="input-mode-single" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-bold mb-1">Pertanyaan</label>
-                            <textarea id="admin-q-text" class="w-full p-2 border rounded h-24" placeholder="Tulis soal lengkap di sini..."></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold mb-1">Kunci Jawaban</label>
-                            <input type="text" id="admin-q-answer" class="w-full p-2 border rounded" placeholder="Jawaban singkat">
-                        </div>
-                        <button onclick="game.saveToBank()" class="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 font-bold shadow">
-                            <i class="fas fa-save"></i> Simpan Soal
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Pertanyaan</label>
+                        <textarea id="admin-q-text" class="w-full p-2 border rounded h-20 text-sm" placeholder="Tulis soal..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Jawaban</label>
+                        <input type="text" id="admin-q-answer" class="w-full p-2 border rounded text-sm" placeholder="Kunci jawaban...">
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="game.saveToBank()" id="btn-save-q" class="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-bold text-sm">
+                            <i class="fas fa-save"></i> Simpan
+                        </button>
+                        <button onclick="game.cancelEdit()" id="btn-cancel-edit" class="hidden w-20 bg-gray-500 text-white py-2 rounded hover:bg-gray-600 font-bold text-sm">
+                            Batal
                         </button>
                     </div>
+                    <div id="admin-save-status" class="text-center text-xs text-green-600 font-bold h-4"></div>
+                </div>
 
-                    <!-- Bulk Mode -->
-                    <div id="input-mode-bulk" class="hidden space-y-4 h-full flex flex-col">
-                        <div class="bg-yellow-50 p-2 text-xs text-yellow-800 border border-yellow-200 rounded">
-                            Format:<br>
-                            1. Soal pertama...<br>
-                            Jawaban : Kunci jawaban
-                        </div>
-                        <textarea id="admin-bulk-text" class="w-full p-2 border rounded flex-1 font-mono text-sm" placeholder="Paste soal di sini..."></textarea>
-                        <button onclick="game.processBulkImport()" class="w-full bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700 font-bold shadow">
-                            <i class="fas fa-file-import"></i> Proses Import
-                        </button>
+                <div id="input-mode-list" class="hidden flex-col h-full overflow-hidden">
+                    <div class="flex gap-2 mb-2">
+                         <input type="text" id="search-q" onkeyup="game.renderAdminQuestionList()" placeholder="Cari soal..." class="w-full p-2 border rounded text-xs">
+                         <button onclick="game.renderAdminQuestionList()" class="bg-gray-200 px-3 rounded"><i class="fas fa-sync"></i></button>
                     </div>
-
-                    <div id="admin-save-status" class="text-center text-sm text-green-600 h-5 font-bold mt-2"></div>
+                    <div id="admin-question-list-container" class="flex-1 overflow-y-auto space-y-2 pr-1 pb-10">
+                        </div>
                 </div>
             </div>
 
@@ -171,6 +243,9 @@
     <div id="host-panel" class="hidden h-full flex flex-col bg-slate-900 text-white">
         <header class="bg-black/30 p-3 flex justify-between items-center backdrop-blur-sm">
             <div class="text-sm font-mono text-indigo-400">HOST MODE</div>
+			<div class="round-badge px-3 py-1 rounded-full text-xs text-yellow-400 font-mono font-bold">
+                    SOAL <span id="host-q-counter">0</span> / <span id="host-q-limit">0</span>
+                </div>
             <div class="flex gap-2">
                 <button onclick="game.toggleSound()" id="sound-toggle" class="bg-white/10 p-2 rounded hover:bg-white/20"><i class="fas fa-volume-up"></i></button>
             </div>
@@ -214,15 +289,41 @@
                             Jawaban: <span>-</span>
                         </div>
                     </div>
+					
+					<div id="host-timer-container" class="hidden w-full max-w-md mb-4 bg-slate-800 p-3 rounded-lg border border-slate-600">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-gray-400 uppercase">Sisa Waktu Menjawab</span>
+                            <span id="host-timer-text" class="text-xl font-mono font-bold text-white">15s</span>
+                        </div>
+                        <div class="w-full bg-gray-700 h-3 rounded-full overflow-hidden mb-3">
+                            <div id="host-timer-bar" class="h-full bg-green-500 w-full timer-bar"></div>
+                        </div>
+                        <button onclick="game.toggleTimerPause()" id="btn-pause-timer" class="w-full py-1 text-xs font-bold bg-gray-600 hover:bg-gray-500 rounded text-white border border-gray-500">
+                            <i class="fas fa-pause"></i> TAHAN DURASI
+                        </button>
+                    </div>
 
                     <div class="flex gap-4 z-10">
                         <button onclick="game.displayQuestionWithTypewriter()" class="px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg flex items-center gap-2">
-                            <i class="fas fa-keyboard"></i> <span>Tampilkan & Efek Ketik</span>
+                            <i class="fas fa-keyboard"></i> <span>Tampilkan Pertanyaan perlahan</span>
                         </button>
                         <button onclick="game.activateBuzzer()" class="px-6 py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg flex items-center gap-2">
                              <i class="fas fa-play"></i> <span>Buka Bel (Tanpa Ketik)</span>
                         </button>
                     </div>
+					
+					<div class="mt-6 w-full max-w-md bg-slate-800/80 p-3 rounded-lg border border-slate-600 z-10">
+                <label class="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1 block">Manual Override (Pilih Penjawab)</label>
+                <div class="flex gap-2">
+                    <select id="host-manual-team-select" class="flex-1 bg-slate-700 text-white text-sm rounded px-2 py-1 border border-slate-600 outline-none">
+                        <option value="">-- Pilih Tim --</option>
+                        </select>
+                    <button onclick="game.manualSelectTeam()" class="bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold px-3 py-1 rounded">
+                        TUNJUK & MULAI
+                    </button>
+                </div>
+            </div>
+					
                 </div>
             </div>
 
@@ -240,9 +341,17 @@
 
     <!-- Client / Peserta Panel -->
     <div id="client-panel" class="hidden h-full flex flex-col bg-slate-50 relative">
-        <div class="absolute top-4 left-4 bg-white px-4 py-2 rounded-full shadow font-bold text-blue-600 z-20">
+        <div id="client-timer-wrapper" class="hidden absolute top-0 left-0 w-full h-2 bg-gray-200 z-30">
+        <div id="client-timer-bar" class="h-full bg-green-500 w-full timer-bar"></div>
+    </div>
+		<div class="absolute top-4 left-4 bg-white px-4 py-2 rounded-full shadow font-bold text-blue-600 z-20">
             <i class="fas fa-user-shield"></i> <span id="client-team-name">Tim Saya</span>
         </div>
+		
+		<div class="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-800 text-yellow-400 px-4 py-2 rounded-full shadow font-mono font-bold text-sm z-20 border border-slate-600">
+             <span id="client-q-counter">0</span> / <span id="client-q-limit">0</span>
+        </div>
+		
         <div class="absolute top-4 right-4 bg-white px-4 py-2 rounded-full shadow font-bold text-green-600 z-20">
             Skor: <span id="client-my-score">0</span>
         </div>
@@ -312,12 +421,30 @@
             </div>
         </div>
     </div>
+	
+	<div id="round-summary-overlay" class="hidden fixed inset-0 z-[60] bg-slate-900/95 flex flex-col items-center justify-center text-white overflow-hidden">
+        <h2 id="round-title-display" class="text-3xl font-bold text-yellow-400 mb-2 uppercase tracking-widest">HASIL BABAK</h2>
+        <div class="w-24 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent mb-8"></div>
+        
+        <div class="flex flex-col items-center mb-10 animate-bounce">
+            <i class="fas fa-crown text-6xl text-yellow-300 crown-icon mb-4"></i>
+            <div id="round-winner-name" class="text-5xl font-black text-white drop-shadow-lg text-center">TIM ALPHA</div>
+            <div id="round-winner-score" class="text-2xl font-mono text-green-400 font-bold mt-2">1000 Poin</div>
+        </div>
+
+        <div id="round-leaderboard" class="w-full max-w-md space-y-3 px-4 overflow-y-auto max-h-[40vh]">
+            </div>
+
+        <button onclick="document.getElementById('round-summary-overlay').classList.add('hidden')" class="mt-8 px-6 py-2 border border-white/20 rounded hover:bg-white/10 text-sm font-mono text-gray-400">
+            Tutup Tampilan
+        </button>
+    </div>
 
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, query, where, getDocs, orderBy, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, query, where, getDocs, orderBy, arrayUnion, writeBatch, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC4t1Gya_QHDzTkYsF7U-pw1Uo1oQUABpM",
@@ -341,6 +468,10 @@
         let myTeamId = null;
         let audioContext = null;
         let isMuted = false;
+		let previousScores = {};
+		let timerInterval = null;
+        let timerValue = 15;
+        let isTimerPaused = false;
         
         // Typewriter Vars
         let typewriterInterval = null;
@@ -453,16 +584,30 @@
 
             switchTab: (tab) => {
                 const btnSingle = document.getElementById('tab-btn-single');
-                const btnBulk = document.getElementById('tab-btn-bulk');
+                const btnList = document.getElementById('tab-btn-list'); // Ganti btnBulk
                 const divSingle = document.getElementById('input-mode-single');
-                const divBulk = document.getElementById('input-mode-bulk');
+                const divList = document.getElementById('input-mode-list'); // Ganti divBulk
+
+                // Reset Class
+                const activeClass = "flex-1 py-2 border-b-2 border-blue-600 font-bold text-blue-600";
+                const inactiveClass = "flex-1 py-2 text-gray-500 hover:text-blue-600";
 
                 if (tab === 'single') {
-                    btnSingle.className = "flex-1 py-2 border-b-2 border-blue-600 font-bold text-blue-600";
-                    btnBulk.className = "flex-1 py-2 text-gray-500 hover:text-blue-600";
+                    btnSingle.className = activeClass;
+                    if(btnList) btnList.className = inactiveClass;
                     divSingle.classList.remove('hidden');
-                    divBulk.classList.add('hidden');
-                } else {
+                    if(divList) divList.classList.add('hidden');
+                } else if (tab === 'list') {
+                    if(btnList) btnList.className = activeClass;
+                    btnSingle.className = inactiveClass;
+                    if(divList) {
+                        divList.classList.remove('hidden');
+                        divList.classList.add('flex');
+                    }
+                    divSingle.classList.add('hidden');
+                    // Load Data saat tab dibuka
+                    window.game.renderAdminQuestionList();
+                } else if (tab === 'bulk') {
                     btnBulk.className = "flex-1 py-2 border-b-2 border-blue-600 font-bold text-blue-600";
                     btnSingle.className = "flex-1 py-2 text-gray-500 hover:text-blue-600";
                     divBulk.classList.remove('hidden');
@@ -490,16 +635,44 @@
                     // Sort descending by score
                     teams.sort((a, b) => (b.score || 0) - (a.score || 0));
                     window.game.renderScores(teams);
+					window.game.updateHostTeamSelect(teams);
                 });
             },
 
             handleStateUpdate: (data) => {
-                const oldState = window.game.state;
+                const oldState = window.game.state || {};
                 window.game.state = data;
+
+                // 1. Cek Game Active (Client Side)
+                if (data.isGameActive === false && currentRole === 'client') {
+                    document.getElementById('setup-screen').classList.remove('hidden');
+                    document.getElementById('setup-screen').querySelector('h1').innerText = "PERMAINAN BERAKHIR / BELUM MULAI";
+                    document.getElementById('client-panel').classList.add('hidden');
+                    return; 
+                } else if (data.isGameActive && currentRole === 'client') {
+                     document.getElementById('setup-screen').classList.add('hidden');
+                     document.getElementById('client-panel').classList.remove('hidden');
+                }
+
+                // 2. Logika Timer (PERBAIKAN: Hapus if(data.timer) agar UI bisa menghilang saat null)
+                window.game.updateTimerUI(data.timer);
+				window.game.updateRoundCounter(data);
+
+                // 3. Logika End Round (Klasemen)
+                if (data.showRoundSummary) {
+                    window.game.renderRoundSummary();
+                } else {
+                    document.getElementById('round-summary-overlay').classList.add('hidden');
+                }
                 
-                if (data.currentQuestion !== currentFullText) {
-                    currentFullText = data.currentQuestion || "";
+                // --- LOGIKA WELCOME MESSAGE & SOAL ---
+                const welcomeText = "SELAMAT DATANG\nLOMBA CERDAS CERMAT";
+                const targetText = data.currentQuestion || welcomeText; 
+
+                if (targetText !== currentFullText) {
+                    currentFullText = targetText;
                     typewriterIndex = 0; 
+                    
                     if(document.getElementById('client-question-text')) {
                         document.getElementById('client-question-text').textContent = ""; 
                     }
@@ -508,17 +681,42 @@
                 if (currentRole === 'client') {
                     window.game.handleClientTypewriter(data);
                 } else if (currentRole === 'host') {
-                    // Host always sees the active question from DB if available, otherwise staged (handled in DOM)
-                    // If DB has question, sync it.
-                    if (data.currentQuestion) {
-                         document.getElementById('host-active-q').textContent = data.currentQuestion;
-                         document.getElementById('host-active-a').querySelector('span').innerText = data.currentAnswer || "-";
-                         document.getElementById('host-active-a').classList.remove('hidden');
+                    const displayQ = data.currentQuestion || welcomeText;
+                    // PERBAIKAN: Tambahkan fallback aman untuk jawaban
+                    const displayA = data.currentQuestion ? (data.currentAnswer || "-") : ""; 
+                    
+                    document.getElementById('host-active-q').textContent = displayQ;
+                    
+                    if(data.currentQuestion) {
+                        document.getElementById('host-active-a').classList.remove('hidden');
+                        document.getElementById('host-active-a').querySelector('span').innerText = displayA;
+                    } else {
+                        document.getElementById('host-active-a').classList.add('hidden');
                     }
                 }
 
                 window.game.updateBuzzerUI(data);
                 window.game.updateWinnerUI(data);
+                
+                // Update Tombol Admin Start/Stop
+                if(document.getElementById('btn-start-game')) {
+                    if(data.isGameActive) {
+                        document.getElementById('btn-start-game').classList.add('hidden');
+                        document.getElementById('btn-stop-game').classList.remove('hidden');
+                    } else {
+                        document.getElementById('btn-start-game').classList.remove('hidden');
+                        document.getElementById('btn-stop-game').classList.add('hidden');
+                    }
+                }
+                
+                // --- PERBAIKAN LOGIKA AUTO-START TIMER ---
+                // Hanya jalankan jika Host, status Locked, Timer lokal mati, DAN timer di DB masih punya sisa waktu
+                if (currentRole === 'host' && data.status === 'locked' && !timerInterval) {
+                    const dbTime = data.timer ? data.timer.value : 15; // Ambil waktu dari DB jika ada (untuk resume)
+                    if (dbTime > 0) {
+                        window.game.startTimerCountdown(dbTime); // Kirim waktu saat ini ke fungsi start
+                    }
+                }
             },
 
             handleClientTypewriter: (data) => {
@@ -538,7 +736,7 @@
                             clearInterval(typewriterInterval);
                             cursorEl.classList.add('hidden');
                         }
-                    }, 100); // SLOWED DOWN from 50ms to 100ms
+                    }, 200); // SLOWED DOWN from 50ms to 100ms
                 } else {
                     cursorEl.classList.add('hidden');
                     // If not typing but text exists (e.g. joined late or buzzer locked), show full text
@@ -604,9 +802,9 @@
 
                     if (overlay.dataset.lastWinner !== data.winner.id) {
                         // Play sound ONLY if Host OR if I am the Winner
-                        if (currentRole === 'host' || (currentRole === 'client' && myTeamId === data.winner.id)) {
-                            audioSys.playBuzzer();
-                        }
+                        if (currentRole === 'client' && myTeamId === data.winner.id) {
+							audioSys.playBuzzer();
+						}
                         overlay.dataset.lastWinner = data.winner.id;
                     }
                 } else {
@@ -617,16 +815,70 @@
                     overlay.dataset.lastWinner = "";
                 }
             },
+			
+			// --- HOST MANUAL CONTROL ---
+            updateHostTeamSelect: (teams) => {
+                const sel = document.getElementById('host-manual-team-select');
+                if(!sel) return;
+                // Simpan seleksi saat ini agar tidak reset saat skor berubah
+                const currentVal = sel.value; 
+                
+                sel.innerHTML = '<option value="">-- Pilih Tim --</option>' + 
+                    teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+                
+                sel.value = currentVal;
+            },
+
+            manualSelectTeam: async () => {
+                const sel = document.getElementById('host-manual-team-select');
+                const teamId = sel.value;
+                if(!teamId) return alert("Pilih tim dulu!");
+                
+                const teamName = sel.options[sel.selectedIndex].text;
+
+                // Paksa status LOCKED ke tim tersebut
+                // Ini otomatis memicu Timer di Host karena status berubah jadi 'locked'
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    status: 'locked',
+                    isTyping: false,
+                    winner: {
+                        id: teamId,
+                        name: teamName + " (DITUNJUK)", // Penanda manual
+                        timestamp: serverTimestamp()
+                    }
+                });
+            },
+            
+            // --- UPDATE COUNTER SOAL ---
+            updateRoundCounter: (data) => {
+                const current = data.currentQuestionNumber || 0;
+                const limit = data.roundConfig ? data.roundConfig.limit : 0;
+                
+                // Update Host
+                if(document.getElementById('host-q-counter')) {
+                    document.getElementById('host-q-counter').innerText = current;
+                    document.getElementById('host-q-limit').innerText = limit;
+                }
+                // Update Client
+                if(document.getElementById('client-q-counter')) {
+                    document.getElementById('client-q-counter').innerText = current;
+                    document.getElementById('client-q-limit').innerText = limit;
+                }
+            },
+			
+			
+			
+			
 
             renderScores: (teams) => {
-                // Admin List
+                // --- 1. Admin List (Sederhana tanpa animasi berat) ---
                 const adminList = document.getElementById('admin-team-list');
                 if (adminList) {
                     adminList.innerHTML = teams.map(t => `
                         <div class="flex justify-between items-center bg-gray-50 p-3 rounded border border-gray-200">
                             <span class="font-bold text-slate-700">${t.name}</span>
                             <div class="flex items-center gap-2">
-                                <span class="font-mono font-bold bg-slate-200 px-2 py-1 rounded">${t.score}</span>
+                                <span class="font-mono font-bold bg-slate-200 px-2 py-1 rounded transition-colors duration-500 ${t.score > (previousScores[t.id]||0) ? 'bg-green-200 text-green-800' : ''}">${t.score}</span>
                                 <button onclick="game.manualUpdateScore('${t.id}', 10)" class="text-green-500 hover:bg-green-100 p-1 rounded"><i class="fas fa-plus"></i></button>
                                 <button onclick="game.manualUpdateScore('${t.id}', -10)" class="text-red-500 hover:bg-red-100 p-1 rounded"><i class="fas fa-minus"></i></button>
                             </div>
@@ -634,39 +886,230 @@
                     `).join('');
                 }
                 
-                // Host List (Updated to show all teams vertically)
+                // --- 2. Host List (DENGAN ANIMASI) ---
                 const hostList = document.getElementById('host-score-list');
                 if (hostList) {
-                    hostList.innerHTML = teams.map((t, i) => `
-                        <div class="flex items-center justify-between p-3 rounded-lg ${i===0 ? 'bg-indigo-900 border border-indigo-500' : 'bg-slate-700/50'}">
+                    hostList.innerHTML = teams.map((t, i) => {
+                        // Cek perubahan skor
+                        const oldScore = previousScores[t.id] !== undefined ? previousScores[t.id] : t.score;
+                        let animClass = "";
+                        
+                        if (t.score > oldScore) animClass = "anim-score-up";
+                        else if (t.score < oldScore) animClass = "anim-score-down";
+
+                        return `
+                        <div class="flex items-center justify-between p-3 rounded-lg transition-all duration-500 ${i===0 ? 'bg-indigo-900 border border-indigo-500 shadow-lg scale-[1.02]' : 'bg-slate-700/50'}">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-full ${i===0 ? 'bg-yellow-500 text-black' : 'bg-slate-600 text-white'} flex items-center justify-center font-bold text-sm">
                                     ${i+1}
                                 </div>
                                 <span class="font-bold text-white text-sm md:text-base truncate max-w-[120px]">${t.name}</span>
                             </div>
-                            <span class="font-black ${i===0 ? 'text-yellow-400' : 'text-white'} text-lg">${t.score}</span>
+                            <span class="font-black text-lg ${i===0 ? 'text-yellow-400' : 'text-white'} ${animClass}">
+                                ${t.score}
+                            </span>
                         </div>
-                    `).join('');
+                    `}).join('');
                 }
 
-                // Client My Score
+                // --- 3. Client My Score (DENGAN ANIMASI) ---
                 if (currentRole === 'client' && myTeamId) {
                     const myTeam = teams.find(t => t.id === myTeamId);
-                    if (myTeam) document.getElementById('client-my-score').innerText = myTeam.score;
+                    if (myTeam) {
+                        const scoreEl = document.getElementById('client-my-score');
+                        const oldVal = parseInt(scoreEl.innerText);
+                        scoreEl.innerText = myTeam.score;
+
+                        // Animasi Client side
+                        if (myTeam.score > oldVal) {
+                            scoreEl.parentElement.classList.add('bg-green-100', 'scale-110');
+                            setTimeout(() => scoreEl.parentElement.classList.remove('bg-green-100', 'scale-110'), 500);
+                        } else if (myTeam.score < oldVal) {
+                            scoreEl.parentElement.classList.add('bg-red-100', 'scale-110');
+                            setTimeout(() => scoreEl.parentElement.classList.remove('bg-red-100', 'scale-110'), 500);
+                        }
+                    }
+                }
+
+                // Update previousScores untuk referensi berikutnya
+                teams.forEach(t => previousScores[t.id] = t.score);
+            },
+			
+			// --- UI RENDERERS ---
+            updateTimerUI: (timerData) => {
+                if (!timerData) {
+                    document.getElementById('host-timer-container').classList.add('hidden');
+                    document.getElementById('client-timer-wrapper').classList.add('hidden');
+                    return;
+                }
+
+                const pct = (timerData.value / timerData.max) * 100;
+                const colorClass = timerData.value <= 5 ? 'bg-red-500' : 'bg-green-500';
+
+                // Host UI
+                if (currentRole === 'host') {
+                    const container = document.getElementById('host-timer-container');
+                    const bar = document.getElementById('host-timer-bar');
+                    container.classList.remove('hidden');
+                    document.getElementById('host-timer-text').innerText = timerData.value + "s";
+                    bar.style.width = pct + "%";
+                    bar.className = `h-full w-full timer-bar ${colorClass}`;
+                    
+                    // Jika waktu habis, disable tombol pause
+                    document.getElementById('btn-pause-timer').disabled = (timerData.value <= 0);
+                }
+
+                // Client UI
+                if (currentRole === 'client') {
+                    const wrapper = document.getElementById('client-timer-wrapper');
+                    const bar = document.getElementById('client-timer-bar');
+                    wrapper.classList.remove('hidden');
+                    bar.style.width = pct + "%";
+                    bar.className = `h-full w-full timer-bar ${colorClass}`;
                 }
             },
 
-            // --- Database Actions ---
+            renderRoundSummary: async () => {
+                // Ambil data tim terbaru (sudah ada di memori via listener, tapi kita fetch ulang untuk memastikan urutan)
+                // Kita pakai data global 'teams' kalau sudah disimpan, atau fetch manual.
+                // Disini kita asumsi snapshot teams berjalan dan kita bisa akses DOM score list
+                
+                // Cara cepat: Ambil data dari DOM Host List yang sudah terurut, atau fetch baru.
+                // Mari fetch baru agar akurat:
+                const { getDocs, collection } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const q = await getDocs(query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'teams'), orderBy("score", "desc")));
+                
+                const teams = [];
+                q.forEach(doc => teams.push(doc.data()));
+
+                if(teams.length === 0) return;
+
+                const winner = teams[0];
+                
+                // Update UI Overlay
+                document.getElementById('round-winner-name').innerText = winner.name;
+                document.getElementById('round-winner-score').innerText = winner.score + " Poin";
+                
+                const listHtml = teams.map((t, i) => `
+                    <div class="flex justify-between items-center bg-white/10 p-2 rounded">
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-gray-400">#${i+1}</span>
+                            <span>${t.name}</span>
+                        </div>
+                        <span class="font-mono font-bold">${t.score}</span>
+                    </div>
+                `).join('');
+
+                document.getElementById('round-leaderboard').innerHTML = listHtml;
+                document.getElementById('round-summary-overlay').classList.remove('hidden');
+            },
+			
+			
+			// --- ADMIN CRUD ---
+            
+            // 1. Render List (Dipanggil saat tab 'list' aktif atau data berubah)
+            renderAdminQuestionList: async () => {
+                const container = document.getElementById('admin-question-list-container');
+                if(!container) return;
+                
+                const search = document.getElementById('search-q') ? document.getElementById('search-q').value.toLowerCase() : "";
+                
+                // Fetch Data (Realtime Snapshot sudah lebih baik jika dipakai global, 
+                // tapi untuk admin, fetch on demand atau snapshot terpisah juga oke.
+                // Disini kita pakai fetch manual agar ringan, atau gunakan snapshot global 'questions' jika sudah dibuat)
+                
+                const { getDocs, collection, query, orderBy } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const qRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'questions');
+                const qSnap = await getDocs(query(qRef, orderBy('createdAt', 'desc')));
+                
+                let html = "";
+                qSnap.forEach(doc => {
+                    const data = doc.data();
+                    if(search && !data.question.toLowerCase().includes(search)) return;
+                    
+                    html += `
+                        <div class="admin-q-item p-3 border-l-4 border-gray-300 bg-gray-50 rounded shadow-sm text-xs relative group">
+                            <div class="pr-16">
+                                <span class="font-bold text-blue-600 block mb-1">${data.category}</span>
+                                <p class="text-gray-700 font-medium line-clamp-2">${data.question}</p>
+                                <p class="text-green-600 mt-1 italic">Jwb: ${data.answer}</p>
+                            </div>
+                            <div class="absolute top-2 right-2 flex flex-col gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                <button onclick="game.editQuestion('${doc.id}', '${encodeURIComponent(data.category)}', '${encodeURIComponent(data.question)}', '${encodeURIComponent(data.answer)}')" class="bg-yellow-400 hover:bg-yellow-500 text-white p-1.5 rounded"><i class="fas fa-edit"></i></button>
+                                <button onclick="game.deleteQuestion('${doc.id}')" class="bg-red-500 hover:bg-red-600 text-white p-1.5 rounded"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html || '<div class="text-center text-gray-400 mt-4">Tidak ada soal</div>';
+            },
+
+            // 2. Setup Edit Mode
+            editQuestion: (id, cat, q, a) => {
+                // Decode URI Component agar karakter aman
+                document.getElementById('edit-q-id').value = id;
+                document.getElementById('admin-q-category').value = decodeURIComponent(cat);
+                document.getElementById('admin-q-text').value = decodeURIComponent(q);
+                document.getElementById('admin-q-answer').value = decodeURIComponent(a);
+                
+                // UI Change
+                document.getElementById('btn-save-q').innerHTML = '<i class="fas fa-sync"></i> Update';
+                document.getElementById('btn-save-q').className = "flex-1 bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 font-bold text-sm";
+                document.getElementById('btn-cancel-edit').classList.remove('hidden');
+                document.getElementById('edit-mode-indicator').classList.remove('hidden');
+                
+                // Switch tab back to form
+                app.switchTab('single');
+            },
+
+            cancelEdit: () => {
+                document.getElementById('edit-q-id').value = "";
+                document.getElementById('admin-q-text').value = "";
+                document.getElementById('admin-q-answer').value = "";
+                
+                document.getElementById('btn-save-q').innerHTML = '<i class="fas fa-save"></i> Simpan';
+                document.getElementById('btn-save-q').className = "flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-bold text-sm";
+                document.getElementById('btn-cancel-edit').classList.add('hidden');
+                document.getElementById('edit-mode-indicator').classList.add('hidden');
+            },
+
+            deleteQuestion: async (id) => {
+                if(!confirm("Hapus soal ini?")) return;
+                const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'questions', id));
+                game.renderAdminQuestionList(); // Refresh list
+            },
+
+            // 3. Update Save Function (Logic Split: Add vs Update)
             saveToBank: async () => {
+                const id = document.getElementById('edit-q-id').value;
                 const cat = document.getElementById('admin-q-category').value;
                 const q = document.getElementById('admin-q-text').value;
                 const a = document.getElementById('admin-q-answer').value;
 
-                if (!q || !a) return alert("Isi soal dan jawaban!");
-                game._saveSingle(cat, q, a, true);
+                if (!q || !a) return alert("Isi lengkap!");
+
+                const statusEl = document.getElementById('admin-save-status');
+                statusEl.innerText = id ? "Mengupdate..." : "Menyimpan...";
+
+                if (id) {
+                    // MODE UPDATE
+                    await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'questions', id), {
+                        category: cat, question: q, answer: a
+                    });
+                    game.cancelEdit(); // Reset form
+                    game.renderAdminQuestionList(); // Refresh list if needed
+                } else {
+                    // MODE ADD NEW
+                    await game._saveSingle(cat, q, a, true);
+                }
+                
+                statusEl.innerText = "Berhasil!";
+                setTimeout(() => statusEl.innerText = "", 2000);
             },
 
+            
             _saveSingle: async (cat, q, a, showStatus = false) => {
                 const statusEl = document.getElementById('admin-save-status');
                 if(showStatus) statusEl.innerText = "Menyimpan...";
@@ -787,7 +1230,9 @@
                     currentAnswer: aText,
                     status: 'open',
                     isTyping: true, 
-                    winner: null
+                    winner: null,
+					lockedTeams: [], // <--- TAMBAHAN PENTING: Reset daftar terkunci
+					currentQuestionNumber: increment(1)
                 });
                 audioSys.playTone(600, 'sine', 0.2); 
             },
@@ -802,7 +1247,8 @@
                     currentAnswer: aText,
                     status: 'open',
                     isTyping: false, 
-                    winner: null
+                    winner: null,
+					lockedTeams: [] // <--- TAMBAHAN PENTING: Reset daftar terkunci
                 });
                 audioSys.playCorrect();
             },
@@ -832,6 +1278,8 @@
                 const teamRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'teams', winnerId);
                 const { increment } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
                 await updateDoc(teamRef, { score: increment(points) });
+				
+				if(currentRole === 'host') window.game.stopTimer();
 
                 // Play Host-only sounds here
                 if (points > 0) {
@@ -866,14 +1314,99 @@
             },
 
             resetBuzzer: async () => {
+				if(currentRole === 'host') window.game.stopTimer();
                  await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
                     status: 'idle', winner: null, isTyping: false
                 });
             },
+			
+			// --- TIMER LOGIC (HOST SIDE) ---
+            startTimerCountdown: (initialValue = 15) => {
+                if(currentRole !== 'host') return;
+                
+                timerValue = initialValue; // Gunakan nilai yang dikirim (bisa 15, atau sisa waktu saat refresh)
+                isTimerPaused = false;
+                
+                if(timerInterval) clearInterval(timerInterval);
+                timerInterval = null;
+                
+                game.syncTimerToDB(timerValue);
 
+                timerInterval = setInterval(() => {
+                    if(!isTimerPaused) {
+                        timerValue--;
+                        game.syncTimerToDB(timerValue);
+
+                        if(timerValue <= 0) {
+                            clearInterval(timerInterval);
+                            timerInterval = null;
+                            audioSys.playWrong(); 
+                        }
+                    }
+                }, 1000);
+            },
+
+            stopTimer: () => {
+                if(timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null; // PENTING: Reset jadi null agar bisa mulai lagi nanti
+                }
+                // Sembunyikan timer di DB
+                updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    timer: null
+                });
+            },
+
+            syncTimerToDB: (val) => {
+                updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    timer: { value: val, max: 15 }
+                }).catch(e => console.log(e)); 
+            },
+
+            toggleTimerPause: () => {
+                isTimerPaused = !isTimerPaused;
+                const btn = document.getElementById('btn-pause-timer');
+                if(isTimerPaused) {
+                    btn.innerHTML = '<i class="fas fa-play"></i> LANJUTKAN';
+                    btn.className = "w-full py-1 text-xs font-bold bg-green-600 hover:bg-green-500 rounded text-white";
+                } else {
+                    btn.innerHTML = '<i class="fas fa-pause"></i> TAHAN DURASI';
+                    btn.className = "w-full py-1 text-xs font-bold bg-gray-600 hover:bg-gray-500 rounded text-white border border-gray-500";
+                }
+            },
+          
             toggleSound: () => {
                 isMuted = !isMuted;
                 document.getElementById('sound-toggle').innerHTML = isMuted ? '<i class="fas fa-volume-mute text-red-400"></i>' : '<i class="fas fa-volume-up"></i>';
+            },
+			
+			// --- ADMIN CONTROLS ---
+            toggleGameSession: async (isActive) => {
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    isGameActive: isActive,
+                    currentQuestion: isActive ? "PERMAINAN DIMULAI!" : "PERMAINAN SELESAI",
+                    status: 'idle'
+                });
+            },
+
+            saveRoundConfig: async () => {
+                const name = document.getElementById('conf-round-name').value;
+                const limit = document.getElementById('conf-q-limit').value;
+                
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    roundConfig: { name, limit: parseInt(limit) },
+                    currentQuestion: `BABAK BARU:\n${name}`,
+                    status: 'idle'
+                });
+                alert("Babak diset!");
+            },
+
+            endRound: async () => {
+                // Trigger tampilan klasemen
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    showRoundSummary: true,
+                    status: 'idle'
+                });
             }
         };
 
