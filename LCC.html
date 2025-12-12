@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V.2.0 Aplikasi Cerdas Cermat Realtime</title>
+    <title>Aplikasi Cerdas Cermat Realtime</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -341,17 +341,32 @@
                         </div>
                     </div>
 					
-					<div id="host-timer-container" class="hidden w-full max-w-md mb-4 bg-slate-800 p-3 rounded-lg border border-slate-600">
+					<div id="host-timer-container" class="hidden w-full max-w-md mb-4 bg-slate-800 p-4 rounded-lg border border-slate-600 shadow-lg">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-bold text-gray-400 uppercase">Sisa Waktu Menjawab</span>
+                            <span class="text-xs font-bold text-gray-400 uppercase">Sisa Waktu</span>
                             <span id="host-timer-text" class="text-xl font-mono font-bold text-white">15s</span>
                         </div>
                         <div class="w-full bg-gray-700 h-3 rounded-full overflow-hidden mb-3">
                             <div id="host-timer-bar" class="h-full bg-green-500 w-full timer-bar"></div>
                         </div>
-                        <button onclick="game.toggleTimerPause()" id="btn-pause-timer" class="w-full py-1 text-xs font-bold bg-gray-600 hover:bg-gray-500 rounded text-white border border-gray-500">
+                        <button onclick="game.toggleTimerPause()" id="btn-pause-timer" class="w-full py-1 text-xs font-bold bg-gray-600 hover:bg-gray-500 rounded text-white border border-gray-500 mb-4">
                             <i class="fas fa-pause"></i> TAHAN DURASI
                         </button>
+
+                        <div id="host-answer-controls" class="hidden border-t border-gray-600 pt-4 mt-2">
+                            <div class="text-center mb-3">
+                                <p class="text-xs text-gray-400 uppercase">Sedang Menjawab:</p>
+                                <p id="host-answering-team" class="text-2xl font-bold text-yellow-400 animate-pulse">Regu A</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="game.awardPoints(100)" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold shadow-lg border-b-4 border-green-800 active:border-b-0 active:translate-y-1 transition-all">
+                                    <i class="fas fa-check text-xl"></i> BENAR (+100)
+                                </button>
+                                <button onclick="game.awardPoints(-50)" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold shadow-lg border-b-4 border-red-800 active:border-b-0 active:translate-y-1 transition-all">
+                                    <i class="fas fa-times text-xl"></i> SALAH (-50)
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="flex gap-4 z-10">
@@ -439,22 +454,7 @@
         <div id="winner-name" class="text-7xl md:text-9xl font-black text-yellow-400 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] scale-150 transition-transform duration-500 text-center px-4">
             REGU A
         </div>
-        
         <div class="mt-16 flex flex-col items-center gap-3">
-            <!-- Host Controls -->
-            <div id="host-winner-controls" class="hidden flex gap-6 scale-125">
-                <button onclick="game.awardPoints(100)" class="bg-green-500 hover:bg-green-600 text-white w-20 h-20 rounded-full font-bold shadow-xl flex items-center justify-center text-3xl transition transform hover:scale-110 border-4 border-white/20" title="Benar (+100)">
-                    <i class="fas fa-check"></i>
-                </button>
-                <button onclick="game.awardPoints(-50)" class="bg-red-500 hover:bg-red-600 text-white w-20 h-20 rounded-full font-bold shadow-xl flex items-center justify-center text-3xl transition transform hover:scale-110 border-4 border-white/20" title="Salah (-50)">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div id="host-winner-text" class="hidden text-sm mt-4 font-mono bg-black/50 px-4 py-1 rounded">
-                Tombol MERAH = Salah & Lanjut soal
-            </div>
-
-             <!-- Admin Close -->
              <div id="admin-winner-controls" class="hidden">
                 <button onclick="game.resetBuzzer()" class="bg-gray-500 hover:bg-gray-600 px-6 py-3 rounded-lg font-bold shadow-lg">
                     Tutup Overlay
@@ -720,7 +720,6 @@
                             nextBtn.innerHTML = `<i class="fas fa-play"></i> Lanjut Babak ${currIdx + 2}`;
                         } else {
                             nextBtn.innerHTML = `<i class="fas fa-check"></i> Babak Final (Reset)`;
-                            // Jika sudah di akhir, tombol ini bisa diatur untuk tidak melakukan apa2 atau reset index
                         }
                         
                         // Update Info Babak Aktif
@@ -730,7 +729,7 @@
                     }
                 }
 
-                // 1. Cek Game Active (Client Side)
+                // --- 3. CEK GAME ACTIVE (Client Side) ---
                 if (data.isGameActive === false && currentRole === 'client') {
                     document.getElementById('setup-screen').classList.remove('hidden');
                     document.getElementById('setup-screen').querySelector('h1').innerText = "PERMAINAN BERAKHIR / BELUM MULAI";
@@ -741,18 +740,18 @@
                      document.getElementById('client-panel').classList.remove('hidden');
                 }
 
-                // 2. Logika Timer (PERBAIKAN: Hapus if(data.timer) agar UI bisa menghilang saat null)
+                // --- 4. LOGIKA TIMER & COUNTER ---
                 window.game.updateTimerUI(data.timer);
-				window.game.updateRoundCounter(data);
+                window.game.updateRoundCounter(data);
 
-                // 3. Logika End Round (Klasemen)
+                // --- 5. LOGIKA END ROUND (KLASEMEN) ---
                 if (data.showRoundSummary) {
                     window.game.renderRoundSummary();
                 } else {
                     document.getElementById('round-summary-overlay').classList.add('hidden');
                 }
                 
-                // --- LOGIKA WELCOME MESSAGE & SOAL ---
+                // --- 6. LOGIKA WELCOME MESSAGE & SOAL ---
                 const welcomeText = "SELAMAT DATANG\nLOMBA CERDAS CERMAT";
                 const targetText = data.currentQuestion || welcomeText; 
 
@@ -769,7 +768,6 @@
                     window.game.handleClientTypewriter(data);
                 } else if (currentRole === 'host') {
                     const displayQ = data.currentQuestion || welcomeText;
-                    // PERBAIKAN: Tambahkan fallback aman untuk jawaban
                     const displayA = data.currentQuestion ? (data.currentAnswer || "-") : ""; 
                     
                     document.getElementById('host-active-q').textContent = displayQ;
@@ -785,7 +783,7 @@
                 window.game.updateBuzzerUI(data);
                 window.game.updateWinnerUI(data);
                 
-                // Update Tombol Admin Start/Stop
+                // --- 7. UPDATE TOMBOL ADMIN START/STOP ---
                 if(document.getElementById('btn-start-game')) {
                     if(data.isGameActive) {
                         document.getElementById('btn-start-game').classList.add('hidden');
@@ -796,12 +794,11 @@
                     }
                 }
                 
-                // --- PERBAIKAN LOGIKA AUTO-START TIMER ---
-                // Hanya jalankan jika Host, status Locked, Timer lokal mati, DAN timer di DB masih punya sisa waktu
+                // --- 8. PERBAIKAN LOGIKA AUTO-START TIMER ---
                 if (currentRole === 'host' && data.status === 'locked' && !timerInterval) {
-                    const dbTime = data.timer ? data.timer.value : 15; // Ambil waktu dari DB jika ada (untuk resume)
+                    const dbTime = data.timer ? data.timer.value : 15; 
                     if (dbTime > 0) {
-                        window.game.startTimerCountdown(dbTime); // Kirim waktu saat ini ke fungsi start
+                        window.game.startTimerCountdown(dbTime); 
                     }
                 }
             },
