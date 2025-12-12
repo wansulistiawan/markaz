@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Cerdas Cermat v.2.6.1</title>
+    <title>Aplikasi Cerdas Cermat v.2.6.2</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -385,11 +385,11 @@
                                 <p id="host-answering-team" class="text-2xl font-bold text-yellow-400 animate-pulse">Regu A</p>
                             </div>
                             <div class="flex gap-3">
-                                <button onclick="game.awardPoints(100)" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold shadow-lg border-b-4 border-green-800 active:border-b-0 active:translate-y-1 transition-all">
-                                    <i class="fas fa-check text-xl"></i> BENAR (+100)
+                                <button onclick="game.awardPoints('correct')" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold shadow-lg border-b-4 border-green-800 active:border-b-0 active:translate-y-1 transition-all">
+                                    <i class="fas fa-check text-xl"></i> BENAR (+<span id="host-btn-plus">100</span>)
                                 </button>
-                                <button onclick="game.awardPoints(-50)" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold shadow-lg border-b-4 border-red-800 active:border-b-0 active:translate-y-1 transition-all">
-                                    <i class="fas fa-times text-xl"></i> SALAH (-50)
+                                <button onclick="game.awardPoints('wrong')" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold shadow-lg border-b-4 border-red-800 active:border-b-0 active:translate-y-1 transition-all">
+                                    <i class="fas fa-times text-xl"></i> SALAH (<span id="host-btn-min">-50</span>)
                                 </button>
                             </div>
                         </div>
@@ -733,6 +733,13 @@
                 window.game.state = data;
 				
 				// --- UPDATE KOLOM CONFIG ADMIN (Jika ada) ---
+				if (currentRole === 'host' && data.config) {
+                    if(document.getElementById('host-btn-plus')) 
+                        document.getElementById('host-btn-plus').innerText = data.config.pointCorrect;
+                    if(document.getElementById('host-btn-min')) 
+                        document.getElementById('host-btn-min').innerText = data.config.pointWrong;
+                }
+				
                 if (data.config && document.getElementById('conf-timer')) {
                     // Hanya update jika Admin tidak sedang mengetik (agar tidak konflik)
                     if(document.activeElement.id !== 'conf-timer') 
@@ -1518,7 +1525,16 @@
                 }
             },
 
-            awardPoints: async (points) => {
+            awardPoints: async (type) => {
+                // Ambil aturan main dari database (atau default jika belum diatur)
+                const config = window.game.state.config || { pointCorrect: 100, pointWrong: -50 };
+                
+                // Tentukan poin berdasarkan tipe tombol yg ditekan
+                let points = 0;
+                if (type === 'correct') points = parseInt(config.pointCorrect);
+                else if (type === 'wrong') points = parseInt(config.pointWrong);
+                else points = parseInt(type); // Jaga-jaga jika dipanggil manual dengan angka
+
                 const winnerId = window.game.state.winner?.id;
                 if (!winnerId) return;
 
@@ -1529,7 +1545,7 @@
 				if(currentRole === 'host') window.game.stopTimer();
 
                 // Play Host-only sounds here
-                if (points > 0) {
+                if (type === 'correct' || points > 0) {
                     audioSys.playCorrect();
                     await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
                         status: 'idle',
@@ -1538,11 +1554,12 @@
                     });
                 } else {
                     audioSys.playWrong();
+                    // Jika SALAH, lempar kembali ke tim lain (lock tim yang salah)
                     await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
                         status: 'open',
                         winner: null,
                         lockedTeams: arrayUnion(winnerId), 
-                        isTyping: true 
+                        isTyping: true // Lanjut ketik soal
                     });
                 }
             },
@@ -1572,21 +1589,28 @@
             },
 			
 			// --- TIMER LOGIC (HOST SIDE) ---
-            startTimerCountdown: (initialValue = 15) => {
+            startTimerCountdown: (initialValue = null) => {
                 if(currentRole !== 'host') return;
                 
-                timerValue = initialValue; // Gunakan nilai yang dikirim (bisa 15, atau sisa waktu saat refresh)
+                // AMBIL DURASI DARI CONFIG ADMIN (Default 15 jika error)
+                const configDuration = (window.game.state.config && window.game.state.config.timerDuration) ? parseInt(window.game.state.config.timerDuration) : 15;
+                
+                // Jika initialValue tidak ada (baru mulai), pakai durasi config.
+                // Jika ada (resume/sync), pakai nilai itu.
+                timerValue = initialValue !== null ? initialValue : configDuration;
+                
                 isTimerPaused = false;
                 
                 if(timerInterval) clearInterval(timerInterval);
                 timerInterval = null;
                 
-                game.syncTimerToDB(timerValue);
+                // Kirim max duration juga agar progress bar akurat
+                game.syncTimerToDB(timerValue, configDuration);
 
                 timerInterval = setInterval(() => {
                     if(!isTimerPaused) {
                         timerValue--;
-                        game.syncTimerToDB(timerValue);
+                        game.syncTimerToDB(timerValue, configDuration);
 
                         if(timerValue <= 0) {
                             clearInterval(timerInterval);
@@ -1608,9 +1632,11 @@
                 });
             },
 
-            syncTimerToDB: (val) => {
+            syncTimerToDB: (val, maxVal) => {
+                // Gunakan maxVal yang dikirim, atau default 15
+                const m = maxVal || 15;
                 updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
-                    timer: { value: val, max: 15 }
+                    timer: { value: val, max: m }
                 }).catch(e => console.log(e)); 
             },
 
