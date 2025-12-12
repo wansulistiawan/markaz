@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Cerdas Cermat Realtime</title>
+    <title>V.2.0 Aplikasi Cerdas Cermat Realtime</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -240,6 +240,19 @@
                 </div>
 				
 				<div id="input-mode-bulk" class="hidden flex-col h-full space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Kategori (Untuk semua soal di bawah)</label>
+                        <select id="admin-bulk-category" class="w-full p-2 border rounded bg-gray-50 text-sm">
+                            <option value="Pengetahuan Umum">Pengetahuan Umum</option>
+                            <option value="Sirah">Sirah</option>
+                            <option value="Tauhid">Tauhid</option>
+                            <option value="Fiqih">Fiqih</option>
+                            <option value="Adab">Adab</option>
+                            <option value="Quran dan Hadits">Quran dan Hadits</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+
                     <div class="bg-yellow-50 p-2 text-xs text-yellow-800 border border-yellow-200 rounded">
                         Format:<br>
                         1. Soal pertama...<br>
@@ -247,7 +260,7 @@
                     </div>
                     <textarea id="admin-bulk-text" class="w-full p-2 border rounded flex-1 font-mono text-sm" placeholder="Paste soal di sini..."></textarea>
                     <button onclick="game.processBulkImport()" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 font-bold shadow text-sm">
-                        <i class="fas fa-file-import"></i> Proses Import
+                        <i class="fas fa-file-import"></i> Import semua soal
                     </button>
                     <div id="admin-bulk-status" class="h-4 text-center text-xs font-bold text-green-600"></div>
                 </div>
@@ -1219,11 +1232,13 @@
             },
 
             processBulkImport: async () => {
-                const cat = document.getElementById('admin-q-category').value;
+                // UBAH BARIS INI (Ambil dari ID admin-bulk-category)
+                const cat = document.getElementById('admin-bulk-category').value;
+                
                 const rawText = document.getElementById('admin-bulk-text').value;
                 if (!rawText.trim()) return alert("Teks kosong!");
 
-                const statusEl = document.getElementById('admin-save-status');
+                const statusEl = document.getElementById('admin-bulk-status'); // Pastikan ID status benar (admin-bulk-status)
                 statusEl.innerText = "Memproses...";
 
                 // Regex to find "Number. Question" followed eventually by "Jawaban :"
