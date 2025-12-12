@@ -91,6 +91,18 @@
             border: 1px solid #334155;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+	        
+        /* Cursor Pointer untuk Nama Tim di Host */
+        .host-clickable-name { 
+            cursor: pointer; 
+            transition: color 0.2s;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 4px;
+        }
+        .host-clickable-name:hover { 
+            color: #facc15; /* yellow-400 */ 
+        }
 		
 
     </style>
@@ -142,29 +154,41 @@
             <button onclick="game.toggleGameSession(false)" id="btn-stop-game" class="hidden bg-red-600 hover:bg-red-700 px-4 py-1 rounded text-sm font-bold">Game Over</button>
             
             <div class="w-px h-6 bg-gray-600 mx-1"></div>
-            <button onclick="game.resetBuzzer()" class="bg-yellow-500 hover:bg-yellow-600 px-3 py-1 rounded text-xs font-bold text-black">Reset Bel</button>
+            <button onclick="game.resetBuzzer()" class="bg-yellow-500 hover:bg-yellow-600 px-3 py-1 rounded text-xs font-bold text-black" title="Reset Bel & Timer">Reset Bel</button>
+            <button onclick="game.resetWholeGame()" class="bg-red-800 hover:bg-red-900 px-3 py-1 rounded text-xs font-bold border border-red-600" title="Hapus semua data & Logout semua">RESET TOTAL</button>
+            <div class="w-px h-6 bg-gray-600 mx-1"></div>
+            <button onclick="location.reload()" class="bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded text-xs"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </header>
 
     <div class="col-span-1 md:col-span-2 bg-white p-4 rounded-xl shadow-sm mb-4 border border-blue-100">
-        <h3 class="font-bold text-blue-800 mb-2"><i class="fas fa-list-ol"></i> Konfigurasi Babak</h3>
-        <div class="flex flex-wrap gap-4 items-end">
-            <div>
-                <label class="text-xs font-bold text-gray-500">Nama Babak</label>
-                <input type="text" id="conf-round-name" class="block w-40 p-2 border rounded text-sm" value="Babak Penyisihan">
+        <div class="flex justify-between items-start">
+            <div class="flex-1">
+                <h3 class="font-bold text-blue-800 mb-2"><i class="fas fa-list-ol"></i> Atur Daftar Babak</h3>
+                <div class="flex flex-wrap gap-2 items-end mb-2">
+                    <input type="text" id="conf-round-name" class="block w-40 p-2 border rounded text-sm" placeholder="Nama Babak (Ex: Penyisihan)">
+                    <input type="number" id="conf-q-limit" class="block w-20 p-2 border rounded text-sm" placeholder="Jml Soal" value="10">
+                    <button onclick="game.addRoundToList()" class="bg-blue-100 text-blue-700 px-3 py-2 rounded hover:bg-blue-200 text-sm font-bold border border-blue-200">
+                        <i class="fas fa-plus"></i> Tambah
+                    </button>
+                </div>
+                <div id="admin-round-list" class="flex flex-wrap gap-2 text-xs text-gray-600 mb-2">
+                    <em class="text-gray-400">Belum ada babak ditambahkan.</em>
+                </div>
             </div>
-            <div>
-                <label class="text-xs font-bold text-gray-500">Jml Pertanyaan</label>
-                <input type="number" id="conf-q-limit" class="block w-20 p-2 border rounded text-sm" value="10">
+            
+            <div class="flex flex-col gap-2 items-end">
+                <div id="active-round-info" class="text-lg font-bold text-green-600 text-right">Babak -</div>
+                <div class="flex gap-2">
+                    <button onclick="game.nextRound()" id="btn-next-round" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-play"></i> Mulai Babak 1
+                    </button>
+                    <button onclick="game.endRound()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-bold shadow">
+                        <i class="fas fa-flag-checkered"></i> Selesai Babak
+                    </button>
+                </div>
             </div>
-            <button onclick="game.saveRoundConfig()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-bold h-10">
-                <i class="fas fa-save"></i> Set Babak
-            </button>
-            <button onclick="game.endRound()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-bold h-10 ml-auto">
-                <i class="fas fa-flag-checkered"></i> Akhiri Babak Ini
-            </button>
         </div>
-        <div id="active-round-info" class="mt-2 text-xs text-green-600 font-mono"></div>
     </div>
 	
         <div class="flex-1 overflow-hidden p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -178,6 +202,7 @@
                 
                 <div class="flex border-b mb-4">
                     <button onclick="app.switchTab('single')" id="tab-btn-single" class="flex-1 py-2 border-b-2 border-blue-600 font-bold text-blue-600">Input / Edit</button>
+                    <button onclick="app.switchTab('bulk')" id="tab-btn-bulk" class="flex-1 py-2 text-gray-500 hover:text-blue-600">Import Massal</button>
                     <button onclick="app.switchTab('list')" id="tab-btn-list" class="flex-1 py-2 text-gray-500 hover:text-blue-600">Daftar Soal</button>
                 </div>
 
@@ -212,6 +237,19 @@
                         </button>
                     </div>
                     <div id="admin-save-status" class="text-center text-xs text-green-600 font-bold h-4"></div>
+                </div>
+				
+				<div id="input-mode-bulk" class="hidden flex-col h-full space-y-3">
+                    <div class="bg-yellow-50 p-2 text-xs text-yellow-800 border border-yellow-200 rounded">
+                        Format:<br>
+                        1. Soal pertama...<br>
+                        Jawaban : Kunci jawaban
+                    </div>
+                    <textarea id="admin-bulk-text" class="w-full p-2 border rounded flex-1 font-mono text-sm" placeholder="Paste soal di sini..."></textarea>
+                    <button onclick="game.processBulkImport()" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 font-bold shadow text-sm">
+                        <i class="fas fa-file-import"></i> Proses Import
+                    </button>
+                    <div id="admin-bulk-status" class="h-4 text-center text-xs font-bold text-green-600"></div>
                 </div>
 
                 <div id="input-mode-list" class="hidden flex-col h-full overflow-hidden">
@@ -312,17 +350,7 @@
                         </button>
                     </div>
 					
-					<div class="mt-6 w-full max-w-md bg-slate-800/80 p-3 rounded-lg border border-slate-600 z-10">
-                <label class="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1 block">Manual Override (Pilih Penjawab)</label>
-                <div class="flex gap-2">
-                    <select id="host-manual-team-select" class="flex-1 bg-slate-700 text-white text-sm rounded px-2 py-1 border border-slate-600 outline-none">
-                        <option value="">-- Pilih Tim --</option>
-                        </select>
-                    <button onclick="game.manualSelectTeam()" class="bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold px-3 py-1 rounded">
-                        TUNJUK & MULAI
-                    </button>
-                </div>
-            </div>
+					
 					
                 </div>
             </div>
@@ -584,35 +612,38 @@
 
             switchTab: (tab) => {
                 const btnSingle = document.getElementById('tab-btn-single');
-                const btnList = document.getElementById('tab-btn-list'); // Ganti btnBulk
+                const btnBulk = document.getElementById('tab-btn-bulk'); // NEW
+                const btnList = document.getElementById('tab-btn-list');
+                
                 const divSingle = document.getElementById('input-mode-single');
-                const divList = document.getElementById('input-mode-list'); // Ganti divBulk
+                const divBulk = document.getElementById('input-mode-bulk'); // NEW
+                const divList = document.getElementById('input-mode-list');
 
-                // Reset Class
+                // Class styles
                 const activeClass = "flex-1 py-2 border-b-2 border-blue-600 font-bold text-blue-600";
                 const inactiveClass = "flex-1 py-2 text-gray-500 hover:text-blue-600";
 
+                // Reset all
+                btnSingle.className = inactiveClass;
+                btnBulk.className = inactiveClass;
+                btnList.className = inactiveClass;
+                divSingle.classList.add('hidden');
+                divBulk.classList.add('hidden');
+                divList.classList.add('hidden');
+                divList.classList.remove('flex'); // remove flex specific
+
                 if (tab === 'single') {
                     btnSingle.className = activeClass;
-                    if(btnList) btnList.className = inactiveClass;
                     divSingle.classList.remove('hidden');
-                    if(divList) divList.classList.add('hidden');
-                } else if (tab === 'list') {
-                    if(btnList) btnList.className = activeClass;
-                    btnSingle.className = inactiveClass;
-                    if(divList) {
-                        divList.classList.remove('hidden');
-                        divList.classList.add('flex');
-                    }
-                    divSingle.classList.add('hidden');
-                    // Load Data saat tab dibuka
-                    window.game.renderAdminQuestionList();
                 } else if (tab === 'bulk') {
-                    btnBulk.className = "flex-1 py-2 border-b-2 border-blue-600 font-bold text-blue-600";
-                    btnSingle.className = "flex-1 py-2 text-gray-500 hover:text-blue-600";
+                    btnBulk.className = activeClass;
                     divBulk.classList.remove('hidden');
-                    divBulk.classList.add('flex'); // Add flex for layout
-                    divSingle.classList.add('hidden');
+                    divBulk.classList.add('flex');
+                } else if (tab === 'list') {
+                    btnList.className = activeClass;
+                    divList.classList.remove('hidden');
+                    divList.classList.add('flex');
+                    window.game.renderAdminQuestionList();
                 }
             }
         };
@@ -640,8 +671,51 @@
             },
 
             handleStateUpdate: (data) => {
+                // --- 1. CEK FORCE RESET (LOGIC BARU) ---
+                if (data.forceResetToken) {
+                    const lastToken = localStorage.getItem('lastResetToken');
+                    if (lastToken && lastToken != data.forceResetToken) {
+                        localStorage.setItem('lastResetToken', data.forceResetToken);
+                        alert("Sistem di-reset oleh Admin.");
+                        location.reload(); // Force Reload semua client
+                        return;
+                    }
+                    if (!lastToken) localStorage.setItem('lastResetToken', data.forceResetToken);
+                }
+
                 const oldState = window.game.state || {};
                 window.game.state = data;
+
+                // --- 2. RENDER LIST BABAK DI ADMIN (LOGIC BARU) ---
+                if (document.getElementById('admin-round-list')) {
+                    const rounds = data.roundsList || [];
+                    const currIdx = data.currentRoundIdx !== undefined ? data.currentRoundIdx : -1;
+                    
+                    if (rounds.length === 0) {
+                        document.getElementById('admin-round-list').innerHTML = '<em class="text-gray-400">Belum ada babak.</em>';
+                        document.getElementById('btn-next-round').innerText = "Mulai Babak 1";
+                        document.getElementById('btn-next-round').disabled = true;
+                    } else {
+                        document.getElementById('admin-round-list').innerHTML = rounds.map((r, i) => 
+                            `<span class="px-2 py-1 rounded border ${i === currIdx ? 'bg-green-100 border-green-300 text-green-700 font-bold' : 'bg-gray-50 border-gray-200'}">${i+1}. ${r.name}</span>`
+                        ).join('');
+                        
+                        // Update tombol Next
+                        const nextBtn = document.getElementById('btn-next-round');
+                        nextBtn.disabled = false;
+                        if (currIdx < rounds.length - 1) {
+                            nextBtn.innerHTML = `<i class="fas fa-play"></i> Lanjut Babak ${currIdx + 2}`;
+                        } else {
+                            nextBtn.innerHTML = `<i class="fas fa-check"></i> Babak Final (Reset)`;
+                            // Jika sudah di akhir, tombol ini bisa diatur untuk tidak melakukan apa2 atau reset index
+                        }
+                        
+                        // Update Info Babak Aktif
+                        if(currIdx >= 0) {
+                            document.getElementById('active-round-info').innerText = rounds[currIdx].name;
+                        }
+                    }
+                }
 
                 // 1. Cek Game Active (Client Side)
                 if (data.isGameActive === false && currentRole === 'client') {
@@ -890,10 +964,8 @@
                 const hostList = document.getElementById('host-score-list');
                 if (hostList) {
                     hostList.innerHTML = teams.map((t, i) => {
-                        // Cek perubahan skor
                         const oldScore = previousScores[t.id] !== undefined ? previousScores[t.id] : t.score;
                         let animClass = "";
-                        
                         if (t.score > oldScore) animClass = "anim-score-up";
                         else if (t.score < oldScore) animClass = "anim-score-down";
 
@@ -903,7 +975,9 @@
                                 <div class="w-8 h-8 rounded-full ${i===0 ? 'bg-yellow-500 text-black' : 'bg-slate-600 text-white'} flex items-center justify-center font-bold text-sm">
                                     ${i+1}
                                 </div>
-                                <span class="font-bold text-white text-sm md:text-base truncate max-w-[120px]">${t.name}</span>
+                                <button onclick="game.confirmManualSelect('${t.id}', '${t.name}')" class="font-bold text-white text-sm md:text-base truncate max-w-[120px] text-left host-clickable-name hover:text-yellow-400" title="Klik untuk menunjuk tim ini menjawab">
+                                    ${t.name} <i class="fas fa-hand-pointer text-[10px] ml-1 opacity-50"></i>
+                                </button>
                             </div>
                             <span class="font-black text-lg ${i===0 ? 'text-yellow-400' : 'text-white'} ${animClass}">
                                 ${t.score}
@@ -933,6 +1007,21 @@
 
                 // Update previousScores untuk referensi berikutnya
                 teams.forEach(t => previousScores[t.id] = t.score);
+            },
+			
+			confirmManualSelect: async (teamId, teamName) => {
+                if(!confirm(`Tunjuk tim "${teamName}" untuk menjawab sekarang?`)) return;
+                
+                // Paksa status LOCKED ke tim tersebut & Start Timer
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    status: 'locked',
+                    isTyping: false,
+                    winner: {
+                        id: teamId,
+                        name: teamName + " (DITUNJUK)",
+                        timestamp: serverTimestamp()
+                    }
+                });
             },
 			
 			// --- UI RENDERERS ---
@@ -1389,16 +1478,69 @@
                 });
             },
 
-            saveRoundConfig: async () => {
+            // --- ROUND MANAGEMENT ---
+            addRoundToList: async () => {
                 const name = document.getElementById('conf-round-name').value;
-                const limit = document.getElementById('conf-q-limit').value;
-                
+                const limit = parseInt(document.getElementById('conf-q-limit').value || 10);
+                if(!name) return alert("Isi nama babak!");
+
+                // Ambil data state sekarang untuk update array
+                // (Note: Idealnya pakai transaction, tapi updateDoc arrayUnion ok untuk simplifikasi)
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
-                    roundConfig: { name, limit: parseInt(limit) },
-                    currentQuestion: `BABAK BARU:\n${name}`,
-                    status: 'idle'
+                    roundsList: arrayUnion({ name, limit })
                 });
-                alert("Babak diset!");
+                
+                // Clear input
+                document.getElementById('conf-round-name').value = "";
+            },
+
+            nextRound: async () => {
+                // Ambil state terbaru dulu untuk tahu index sekarang
+                // Kita gunakan variable lokal 'game.state' yang selalu sync via listener
+                const currentState = window.game.state || {};
+                const rounds = currentState.roundsList || [];
+                let nextIdx = (currentState.currentRoundIdx !== undefined) ? currentState.currentRoundIdx + 1 : 0;
+
+                if (nextIdx >= rounds.length) return alert("Semua babak sudah selesai! Tambahkan babak baru.");
+
+                const nextRound = rounds[nextIdx];
+
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    currentRoundIdx: nextIdx,
+                    roundConfig: nextRound, // Update config aktif
+                    currentQuestion: `BABAK ${nextIdx + 1}:\n${nextRound.name}`,
+                    status: 'idle',
+                    currentQuestionNumber: 0 // Reset counter soal
+                });
+            },
+			
+			// --- RESET TOTAL GAME ---
+            resetWholeGame: async () => {
+                if(!confirm("PERINGATAN KERAS:\n- Semua tim akan dihapus\n- Semua skor hilang\n- Semua client akan logout otomatis\n\nLanjutkan?")) return;
+                
+                const { deleteDoc, getDocs } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                
+                // 1. Hapus semua Tim
+                const teamSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'teams'));
+                const batchPromises = teamSnap.docs.map(d => deleteDoc(d.ref));
+                await Promise.all(batchPromises);
+
+                // 2. Reset Game State & Trigger Force Logout
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
+                    status: 'idle',
+                    currentQuestion: '',
+                    currentAnswer: '',
+                    winner: null,
+                    timer: null,
+                    isGameActive: false,
+                    roundConfig: null,
+                    roundsList: [], // Reset daftar babak
+                    currentRoundIdx: -1,
+                    forceResetToken: Date.now() // Token untuk memaksa client reload
+                });
+                
+                alert("Sistem berhasil di-reset total.");
+                location.reload(); // Admin juga reload
             },
 
             endRound: async () => {
