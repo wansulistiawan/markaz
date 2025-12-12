@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>v.2.2 Aplikasi Cerdas Cermat Realtime</title>
+    <title>Aplikasi Cerdas Cermat v.2.5</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -683,13 +683,13 @@
             },
 
             handleStateUpdate: (data) => {
-                // --- 1. CEK FORCE RESET (LOGIC BARU) ---
+                // --- 1. CEK FORCE RESET ---
                 if (data.forceResetToken) {
                     const lastToken = localStorage.getItem('lastResetToken');
                     if (lastToken && lastToken != data.forceResetToken) {
                         localStorage.setItem('lastResetToken', data.forceResetToken);
                         alert("Sistem di-reset oleh Admin.");
-                        location.reload(); // Force Reload semua client
+                        location.reload(); 
                         return;
                     }
                     if (!lastToken) localStorage.setItem('lastResetToken', data.forceResetToken);
@@ -698,7 +698,7 @@
                 const oldState = window.game.state || {};
                 window.game.state = data;
 
-                // --- 2. RENDER LIST BABAK DI ADMIN (LOGIC BARU) ---
+                // --- 2. RENDER LIST BABAK DI ADMIN ---
                 if (document.getElementById('admin-round-list')) {
                     const rounds = data.roundsList || [];
                     const currIdx = data.currentRoundIdx !== undefined ? data.currentRoundIdx : -1;
@@ -712,7 +712,6 @@
                             `<span class="px-2 py-1 rounded border ${i === currIdx ? 'bg-green-100 border-green-300 text-green-700 font-bold' : 'bg-gray-50 border-gray-200'}">${i+1}. ${r.name}</span>`
                         ).join('');
                         
-                        // Update tombol Next
                         const nextBtn = document.getElementById('btn-next-round');
                         nextBtn.disabled = false;
                         if (currIdx < rounds.length - 1) {
@@ -721,7 +720,6 @@
                             nextBtn.innerHTML = `<i class="fas fa-check"></i> Babak Final (Reset)`;
                         }
                         
-                        // Update Info Babak Aktif
                         if(currIdx >= 0) {
                             document.getElementById('active-round-info').innerText = rounds[currIdx].name;
                         }
@@ -739,18 +737,35 @@
                      document.getElementById('client-panel').classList.remove('hidden');
                 }
 
-                // --- 4. LOGIKA TIMER & COUNTER ---
+                // --- 4. LOGIKA UI KONTROL JAWABAN (HOST) [BAGIAN INI YANG SEBELUMNYA HILANG] ---
+                if (currentRole === 'host') {
+                    const controlDiv = document.getElementById('host-answer-controls');
+                    const teamNameDiv = document.getElementById('host-answering-team');
+                    
+                    if (data.status === 'locked' && data.winner) {
+                        // Tampilkan panel kontrol
+                        controlDiv.classList.remove('hidden');
+                        teamNameDiv.innerText = data.winner.name;
+                        // Pastikan container timer juga terlihat
+                        document.getElementById('host-timer-container').classList.remove('hidden');
+                    } else {
+                        // Sembunyikan panel kontrol
+                        controlDiv.classList.add('hidden');
+                    }
+                }
+
+                // --- 5. LOGIKA TIMER & COUNTER ---
                 window.game.updateTimerUI(data.timer);
                 window.game.updateRoundCounter(data);
 
-                // --- 5. LOGIKA END ROUND (KLASEMEN) ---
+                // --- 6. LOGIKA END ROUND (KLASEMEN) ---
                 if (data.showRoundSummary) {
                     window.game.renderRoundSummary();
                 } else {
                     document.getElementById('round-summary-overlay').classList.add('hidden');
                 }
                 
-                // --- 6. LOGIKA WELCOME MESSAGE & SOAL ---
+                // --- 7. LOGIKA WELCOME MESSAGE & SOAL ---
                 const welcomeText = "SELAMAT DATANG\nLOMBA CERDAS CERMAT";
                 const targetText = data.currentQuestion || welcomeText; 
 
@@ -782,7 +797,7 @@
                 window.game.updateBuzzerUI(data);
                 window.game.updateWinnerUI(data);
                 
-                // --- 7. UPDATE TOMBOL ADMIN START/STOP ---
+                // --- 8. UPDATE TOMBOL ADMIN START/STOP ---
                 if(document.getElementById('btn-start-game')) {
                     if(data.isGameActive) {
                         document.getElementById('btn-start-game').classList.add('hidden');
@@ -793,7 +808,7 @@
                     }
                 }
                 
-                // --- 8. PERBAIKAN LOGIKA AUTO-START TIMER ---
+                // --- 9. LOGIKA AUTO-START TIMER ---
                 if (currentRole === 'host' && data.status === 'locked' && !timerInterval) {
                     const dbTime = data.timer ? data.timer.value : 15; 
                     if (dbTime > 0) {
