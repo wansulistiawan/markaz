@@ -492,8 +492,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, query, where, getDocs, orderBy, arrayUnion, writeBatch, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+        import { getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, query, where, getDocs, orderBy, arrayUnion, writeBatch, increment, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+		
         const firebaseConfig = {
             apiKey: "AIzaSyC4t1Gya_QHDzTkYsF7U-pw1Uo1oQUABpM",
             authDomain: "websitemarkaz.firebaseapp.com",
@@ -829,12 +829,17 @@
                 const qEl = document.getElementById('client-question-text');
                 const cursorEl = document.getElementById('client-cursor');
                 
-                if (typewriterInterval) clearInterval(typewriterInterval);
+                // Selalu bersihkan interval lama setiap ada update state
+                if (typewriterInterval) {
+                    clearInterval(typewriterInterval);
+                    typewriterInterval = null;
+                }
 
-                if (data.isTyping && data.status === 'open') {
+                // HANYA mengetik jika status 'open' DAN flag isTyping true
+                if (data.status === 'open' && data.isTyping) {
                     cursorEl.classList.remove('hidden');
+                    
                     typewriterInterval = setInterval(() => {
-                        // Use textContent to preserve formatting if combined with whitespace-pre-wrap
                         if (typewriterIndex < currentFullText.length) {
                             qEl.textContent += currentFullText.charAt(typewriterIndex);
                             typewriterIndex++;
@@ -842,10 +847,10 @@
                             clearInterval(typewriterInterval);
                             cursorEl.classList.add('hidden');
                         }
-                    }, 200); // SLOWED DOWN from 50ms to 100ms
+                    }, 200); 
                 } else {
+                    // Jika status LOCKED/IDLE, paksa berhenti & tampilkan teks penuh (jika belum selesai)
                     cursorEl.classList.add('hidden');
-                    // If not typing but text exists (e.g. joined late or buzzer locked), show full text
                     if (qEl.textContent.length < currentFullText.length) {
                         qEl.textContent = currentFullText;
                     }
@@ -1410,20 +1415,44 @@
 
             buzz: async () => {
                 const state = window.game.state;
+                
+                // Cek lokal dulu biar responsif
                 if (state.status !== 'open') return;
                 if (state.lockedTeams && state.lockedTeams.includes(myTeamId)) return;
 
+                // Efek visual tekan tombol
                 document.getElementById('client-buzzer-btn').classList.add('scale-95');
 
-                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
-                    status: 'locked',
-                    isTyping: false, 
-                    winner: {
-                        id: myTeamId,
-                        name: document.getElementById('client-team-name').innerText,
-                        timestamp: serverTimestamp()
-                    }
-                });
+                const gameRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main');
+
+                try {
+                    // MENGGUNAKAN TRANSACTION (Anti-Race Condition)
+                    // Ini memastikan hanya satu pemenang yang diterima server
+                    await runTransaction(db, async (transaction) => {
+                        const gameDoc = await transaction.get(gameRef);
+                        if (!gameDoc.exists()) throw "Document does not exist!";
+                        
+                        const gameState = gameDoc.data();
+
+                        // Cek lagi di dalam server apakah status MASIH open
+                        if (gameState.status === 'open') {
+                            transaction.update(gameRef, {
+                                status: 'locked',
+                                isTyping: false, // Paksa berhenti mengetik
+                                winner: {
+                                    id: myTeamId,
+                                    name: document.getElementById('client-team-name').innerText,
+                                    timestamp: serverTimestamp()
+                                }
+                            });
+                        } else {
+                            // Jika status sudah locked (keduluan orang lain), abaikan request ini
+                            console.log("Keduluan tim lain.");
+                        }
+                    });
+                } catch (e) {
+                    console.error("Buzz failed: ", e);
+                }
             },
 
             awardPoints: async (points) => {
@@ -1475,7 +1504,7 @@
                     status: 'idle', 
                     winner: null, 
                     isTyping: false,
-                    showRoundSummary: false // <--- TAMBAHAN: Paksa overlay hilang saat reset bel
+                    showRoundSummary: false // Pastikan overlay hasil babak tertutup
                 });
             },
 			
@@ -1566,8 +1595,6 @@
             },
 
             nextRound: async () => {
-                // Ambil state terbaru dulu untuk tahu index sekarang
-                // Kita gunakan variable lokal 'game.state' yang selalu sync via listener
                 const currentState = window.game.state || {};
                 const rounds = currentState.roundsList || [];
                 let nextIdx = (currentState.currentRoundIdx !== undefined) ? currentState.currentRoundIdx + 1 : 0;
@@ -1578,10 +1605,11 @@
 
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'gameState', 'main'), {
                     currentRoundIdx: nextIdx,
-                    roundConfig: nextRound, // Update config aktif
+                    roundConfig: nextRound,
                     currentQuestion: `BABAK ${nextIdx + 1}:\n${nextRound.name}`,
                     status: 'idle',
-                    currentQuestionNumber: 0 // Reset counter soal
+                    currentQuestionNumber: 0,
+                    showRoundSummary: false // Pastikan overlay hasil babak tertutup saat pindah babak
                 });
             },
 			
