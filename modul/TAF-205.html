@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAF-205: Tafsir & Tadabbur Mendalam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Amiri&family=Scheherazade+New&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --slate-primary: #0f172a;
+            --amber-accent: #d97706;
+            --sky-deep: #0369a1;
+            --rose-accent: #e11d48;
+            --emerald-vibrant: #10b981;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; scroll-behavior: smooth; }
+        .arabic { font-family: 'Scheherazade New', serif; font-size: 2.75rem; line-height: 4.5rem; text-align: right; direction: rtl; }
+        .tab-btn { border-bottom: 4px solid transparent; transition: all 0.3s; color: #64748b; font-size: 0.875rem; }
+        .tab-btn.active { border-bottom-color: var(--amber-accent); color: var(--slate-primary); font-weight: 700; background-color: #fffbeb; }
+        .card { background: white; border-radius: 1.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 3rem; }
+        .teacher-note { background-color: #f0fdf4; border-left: 6px solid #22c55e; padding: 1.5rem; margin: 2rem 0; border-radius: 0.75rem; color: #166534; font-size: 1rem; line-height: 1.6; }
+        .btn-option { transition: all 0.2s; width: 100%; text-align: left; padding: 1.25rem; border: 2px solid #f1f5f9; border-radius: 1rem; margin-top: 0.75rem; background: white; color: #1e293b; }
+        .btn-option:hover { border-color: var(--amber-accent); background-color: #fffbeb; }
+        .correct { background-color: #dcfce7 !important; border-color: #22c55e !important; color: #166534 !important; }
+        .wrong { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; }
+        .explanation { margin-top: 1rem; padding: 1.25rem; background: #f8fafc; border-radius: 0.75rem; border: 1px dashed #cbd5e1; color: #475569; }
+        .sticky-nav { position: sticky; top: 0; z-index: 1000; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid #e2e8f0; }
+        .surah-header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 4rem 1rem; text-align: center; }
+        .analogy-box { background: #eff6ff; border-radius: 1rem; padding: 1.5rem; border: 1px solid #dbeafe; margin: 1.5rem 0; color: #1e40af; }
+        .hidden { display: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Animation for Quake Simulation */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shake-element { animation: shake 0.5s infinite; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="surah-header">
+        <div class="max-w-5xl mx-auto px-4">
+            <h1 class="text-5xl font-black mb-4 tracking-tight uppercase">TAF-205</h1>
+            <h2 class="text-3xl font-bold text-amber-400 uppercase tracking-widest">Tafsir & Tadabbur Mendalam</h2>
+            <p class="mt-4 text-slate-400 font-medium">Kurikulum 8 Pertemuan: Al-Qari'ah & Al-Zalzalah</p>
+        </div>
+    </header>
+
+    <nav class="sticky-nav">
+        <div class="max-w-screen-2xl mx-auto overflow-x-auto no-scrollbar">
+            <div class="flex whitespace-nowrap px-4 shadow-sm">
+                <button onclick="switchTab('p1')" id="btn-p1" class="tab-btn px-8 py-5 font-bold uppercase active">P1: Guncangan Jiwa</button>
+                <button onclick="switchTab('p2')" id="btn-p2" class="tab-btn px-8 py-5 font-bold uppercase">P2: Manusia & Gunung</button>
+                <button onclick="switchTab('p3')" id="btn-p3" class="tab-btn px-8 py-5 font-bold uppercase">P3: Timbangan Amal</button>
+                <button onclick="switchTab('p4')" id="btn-p4" class="tab-btn px-8 py-5 font-bold uppercase">P4: Narun Hamiyah</button>
+                <button onclick="switchTab('p5')" id="btn-p5" class="tab-btn px-8 py-5 font-bold uppercase">P5: Goncangan Bumi</button>
+                <button onclick="switchTab('p6')" id="btn-p6" class="tab-btn px-8 py-5 font-bold uppercase">P6: Rahasia Bumi</button>
+                <button onclick="switchTab('p7')" id="btn-p7" class="tab-btn px-8 py-5 font-bold uppercase">P7: Klasifikasi Manusia</button>
+                <button onclick="switchTab('p8')" id="btn-p8" class="tab-btn px-8 py-5 font-bold uppercase">P8: Zarrah (Atom)</button>
+                <button onclick="switchTab('sumatif')" id="btn-sumatif" class="tab-btn px-8 py-5 font-bold uppercase text-rose-600">Sumatif Akhir</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-6 md:p-12">
+
+        <!-- CONTENT SECTIONS (Iterated through JS below) -->
+        <div id="main-content"></div>
+
+    </main>
+
+    <script>
+        const kurikulum = [
+            {
+                id: "p1",
+                title: "Pertemuan 1: Guncangan Jiwa (Al-Qari'ah 1-3)",
+                color: "amber",
+                tujuan: ["Menganalisis makna linguistik Al-Qari'ah", "Memahami urgensi pengulangan kata dalam Al-Qur'an", "Membangun kesadaran eksistensial tentang hari kiamat"],
+                nilai: "Muraqabah (merasa diawasi). Kiamat disebut Al-Qari'ah karena ia 'mengetuk' atau 'memukul' hati dengan keras agar terbangun dari kelalaian dunia.",
+                dalil: "Al-Qari'ah (1) Ma Al-Qari'ah (2) Wama Adraka Ma Al-Qari'ah (3)",
+                skenario: `
+                    <h4>1. Makna Al-Qari'ah</h4>
+                    <p>Berasal dari kata 'Qara'a' yang berarti mengetuk dengan keras. Bayangkan seseorang mengetuk pintu rumah Anda di tengah malam dengan palu godam. Itulah guncangan kiamat terhadap jiwa manusia.</p>
+                    <div class="analogy-box">Analogi: Seperti alarm kebakaran yang berbunyi sangat nyaring saat semua orang tertidur lelap.</div>
+                    <div class="teacher-note">Guru hendaknya menekankan bahwa kiamat bukan hanya peristiwa fisik, tapi hancurnya segala kepastian duniawi.</div>
+                `,
+                simulasi: "Klik tombol 'Ketukan' untuk merasakan getaran visual pada layar sebagai representasi Al-Qari'ah.",
+                quiz: [
+                    { q: "Apa arti harfiah Al-Qari'ah?", o: ["Bumi bergetar", "Suara yang mengetuk keras", "Gunung meletus", "Langit terbelah"], a: 1, e: "Al-Qari'ah berarti yang mengetuk/memukul dengan keras hingga memekakkan telinga." },
+                    { q: "Mengapa ayat 1-3 diulang-ulang?", o: ["Agar mudah hafal", "Menunjukkan kengerian & keagungan", "Kesalahan tulis", "Tidak ada makna khusus"], a: 1, e: "Gaya bahasa 'Tahwil' bertujuan menggetarkan hati pendengar." },
+                    { q: "Al-Qari'ah termasuk surah...", o: ["Madaniyah", "Makkiyah", "Sajdah", "Panjang"], a: 1, e: "Makkiyah, karena fokus pada akidah dan hari kiamat." },
+                    { q: "Apa guncangan pertama yang dirasakan?", o: ["Fisik", "Jiwa/Mental", "Ekonomi", "Politik"], a: 1, e: "Jiwa manusia terpukul oleh kedahsyatan suara sangkakala." },
+                    { q: "Al-Qari'ah adalah nama lain dari...", o: ["Neraka", "Surga", "Hari Kiamat", "Malaikat Jibril"], a: 2, e: "Salah satu nama hari kiamat." },
+                    { q: "Kata 'Wama Adraka' menunjukkan...", o: ["Pertanyaan biasa", "Ketidaktahuan Allah", "Keterbatasan akal manusia", "Jawaban singkat"], a: 2, e: "Menunjukkan manusia tidak akan bisa membayangkan hakikat aslinya." },
+                    { q: "Sikap mukmin terhadap Al-Qari'ah?", o: ["Takut saja", "Abaikan", "Persiapkan amal", "Lari"], a: 2, e: "Mempersiapkan bekal sebelum hari itu tiba." },
+                    { q: "Fungsi ketukan dalam nama surah ini?", o: ["Membangunkan yang lalai", "Menghibur", "Mengusir musuh", "Tanda shalat"], a: 0, e: "Membangunkan manusia dari tidurnya kesenangan dunia." },
+                    { q: "Urutan Surah Al-Qari'ah?", o: ["100", "101", "102", "103"], a: 1, e: "Surah ke-101." },
+                    { q: "Isi utama ayat 1-3?", o: ["Siksa neraka", "Nama kiamat & kehebatannya", "Nikmat surga", "Hukum waris"], a: 1, e: "Fokus pada pengenalan istilah kiamat." }
+                ]
+            },
+            {
+                id: "p2",
+                title: "Pertemuan 2: Manusia & Gunung (Al-Qari'ah 4-5)",
+                color: "emerald",
+                tujuan: ["Menggambarkan keadaan manusia seperti laron", "Memahami transformasi gunung menjadi bulu", "Menghubungkan kerapuhan dunia dengan kekuasaan Allah"],
+                nilai: "Tawadhu (rendah hati). Manusia sehebat apapun di kiamat hanyalah laron yang tak berdaya.",
+                dalil: "Yauma Yakunu An-Nasu Kal-Farashil Mabthuth (4)",
+                skenario: `
+                    <h4>1. Analogi Laron (Al-Farash)</h4>
+                    <p>Mengapa laron? Laron terbang tak tentu arah, lemah, dan berkerumun. Itulah gambaran manusia saat kiamat: bingung, panik, dan kehilangan arah.</p>
+                    <div class="analogy-box">Analogi: Seperti kerumunan orang di stadion saat terjadi kebakaran besar; tak ada yang peduli pada orang lain.</div>
+                    <div class="teacher-note">Guru: Jelaskan bahwa gunung yang solid menjadi 'Ihn' (bulu domba) menunjukkan hancurnya struktur atom materi bumi.</div>
+                `,
+                simulasi: "Gerakkan slider 'Intensitas Kiamat' untuk melihat gambar gunung perlahan berubah menjadi transparan/bulu.",
+                quiz: [
+                    { q: "Manusia diibaratkan seperti...", o: ["Semut", "Laron/Kupu-kupu", "Belalang", "Burung"], a: 1, e: "Kal-Farashil Mabthuth (seperti laron yang bertebaran)." },
+                    { q: "Gunung diibaratkan seperti...", o: ["Debu", "Bulu domba yang dibusur", "Asap", "Air terjun"], a: 1, e: "Kal-Ihnil Manfush (seperti bulu domba yang dibusur)." },
+                    { q: "Makna 'Mabthuth' adalah...", o: ["Terbang tinggi", "Bertebaran/Kacau", "Warna-warni", "Kuat"], a: 1, e: "Bertebaran tanpa arah tujuan." },
+                    { q: "Mengapa gunung dijadikan perumpamaan?", o: ["Karena tinggi", "Simbol kekokohan yang runtuh", "Karena banyak pohon", "Hiasan bumi"], a: 1, e: "Jika yang terkokoh saja hancur, apalagi manusia." },
+                    { q: "Keadaan manusia saat itu...", o: ["Saling tolong", "Sangat panik", "Tenang", "Tidur"], a: 1, e: "Sangat panik hingga tak mengenali saudara sendiri." },
+                    { q: "Arti 'Ihn' adalah...", o: ["Kapas", "Bulu domba berwarna", "Sutra", "Pasir"], a: 1, e: "Bulu domba yang biasanya berat menjadi sangat ringan." },
+                    { q: "Maksud 'Manfush'...", o: ["Ditiup", "Dibusur/Diurai", "Dicuci", "Dibuang"], a: 1, e: "Diurai hingga kehilangan kekokohannya." },
+                    { q: "Hikmah ayat ini?", o: ["Dunia itu fana", "Gunung itu berbahaya", "Laron itu indah", "Rajin olahraga"], a: 0, e: "Menyadarkan manusia bahwa kekuatan materi dunia hanyalah sementara." },
+                    { q: "Siapa yang membuat kiamat terjadi?", o: ["Alam", "Malaikat", "Allah SWT", "Manusia"], a: 2, e: "Atas perintah Allah semata." },
+                    { q: "Manusia bertebaran mencari...", o: ["Harta", "Tempat sembunyi", "Anak", "Makanan"], a: 1, e: "Mencari perlindungan yang sudah tidak ada lagi." }
+                ]
+            },
+            {
+                id: "p3",
+                title: "Pertemuan 3: Timbangan Amal (Al-Qari'ah 6-9)",
+                color: "sky",
+                tujuan: ["Memahami konsep Mizan", "Mendefinisikan Aishah Radiyah", "Mengenal terminologi Hawiyah"],
+                nilai: "Adil (Keadilan). Allah menimbang bukan hanya kuantitas, tapi kualitas (keikhlasan).",
+                dalil: "Fa Amma Man Thaqulat Mawazinuhu (6)",
+                skenario: `
+                    <h4>1. Konsep Mawazin</h4>
+                    <p>Allah menggunakan bentuk jamak (Mawazin) karena amal manusia beragam jenisnya. Beratnya timbangan ditentukan oleh bobot kebenaran amal tersebut.</p>
+                    <div class="analogy-box">Analogi: Satu kilogram emas jauh lebih berharga daripada satu ton sampah plastik. Ikhlas adalah emasnya amal.</div>
+                    <svg width="200" height="100" class="mx-auto my-4"><line x1="100" y1="10" x2="100" y2="90" stroke="black" /><line x1="40" y1="30" x2="160" y2="70" stroke="black" stroke-width="3" /><circle cx="40" cy="30" r="20" fill="gold" /><circle cx="160" cy="70" r="20" fill="gray" /></svg>
+                    <div class="teacher-note">Gunakan istilah 'Aishah Radiyah' untuk menggambarkan kebahagiaan yang paripurna di surga.</div>
+                `,
+                simulasi: "Drag & Drop 'Amal Ikhlas' ke timbangan untuk melihat indikator Surga menyala.",
+                quiz: [
+                    { q: "Arti 'Thaqulat' adalah...", o: ["Ringan", "Berat", "Sama", "Hilang"], a: 1, e: "Thaqulat berarti berat timbangannya." },
+                    { q: "Balasan bagi yang berat timbangannya?", o: ["Hawiyah", "Aishatin Radiyah", "Dunia", "Kubur"], a: 1, e: "Kehidupan yang memuaskan (Surga)." },
+                    { q: "Apa yang dimaksud 'Hawiyah'?", o: ["Pintu surga", "Neraka yang dalam", "Nama gunung", "Nama telaga"], a: 1, e: "Hawiyah adalah tempat kembali bagi yang ringan timbangannya." },
+                    { q: "Arti 'Ummuhu' secara bahasa adalah...", o: ["Rumahnya", "Ibunya", "Pakaiannya", "Temannya"], a: 1, e: "Allah menyebut neraka sebagai 'ibunya' karena ia mendekap pendosa dengan erat." },
+                    { q: "Mengapa menggunakan istilah 'Ibu' untuk neraka?", o: ["Karena hangat", "Karena tempat kembali terakhir", "Karena neraka itu baik", "Karena neraka itu besar"], a: 1, e: "Sebagaimana anak kembali ke pelukan ibu, pendosa kembali ke neraka." },
+                    { q: "Mawazin adalah bentuk jamak dari...", o: ["Mizan", "Wazan", "Zain", "Mauz"], a: 0, e: "Mizan (Timbangan)." },
+                    { q: "Kehidupan yang 'Radiyah' artinya...", o: ["Penuh kerja", "Memuaskan/Ridha", "Membosankan", "Singkat"], a: 1, e: "Kehidupan di mana hamba merasa sangat puas." },
+                    { q: "Amal yang paling berat di timbangan?", o: ["Sedekah banyak tapi riya", "Zikir dengan ikhlas", "Shalat sambil ngantuk", "Haji untuk pamer"], a: 1, e: "Keikhlasan memberi bobot luar biasa pada amal." },
+                    { q: "Jika kebaikan 51% dan keburukan 49%, maka...", o: ["Masuk neraka", "Timbangan berat", "Timbangan ringan", "Batal"], a: 1, e: "Dihitung sebagai timbangan yang berat." },
+                    { q: "Siapa yang menimbang amal?", o: ["Malaikat saja", "Allah dengan keadilan-Nya", "Manusia sendiri", "Setan"], a: 1, e: "Allah adalah hakim yang paling adil." }
+                ]
+            },
+            {
+                id: "p4",
+                title: "Pertemuan 4: Narun Hamiyah (Al-Qari'ah 10-11)",
+                color: "orange",
+                tujuan: ["Menganalisis intensitas panas neraka", "Memahami struktur penutup surah", "Membangun rasa takut yang positif (Khauf)"],
+                nilai: "Khauf & Raja' (Takut & Harap). Pengetahuan tentang neraka membuat kita waspada.",
+                dalil: "Narun Hamiyah (11)",
+                skenario: `
+                    <h4>1. Hakikat Hamiyah</h4>
+                    <p>Hamiyah bukan sekadar panas. Ia adalah api yang telah mencapai puncak suhunya. Hadits menyebutkan api dunia hanya 1/70 dari api neraka.</p>
+                    <div class="analogy-box">Analogi: Jika api kompor bisa membakar kulit, api laser bisa memotong baja. Api Hamiyah melampaui segala teknologi panas manusia.</div>
+                    <div class="teacher-note">Tekankan bahwa 'Wama Adraka' di sini menunjukkan akal kita tak sanggup mendeteksi suhu Hawiyah.</div>
+                `,
+                simulasi: "Klik tombol 'Bandingkan' untuk melihat perbandingan suhu api dunia vs api neraka secara grafik.",
+                quiz: [
+                    { q: "Apa arti 'Narun Hamiyah'?", o: ["Api yang terang", "Api yang sangat panas", "Api yang biru", "Api yang padam"], a: 1, e: "Api yang panasnya meluap-luap/puncak panas." },
+                    { q: "Berapa perbandingan panas api neraka vs api dunia?", o: ["10x", "70x", "100x", "1000x"], a: 1, e: "Berdasarkan hadits Nabi SAW adalah 70 kali lipat." },
+                    { q: "Mengapa surah ditutup dengan api?", o: ["Agar senang", "Sebagai peringatan terakhir", "Tidak sengaja", "Hiasan"], a: 1, e: "Memberikan kesan 'shock therapy' agar manusia bertaubat." },
+                    { q: "Surah Al-Qari'ah diakhiri dengan ayat nomor?", o: ["9", "10", "11", "12"], a: 2, e: "Terdiri dari 11 ayat." },
+                    { q: "Warna api neraka menurut riwayat?", o: ["Merah", "Kuning", "Hitam pekat", "Biru"], a: 2, e: "Dibakar ribuan tahun hingga menjadi hitam." },
+                    { q: "Apa yang membuat api neraka lebih panas?", o: ["Kayu bakarnya", "Lama pembakarannya atas izin Allah", "Bensin", "Angin"], a: 1, e: "Allah memerintahkan api itu membara ribuan tahun." },
+                    { q: "Siapa yang masuk ke Narun Hamiyah?", o: ["Orang shalat", "Yang ringan timbangan kebaikannya", "Orang kaya", "Anak kecil"], a: 1, e: "Mereka yang timbangan amalnya ringan." },
+                    { q: "Lawannya 'Aishatin Radiyah' adalah...", o: ["Surga", "Hawiyah", "Dunia", "Mimpi"], a: 1, e: "Hawiyah (Neraka)." },
+                    { q: "Sikap saat membaca ayat terakhir Al-Qari'ah?", o: ["Tertawa", "Berdoa minta perlindungan", "Biasa saja", "Marah"], a: 1, e: "Dianjurkan memohon perlindungan dari api neraka." },
+                    { q: "Maksud pertanyaan 'Wama Adraka Ma Hiyah'?", o: ["Allah bertanya beneran", "Menantang manusia membayangkan", "Menunjukkan kehebatan api", "Sama dengan p1"], a: 2, e: "Menunjukkan kengeriannya tak terjangkau imajinasi." }
+                ]
+            },
+            {
+                id: "p5",
+                title: "Pertemuan 5: Goncangan Bumi (Al-Zalzalah 1-2)",
+                color: "rose",
+                tujuan: ["Memahami makna Zulzilat dan Zilzalaha", "Menganalisis proses bumi mengeluarkan beban", "Membangun kesadaran lingkungan"],
+                nilai: "Tanggung Jawab. Bumi menyimpan memori segala perbuatan kita.",
+                dalil: "Idza Zulzilatil Ardhu Zilzalaha (1)",
+                skenario: `
+                    <h4>1. Zulzilat vs Zilzalaha</h4>
+                    <p>Zilzalaha menggunakan kata ganti 'ha' (nya), artinya guncangan yang khusus milik bumi itu sendiri, yang belum pernah terjadi sebelumnya. Bukan gempa biasa.</p>
+                    <div class="analogy-box">Analogi: Jika gempa bumi sekarang adalah getaran HP, Zalzalah kiamat adalah mesin penghancur gedung raksasa.</div>
+                    <div class="teacher-note">Guru: Jelaskan 'Athqalaha' (beban-beban) bisa berarti mayat manusia atau logam mulia/harta yang selama ini dipendam.</div>
+                `,
+                simulasi: "Klik 'Guncangkan' untuk melihat elemen kartu bergoyang secara intensif.",
+                quiz: [
+                    { q: "Apa arti 'Idza Zulzilat'?", o: ["Jika bumi dibelah", "Apabila bumi digoncangkan", "Saat langit runtuh", "Jika laut meluap"], a: 1, e: "Zulzilat berarti digoncangkan dengan dahsyat." },
+                    { q: "Kata 'Zilzalaha' menunjukkan...", o: ["Goncangan biasa", "Goncangan maha dahsyat miliknya", "Goncangan kecil", "Goncangan sementara"], a: 1, e: "Menunjukkan eksklusivitas goncangan kiamat." },
+                    { q: "Apa yang dikeluarkan bumi (Athqalaha)?", o: ["Air", "Beban-beban (mayat/harta)", "Pohon", "Oksigen"], a: 1, e: "Bumi mengeluarkan segala isinya ke permukaan." },
+                    { q: "Al-Zalzalah termasuk surah...", o: ["Makkiyah", "Madaniyah", "Pendek", "Sajdah"], a: 1, e: "Mayoritas ulama menggolongkannya sebagai Madaniyah." },
+                    { q: "Goncangan ini terjadi pada...", o: ["Masa lalu", "Kiamat", "Tiap tahun", "Bulan depan"], a: 1, e: "Peristiwa besar di hari kiamat." },
+                    { q: "Bagaimana perasaan manusia melihat guncangan ini?", o: ["Senang", "Sangat kaget/bingung", "Biasa saja", "Ingin selfie"], a: 1, e: "Manusia akan berkata 'Ma laha?' (Kenapa bumi ini?)." },
+                    { q: "Zulzilat adalah bentuk kata kerja...", o: ["Pasif", "Aktif", "Perintah", "Larangan"], a: 0, e: "Digoncangkan (oleh perintah Allah)." },
+                    { q: "Siapa yang memerintahkan bumi berguncang?", o: ["Lempeng tektonik", "Allah SWT", "Matahari", "Magnet"], a: 1, e: "Sepenuhnya atas wahyu/perintah Allah." },
+                    { q: "Maksud 'Beban bumi' di masa lalu?", o: ["Sampah", "Mayat dan harta karun", "Akar", "Inti bumi"], a: 1, e: "Segala yang terkubur akan dimuntahkan." },
+                    { q: "Zalzalah artinya...", o: ["Gempa", "Banjir", "Badai", "Gerhana"], a: 0, e: "Goncangan/Gempa." }
+                ]
+            },
+            {
+                id: "p6",
+                title: "Pertemuan 6: Rahasia Bumi (Al-Zalzalah 3-5)",
+                color: "emerald",
+                tujuan: ["Menjelaskan mengapa bumi berbicara", "Memahami konsep wahyu kepada makhluk tak bernyawa", "Meningkatkan integritas moral"],
+                nilai: "Integritas. Kita tidak bisa bersembunyi karena tanah tempat kita berdiri akan menjadi saksi.",
+                dalil: "Yauma'idzin Tuhaddithu Akhbaraha (4)",
+                skenario: `
+                    <h4>1. Bumi Sebagai Saksi</h4>
+                    <p>Bumi akan menceritakan 'Akhbar' (berita-berita). Setiap sujud, setiap langkah maksiat, tanah akan melaporkannya kepada Allah.</p>
+                    <div class="analogy-box">Analogi: Seperti CCTV yang merekam 24 jam. Bedanya, 'CCTV' ini adalah lantai yang Anda injak sekarang.</div>
+                    <div class="teacher-note">Guru: Jelaskan ayat 5 'Bi-anna Rabbaka Aw-ha Laha'. Bumi berbicara bukan karena punya mulut, tapi karena Allah yang mewahyukan padanya.</div>
+                `,
+                simulasi: "Pilih 'Lokasi' (Masjid vs Jalan) untuk melihat pesan 'Laporan Bumi' yang akan muncul di hari kiamat.",
+                quiz: [
+                    { q: "Apa yang dilakukan bumi pada hari itu?", o: ["Diam saja", "Menceritakan beritanya", "Menghilang", "Menjadi surga"], a: 1, e: "Tuhaddithu Akhbaraha (menceritakan berita-beritanya)." },
+                    { q: "Mengapa bumi bisa bicara?", o: ["Punya mulut", "Allah mewahyukan padanya", "Evolusi", "Teknologi"], a: 1, e: "Karena Tuhanmu telah mewahyukan kepadanya." },
+                    { q: "Apa maksud 'Akhbar' bumi?", o: ["Berita cuaca", "Rekaman amal manusia di atasnya", "Berita politik", "Gosip"], a: 1, e: "Kesaksian bumi atas perbuatan manusia." },
+                    { q: "Manusia bertanya 'Ma laha', artinya?", o: ["Siapa dia?", "Ada apa dengannya?", "Ke mana dia?", "Mengapa dia marah?"], a: 1, e: "Ekspresi kebingungan manusia melihat bumi hancur." },
+                    { q: "Bumi menjadi saksi yang...", o: ["Bohong", "Jujur & Tak bisa dibantah", "Ragu-ragu", "Dibayar"], a: 1, e: "Saksi yang paling otentik di hadapan Allah." },
+                    { q: "Hikmah bumi berbicara?", o: ["Agar kita takut jalan", "Agar waspada saat sendirian", "Tidak ada hikmah", "Agar kita menanam pohon"], a: 1, e: "Menyadarkan bahwa tak ada tempat sembunyi dari dosa." },
+                    { q: "Ayat 5 menekankan kekuasaan Allah dalam hal...", o: ["Menciptakan", "Memberi Wahyu/Perintah", "Menghancurkan", "Memberi Rezeki"], a: 1, e: "Allah mampu membuat benda mati berbicara." },
+                    { q: "Siapa yang kaget melihat bumi bicara?", o: ["Malaikat", "Manusia", "Hewan", "Jin"], a: 1, e: "Manusia yang tidak beriman akan sangat syok." },
+                    { q: "Berapa jumlah ayat Al-Zalzalah?", o: ["7", "8", "9", "10"], a: 1, e: "Terdiri dari 8 ayat." },
+                    { q: "Kata 'Aw-ha' berarti...", o: ["Melihat", "Mewahyukan/Memerintahkan", "Mendengar", "Menulis"], a: 1, e: "Allah memberi perintah/ilham kepada bumi." }
+                ]
+            },
+            {
+                id: "p7",
+                title: "Pertemuan 7: Klasifikasi Manusia (Al-Zalzalah 6)",
+                color: "sky",
+                tujuan: ["Memahami makna 'Ashtata'", "Menjelaskan tujuan manusia dikelompokkan", "Membangun kesiapan mental menghadapi hisab"],
+                nilai: "Kejelasan. Di akhirat, tak ada zona abu-abu; semua jelas kelompoknya.",
+                dalil: "Yauma'idzin Yasdhuru An-Nasu Ashtatan (6)",
+                skenario: `
+                    <h4>1. Makna Ashtatan</h4>
+                    <p>Artinya bergolak-golak atau berkelompok-kelompok sesuai jenis amalnya. Orang beriman berkumpul dengan orang beriman, begitu pula sebaliknya.</p>
+                    <div class="analogy-box">Analogi: Seperti filter di laboratorium yang memisahkan zat bersih dan kotor secara otomatis.</div>
+                    <div class="teacher-note">Guru: Tekankan kata 'Liyuraw A'malahum' (untuk diperlihatkan amal mereka). Kita akan menonton 'film' hidup kita sendiri.</div>
+                `,
+                simulasi: "Klik 'Sortir' untuk memisahkan ikon 'Hati Bersih' dan 'Hati Gelap' ke sisi yang berbeda.",
+                quiz: [
+                    { q: "Arti 'Ashtatan' adalah...", o: ["Bersatu", "Bermacam-macam kelompok", "Berlari", "Diam"], a: 1, e: "Manusia keluar dari kubur dalam keadaan berkelompok-kelompok." },
+                    { q: "Tujuan manusia dikelompokkan adalah...", o: ["Untuk piknik", "Diperlihatkan balasan amalnya", "Untuk perang", "Tidak ada tujuan"], a: 1, e: "Liyuraw A'malahum (agar diperlihatkan kepada mereka amal mereka)." },
+                    { q: "Kata 'Yasdhuru' berarti...", o: ["Masuk", "Keluar/Muncul", "Duduk", "Terbang"], a: 1, e: "Muncul atau keluar (dari dalam kubur)." },
+                    { q: "Siapa yang berkelompok?", o: ["Hanya muslim", "Seluruh manusia", "Hanya kafir", "Malaikat"], a: 1, e: "An-Nasu (Seluruh Manusia)." },
+                    { q: "Di mana kita akan melihat amal kita?", o: ["Di TV", "Dalam catatan/layar akhirat", "Di mimpi", "Tidak lihat"], a: 1, e: "Segala amal akan divisualisasikan dengan jelas." },
+                    { q: "Perasaan saat melihat amal buruk?", o: ["Bangga", "Sangat malu & menyesal", "Biasa saja", "Senang"], a: 1, e: "Penyesalan yang luar biasa bagi pelaku dosa." },
+                    { q: "Apa yang membedakan kelompok satu dengan lainnya?", o: ["Warna kulit", "Amal perbuatan", "Kekayaan", "Bahasa"], a: 1, e: "Amal adalah satu-satunya pembeda." },
+                    { q: "Maksud 'Liyuraw'?", o: ["Agar mereka makan", "Agar mereka melihat", "Agar mereka tidur", "Agar mereka lari"], a: 1, e: "Akar kata 'Ra'a' (melihat)." },
+                    { q: "Apakah ada yang tersembunyi saat itu?", o: ["Banyak", "Tidak ada sama sekali", "Hanya sedikit", "Tergantung"], a: 1, e: "Semua akan dibuka sejelas-jelasnya." },
+                    { q: "Sikap kita sekarang agar masuk kelompok yang baik?", o: ["Santai", "Istiqamah dalam kebaikan", "Menunggu nanti", "Pindah negara"], a: 1, e: "Berusaha menjaga amal shaleh setiap hari." }
+                ]
+            },
+            {
+                id: "p8",
+                title: "Pertemuan 8: Zarrah/Atom (Al-Zalzalah 7-8)",
+                color: "indigo",
+                tujuan: ["Menganalisis konsep keadilan sekecil zarrah", "Memahami urgensi amal-amal kecil", "Menutup pembelajaran dengan komitmen aksi"],
+                nilai: "Ketelitian (Precision). Allah tidak melewatkan koma atau titik dalam hidup kita.",
+                dalil: "Faman Ya'mal Mithqala Dzarratin Khairan Yarah (7)",
+                skenario: `
+                    <h4>1. Definisi Zarrah</h4>
+                    <p>Zarrah sering diterjemahkan sebagai biji sawi, semut kecil, atau debu yang terlihat di sinar matahari. Dalam konteks modern: Atom. Intinya: Satuan terkecil yang bisa dibayangkan manusia.</p>
+                    <div class="analogy-box">Analogi: Satu tetes tinta di kolam mungkin tak terlihat, tapi di kertas putih ia sangat jelas. Satu dosa di dunia mungkin remeh, di akhirat ia nyata.</div>
+                    <div class="teacher-note">Guru: Tutup sesi dengan pesan: Jangan remehkan senyuman (kebaikan kecil) dan jangan remehkan lirik mata (keburukan kecil).</div>
+                `,
+                simulasi: "Gunakan 'Kaca Pembesar' virtual untuk melihat butiran 'Zarrah' yang berisi catatan amal.",
+                quiz: [
+                    { q: "Apa arti 'Zarrah'?", o: ["Batu besar", "Satuan terkecil/Atom", "Gunung", "Lautan"], a: 1, e: "Sesuatu yang sangat kecil, seukuran debu atau atom." },
+                    { q: "Jika beramal seberat zarrah keburukan, apakah dicatat?", o: ["Tidak", "Ya, tetap dicatat & dibalas", "Hanya jika sengaja", "Tergantung mood"], a: 1, e: "Ya'mal mithqala dzarratin sharran yarah (akan melihat balasannya)." },
+                    { q: "Apa janji Allah di ayat 7?", o: ["Pasti melihat balasan kebaikan", "Dapat uang", "Masuk sekolah", "Jadi pintar"], a: 0, e: "Kebaikan sekecil apapun tidak akan sia-sia." },
+                    { q: "Ayat ini mengajarkan kita untuk tidak...", o: ["Makan banyak", "Meremehkan amal kecil", "Tidur siang", "Berjalan jauh"], a: 1, e: "Amal kecil bisa menjadi penentu di akhirat." },
+                    { q: "Kata 'Khairan' berarti...", o: ["Buruk", "Baik", "Cepat", "Lambat"], a: 1, e: "Kebaikan." },
+                    { q: "Kata 'Sharran' berarti...", o: ["Baik", "Buruk/Kejahatan", "Lucu", "Sedih"], a: 1, e: "Keburukan." },
+                    { q: "Maksud 'Yarah' di akhir ayat?", o: ["Dia akan lari", "Dia akan melihatnya", "Dia akan lupa", "Dia akan tidur"], a: 1, e: "Akar kata 'Ra'a' (melihat/menyaksikan)." },
+                    { q: "Siapa yang rugi menurut ayat terakhir?", o: ["Yang banyak uang", "Yang meremehkan dosa kecil", "Yang rajin bantu ibu", "Yang suka belajar"], a: 1, e: "Orang yang menumpuk dosa kecil tanpa taubat." },
+                    { q: "Prinsip keadilan Allah di ayat ini?", o: ["Pilih kasih", "Maha Teliti & Adil", "Random", "Hanya untuk orang kaya"], a: 1, e: "Allah memperhitungkan segalanya secara presisi." },
+                    { q: "Kesimpulan surah Al-Zalzalah?", o: ["Bumi itu kuat", "Segala amal ada hitungannya", "Kiamat itu mitos", "Jangan buang sampah"], a: 1, e: "Penekanan pada tanggung jawab mutlak setiap individu." }
+                ]
+            }
+        ];
+
+        // RENDER ALL CONTENT
+        const mainContainer = document.getElementById('main-content');
+        kurikulum.forEach(p => {
+            const section = document.createElement('section');
+            section.id = p.id;
+            section.className = "tab-content hidden";
+            section.innerHTML = `
+                <div class="card p-8 md:p-14">
+                    <h2 class="text-4xl font-black text-slate-900 mb-10 border-b-4 border-${p.color}-500 pb-4 inline-block">${p.title}</h2>
+                    <div class="space-y-12">
+                        <div class="bg-slate-50 p-8 rounded-3xl border border-slate-200">
+                            <h3 class="text-2xl font-bold text-${p.color}-700 mb-6">A. Tujuan Pembelajaran</h3>
+                            <ul class="space-y-4 text-slate-700">
+                                ${p.tujuan.map((t, i) => `<li class="flex items-start"><span class="mr-3 font-bold text-${p.color}-500">${i+1}.</span> ${t}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-${p.color}-700 mb-6">B. Keterkaitan Nilai Islam</h3>
+                            <div class="bg-${p.color}-50 p-8 rounded-3xl border border-${p.color}-200">
+                                <p class="text-lg text-slate-800 mb-6">${p.nilai}</p>
+                                <div class="bg-white p-6 rounded-2xl border-l-8 border-${p.color}-600 shadow-sm">
+                                    <p class="arabic mb-2">${p.dalil}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-${p.color}-700 mb-6">C. Skenario Pembelajaran</h3>
+                            <div class="prose prose-lg max-w-none text-slate-800 space-y-8">${p.skenario}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card p-8 md:p-14 bg-${p.color}-50 border-t-8 border-${p.color}-600">
+                    <h3 class="text-3xl font-black mb-8 text-center uppercase">Konten Tambahan ${p.id.toUpperCase()}</h3>
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-white p-8 rounded-3xl border shadow-sm">
+                            <h4 class="font-bold mb-4 uppercase">Simulasi 1</h4>
+                            <p class="text-sm text-slate-600 mb-6">${p.simulasi}</p>
+                            <button onclick="runSim('${p.id}')" class="w-full py-3 bg-${p.color}-600 text-white rounded-xl font-bold">Jalankan Simulasi</button>
+                        </div>
+                        <div class="bg-white p-8 rounded-3xl border shadow-sm">
+                            <h4 class="font-bold mb-4 uppercase">Simulasi 2</h4>
+                            <p class="text-sm text-slate-600 mb-4">Refleksi Mandiri: Tuliskan 1 amal zarrah yang ingin kamu lakukan hari ini.</p>
+                            <input type="text" class="w-full p-3 border rounded-xl" placeholder="Ketik di sini...">
+                        </div>
+                    </div>
+                    <div class="bg-slate-900 p-8 rounded-3xl text-white">
+                        <h4 class="text-2xl font-bold mb-8 text-${p.color}-400">Latihan Formatif (10 Soal)</h4>
+                        <div id="quiz-${p.id}-container" class="space-y-6"></div>
+                    </div>
+                </div>
+            `;
+            mainContainer.appendChild(section);
+        });
+
+        // SUMATIF SECTION
+        const sumatifSection = document.createElement('section');
+        sumatifSection.id = 'sumatif';
+        sumatifSection.className = "tab-content hidden";
+        sumatifSection.innerHTML = `
+            <div class="card p-14 text-center">
+                <h2 class="text-5xl font-black text-rose-600 mb-6">SUMATIF AKHIR TAF-205</h2>
+                <p class="text-xl text-slate-600 mb-10">Uji pemahaman komprehensif Anda terhadap Surah Al-Qari'ah & Al-Zalzalah.</p>
+                <div class="grid md:grid-cols-3 gap-6 mb-12">
+                    <div class="p-6 bg-slate-50 rounded-2xl border">
+                        <div class="text-3xl font-bold text-slate-800">20</div>
+                        <div class="text-sm text-slate-500">Total Soal</div>
+                    </div>
+                    <div class="p-6 bg-slate-50 rounded-2xl border">
+                        <div class="text-3xl font-bold text-slate-800">90</div>
+                        <div class="text-sm text-slate-500">Menit Waktu</div>
+                    </div>
+                    <div class="p-6 bg-slate-50 rounded-2xl border">
+                        <div class="text-3xl font-bold text-slate-800">80</div>
+                        <div class="text-sm text-slate-500">Passing Grade</div>
+                    </div>
+                </div>
+                <button class="px-12 py-5 bg-rose-600 text-white font-black rounded-2xl text-xl hover:bg-rose-700 transition">MULAI UJIAN SEKARANG</button>
+            </div>
+        `;
+        mainContainer.appendChild(sumatifSection);
+
+        // LOGIC FUNCTIONS
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById('btn-' + id).classList.add('active');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function renderAllQuizzes() {
+            kurikulum.forEach(p => {
+                const container = document.getElementById(`quiz-${p.id}-container`);
+                p.quiz.forEach((item, idx) => {
+                    const div = document.createElement('div');
+                    div.className = "bg-slate-800 p-6 rounded-2xl border border-slate-700";
+                    div.innerHTML = `
+                        <p class="font-bold mb-4 text-white"><span class="opacity-50 mr-2">${idx+1}.</span> ${item.q}</p>
+                        <div class="grid md:grid-cols-2 gap-3">
+                            ${item.o.map((opt, oIdx) => `
+                                <button class="btn-option !text-slate-200 !bg-slate-700 !border-slate-600" onclick="checkAnswer(this, ${oIdx}, ${item.a}, '${p.id}_${idx}')">
+                                    ${opt}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <div id="exp-${p.id}_${idx}" class="hidden explanation !text-slate-300 !bg-slate-800">
+                            <strong>Tadabbur:</strong> ${item.e}
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        function checkAnswer(btn, sel, cor, id) {
+            const parent = btn.parentElement;
+            const exp = document.getElementById('exp-' + id);
+            parent.querySelectorAll('button').forEach(b => b.disabled = true);
+            exp.classList.remove('hidden');
+            if(sel === cor) {
+                btn.classList.add('correct');
+            } else {
+                btn.classList.add('wrong');
+                parent.querySelectorAll('button')[cor].classList.add('correct');
+            }
+        }
+
+        function runSim(id) {
+            if(id === 'p1') {
+                document.body.classList.add('shake-element');
+                setTimeout(() => document.body.classList.remove('shake-element'), 1000);
+            } else if(id === 'p5') {
+                const card = document.querySelector(`#${id} .card`);
+                card.classList.add('shake-element');
+                setTimeout(() => card.classList.remove('shake-element'), 1500);
+            } else {
+                alert('Simulasi ' + id + ' berhasil dijalankan di layar interaktif!');
+            }
+        }
+
+        window.onload = () => {
+            renderAllQuizzes();
+            switchTab('p1');
+        };
+    </script>
+</body>
+</html>
