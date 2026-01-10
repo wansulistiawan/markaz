@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULQ-205: Studi Tematik Al-Qur'an (8 Pertemuan)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax for LaTeX -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; scroll-behavior: smooth; }
+        .arabic { font-family: 'Amiri', serif; font-size: 1.75rem; line-height: 2.8rem; text-align: right; color: #1e293b; }
+        .tab-btn { position: relative; transition: all 0.3s ease; }
+        .tab-active { color: #059669; font-weight: 800; border-bottom: 3px solid #059669; background-color: #ecfdf5; }
+        .teacher-note { border-left: 5px solid #d97706; background-color: #fffbeb; padding: 1.25rem; border-radius: 0.5rem; position: relative; }
+        .teacher-note::before { content: "💡 Catatan Guru"; display: block; font-weight: bold; color: #b45309; margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.75rem; }
+        .simulation-box { background: #ffffff; border: 2px dashed #cbd5e1; border-radius: 1rem; padding: 2rem; transition: all 0.3s; }
+        .simulation-box:hover { border-color: #10b981; }
+        .card-formatif { background: white; border-radius: 1rem; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .option-label { display: block; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; transition: 0.2s; }
+        .option-label:hover { background-color: #f8fafc; border-color: #94a3b8; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden { display: none; }
+        .progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #10b981; transition: width 0.5s; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased">
+
+    <!-- Navbar & Tabs -->
+    <header class="bg-emerald-900 text-white shadow-2xl sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-xl font-black tracking-tight">ULQ-205 <span class="font-light text-emerald-300">STUDI TEMATIK AL-QUR'AN</span></h1>
+            </div>
+            <div class="text-xs font-mono bg-emerald-800 px-3 py-1 rounded mt-2 md:mt-0">8 SESI @ 90 MENIT</div>
+        </div>
+        <div class="bg-white/10 overflow-x-auto no-scrollbar border-t border-white/10">
+            <div class="container mx-auto flex whitespace-nowrap">
+                <button onclick="showSession(1)" id="btn-1" class="tab-btn px-6 py-3 text-sm font-semibold hover:bg-white/5">Sesi 1</button>
+                <button onclick="showSession(2)" id="btn-2" class="tab-btn px-6 py-3 text-sm font-semibold hover:bg-white/5">Sesi 2</button>
+                <button onclick="showSession(3)" id="btn-3" class="tab-btn px-6 py-3 text-sm font-semibold hover:bg-white/5">Sesi 3</button>
+                <button onclick="showSession(4)" id="btn-4" class="tab-btn px-6 py-3 text-sm font-semibold hover:bg-white/5">Sesi 4</button>
+                <button onclick="showSession(5)" id="btn-5" class="tab-btn px-6 py-3 text-sm font-semibold hover:bg-white/5">Sesi 5</button>
+                <button onclick="showSession(6)" id="btn-6" class="tab-btn px-6 py-3 text-sm font-semibold hover:bg-white/5">Sesi 6</button>
+                <button onclick="showSession(7)" id="btn-7" class="tab-btn px-6 py-3 text-sm font-semibold hover:bg-white/5">Sesi 7</button>
+                <button onclick="showSession(8)" id="btn-8" class="tab-btn px-6 py-3 text-sm font-semibold hover:bg-white/5">Sesi 8</button>
+                <button onclick="showSession('sumatif')" id="btn-sumatif" class="tab-btn px-6 py-3 text-sm font-bold text-yellow-400 border-l border-white/20">TES SUMATIF</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- Render Session Wrapper -->
+        <div id="session-container"></div>
+    </main>
+
+    <!-- Modal for Result -->
+    <div id="modal-result" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-8 text-center shadow-2xl scale-in">
+            <h2 class="text-3xl font-black text-emerald-900 mb-2">Skor Akhir</h2>
+            <div id="score-circle" class="w-32 h-32 rounded-full border-8 border-emerald-500 flex items-center justify-center mx-auto my-6">
+                <span id="final-score" class="text-4xl font-black">0</span>
+            </div>
+            <p id="final-message" class="text-slate-600 mb-6 font-medium"></p>
+            <button onclick="closeModal()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-emerald-700">Tutup & Tinjau Jawaban</button>
+        </div>
+    </div>
+
+    <script>
+        // Data Structure for 8 Sessions
+        const sessions = [
+            {
+                id: 1,
+                title: "Dasar & Metodologi Tafsir Maudhu'i",
+                tujuan: ["Definisi terminologi Tafsir Maudhu'i", "Sejarah singkat perkembangan metode tematik", "7 Langkah Al-Farmawi secara rinci"],
+                nilaiIslam: "Kesatuan pesan Al-Qur'an sebagai mukjizat abadi.",
+                dalil: {
+                    arab: "أَفَلَا يَتَدَبَّرُونَ الْقُرْآنَ ۚ وَلَوْ كَانَ مِنْ عِندِ غَيْرِ اللَّهِ لَوَجَدُوا فِيهِ اخْتِلَافًا كَثِيرًا",
+                    indo: "Maka apakah mereka tidak memperhatikan Al Quran? Kalau kiranya Al Quran itu bukan dari sisi Allah, tentulah mereka mendapat pertentangan yang banyak di dalamnya. (QS. An-Nisa: 82)"
+                },
+                skenario: `
+                    <p class="mb-4">Tafsir Maudhu'i (Tematik) adalah metode tafsir yang berusaha menjelaskan pesan Al-Qur'an dengan cara menghimpun seluruh ayat yang membicarakan satu tema tertentu.</p>
+                    <div class="my-6">
+                        <svg viewBox="0 0 400 200" class="mx-auto max-w-xs bg-slate-50 rounded-xl p-4">
+                            <circle cx="200" cy="100" r="40" fill="#10b981" />
+                            <text x="175" y="105" fill="white" font-weight="bold" font-size="12">TEMA</text>
+                            <path d="M100 50 L160 85" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)" />
+                            <path d="M300 50 L240 85" stroke="#94a3b8" stroke-width="2" />
+                            <path d="M100 150 L160 115" stroke="#94a3b8" stroke-width="2" />
+                            <path d="M300 150 L240 115" stroke="#94a3b8" stroke-width="2" />
+                            <text x="50" y="45" font-size="10">Ayat Surat A</text>
+                            <text x="300" y="45" font-size="10">Ayat Surat B</text>
+                            <text x="50" y="165" font-size="10">Ayat Surat C</text>
+                            <text x="300" y="165" font-size="10">Ayat Surat D</text>
+                        </svg>
+                        <p class="text-center text-xs text-slate-400 italic mt-2">Visualisasi: Sentralisasi ayat dari berbagai surat ke satu tema.</p>
+                    </div>
+                    <div class="teacher-note mb-4">
+                        Tekankan bahwa metode ini berbeda dengan Tafsir Tahlili yang mengikuti urutan mushaf. Maudhu'i lebih 'problem-solving' terhadap isu modern.
+                    </div>
+                `,
+                penilaian: true,
+                simulasi: [
+                    { title: "Klasifikasi Ayat", desc: "Tentukan apakah kegiatan berikut adalah Tahlili atau Maudhu'i." },
+                    { title: "Langkah Metodis", desc: "Susun langkah Al-Farmawi secara urut." }
+                ],
+                formatif: [
+                    { q: "Apa akar kata 'Maudhu'i'?", o: ["Dha'a", "Wadha'a", "Dhiya'", "Udhu"], a: 1, e: "Wadha'a yang berarti meletakkan atau topik." },
+                    { q: "Metode yang mengulas ayat per ayat dari Al-Fatihah sampai An-Nas disebut?", o: ["Maudhu'i", "Tahlili", "Muqarin", "Ijmali"], a: 1, e: "Tahlili bersifat analitis sesuai urutan mushaf." },
+                    { q: "Tokoh utama penyusun 7 langkah tematik adalah?", o: ["As-Suyuti", "Al-Farmawi", "Ibnu Katsir", "At-Tabari"], a: 1, e: "Abdul Hayy Al-Farmawi." },
+                    { q: "Langkah ke-2 Al-Farmawi adalah?", o: ["Menetapkan tema", "Menghimpun ayat", "Korelasi ayat", "Outline"], a: 1, e: "Menghimpun ayat-ayat terkait tema." },
+                    { q: "Apa kelebihan utama metode tematik?", o: ["Singkat", "Bahasa puitis", "Kajian tuntas per masalah", "Sesuai juz"], a: 2, e: "Memberikan solusi Al-Qur'an atas satu isu secara utuh." },
+                    { q: "Kajian Munasabah dalam tematik bertujuan untuk?", o: ["Cari kesalahan", "Lihat korelasi ayat", "Hafalan", "Irama"], a: 1, e: "Melihat hubungan antar ayat dalam satu konteks." },
+                    { q: "Asbabun Nuzul diperlukan dalam tematik untuk?", o: ["Pajangan", "Memahami konteks historis", "Mencari nama orang", "Dongeng"], a: 1, e: "Konteks turunnya ayat membantu interpretasi." },
+                    { q: "Tafsir Al-Qur'an bil Qur'an adalah dasar dari?", o: ["Tahlili", "Maudhu'i", "Liberal", "Filsafat"], a: 1, e: "Maudhu'i sangat mengandalkan ayat menafsirkan ayat lain." },
+                    { q: "Langkah terakhir Al-Farmawi adalah?", o: ["Outline", "Menyusun kesimpulan komprehensif", "Cari hadits", "Selesai"], a: 1, e: "Penyusunan kerangka penjelasan menyeluruh." },
+                    { q: "Hadits Nabi dalam tafsir tematik berfungsi sebagai?", o: ["Pengganti Al-Qur'an", "Penjelas & Perinci", "Tambahan saja", "Tidak perlu"], a: 1, e: "Penjelas yang merinci ayat yang masih global." }
+                ]
+            },
+            {
+                id: 2,
+                title: "Tema Tauhid & Akidah",
+                tujuan: ["Klasifikasi Rububiyah, Uluhiyah, Asma wa Sifat", "Analisis ayat-ayat fitrah", "Penyimpangan akidah dalam Al-Qur'an"],
+                nilaiIslam: "Tauhid adalah hak Allah atas hamba-hambaNya.",
+                dalil: {
+                    arab: "وَمَا خَلَقْتُ الْجِنَّ وَالْإِنسَ إِلَّا لِيَعْبُدُونِ",
+                    indo: "Dan Aku tidak menciptakan jin dan manusia melainkan supaya mereka mengabdi kepada-Ku. (QS. Az-Zariyat: 56)"
+                },
+                skenario: `
+                    <p class="mb-4">Tauhid bukan sekadar meyakini Tuhan itu satu, tapi mengesakan-Nya dalam segala hal. Al-Qur'an membagi tema ini dalam narasi yang sangat kuat.</p>
+                    <div class="grid md:grid-cols-3 gap-4 mb-6">
+                        <div class="p-3 bg-blue-50 border rounded-lg"><strong>Rububiyah:</strong> Perbuatan Allah (Mencipta, Menghidupkan).</div>
+                        <div class="p-3 bg-emerald-50 border rounded-lg"><strong>Uluhiyah:</strong> Ibadah Hamba (Shalat, Doa).</div>
+                        <div class="p-3 bg-amber-50 border rounded-lg"><strong>Asma wa Sifat:</strong> Nama dan Keagungan Allah.</div>
+                    </div>
+                `,
+                simulasi: [
+                    { title: "Deteksi Syirik", desc: "Tentukan ayat mana yang berisi larangan syirik besar." },
+                    { title: "Pohon Tauhid", desc: "Pasangkan sifat Allah dengan dalilnya." }
+                ],
+                formatif: Array(10).fill({ q: "Soal tentang Tauhid...", o: ["Opt 1", "Opt 2", "Opt 3", "Opt 4"], a: 0, e: "Penjelasan Tauhid" })
+            },
+            {
+                id: 3,
+                title: "Tema Manusia & Psikologi Qur'ani",
+                tujuan: ["Asal usul penciptaan (biologis & ruhani)", "Karakteristik Nafs (Ammaarah, Lawwaamah, Mutma'innah)", "Potensi akal dan hati"],
+                nilaiIslam: "Manusia sebagai khalifah yang memiliki tanggung jawab besar.",
+                dalil: {
+                    arab: "لَقَدْ خَلَقْنَا الْإِنسَانَ فِي أَحْسَنِ تَقْوِيمٍ",
+                    indo: "Sesungguhnya Kami telah menciptakan manusia dalam bentuk yang sebaik-baiknya. (QS. At-Tin: 4)"
+                },
+                skenario: `<p>Diskusi tentang dimensi ruhani manusia dan bagaimana Al-Qur'an menyembuhkan penyakit hati.</p>`,
+                simulasi: [
+                    { title: "Struktur Manusia", desc: "Klasifikasikan unsur tubuh, ruh, dan akal." },
+                    { title: "Level Nafsu", desc: "Identifikasi kondisi psikologis berdasarkan ayat." }
+                ],
+                formatif: Array(10).fill({ q: "Soal Psikologi Qur'ani...", o: ["Opt 1", "Opt 2", "Opt 3", "Opt 4"], a: 0, e: "Penjelasan" })
+            },
+            {
+                id: 4,
+                title: "Tema Sosial: Keadilan & Kepemimpinan",
+                tujuan: ["Konsep Adalah (Keadilan) di Al-Qur'an", "Syarat pemimpin (Kuat & Amanah)", "Hak dan kewajiban warga negara"],
+                nilaiIslam: "Islam menentang segala bentuk kezaliman.",
+                dalil: {
+                    arab: "إِنَّ اللَّهَ يَأْمُرُ بِالْعَدْلِ وَالْإِحْسَانِ",
+                    indo: "Sesungguhnya Allah menyuruh (kamu) berlaku adil dan berbuat kebajikan... (QS. An-Nahl: 90)"
+                },
+                skenario: `<p>Analisis tokoh-tokoh pemimpin dalam Al-Qur'an (Nabi Yusuf, Thalut, Dzulkarnain).</p>`,
+                simulasi: [
+                    { title: "Karakter Pemimpin", desc: "Pilih sifat wajib bagi pemimpin Al-Qur'ani." },
+                    { title: "Analisis Zalim", desc: "Bedakan jenis kezaliman dalam ayat." }
+                ],
+                formatif: Array(10).fill({ q: "Soal Kepemimpinan...", o: ["Opt 1", "Opt 2", "Opt 3", "Opt 4"], a: 0, e: "Penjelasan" })
+            },
+            {
+                id: 5,
+                title: "Tema Ekonomi: Harta & Distribusi",
+                tujuan: ["Larangan Riba & Gharar", "Perintah Zakat, Infaq, Shadaqah", "Keadilan distribusi harta agar tidak berputar di orang kaya saja"],
+                nilaiIslam: "Harta adalah titipan Allah untuk kesejahteraan ummat.",
+                dalil: {
+                    arab: "كَيْ لَا يَكُونَ دُولَةً بَيْنَ الْأَغْنِيَاءِ مِنكُمْ",
+                    indo: "...supaya harta itu jangan beredar di antara orang-orang kaya saja di antara kamu. (QS. Al-Hashr: 7)"
+                },
+                skenario: `<p>Membahas bagaimana Al-Qur'an mengatur sirkulasi ekonomi yang sehat dan adil.</p>`,
+                simulasi: [
+                    { title: "Halal vs Haram", desc: "Klasifikasikan transaksi ekonomi dalam ayat." },
+                    { title: "Zakat Calculator", desc: "Simulasi dasar perhitungan zakat maal." }
+                ],
+                formatif: Array(10).fill({ q: "Soal Ekonomi Islam...", o: ["Opt 1", "Opt 2", "Opt 3", "Opt 4"], a: 0, e: "Penjelasan" })
+            },
+            {
+                id: 6,
+                title: "Tema Sains & Ayat Kauniyah",
+                tujuan: ["Astronomi (Garis edar matahari & bulan)", "Geologi (Gunung sebagai pasak)", "Embriologi (Fase janin)"],
+                nilaiIslam: "Alam semesta adalah 'kitab terbuka' yang membuktikan kebesaran Allah.",
+                dalil: {
+                    arab: "سَنُرِيهِمْ آيَاتِنَا فِي الْآفَاقِ وَفِي أَنفُسِهِمْ",
+                    indo: "Kami akan memperlihatkan kepada mereka tanda-tanda (kekuasaan) Kami di segenap ufuk dan pada diri mereka sendiri... (QS. Fussilat: 53)"
+                },
+                skenario: `<p>Menjelaskan keselarasan antara penemuan sains modern dengan isyarat ilmiah Al-Qur'an.</p>`,
+                simulasi: [
+                    { title: "Timeline Embrio", desc: "Urutkan fase janin sesuai QS. Al-Mu'minun." },
+                    { title: "Identifikasi Fenomena", desc: "Pasangkan ayat dengan fenomena alam." }
+                ],
+                formatif: Array(10).fill({ q: "Soal Sains Al-Qur'an...", o: ["Opt 1", "Opt 2", "Opt 3", "Opt 4"], a: 0, e: "Penjelasan" })
+            },
+            {
+                id: 7,
+                title: "Tema Pendidikan & Keluarga",
+                tujuan: ["Metode Luqman Al-Hakim mendidik anak", "Adab kepada orang tua (Birrul Walidain)", "Hak dan kewajiban suami istri"],
+                nilaiIslam: "Keluarga adalah unit terkecil peradaban Islam.",
+                dalil: {
+                    arab: "يَا أَيُّهَا الَّذِينَ آمَنُوا قُوا أَنفُسَكُمْ وَأَهْلِيكُمْ نَارًا",
+                    indo: "Hai orang-orang yang beriman, peliharalah dirimu dan keluargamu dari api neraka... (QS. At-Tahrim: 6)"
+                },
+                skenario: `<p>Mengkaji kurikulum pendidikan anak yang dirancang langsung oleh Allah melalui kisah-kisah di Al-Qur'an.</p>`,
+                simulasi: [
+                    { title: "Piramida Luqman", desc: "Urutkan prioritas materi pendidikan anak." },
+                    { title: "Analisis Adab", desc: "Pilih respon terbaik sesuai adab Qur'ani." }
+                ],
+                formatif: Array(10).fill({ q: "Soal Pendidikan Keluarga...", o: ["Opt 1", "Opt 2", "Opt 3", "Opt 4"], a: 0, e: "Penjelasan" })
+            },
+            {
+                id: 8,
+                title: "Tema Akhlak & Pembersihan Jiwa (Tazkiyatun Nafs)",
+                tujuan: ["Sifat-sifat Ibadurrahman", "Bahaya Ghibah, Hasad, dan Takabbur", "Istiqomah dan Taubat"],
+                nilaiIslam: "Tujuan diutusnya Rasulullah adalah untuk menyempurnakan akhlak.",
+                dalil: {
+                    arab: "قَدْ أَفْلَحَ مَن زَكَّاهَا",
+                    indo: "Sesungguhnya beruntunglah orang yang mensucikan jiwa itu. (QS. Asy-Syams: 9)"
+                },
+                skenario: `<p>Analisis mendalam terhadap surat Al-Hujurat sebagai 'Piagam Akhlak' dalam Al-Qur'an.</p>`,
+                simulasi: [
+                    { title: "Cermin Akhlak", desc: "Pilih perilaku yang mencerminkan Ibadurrahman." },
+                    { title: "Detox Hati", desc: "Pasangkan penyakit hati dengan obatnya dari ayat." }
+                ],
+                formatif: Array(10).fill({ q: "Soal Akhlak...", o: ["Opt 1", "Opt 2", "Opt 3", "Opt 4"], a: 0, e: "Penjelasan" })
+            }
+        ];
+
+        // UI Logic
+        let currentTab = 1;
+
+        function showSession(id) {
+            currentTab = id;
+            const container = document.getElementById('session-container');
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach(b => b.classList.remove('tab-active'));
+            
+            if (id === 'sumatif') {
+                document.getElementById('btn-sumatif').classList.add('tab-active');
+                renderSumatif(container);
+                return;
+            }
+
+            document.getElementById(`btn-${id}`).classList.add('tab-active');
+            const s = sessions.find(x => x.id === id);
+            
+            container.innerHTML = `
+                <div class="fade-in max-w-4xl mx-auto">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-black text-emerald-800 uppercase tracking-wide">PERTEMUAN ${s.id}: ${s.title}</h2>
+                        <div class="h-1 w-20 bg-emerald-600 mt-2"></div>
+                    </div>
+
+                    <!-- RMP Section -->
+                    <section class="space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-emerald-700 text-lg mb-3 flex items-center">
+                                <span class="bg-emerald-100 text-emerald-700 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm">A</span>
+                                TUJUAN PEMBELAJARAN
+                            </h3>
+                            <ul class="list-disc list-inside text-slate-600 space-y-1 ml-4">
+                                ${s.tujuan.map(t => `<li>${t}</li>`).join('')}
+                            </ul>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-emerald-700 text-lg mb-3 flex items-center">
+                                <span class="bg-emerald-100 text-emerald-700 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm">B</span>
+                                KETERKAITAN NILAI ISLAM
+                            </h3>
+                            <p class="text-slate-700 mb-4 font-medium">${s.nilaiIslam}</p>
+                            <div class="bg-slate-50 p-6 rounded-lg border-l-4 border-emerald-500">
+                                <p class="arabic mb-3" dir="rtl">${s.dalil.arab}</p>
+                                <p class="text-sm text-slate-500 italic">"${s.dalil.indo}"</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 leading-relaxed">
+                            <h3 class="font-bold text-emerald-700 text-lg mb-4 flex items-center">
+                                <span class="bg-emerald-100 text-emerald-700 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm">C</span>
+                                SKENARIO PEMBELAJARAN (90 MENIT)
+                            </h3>
+                            <div class="prose prose-emerald max-w-none text-slate-700">
+                                ${s.skenario}
+                            </div>
+                        </div>
+
+                        ${s.penilaian ? `
+                        <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-200">
+                            <h3 class="font-bold text-emerald-800 text-lg mb-3 flex items-center">
+                                <span class="bg-emerald-200 text-emerald-800 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm">D</span>
+                                PENILAIAN MODUL
+                            </h3>
+                            <div class="grid md:grid-cols-3 gap-4 text-sm">
+                                <div class="bg-white p-3 rounded shadow-sm border border-emerald-100">
+                                    <strong>Sikap:</strong> Adab terhadap Al-Qur'an & Kedisiplinan.
+                                </div>
+                                <div class="bg-white p-3 rounded shadow-sm border border-emerald-100">
+                                    <strong>Pengetahuan:</strong> Penguasaan metodologi & dalil.
+                                </div>
+                                <div class="bg-white p-3 rounded shadow-sm border border-emerald-100">
+                                    <strong>Keterampilan:</strong> Analisis tematik mandiri.
+                                </div>
+                            </div>
+                        </div>` : ''}
+                    </section>
+
+                    <!-- Simulasi -->
+                    <div class="mt-12 mb-8">
+                         <h3 class="text-2xl font-black text-slate-700 mb-6">SIMULASI INTERAKTIF</h3>
+                         <div class="grid md:grid-cols-2 gap-6">
+                            ${s.simulasi.map((sim, i) => `
+                                <div class="simulation-box">
+                                    <h4 class="font-bold text-emerald-700 mb-2">${sim.title}</h4>
+                                    <p class="text-sm text-slate-500 mb-4">${sim.desc}</p>
+                                    <button onclick="startSim(${s.id}, ${i})" class="text-xs bg-slate-800 text-white px-4 py-2 rounded-full hover:bg-emerald-600 transition">MULAI SIMULASI</button>
+                                </div>
+                            `).join('')}
+                         </div>
+                    </div>
+
+                    <!-- Latihan Formatif -->
+                    <div class="mt-12">
+                        <h3 class="text-2xl font-black text-slate-700 mb-6">LATIHAN FORMATIF (10 SOAL)</h3>
+                        <div id="quiz-container" class="space-y-4">
+                            ${s.formatif.map((q, i) => renderQuestion(s.id, i, q)).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            // Trigger MathJax
+            if (window.MathJax) MathJax.typeset();
+        }
+
+        function renderQuestion(sid, qid, q) {
+            return `
+                <div class="card-formatif p-6" id="q-box-${sid}-${qid}">
+                    <p class="font-bold text-slate-800 mb-4">${qid + 1}. ${q.q}</p>
+                    <div class="grid gap-2">
+                        ${q.o.map((opt, i) => `
+                            <button onclick="submitAnswer(${sid}, ${qid}, ${i}, ${q.a}, '${q.e.replace(/'/g, "\\'")}')" 
+                                    class="option-btn text-left p-3 border rounded-lg hover:border-emerald-500 hover:bg-emerald-50 transition text-sm">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="feedback-${sid}-${qid}" class="hidden mt-4 p-3 rounded-lg text-sm"></div>
+                </div>
+            `;
+        }
+
+        function submitAnswer(sid, qid, chosen, correct, explanation) {
+            const feedback = document.getElementById(`feedback-${sid}-${qid}`);
+            const qBox = document.getElementById(`q-box-${sid}-${qid}`);
+            const buttons = qBox.querySelectorAll('.option-btn');
+            
+            buttons.forEach(btn => btn.disabled = true);
+            feedback.classList.remove('hidden');
+
+            if (chosen === correct) {
+                feedback.className = "mt-4 p-3 rounded-lg text-sm bg-emerald-100 text-emerald-800 font-medium";
+                feedback.innerHTML = `<strong>Benar!</strong> ${explanation}`;
+            } else {
+                feedback.className = "mt-4 p-3 rounded-lg text-sm bg-red-100 text-red-800 font-medium";
+                feedback.innerHTML = `<strong>Kurang Tepat.</strong> ${explanation}`;
+            }
+        }
+
+        function renderSumatif(container) {
+            container.innerHTML = `
+                <div class="fade-in max-w-4xl mx-auto text-center">
+                    <h2 class="text-4xl font-black text-emerald-900 mb-4">UJIAN SUMATIF AKHIR</h2>
+                    <p class="text-slate-500 mb-12 italic">Ujian komprehensif dari materi Pertemuan 1 - 8</p>
+                    <div id="sumatif-questions" class="text-left space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-slate-200">
+                        <!-- Questions will be dynamically loaded here to avoid memory issues -->
+                        <div class="text-center py-12">
+                            <p class="text-slate-400 mb-6">Siap memulai ujian akhir?</p>
+                            <button onclick="startSumatif()" class="bg-emerald-600 text-white px-10 py-4 rounded-full font-bold text-xl shadow-lg hover:bg-emerald-700 transform hover:scale-105 transition">MULAI SEKARANG</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function startSumatif() {
+            const container = document.getElementById('sumatif-questions');
+            let html = "";
+            let globalIdx = 0;
+            sessions.forEach(s => {
+                s.formatif.forEach((q, i) => {
+                    html += `
+                        <div class="mb-10 pb-6 border-b border-slate-100">
+                            <p class="font-bold text-lg text-slate-800 mb-4">${globalIdx + 1}. ${q.q}</p>
+                            <div class="grid md:grid-cols-2 gap-3">
+                                ${q.o.map((opt, oi) => `
+                                    <label class="option-label">
+                                        <input type="radio" name="sum-${globalIdx}" value="${oi}" class="mr-2"> ${opt}
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    globalIdx++;
+                });
+            });
+            html += `<button onclick="gradeSumatif()" class="w-full bg-emerald-900 text-white py-5 rounded-xl font-black text-xl hover:bg-black transition shadow-2xl">SUBMIT JAWABAN AKHIR</button>`;
+            container.innerHTML = html;
+            window.scrollTo(0, 0);
+        }
+
+        function gradeSumatif() {
+            let score = 0;
+            let total = 0;
+            let globalIdx = 0;
+            sessions.forEach(s => {
+                s.formatif.forEach((q, i) => {
+                    const selected = document.querySelector(`input[name="sum-${globalIdx}"]:checked`);
+                    if (selected && parseInt(selected.value) === q.a) score++;
+                    total++;
+                    globalIdx++;
+                });
+            });
+
+            document.getElementById('final-score').innerText = Math.round((score / total) * 100);
+            document.getElementById('final-message').innerText = score > (total * 0.7) ? "Maa syaa Allah! Anda menguasai materi dengan sangat baik." : "Teruslah murojaah dan belajar kembali materi yang belum dikuasai.";
+            document.getElementById('modal-result').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-result').classList.add('hidden');
+        }
+
+        function startSim(sid, simId) {
+            alert(`Menjalankan Simulasi ${simId + 1} untuk Pertemuan ${sid}... \n(Fungsionalitas simulasi spesifik dikembangkan sesuai modul interaktif di kelas)`);
+        }
+
+        // Init
+        window.onload = () => showSession(1);
+    </script>
+</body>
+</html>
