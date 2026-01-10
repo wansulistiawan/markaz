@@ -3,334 +3,536 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPA-105: Struktur Sel Hewan & Tumbuhan</title>
-    <!-- Tailwind CSS -->
+    <title>IPA-105: Struktur Sel - RMP Lengkap</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- MathJax for LaTeX -->
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #334155; }
-        .arabic { font-family: 'Amiri', serif; font-size: 1.8rem; line-height: 2.5rem; text-align: right; color: #064e3b; }
-        .tab-btn { transition: all 0.3s ease; border-bottom: 3px solid transparent; }
-        .tab-active { color: #059669; font-weight: 800; border-bottom-color: #059669; background-color: #f0fdf4; }
-        .teacher-note { border-left: 5px solid #d97706; background-color: #fffbeb; padding: 1.25rem; border-radius: 0.5rem; margin: 1.5rem 0; }
-        .teacher-note::before { content: "📋 INSTRUKSI GURU"; display: block; font-weight: 800; font-size: 0.75rem; color: #b45309; margin-bottom: 0.5rem; }
-        .cell-svg { max-width: 300px; margin: auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
-        .formatif-card { background: white; border: 1px solid #e2e8f0; border-radius: 1rem; overflow: hidden; }
-        .option-btn { display: block; width: 100%; text-align: left; padding: 1rem; border: 1px solid #f1f5f9; margin-bottom: 0.5rem; border-radius: 0.5rem; transition: 0.2s; }
-        .option-btn:hover { background: #f0fdf4; border-color: #10b981; }
-        .correct { background: #d1fae5 !important; border-color: #059669 !important; font-weight: bold; }
-        .wrong { background: #fee2e2 !important; border-color: #dc2626 !important; }
-        .hidden { display: none; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #065f46;
+            --secondary: #047857;
+            --accent: #f59e0b;
+        }
+
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        .tab-btn.active { 
+            background-color: var(--primary); 
+            color: white; 
+            border-bottom: 4px solid var(--accent);
+        }
+
+        .teacher-note {
+            background-color: #fffbeb;
+            border-left: 4px solid #d97706;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .dalil-box {
+            background-color: #f0fdf4;
+            border: 1px solid #10b981;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+        }
+
+        .quiz-option {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 2px solid #e2e8f0;
+        }
+
+        .quiz-option.correct { border-color: #10b981; background-color: #ecfdf5; }
+        .quiz-option.wrong { border-color: #ef4444; background-color: #fef2f2; }
+
+        .simulation-card {
+            background: #1e293b;
+            color: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="antialiased">
+<body class="pb-12">
 
     <!-- Header & Navigation -->
-    <header class="bg-emerald-900 text-white shadow-xl sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
-            <div>
-                <h1 class="text-xl font-extrabold tracking-tight">IPA-105 <span class="text-emerald-400">SEL HEWAN & TUMBUHAN</span></h1>
-                <p class="text-xs text-emerald-200">Blueprint Kurikulum Terpadu 8 Sesi</p>
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-emerald-700 p-2 rounded-lg text-white">
+                    <i class="fa-solid fa-microscope text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold text-slate-800">IPA-105: Struktur Sel</h1>
             </div>
-            <div id="progress-indicator" class="mt-4 md:mt-0 text-sm font-mono bg-emerald-800 px-4 py-1 rounded-full">
-                Kemajuan: 0%
-            </div>
+            <span class="text-xs font-bold bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full uppercase">Manhaj Salaf Ahlussunnah</span>
         </div>
-        <div class="bg-white border-t border-slate-200 overflow-x-auto">
-            <div class="container mx-auto flex">
-                <button onclick="loadSesi(1)" id="nav-1" class="tab-btn px-6 py-4 text-sm font-semibold text-slate-500 whitespace-nowrap">Sesi 1</button>
-                <button onclick="loadSesi(2)" id="nav-2" class="tab-btn px-6 py-4 text-sm font-semibold text-slate-500 whitespace-nowrap">Sesi 2</button>
-                <button onclick="loadSesi(3)" id="nav-3" class="tab-btn px-6 py-4 text-sm font-semibold text-slate-500 whitespace-nowrap">Sesi 3</button>
-                <button onclick="loadSesi(4)" id="nav-4" class="tab-btn px-6 py-4 text-sm font-semibold text-slate-500 whitespace-nowrap">Sesi 4</button>
-                <button onclick="loadSesi(5)" id="nav-5" class="tab-btn px-6 py-4 text-sm font-semibold text-slate-500 whitespace-nowrap">Sesi 5</button>
-                <button onclick="loadSesi(6)" id="nav-6" class="tab-btn px-6 py-4 text-sm font-semibold text-slate-500 whitespace-nowrap">Sesi 6</button>
-                <button onclick="loadSesi(7)" id="nav-7" class="tab-btn px-6 py-4 text-sm font-semibold text-slate-500 whitespace-nowrap">Sesi 7</button>
-                <button onclick="loadSesi(8)" id="nav-8" class="tab-btn px-6 py-4 text-sm font-semibold text-slate-500 whitespace-nowrap">Sesi 8</button>
-                <button onclick="loadSumatif()" id="nav-sum" class="tab-btn px-6 py-4 text-sm font-bold text-orange-600 bg-orange-50 whitespace-nowrap">SUMATIF</button>
-            </div>
-        </div>
+        <nav class="bg-slate-800 flex overflow-x-auto no-scrollbar">
+            <button onclick="switchTab(1)" id="btn-1" class="tab-btn px-5 py-3 text-slate-300 whitespace-nowrap active">Pertemuan 1</button>
+            <button onclick="switchTab(2)" id="btn-2" class="tab-btn px-5 py-3 text-slate-300 whitespace-nowrap">Pertemuan 2</button>
+            <button onclick="switchTab(3)" id="btn-3" class="tab-btn px-5 py-3 text-slate-300 whitespace-nowrap">Pertemuan 3</button>
+            <button onclick="switchTab(4)" id="btn-4" class="tab-btn px-5 py-3 text-slate-300 whitespace-nowrap">Pertemuan 4</button>
+            <button onclick="switchTab(5)" id="btn-5" class="tab-btn px-5 py-3 text-slate-300 whitespace-nowrap">Pertemuan 5</button>
+            <button onclick="switchTab(6)" id="btn-6" class="tab-btn px-5 py-3 text-slate-300 whitespace-nowrap">Pertemuan 6</button>
+            <button onclick="switchTab(7)" id="btn-7" class="tab-btn px-5 py-3 text-slate-300 whitespace-nowrap">Pertemuan 7</button>
+            <button onclick="switchTab(8)" id="btn-8" class="tab-btn px-5 py-3 text-slate-300 whitespace-nowrap">Pertemuan 8</button>
+            <button onclick="switchTab(9)" id="btn-9" class="tab-btn px-5 py-3 bg-amber-600 text-white font-bold whitespace-nowrap">TES SUMATIF</button>
+        </nav>
     </header>
 
-    <main class="container mx-auto px-4 py-8">
-        <div id="main-content" class="max-w-4xl mx-auto">
-            <!-- Content Injected via JS -->
+    <main class="max-w-5xl mx-auto p-4 md:p-8">
+
+        <!-- CONTENT: PERTEMUAN 1 -->
+        <div id="content-1" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-8">
+                <h2 class="text-3xl font-bold text-emerald-800">Pertemuan 1: Keajaiban Sel & Teori Sel</h2>
+                
+                <section>
+                    <h3 class="font-bold text-lg border-b pb-2 mb-4">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>Santri dapat menjelaskan pengertian sel sebagai unit fungsional dan struktural terkecil.</li>
+                        <li>Santri mampu merinci sejarah penemuan sel oleh Robert Hooke dan ilmuwan lainnya.</li>
+                        <li>Santri dapat membedakan organisme uniseluler dan multiseluler.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-lg border-b pb-2 mb-4">B. Keterkaitan Nilai Islam</h3>
+                    <div class="dalil-box">
+                        <p class="text-xl mb-2 font-serif">صُنْعَ اللَّهِ الَّذِي أَتْقَنَ كُلَّ شَيْءٍ</p>
+                        <p class="italic text-sm">"...(begitulah) perbuatan Allah yang membuat dengan kokoh (rapi) tiap-tiap sesuatu..." (QS. An-Naml: 88)</p>
+                        <p class="mt-4 text-slate-600 text-sm">Sel adalah bukti 'itqan' (kerapian) ciptaan Allah. Triliunan sel bekerja harmonis menunjukkan adanya Al-Khaliq yang mengatur segalanya.</p>
+                    </div>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-lg border-b pb-2 mb-4">C. Skenario Pembelajaran</h3>
+                    <div class="space-y-4">
+                        <p><strong>1. Pendahuluan (15 Menit):</strong> Guru menunjukkan sayatan gabus. Robert Hooke pada 1665 melihat "kotak kosong" yang disebut <em>cellula</em>. Sejatinya itu adalah sel mati.</p>
+                        
+                        <div class="flex flex-col items-center my-6">
+                            <svg width="200" height="150" viewBox="0 0 200 150">
+                                <rect x="10" y="10" width="180" height="130" rx="5" fill="#fef3c7" stroke="#92400e" stroke-width="2"/>
+                                <path d="M10 40h180M10 70h180M10 100h180M40 10v130M70 10v130M100 10v130M130 10v130M160 10v130" stroke="#d97706" opacity="0.3"/>
+                                <text x="100" y="145" text-anchor="middle" font-size="10" fill="#92400e">Representasi Sel Gabus</text>
+                            </svg>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Cork_Micrographia_Hooke.png/300px-Cork_Micrographia_Hooke.png" class="w-48 mt-2 rounded shadow">
+                            <p class="text-[10px] text-slate-400 mt-1 italic">Sumber: Wikimedia Commons - Robert Hooke's Micrographia</p>
+                        </div>
+
+                        <p><strong>2. Materi Inti (45 Menit):</strong> Sel adalah unit terkecil. Ada yang <strong>Uniseluler</strong> (satu sel saja sudah jadi individu, misal Bakteri) dan <strong>Multiseluler</strong> (butuh kerjasama triliunan sel, misal Manusia).</p>
+                        
+                        <div class="teacher-note">
+                            <strong>Analogi:</strong> Sel seperti batu bata dalam bangunan. Satu batu bata memiliki struktur, tapi kumpulan batu bata yang tertata rapi membentuk gedung pesantren yang kokoh.
+                        </div>
+
+                        <p><strong>3. Diskusi (30 Menit):</strong> Membahas teori sel Rudolf Virchow: <em>Omnis cellula e cellula</em> (Sel berasal dari sel sebelumnya melalui pembelahan).</p>
+                    </div>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-lg border-b pb-2 mb-4">D. Penilaian Modul</h3>
+                    <div class="grid md:grid-cols-3 gap-4 text-xs">
+                        <div class="p-3 bg-slate-50 border rounded"><strong>Sikap/Adab:</strong> Fokus saat belajar, syukur atas ciptaan Allah.</div>
+                        <div class="p-3 bg-slate-50 border rounded"><strong>Pengetahuan:</strong> Skor Kuis Formatif dan Tes Sumatif Akhir.</div>
+                        <div class="p-3 bg-slate-50 border rounded"><strong>Keterampilan:</strong> Ketepatan dalam simulasi dan analisis gambar sel.</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Konten Tambahan P1 -->
+            <div class="mt-8 space-y-6">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="simulation-card">
+                        <h4 class="font-bold mb-2"><i class="fa-solid fa-vial"></i> Simulasi 1.1: Identifikasi Penemu</h4>
+                        <p class="text-xs mb-4">Siapa yang menemukan sel pada gabus?</p>
+                        <button onclick="alert('Benar! Robert Hooke pada 1665.')" class="bg-emerald-600 px-4 py-2 rounded text-sm w-full">Robert Hooke</button>
+                        <button onclick="alert('Salah. Virchow fokus pada pembelahan sel.')" class="bg-slate-600 px-4 py-2 rounded text-sm w-full mt-2">Rudolf Virchow</button>
+                    </div>
+                    <div class="simulation-card">
+                        <h4 class="font-bold mb-2"><i class="fa-solid fa-magnifying-glass"></i> Simulasi 1.2: Skala Sel</h4>
+                        <p class="text-xs mb-4">Jika 1 sel = 0.01 mm, berapa panjang 100 sel yang berjajar?</p>
+                        <input type="number" id="sim1-calc" class="w-full p-2 text-slate-900 rounded mb-2" placeholder="Jawaban (mm)">
+                        <button onclick="checkSim1()" class="bg-amber-500 text-slate-900 px-4 py-2 rounded text-sm w-full font-bold">Cek</button>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-2xl border border-slate-200">
+                    <h4 class="font-bold text-xl mb-4 text-emerald-800">Latihan Formatif 1</h4>
+                    <div id="quiz-1" class="space-y-6"></div>
+                </div>
+            </div>
         </div>
+
+        <!-- CONTENT: PERTEMUAN 2 -->
+        <div id="content-2" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-8">
+                <h2 class="text-3xl font-bold text-emerald-800">Pertemuan 2: Membran Sel & Dinding Sel</h2>
+                
+                <section>
+                    <h3 class="font-bold text-lg border-b pb-2 mb-4">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>Santri mampu merinci struktur membran sel (fosfolipid bilayer).</li>
+                        <li>Santri dapat menjelaskan sifat selektif permeabel membran sel.</li>
+                        <li>Santri mampu membedakan peran dinding sel pada tumbuhan.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-lg border-b pb-2 mb-4">B. Keterkaitan Nilai Islam</h3>
+                    <div class="dalil-box">
+                        <p class="text-xl mb-2 font-serif">وَمَا كَانَ اللَّهُ لِيُعْجِزَهُ مِنْ شَيْءٍ</p>
+                        <p class="italic text-sm">"...Dan tidak ada sesuatu pun yang dapat melemahkan Allah di langit maupun di bumi..." (QS. Fatir: 44)</p>
+                        <p class="mt-4 text-slate-600 text-sm">Membran sel yang begitu tipis (±7 nm) namun mampu menjaga tekanan sel yang sangat besar adalah tanda kekuasaan Allah yang tak tertandingi.</p>
+                    </div>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-lg border-b pb-2 mb-4">C. Skenario Pembelajaran</h3>
+                    <div class="space-y-4">
+                        <p><strong>1. Pendahuluan (15 Menit):</strong> Mengapa sel tidak bocor meskipun isinya cair? Karena ada membran. Ibarat sebuah benteng yang menjaga kedaulatan negara sel.</p>
+                        
+                        <div class="flex flex-col items-center my-6">
+                            <svg width="300" height="100" viewBox="0 0 300 100">
+                                <rect x="0" y="20" width="300" height="15" fill="#065f46" rx="5"/>
+                                <rect x="0" y="65" width="300" height="15" fill="#065f46" rx="5"/>
+                                <g stroke="#059669" stroke-width="2">
+                                    <line x1="20" y1="35" x2="20" y2="65"/><line x1="50" y1="35" x2="50" y2="65"/>
+                                    <line x1="80" y1="35" x2="80" y2="65"/><line x1="110" y1="35" x2="110" y2="65"/>
+                                    <line x1="140" y1="35" x2="140" y2="65"/><line x1="170" y1="35" x2="170" y2="65"/>
+                                </g>
+                                <text x="150" y="15" text-anchor="middle" font-size="12" font-weight="bold">Fosfolipid Bilayer</text>
+                            </svg>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Cell_membrane_detailed_diagram_edit2.svg/500px-Cell_membrane_detailed_diagram_edit2.svg.png" class="w-64 mt-2 rounded border">
+                            <p class="text-[10px] text-slate-400 mt-1 italic">Sumber: Wikipedia - Diagram Struktur Membran Sel</p>
+                        </div>
+
+                        <p><strong>2. Materi Inti (45 Menit):</strong> Membran sel terdiri dari <strong>fosfolipid</strong> (kepala suka air/hidrofilik dan ekor takut air/hidrofobik). Dinding sel hanya ada pada tumbuhan, kaku karena mengandung <strong>selulosa</strong>.</p>
+                        
+                        <div class="teacher-note">
+                            <strong>Analogi Satpam:</strong> Membran sel adalah satpam gerbang pesantren. Ia memeriksa siapa yang boleh masuk (nutrisi) dan siapa yang harus keluar (sampah). Dinding sel adalah pagar beton yang mengelilingi pesantren agar tidak mudah hancur.
+                        </div>
+
+                        <p><strong>3. Diskusi (30 Menit):</strong> Apa jadinya jika sel hewan memiliki dinding sel? (Hewan tidak akan bisa bergerak lincah dan akan kaku seperti kayu).</p>
+                    </div>
+                </section>
+            </div>
+
+            <div class="mt-8 space-y-6">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="simulation-card">
+                        <h4 class="font-bold mb-2"><i class="fa-solid fa-shield"></i> Simulasi 2.1: Sifat Membran</h4>
+                        <div class="flex gap-2">
+                            <button onclick="alert('Air Masuk: Air adalah molekul netral kecil.')" class="bg-blue-600 px-3 py-1 rounded text-xs flex-1">Kirim Air</button>
+                            <button onclick="alert('Racun Ditolak: Membran selektif menghalanginya!')" class="bg-red-600 px-3 py-1 rounded text-xs flex-1">Kirim Racun</button>
+                        </div>
+                    </div>
+                    <div class="simulation-card">
+                        <h4 class="font-bold mb-2"><i class="fa-solid fa-tree"></i> Simulasi 2.2: Tes Kekakuan</h4>
+                        <button onclick="toggleBox(true)" class="bg-green-600 px-3 py-1 rounded text-xs w-full mb-1">Pasang Dinding (Tumbuhan)</button>
+                        <button onclick="toggleBox(false)" class="bg-slate-500 px-3 py-1 rounded text-xs w-full">Lepas Dinding (Hewan)</button>
+                        <div id="demo-box" class="h-8 bg-slate-400 mt-2 rounded transition-all"></div>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-2xl border border-slate-200">
+                    <h4 class="font-bold text-xl mb-4 text-emerald-800">Latihan Formatif 2</h4>
+                    <div id="quiz-2" class="space-y-6"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PERTEMUAN 3 HINGGA 8 -->
+        <div id="content-3" class="tab-content hidden"><div id="rmp-3" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200"></div></div>
+        <div id="content-4" class="tab-content hidden"><div id="rmp-4" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200"></div></div>
+        <div id="content-5" class="tab-content hidden"><div id="rmp-5" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200"></div></div>
+        <div id="content-6" class="tab-content hidden"><div id="rmp-6" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200"></div></div>
+        <div id="content-7" class="tab-content hidden"><div id="rmp-7" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200"></div></div>
+        <div id="content-8" class="tab-content hidden"><div id="rmp-8" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200"></div></div>
+
+        <!-- TES SUMATIF TAB -->
+        <div id="content-9" class="tab-content hidden">
+            <div class="bg-white p-8 rounded-2xl shadow-xl border-4 border-amber-500">
+                <div class="text-center mb-10">
+                    <i class="fa-solid fa-trophy text-6xl text-amber-500 mb-4"></i>
+                    <h2 class="text-4xl font-bold text-slate-800">Ujian Akhir Modul Sel</h2>
+                    <p class="text-slate-500">Uji seluruh pemahamanmu dari pertemuan 1 hingga 8.</p>
+                </div>
+                <div id="sumatif-questions" class="space-y-8"></div>
+                <div class="mt-12 text-center">
+                    <button id="submit-sumatif" onclick="calcSumatif()" class="bg-emerald-600 text-white px-10 py-4 rounded-xl font-bold text-xl shadow-lg hover:bg-emerald-700 transition">KIRIM JAWABAN</button>
+                    <div id="result-sumatif" class="hidden mt-8 p-6 bg-slate-100 rounded-2xl">
+                        <p class="text-2xl font-bold">Skor Anda: <span id="final-score" class="text-emerald-600">0</span>/100</p>
+                        <button onclick="location.reload()" class="mt-4 text-emerald-700 font-bold underline">Ulangi Tes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
-    <!-- Modal Skor -->
-    <div id="modal-skor" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[60]">
-        <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
-            <h3 class="text-2xl font-bold text-slate-800">Hasil Evaluasi</h3>
-            <div id="skor-lingkaran" class="w-32 h-32 rounded-full border-8 border-emerald-500 flex items-center justify-center mx-auto my-6">
-                <span id="txt-skor" class="text-4xl font-black">0</span>
-            </div>
-            <p id="txt-feedback" class="text-slate-600 mb-6"></p>
-            <button onclick="closeModal()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition">Murojaah Materi</button>
-        </div>
-    </div>
-
     <script>
-        const sesiData = [
-            {
-                id: 1,
-                title: "Sejarah Sel & Mukjizat Mikrokosmos",
-                tujuan: [
-                    "Menjelaskan sejarah penemuan sel oleh Robert Hooke & van Leeuwenhoek.",
-                    "Memahami sel sebagai unit terkecil kehidupan ciptaan Allah.",
-                    "Menyimpulkan teori sel modern."
-                ],
-                islam: {
-                    ayat: "إِنَّا كُلَّ شَيْءٍ خَلَقْنَاهُ بِقَدَرٍ",
-                    terjemah: "Sesungguhnya Kami menciptakan segala sesuatu menurut ukuran. (QS. Al-Qamar: 49)",
-                    catatan: "Sel adalah bukti nyata 'Qadar' (ukuran/desain) Allah yang sangat teliti dalam skala mikroskopis."
-                },
-                skenario: `
-                    <div class="space-y-4">
-                        <p><strong>Pendahuluan (15 Menit):</strong> Guru menunjukkan sayatan gabus atau gambar kotak-kotak kecil. Tanya jawab: "Bagaimana benda sekecil ini bisa menyusun paus yang besar?"</p>
-                        <div class="bg-slate-100 p-4 rounded-xl text-center">
-                            <svg class="cell-svg" viewBox="0 0 100 100">
-                                <rect x="10" y="10" width="20" height="20" fill="none" stroke="#64748b" />
-                                <rect x="30" y="10" width="20" height="20" fill="none" stroke="#64748b" />
-                                <rect x="50" y="10" width="20" height="20" fill="none" stroke="#64748b" />
-                                <rect x="10" y="30" width="20" height="20" fill="none" stroke="#64748b" />
-                                <circle cx="20" cy="20" r="2" fill="#94a3b8" />
-                                <text x="12" y="55" font-size="5" fill="#475569">Struktur Sel Gabus Robert Hooke</text>
-                            </svg>
-                        </div>
-                        <p><strong>Inti (60 Menit):</strong> Membahas penemuan mikroskop. Robert Hooke (1665) menyebutkan istilah <em>cellula</em>. Teori sel: 1. Semua mahluk hidup dari sel. 2. Sel adalah unit fungsional. 3. Sel berasal dari sel sebelumnya.</p>
-                        <div class="teacher-note">Gunakan analogi batu bata untuk membangun rumah (tubuh) agar santri lebih mudah membayangkan.</div>
-                    </div>
-                `,
-                formatif: [
-                    { q: "Siapa ilmuwan yang pertama kali menggunakan istilah 'Sel'?", a: ["Robert Hooke", "Antonie van Leeuwenhoek", "Rudolf Virchow", "Matthias Schleiden"], c: 0, e: "Robert Hooke melihat rongga kosong pada gabus dan menamainya cellula." },
-                    { q: "Apa arti dari 'Omnis cellula e cellula'?", a: ["Sel adalah unit energi", "Semua sel berasal dari sel sebelumnya", "Sel hanya ada pada tumbuhan", "Sel adalah benda mati"], c: 1, e: "Pernyataan Rudolf Virchow ini menegaskan keberlanjutan kehidupan sel." },
-                    { q: "Berapa ukuran rata-rata sel mahluk hidup?", a: ["1-100 meter", "1-100 milimeter", "1-100 mikrometer", "1-100 nanometer"], c: 2, e: "Sel berukuran mikroskopis (mikrometer)." },
-                    { q: "Mikroskop pertama kali dikembangkan secara signifikan oleh...", a: ["Einstein", "Leeuwenhoek", "Newton", "Mendel"], c: 1, e: "Leeuwenhoek adalah bapak mikrobiologi dengan lensa buatannya sendiri." },
-                    { q: "Teori sel menyatakan bahwa sel adalah unit terkecil...", a: ["Kimiawi", "Fungsional & Struktural", "Hanya Struktural", "Hanya Fungsional"], c: 1, e: "Sel mencakup struktur fisik dan fungsi kerja mahluk hidup." },
-                    { q: "Komponen yang membatasi sel dengan lingkungan luar adalah...", a: ["Inti sel", "Membran sel", "Ribosom", "Sitoplasma"], c: 1, e: "Membran sel berfungsi sebagai pelindung dan pengatur zat." },
-                    { q: "Cairan bening di dalam sel tempat organel berada disebut...", a: ["Nukleus", "Sitoplasma", "Vakuola", "Klorofil"], c: 1, e: "Sitoplasma adalah matriks cair di dalam sel." },
-                    { q: "Ilmuwan yang menyatakan sel adalah unit dasar tumbuhan adalah...", a: ["Schleiden", "Schwann", "Hooke", "Brown"], c: 0, e: "Matthias Schleiden fokus pada anatomi tumbuhan." },
-                    { q: "Organisme yang hanya terdiri dari satu sel disebut...", a: ["Multiseluler", "Uniseluler", "Biseluler", "Non-seluler"], c: 1, e: "Contohnya adalah bakteri dan amoeba." },
-                    { q: "Robert Hooke mengamati sel pada sayatan...", a: ["Bawang merah", "Darah manusia", "Gabus pohon ek", "Daun Elodea"], c: 2, e: "Gabus adalah jaringan tumbuhan yang sudah mati." }
-                ]
+        const rmpData = {
+            3: {
+                title: "Pertemuan 3: Nukleus (Otak Sel)",
+                tujuan: ["Santri mampu mengidentifikasi struktur nukleus.", "Santri menjelaskan peran DNA sebagai pembawa sifat.", "Santri membedakan sel prokariotik dan eukariotik."],
+                dalil: "إِنَّا كُلَّ شَيْءٍ خَلَقْنَاهُ بِقَدَرٍ (Sesungguhnya Kami menciptakan segala sesuatu menurut ukuran/ketetapan) - QS. Al-Qamar: 49",
+                skenario: "Nukleus mengandung DNA yang merupakan 'Blueprint' kehidupan. Ibarat kantor Mudir Pesantren yang menyimpan semua rahasia dan aturan pesantren.",
+                visual: `<svg width="100" height="100" viewBox="0 0 100 100" class="mx-auto"><circle cx="50" cy="50" r="45" fill="#f1f5f9" stroke="#1e293b" stroke-width="2" stroke-dasharray="4"/><circle cx="50" cy="50" r="15" fill="#334155"/></svg><p class='text-xs text-center mt-2 italic text-slate-400'>Diagram Nukleus Berpori</p>`,
+                note: "Jelaskan bahwa pori nukleus sangat cerdas, ia tahu molekul mana yang boleh membawa pesan keluar-masuk inti."
             },
-            {
-                id: 2,
-                title: "Komponen Kimiawi Penyusun Sel",
-                tujuan: ["Identifikasi unsur makro dan mikro dalam sel.", "Memahami peran air dalam protoplasma.", "Menjelaskan fungsi protein, lipid, dan karbohidrat bagi sel."],
-                islam: {
-                    ayat: "وَجَعَلْنَا مِنَ الْمَاءِ كُلَّ شَيْءٍ حَيٍّ",
-                    terjemah: "Dan dari air Kami jadikan segala sesuatu yang hidup... (QS. Al-Anbiya: 30)",
-                    catatan: "Air adalah pelarut universal dan komponen terbesar (70-90%) dalam protoplasma sel."
-                },
-                skenario: `<p>Sesi ini membahas 'sup kimia' kehidupan. Unsur organik (C, H, O, N) dan anorganik. Protein sebagai pembangun, Karbohidrat sebagai energi, dan Lemak sebagai cadangan energi & membran.</p>`,
-                formatif: Array(10).fill({ q: "Komponen organik utama sel adalah...", a: ["Pasir", "Protein", "Emas", "Kaca"], c: 1, e: "Protein, Karbohidrat, dan Lemak adalah senyawa organik penyusun sel." })
+            4: {
+                title: "Pertemuan 4: Retikulum Endoplasma & Ribosom",
+                tujuan: ["Santri menjelaskan proses sintesis protein.", "Santri membedakan RE Kasar dan RE Halus.", "Santri mengaitkan fungsi ribosom dengan pembentukan tubuh."],
+                dalil: "يَخْلُقُكُمْ فِي بُطُونِ أُمَّهَاتِكُمْ خَلْقًا مِنْ بَعْدِ خَلْقٍ (Dia menciptakan kamu dalam perut ibumu kejadian demi kejadian) - QS. Az-Zumar: 6",
+                skenario: "RE Kasar ditempeli ribosom untuk membuat protein. RE Halus membuat lemak. Ibarat dapur umum yang memproses bahan mentah menjadi makanan siap saji.",
+                visual: `<svg width="150" height="80" viewBox="0 0 150 80" class="mx-auto"><path d="M10 10c20 0 20 20 40 20s20-20 40-20 20 20 40 20" fill="none" stroke="#be185d" stroke-width="8" opacity="0.3"/><circle cx="25" cy="15" r="3" fill="#be185d"/><circle cx="65" cy="15" r="3" fill="#be185d"/></svg>`,
+                note: "Protein adalah 'pekerja' utama di sel. Ribosom adalah pabrik pembuat pekerja tersebut."
             },
-            {
-                id: 3,
-                title: "Membran Sel: Gerbang Amanah",
-                tujuan: ["Menganalisis struktur Lipid Bilayer.", "Memahami sifat Selektif Permeabel.", "Menjelaskan fungsi protein transpor."],
-                islam: {
-                    ayat: "وَالَّذِينَ هُمْ لِأَمَانَاتِهِمْ وَعَهْدِهِمْ رَاعُونَ",
-                    terjemah: "Dan orang-orang yang memelihara amanat-amanat dan janjinya. (QS. Al-Mu'minun: 8)",
-                    catatan: "Membran sel mengemban amanah untuk hanya membiarkan zat yang bermanfaat masuk dan menahan yang berbahaya keluar."
-                },
-                skenario: `<p>Membahas struktur mozaik fluida. Bagaimana sel berkomunikasi dengan lingkungan luar melalui reseptor pada membran.</p>`,
-                formatif: Array(10).fill({ q: "Sifat membran sel yang hanya bisa dilewati zat tertentu disebut...", a: ["Permeabel", "Impermeabel", "Selektif Permeabel", "Netral"], c: 2, e: "Membran memilih zat yang boleh lewat." })
+            5: {
+                title: "Pertemuan 5: Mitokondria & Badan Golgi",
+                tujuan: ["Santri menjelaskan proses pembentukan energi ATP.", "Santri merinci peran Badan Golgi dalam sekresi.", "Santri memahami pentingnya energi untuk ibadah."],
+                dalil: "Hadits: 'Mukmin yang kuat lebih dicintai Allah daripada mukmin yang lemah.' - HR. Muslim",
+                skenario: "Mitokondria adalah pusat pembangkit listrik. Badan Golgi adalah kantor ekspedisi yang membungkus paket untuk dikirim keluar sel.",
+                visual: `<div class='text-center'><img src='https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Animal_mitochondrion_diagram_en.svg/400px-Animal_mitochondrion_diagram_en.svg.png' class='w-40 mx-auto rounded shadow-sm'><p class='text-[10px] text-slate-400 italic mt-1'>Sumber: Wikimedia Commons</p></div>`,
+                note: "Tekankan bahwa energi yang dihasilkan mitokondria harus digunakan untuk ketaatan kepada Allah."
             },
-            {
-                id: 4,
-                title: "Nukleus & Sistem Komando",
-                tujuan: ["Identifikasi bagian-bagian inti sel.", "Memahami peran DNA sebagai materi genetik.", "Menganalisis hubungan nukleus dengan sintesis protein."],
-                islam: {
-                    ayat: "سَنُرِيهِمْ آيَاتِنَا فِي الْآفَاقِ وَفِي أَنفُسِهِمْ",
-                    terjemah: "Kami akan memperlihatkan kepada mereka tanda-tanda (kekuasaan) Kami di segenap ufuk dan pada diri mereka sendiri... (QS. Fussilat: 53)",
-                    catatan: "DNA di dalam nukleus adalah kode informasi yang sangat rumit, bukti adanya Perancang Yang Maha Cerdas."
-                },
-                skenario: `<p>Nukleus adalah pusat kendali. Jika nukleus rusak, seluruh metabolisme sel berhenti. Di dalamnya terdapat kromosom yang membawa sifat keturunan.</p>`,
-                formatif: Array(10).fill({ q: "Di manakah materi genetik (DNA) disimpan?", a: ["Ribosom", "Nukleus", "Lisosom", "Vakuola"], c: 1, e: "Nukleus menjaga stabilitas gen-gen tersebut." })
+            6: {
+                title: "Pertemuan 6: Kloroplas (Dapur Tumbuhan)",
+                tujuan: ["Santri menjelaskan proses fotosintesis.", "Santri memahami fungsi klorofil.", "Santri bersyukur atas oksigen yang dihasilkan tumbuhan."],
+                dalil: "الَّذِي جَعَلَ لَكُمْ مِنَ الشَّجَرِ الْأَخْضَرِ نَارًا (Tuhan yang menjadikan untukmu api dari kayu yang hijau) - QS. Yasin: 80",
+                skenario: "Kloroplas menangkap energi cahaya matahari. Hanya ada di tumbuhan. Tanpa kloroplas, dunia akan kehabisan makanan dan oksigen.",
+                visual: `<svg width="100" height="60" viewBox="0 0 100 60" class="mx-auto"><ellipse cx="50" cy="30" rx="45" ry="25" fill="#dcfce7" stroke="#166534"/><rect x="25" y="25" width="50" height="5" fill="#166534" opacity="0.5"/></svg>`,
+                note: "Bahas bagaimana tumbuhan 'memasak' makanannya sendiri (Autotrof)."
             },
-            {
-                id: 5,
-                title: "Sitoplasma & Organel Energi",
-                tujuan: ["Memahami fungsi Mitokondria sebagai pusat energi.", "Menjelaskan fungsi Kloroplas pada tumbuhan.", "Menganalisis proses respirasi seluler singkat."],
-                islam: {
-                    ayat: "الَّذِي جَعَلَ لَكُم مِّنَ الشَّجَرِ الْأَخْضَرِ نَارًا",
-                    terjemah: "Yaitu (Tuhan) yang menjadikan untukmu api dari kayu yang hijau... (QS. Yasin: 80)",
-                    catatan: "Kloroplas pada tumbuhan hijau mengubah energi cahaya menjadi energi kimia yang bisa kita gunakan."
-                },
-                skenario: `<p>Mitokondria adalah 'Pembangkit Listrik' (Powerhouse). Kloroplas adalah 'Panel Surya'. Membandingkan bagaimana energi diciptakan dan digunakan dalam sel.</p>`,
-                formatif: Array(10).fill({ q: "Organel sel yang berfungsi sebagai tempat respirasi sel adalah...", a: ["Mitokondria", "Ribosom", "Vakuola", "Badan Golgi"], c: 0, e: "Mitokondria menghasilkan ATP (energi)." })
+            7: {
+                title: "Pertemuan 7: Lisosom & Vakuola",
+                tujuan: ["Santri menjelaskan proses pencernaan sel.", "Santri memahami fungsi vakuola sebagai penyimpan.", "Santri menganalisis sistem pembuangan sampah sel."],
+                dalil: "نَظِّفُوا أَفْنِيَتَكُمْ (Bersihkanlah halaman-halamanmu) - HR. Tirmidzi (Prinsip Kebersihan)",
+                skenario: "Lisosom berisi enzim pencerna untuk menghancurkan kuman. Vakuola pada tumbuhan besar untuk menyimpan air dan cadangan makanan.",
+                visual: `<svg width="80" height="80" viewBox="0 0 80 80" class="mx-auto"><circle cx="40" cy="40" r="30" fill="#fef2f2" stroke="#ef4444" stroke-dasharray="2"/><circle cx="30" cy="35" r="5" fill="#ef4444" opacity="0.6"/></svg>`,
+                note: "Lisosom seperti sistem pengelolaan limbah agar sel tidak keracunan sampahnya sendiri."
             },
-            {
-                id: 6,
-                title: "Organel Sekresi & Ekskresi",
-                tujuan: ["Memahami peran Retikulum Endoplasma dan Ribosom.", "Menjelaskan fungsi Badan Golgi.", "Menganalisis fungsi Lisosom dalam pencernaan seluler."],
-                islam: {
-                    ayat: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطَّيِّبَ",
-                    terjemah: "Sesungguhnya Allah itu baik dan menyukai kebaikan.",
-                    catatan: "Sel memiliki mekanisme pembersihan internal melalui Lisosom agar sel tetap bersih (Thoyyib) dari zat sisa berbahaya."
-                },
-                skenario: `<p>Membahas jalur perakitan protein: Ribosom -> RE -> Badan Golgi -> Vesikel Sekresi. Lisosom sebagai sistem pembuangan sampah.</p>`,
-                formatif: Array(10).fill({ q: "Organel yang dijuluki 'kantong pencernaan' adalah...", a: ["Lisosom", "Sentriol", "Nukleolus", "RE Halus"], c: 0, e: "Lisosom berisi enzim hidrolitik untuk merombak zat." })
-            },
-            {
-                id: 7,
-                title: "Perbedaan Sel Hewan & Tumbuhan",
-                tujuan: ["Identifikasi struktur khusus sel tumbuhan (Dinding sel, Vakuola besar).", "Identifikasi struktur khusus sel hewan (Sentriol).", "Menganalisis perbedaan mekanis antara keduanya."],
-                islam: {
-                    ayat: "خَلَقَ كُلَّ شَيْءٍ فَقَدَّرَهُ تَقْدِيرًا",
-                    terjemah: "Dia telah menciptakan segala sesuatu, dan Dia menetapkan ukuran-ukurannya dengan serapi-rapinya. (QS. Al-Furqan: 2)",
-                    catatan: "Perbedaan struktur sel hewan dan tumbuhan disesuaikan dengan kebutuhan hidup masing-masing yang unik."
-                },
-                skenario: `<p>Praktikum virtual: Membandingkan bentuk sel tumbuhan yang tetap (karena dinding sel) dan sel hewan yang fleksibel. Mengamati vakuola sentral pada tumbuhan.</p>`,
-                formatif: Array(10).fill({ q: "Struktur yang menyebabkan sel tumbuhan kaku adalah...", a: ["Dinding Sel", "Membran Sel", "Sentriol", "Lisosom"], c: 0, e: "Dinding sel terbuat dari selulosa yang kuat." })
-            },
-            {
-                id: 8,
-                title: "Transportasi Membran: Difusi & Osmosis",
-                tujuan: ["Membedakan transpor pasif dan aktif.", "Menjelaskan mekanisme osmosis pada sel hewan dan tumbuhan.", "Mengaitkan keseimbangan cairan dengan kesehatan."],
-                islam: {
-                    ayat: "وَأَنزَلْنَا مِنَ السَّمَاءِ مَاءً بِقَدَرٍ",
-                    terjemah: "Dan Kami turunkan air dari langit menurut suatu ukuran... (QS. Al-Mu'minun: 18)",
-                    catatan: "Keseimbangan cairan (Homeostasis) dalam sel adalah kunci keberlangsungan hidup mahluk."
-                },
-                skenario: `<p>Eksperimen sederhana: Kentang dalam larutan garam. Menjelaskan mengapa ikan air laut tidak bisa hidup di air tawar secara instan terkait tekanan osmotik sel.</p>`,
-                formatif: Array(10).fill({ q: "Perpindahan air melalui membran selektif permeabel disebut...", a: ["Difusi", "Osmosis", "Eksositosis", "Pompa Ion"], c: 1, e: "Osmosis adalah difusi air." })
+            8: {
+                title: "Pertemuan 8: Perbedaan Sel Hewan & Tumbuhan",
+                tujuan: ["Santri merinci tabel perbedaan kedua jenis sel.", "Santri menjelaskan fungsi sentriol pada sel hewan.", "Santri mereview seluruh organel sel."],
+                dalil: "فَتَبَارَكَ اللَّهُ أَحْسَنُ الْخَالِقِينَ (Maka Maha Suci Allah, Pencipta yang paling baik) - QS. Al-Mu’minun: 14",
+                skenario: "Kesimpulan akhir: Tumbuhan punya dinding sel dan kloroplas. Hewan punya sentriol dan lisosom aktif. Keduanya adalah mahakarya Allah.",
+                visual: `<div class='grid grid-cols-2 gap-2 text-[10px] text-center'><div>Sel Tumbuhan (Kotak)</div><div>Sel Hewan (Bulat)</div></div>`,
+                note: "Gunakan sesi ini untuk persiapan menghadapi Tes Sumatif."
             }
-        ];
+        };
 
-        let currentSesi = 1;
+        const quizzes = {
+            1: [
+                { q: "Siapa penemu sel pertama kali pada sayatan gabus?", a: ["Robert Hooke", "Rudolf Virchow", "Antonie van Leeuwenhoek", "Matthias Schleiden"], c: 0, e: "Robert Hooke menemukan struktur kotak-kotak pada gabus tahun 1665." },
+                { q: "Sel disebut unit fungsional karena...", a: ["Menjadi penyusun utama tubuh", "Melakukan proses kehidupan secara mandiri", "Hanya dimiliki oleh makhluk hidup besar", "Bentuknya kaku dan kuat"], c: 1, e: "Dalam sel terjadi metabolisme, respirasi, dan sintesis yang mendukung hidup." },
+                { q: "Apa arti dari prinsip 'Omnis cellula e cellula'?", a: ["Sel adalah unit struktural", "Sel berasal dari benda mati", "Sel berasal dari sel sebelumnya", "Sel hanya ada pada tumbuhan"], c: 2, e: "Prinsip ini dikemukakan oleh Virchow, menyatakan sel berasal dari pembelahan sel." },
+                { q: "Contoh organisme yang bersifat uniseluler adalah...", a: ["Padi", "Bakteri", "Ikan", "Lumut"], c: 1, e: "Bakteri adalah makhluk hidup yang seluruh fungsinya dijalankan oleh satu sel saja." },
+                { q: "Mikroskop yang digunakan Robert Hooke saat menemukan sel adalah...", a: ["Mikroskop elektron", "Mikroskop digital", "Mikroskop cahaya sederhana", "Teleskop"], c: 2, e: "Hooke menggunakan mikroskop cahaya dengan lensa sederhana buatan sendiri." },
+                { q: "Sel gabus yang diamati Robert Hooke sejatinya adalah...", a: ["Sel hewan yang lincah", "Sel bakteri kecil", "Sel mati", "Inti sel"], c: 2, e: "Sel gabus adalah sel mati yang hanya menyisakan dinding selnya saja." },
+                { q: "Organisme multiseluler adalah makhluk hidup yang...", a: ["Hanya punya satu sel", "Terdiri dari banyak sel yang bekerja sama", "Tidak memiliki sel", "Hanya bisa dilihat mikroskop"], c: 1, e: "Contohnya adalah manusia, hewan, dan sebagian besar tumbuhan." },
+                { q: "Unit terkecil dari makhluk hidup secara hierarki biologi adalah...", a: ["Molekul", "Organ", "Sel", "Jaringan"], c: 2, e: "Sel adalah tingkatan paling dasar yang memiliki ciri-ciri kehidupan." },
+                { q: "Dalil 'Itqan' (kerapian ciptaan Allah) terdapat dalam surat...", a: ["An-Naml: 88", "Al-Baqarah: 1", "Yasin: 10", "Al-Kahfi: 110"], c: 0, e: "QS. An-Naml: 88 menjelaskan betapa kokoh dan rapi ciptaan Allah, termasuk sel." },
+                { q: "Mengapa sel disebut unit struktural?", a: ["Karena sel dapat membelah", "Karena sel menyusun struktur tubuh", "Karena sel membutuhkan nutrisi", "Karena sel memiliki DNA"], c: 1, e: "Struktural berarti sel adalah bahan bangunan fisik tubuh makhluk hidup." }
+            ],
+            2: [
+                { q: "Lapisan lemak ganda pada membran sel disebut...", a: ["Karbohidrat bilayer", "Protein kompleks", "Fosfolipid bilayer", "Selulosa"], c: 2, e: "Terdiri dari dua lapis fosfolipid (kepala dan ekor)." },
+                { q: "Sifat membran sel yang hanya mengizinkan zat tertentu lewat adalah...", a: ["Permeabel", "Selektif Permeabel", "Impermeabel", "Kaku"], c: 1, e: "Ini penting untuk menjaga keseimbangan konsentrasi di dalam sel." },
+                { q: "Komponen utama penyusun dinding sel tumbuhan adalah...", a: ["Lemak", "Oksigen", "Selulosa", "Kalsium"], c: 2, e: "Selulosa adalah polisakarida yang memberikan kekakuan pada tumbuhan." },
+                { q: "Bagian ekor pada fosfolipid membran sel bersifat...", a: ["Hidrofilik (suka air)", "Hidrofobik (takut air)", "Asam", "Basa"], c: 1, e: "Ekor lemak berada di bagian dalam karena menghindari cairan air." },
+                { q: "Manakah makhluk hidup yang TIDAK memiliki dinding sel?", a: ["Jamur", "Bakteri", "Sapi", "Pohon Mangga"], c: 2, e: "Hewan (seperti sapi) hanya memiliki membran sel agar bisa bergerak fleksibel." },
+                { q: "Fungsi utama dinding sel pada tumbuhan adalah...", a: ["Tempat fotosintesis", "Menjaga bentuk sel agar tetap kaku", "Pusat perintah sel", "Membuat protein"], c: 1, e: "Dinding sel memberikan perlindungan dan bentuk tetap pada tumbuhan." },
+                { q: "Kepala fosfolipid pada membran sel bersifat...", a: ["Hidrofobik", "Hidrofilik", "Netral", "Logam"], c: 1, e: "Bagian kepala bermuatan listrik dan tertarik pada air di luar/dalam sel." },
+                { q: "Membran sel sangatlah tipis, ukurannya sekitar...", a: ["1000 cm", "1 mm", "7-10 nm", "1 meter"], c: 2, e: "Nanometer (nm) adalah satuan sepersemiliar meter, menunjukkan betapa kecilnya sel." },
+                { q: "Zat yang biasanya sulit melewati membran sel secara langsung adalah...", a: ["Air", "Oksigen", "Ion atau molekul besar", "Karbondioksida"], c: 2, e: "Molekul besar butuh saluran protein khusus untuk masuk." },
+                { q: "Dinding sel bersifat permeabel, artinya...", a: ["Menolak semua zat", "Mudah dilewati zat cair dan gas", "Hanya dilewati cahaya", "Sangat rapat"], c: 1, e: "Dinding sel memiliki pori besar, namun membran di bawahnya yang menyeleksi." }
+            ],
+            3: [
+                { q: "Organel yang dianggap sebagai 'otak' atau pusat komando sel adalah...", a: ["Nukleus", "Vakuola", "Ribosom", "Lisosom"], c: 0, e: "Nukleus mengatur seluruh aktivitas metabolisme dan pembelahan sel." },
+                { q: "Materi genetik pembawa sifat yang ada di dalam nukleus adalah...", a: ["ATP", "DNA", "Enzim", "Glukosa"], c: 1, e: "DNA berisi informasi yang diwariskan dari orang tua ke anak." },
+                { q: "Sel yang TIDAK memiliki membran inti disebut...", a: ["Eukariotik", "Multiseluler", "Prokariotik", "Uniseluler"], c: 2, e: "Contoh sel prokariotik adalah bakteri." },
+                { q: "Sel eukariotik ditemukan pada...", a: ["Hanya bakteri", "Hewan dan Tumbuhan", "Hanya virus", "Batu"], c: 1, e: "Hewan, tumbuhan, protista, dan jamur memiliki membran inti (eukariotik)." },
+                { q: "Cairan yang mengisi bagian dalam sel (di luar nukleus) disebut...", a: ["Sitoplasma", "Darah", "Nukleoplasma", "Minyak"], c: 0, e: "Sitoplasma adalah tempat organel-organel berada." },
+                { q: "Bagian nukleus yang berfungsi sebagai jalan keluar masuknya molekul adalah...", a: ["Dinding", "Pori nukleus", "Ribosom", "Benang kromatin"], c: 1, e: "Pori nukleus menyeleksi pengiriman instruksi genetik keluar inti." },
+                { q: "Organisme eukariotik uniseluler contohnya adalah...", a: ["Amoeba", "Gajah", "Bakteri E. coli", "Virus Corona"], c: 0, e: "Amoeba memiliki inti sejati meskipun hanya satu sel." },
+                { q: "Benang-benang halus di dalam nukleus yang akan memendek saat membelah disebut...", a: ["Silia", "Kromatin", "Minyak", "Spora"], c: 1, e: "Kromatin akan menebal menjadi kromosom." },
+                { q: "Dalil 'segala sesuatu diciptakan menurut ukuran' (QS. Al-Qamar: 49) berkaitan dengan...", a: ["Ketelitian DNA", "Warna bunga", "Ukuran sel", "Bentuk daun"], c: 0, e: "DNA memiliki urutan kode yang sangat presisi (menurut kadar/ukuran)." },
+                { q: "Struktur kecil di dalam nukleus yang membuat komponen ribosom adalah...", a: ["Nukleolus", "Sentriol", "Kloroplas", "Dinding sel"], c: 0, e: "Nukleolus adalah 'anak inti' tempat sintesis ribosom." }
+            ],
+            4: [
+                { q: "Ribosom adalah organel yang berfungsi sebagai tempat...", a: ["Respirasi", "Sintesis protein", "Pencernaan", "Penyimpanan air"], c: 1, e: "Ribosom menyusun asam amino menjadi protein." },
+                { q: "RE yang permukaannya ditempeli oleh ribosom disebut...", a: ["RE Halus", "RE Licin", "RE Kasar", "RE Panjang"], c: 2, e: "Ribosom memberikan tekstur bintik/kasar pada permukaannya." },
+                { q: "Fungsi utama Retikulum Endoplasma (RE) Halus adalah...", a: ["Sintesis lemak/lipid", "Sintesis protein", "Pembelahan sel", "Mematikan virus"], c: 0, e: "RE halus tidak memiliki ribosom dan fokus pada metabolisme lemak." },
+                { q: "Retikulum Endoplasma memiliki bentuk seperti...", a: ["Butiran pasir", "Labirin membran", "Bola padat", "Piringan"], c: 1, e: "Berupa saluran-saluran membran yang berliku di dalam sitoplasma." },
+                { q: "Protein yang dibuat di RE Kasar biasanya akan...", a: ["Dibuang ke sampah", "Dikirim ke Badan Golgi untuk diproses lanjut", "Dihancurkan", "Berubah jadi air"], c: 1, e: "RE bekerja sama dengan Badan Golgi dalam sistem sekresi." },
+                { q: "Dimanakah ribosom dapat ditemukan di dalam sel?", a: ["Hanya di nukleus", "Bebas di sitoplasma atau menempel di RE", "Menempel di dinding sel", "Hanya di vakuola"], c: 1, e: "Ada ribosom bebas dan ada ribosom terikat." },
+                { q: "Organel terkecil di dalam sel yang tidak bermembran adalah...", a: ["Vakuola", "Ribosom", "Nukleus", "Mitokondria"], c: 1, e: "Ribosom berukuran sangat kecil namun jumlahnya ribuan." },
+                { q: "QS Az-Zumar: 6 menjelaskan tentang pencapaian kejadian demi kejadian, yang di level sel dimulai dari...", a: ["Sintesis protein", "Penguapan", "Pembekuan", "Penuaan"], c: 0, e: "Pembentukan struktur tubuh dimulai dari protein yang dibuat ribosom." },
+                { q: "RE Kasar banyak ditemukan pada sel yang aktif menghasilkan...", a: ["Oksigen", "Enzim atau hormon (protein)", "Lemak saja", "Cahaya"], c: 1, e: "Sel kelenjar biasanya memiliki RE kasar yang melimpah." },
+                { q: "Ribosom terdiri dari dua bagian utama, yaitu...", a: ["Kepala dan ekor", "Subunit besar dan subunit kecil", "Atas dan bawah", "Kanan dan kiri"], c: 1, e: "Keduanya bersatu saat proses sintesis protein berlangsung." }
+            ],
+            5: [
+                { q: "Organel yang berfungsi menghasilkan energi (ATP) melalui respirasi adalah...", a: ["Badan Golgi", "Mitokondria", "Lisosom", "Ribosom"], c: 1, e: "Mitokondria sering dijuluki 'Powerhouse of the cell'." },
+                { q: "Badan Golgi memiliki fungsi utama dalam...", a: ["Membuat energi", "Pengemasan dan pengiriman zat hasil sel", "Menyimpan air", "Menghancurkan kuman"], c: 1, e: "Golgi memodifikasi protein dan membungkusnya dalam vesikel." },
+                { q: "Lipatan-lipatan di dalam mitokondria yang memperluas bidang respirasi disebut...", a: ["Stroma", "Krista", "Matriks", "Granum"], c: 1, e: "Krista meningkatkan efisiensi pembentukan energi." },
+                { q: "Energi yang dihasilkan oleh mitokondria berbentuk molekul...", a: ["DNA", "ATP", "H2O", "Glukosa"], c: 1, e: "Adenosin Trifosfat (ATP) adalah mata uang energi sel." },
+                { q: "Jika sebuah sel sangat aktif bergerak (seperti sel otot), maka sel tersebut memiliki banyak...", a: ["Vakuola", "Dinding sel", "Mitokondria", "Kloroplas"], c: 2, e: "Otot butuh suplai energi ATP yang sangat besar." },
+                { q: "Badan Golgi sering ditemukan pada sel-sel yang bersifat...", a: ["Sekretori (kelenjar)", "Kaku", "Mati", "Tulang"], c: 0, e: "Karena fungsinya mengeluarkan/mensekresikan zat." },
+                { q: "Vesikel yang lepas dari Badan Golgi bisa menuju ke...", a: ["Luar sel", "Hanya ke inti sel", "Hanya ke ribosom", "Bawah tanah"], c: 0, e: "Protein dikirim ke bagian sel lain atau dikeluarkan dari sel." },
+                { q: "Mitokondria memiliki keunikan karena mempunyai...", a: ["Warna hijau", "DNA sendiri", "Pintu gerbang kayu", "Bisa bicara"], c: 1, e: "Mitokondria dapat membelah sendiri karena punya DNA mitokondria." },
+                { q: "Sesuai hadits, mukmin yang kuat lebih dicintai, hal ini di level sel didukung oleh...", a: ["Kesehatan Mitokondria", "Banyaknya sampah", "Dinding yang rapuh", "Kurang protein"], c: 0, e: "Kesehatan fisik dimulai dari performa energi di tingkat sel." },
+                { q: "Warna mitokondria di bawah mikroskop biasanya tidak berwarna, namun sering digambarkan berbentuk...", a: ["Piring", "Sosis atau oval", "Bintang", "Kotak sempurna"], c: 1, e: "Bentuk oval dengan lekukan di dalamnya." }
+            ],
+            6: [
+                { q: "Proses pembuatan makanan pada tumbuhan disebut...", a: ["Respirasi", "Fotosintesis", "Transpirasi", "Oksidasi"], c: 1, e: "Mengubah energi cahaya menjadi energi kimia (gula)." },
+                { q: "Zat warna hijau yang berfungsi menangkap cahaya matahari adalah...", a: ["Hemoglobin", "Klorofil", "Melanin", "Karoten"], c: 1, e: "Klorofil berada di dalam kloroplas." },
+                { q: "Kloroplas termasuk ke dalam kelompok organel yang disebut...", a: ["Plastida", "Lisosom", "Vesikel", "Nukleus"], c: 0, e: "Plastida adalah organel khas sel tumbuhan." },
+                { q: "Tumpukan membran berbentuk koin di dalam kloroplas disebut...", a: ["Stroma", "Granum", "Matriks", "Krista"], c: 1, e: "Satu keping koinnya disebut tilakoid." },
+                { q: "Cairan di dalam kloroplas tempat terjadinya reaksi kimia disebut...", a: ["Sitoplasma", "Stroma", "Darah", "Nukleoplasma"], c: 1, e: "Stroma mengisi ruang di antara grana." },
+                { q: "Hasil akhir dari proses fotosintesis adalah...", a: ["Karbon dioksida dan air", "Glukosa dan Oksigen", "Tanah dan pupuk", "Cahaya matahari"], c: 1, e: "Oksigen dilepaskan ke udara untuk kita bernapas." },
+                { q: "Kloroplas TIDAK ditemukan pada sel...", a: ["Daun mangga", "Rumput", "Hewan", "Lumut"], c: 2, e: "Hewan tidak bisa membuat makanan sendiri (heterotrof)." },
+                { q: "Mengapa tumbuhan disebut organisme autotrof?", a: ["Karena bisa bergerak", "Karena bisa membuat makanan sendiri", "Karena berukuran besar", "Karena butuh air"], c: 1, e: "Auto = sendiri, Trof = makanan." },
+                { q: "QS Yasin: 80 menyebut api dari kayu yang hijau, mengisyaratkan adanya energi kimia dari...", a: ["Kloroplas", "Batu bara", "Udara", "Air laut"], c: 0, e: "Kayu hijau menyimpan energi matahari hasil fotosintesis kloroplas." },
+                { q: "Organel plastida yang berwarna selain hijau (seperti jingga pada wortel) disebut...", a: ["Kloroplas", "Kromoplas", "Leukoplas", "Amiloplas"], c: 1, e: "Kromo berarti warna." }
+            ],
+            7: [
+                { q: "Organel yang berisi enzim hidrolitik untuk pencernaan sel adalah...", a: ["Vakuola", "Lisosom", "Ribosom", "Mitokondria"], c: 1, e: "Lisosom bertugas merombak zat atau organel rusak." },
+                { q: "Vakuola yang sangat besar biasanya ditemukan pada sel...", a: ["Hewan", "Tumbuhan Dewasa", "Bakteri", "Virus"], c: 1, e: "Vakuola tumbuhan menyimpan air dan menjaga tekanan turgor." },
+                { q: "Peristiwa sel menghancurkan dirinya sendiri menggunakan enzim lisosom disebut...", a: ["Fotosintesis", "Autolisis", "Ekskresi", "Difusi"], c: 1, e: "Biasanya terjadi saat sel sudah sangat rusak atau mati." },
+                { q: "Fungsi utama vakuola pada tumbuhan adalah untuk...", a: ["Membuat protein", "Menyimpan cadangan makanan dan air", "Pusat energi", "Membelah diri"], c: 1, e: "Vakuola juga menyimpan pigmen dan zat sisa." },
+                { q: "Lisosom dibentuk oleh organel...", a: ["Badan Golgi", "Dinding sel", "Kloroplas", "Vakuola"], c: 0, e: "Golgi membungkus enzim hidrolitik menjadi lisosom." },
+                { q: "Lisosom berperan dalam pertahanan tubuh sel karena dapat...", a: ["Menghasilkan cahaya", "Mencerna bakteri atau virus yang masuk", "Membuat dinding tebal", "Menarik air"], c: 1, e: "Ini disebut proses fagositosis." },
+                { q: "Vakuola pada sel hewan biasanya bersifat...", a: ["Sangat besar", "Kecil dan jumlahnya banyak", "Tidak ada sama sekali", "Kaku"], c: 1, e: "Beberapa hewan memiliki vakuola kontraktil untuk memompa air." },
+                { q: "Prinsip kebersihan (hadits) tercermin dalam sel melalui fungsi...", a: ["Lisosom", "Mitokondria", "Ribosom", "Dinding sel"], c: 0, e: "Lisosom menjaga sel bersih dari zat berbahaya dan organel sampah." },
+                { q: "Apa yang terjadi jika vakuola tumbuhan kekurangan air?", a: ["Tumbuhan layu", "Tumbuhan meledak", "Tumbuhan makin tegak", "Tumbuhan berubah warna"], c: 0, e: "Tekanan turgor menurun sehingga tumbuhan layu." },
+                { q: "Enzim di dalam lisosom hanya bekerja aktif pada lingkungan yang...", a: ["Basa", "Asam", "Netral", "Sangat panas"], c: 1, e: "pH di dalam lisosom lebih rendah (asam) dibanding sitoplasma." }
+            ],
+            8: [
+                { q: "Manakah organel yang hanya ada pada sel tumbuhan?", a: ["Mitokondria", "Dinding sel dan Kloroplas", "Inti sel", "Membran sel"], c: 1, e: "Hewan tidak memilikinya agar sel lebih fleksibel." },
+                { q: "Sentriol adalah organel yang hanya ditemukan pada sel...", a: ["Tumbuhan", "Hewan", "Bakteri", "Jamur"], c: 1, e: "Sentriol berperan penting dalam pembelahan sel hewan." },
+                { q: "Bentuk sel tumbuhan cenderung tetap/kaku karena adanya...", a: ["Dinding sel", "Vakuola kecil", "Lemak", "Oksigen"], c: 0, e: "Dinding selulosa memberikan kekuatan fisik." },
+                { q: "Sel hewan biasanya memiliki bentuk yang...", a: ["Kotak sempurna", "Berubah-ubah atau bulat", "Segitiga", "Memanjang kaku"], c: 1, e: "Karena tidak memiliki dinding sel." },
+                { q: "Letak nukleus pada sel tumbuhan biasanya terdesak ke tepi karena...", a: ["Ditarik gravitasi", "Adanya vakuola yang sangat besar di tengah", "Ditolak dinding", "Ingin keluar"], c: 1, e: "Vakuola sentral mengambil sebagian besar ruang sel." },
+                { q: "Lisosom lebih umum dan aktif ditemukan pada sel...", a: ["Tumbuhan", "Hewan", "Batu", "Kayu"], c: 1, e: "Hewan butuh lisosom untuk mencerna makromolekul eksternal." },
+                { q: "Persamaan antara sel hewan dan tumbuhan adalah keduanya memiliki...", a: ["Dinding sel", "Membran sel dan Mitokondria", "Kloroplas", "Sentriol"], c: 1, e: "Keduanya adalah sel eukariotik yang butuh energi dan perlindungan membran." },
+                { q: "Sentriol pada sel hewan berfungsi untuk...", a: ["Fotosintesis", "Pembentukan benang spindel saat pembelahan", "Membuat lemak", "Menyimpan air"], c: 1, e: "Membantu memisahkan kromosom." },
+                { q: "Tumbuhan dapat berdiri tegak meskipun tanpa tulang karena...", a: ["Adanya dinding sel yang kuat", "Banyaknya air", "Ada klorofil", "Ada akar"], c: 0, e: "Dinding sel adalah penopang struktural utama tumbuhan." },
+                { q: "QS Al-Mu'minun: 14 menyebut 'Pencipta terbaik', hal ini dibuktikan dengan...", a: ["Keseragaman sel", "Spesialisasi organel yang pas sesuai fungsi", "Besarnya sel", "Jumlah sel yang sedikit"], c: 1, e: "Desain sel hewan dan tumbuhan sangat pas dengan cara hidup masing-masing." }
+            ]
+        };
 
-        function loadSesi(num) {
-            currentSesi = num;
-            const data = sesiData[num - 1];
-            
-            // Update UI Nav
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
-            document.getElementById(`nav-${num}`).classList.add('tab-active');
-            
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
-                <div class="fade-in space-y-8">
-                    <div class="border-b-4 border-emerald-600 pb-2">
-                        <h2 class="text-3xl font-black text-slate-800 uppercase tracking-tighter">PERTEMUAN ${data.id}: ${data.title}</h2>
-                    </div>
-
-                    <section>
-                        <h3 class="text-xl font-bold text-emerald-800 mb-3">A. Tujuan Pembelajaran</h3>
-                        <ul class="list-disc ml-6 space-y-1 text-slate-600">
-                            ${data.tujuan.map(t => `<li>${t}</li>`).join('')}
-                        </ul>
-                    </section>
-
-                    <section class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
-                        <h3 class="text-xl font-bold text-emerald-800 mb-4">B. Nilai Islam & Tadabbur</h3>
-                        <p class="arabic" dir="rtl">${data.islam.ayat}</p>
-                        <p class="text-sm text-emerald-900 italic mt-2">"${data.islam.terjemah}"</p>
-                        <p class="mt-4 text-slate-700 bg-white/50 p-3 rounded-lg text-sm border-l-4 border-emerald-500">${data.islam.catatan}</p>
-                    </section>
-
-                    <section>
-                        <h3 class="text-xl font-bold text-emerald-800 mb-3 border-b pb-1">C. Skenario Pembelajaran (90 Menit)</h3>
-                        <div class="prose prose-emerald max-w-none text-slate-700">
-                            ${data.skenario}
-                        </div>
-                    </section>
-
-                    <section>
-                        <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
-                            <span class="bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-2 text-sm">D</span>
-                            LATIHAN FORMATIF
-                        </h3>
-                        <div class="space-y-6">
-                            ${data.formatif.map((f, idx) => `
-                                <div class="formatif-card p-6" id="q-${idx}">
-                                    <p class="font-bold text-slate-800 mb-4">${idx+1}. ${f.q}</p>
-                                    <div class="grid md:grid-cols-2 gap-3">
-                                        ${f.a.map((opt, oIdx) => `
-                                            <button onclick="checkAnswer(${num-1}, ${idx}, ${oIdx}, ${f.c}, '${f.e.replace(/'/g, "\\'")}')" class="option-btn" id="q-${idx}-opt-${oIdx}">
-                                                ${opt}
-                                            </button>
-                                        `).join('')}
-                                    </div>
-                                    <div id="msg-${idx}" class="hidden mt-4 p-3 rounded-lg text-sm border"></div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </section>
-                </div>
-            `;
-            updateProgress();
+        function switchTab(n) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('content-' + n).classList.remove('hidden');
+            document.getElementById('btn-' + n).classList.add('active');
             window.scrollTo(0,0);
         }
 
-        function checkAnswer(sIdx, qIdx, oIdx, correct, explanation) {
-            const msgBox = document.getElementById(`msg-${qIdx}`);
-            const buttons = document.querySelectorAll(`#q-${qIdx} .option-btn`);
-            
-            buttons.forEach((b, i) => {
-                b.disabled = true;
-                if(i === correct) b.classList.add('correct');
-                if(i === oIdx && i !== correct) b.classList.add('wrong');
-            });
-
-            msgBox.classList.remove('hidden');
-            if(oIdx === correct) {
-                msgBox.className = "mt-4 p-3 rounded-lg text-sm border bg-emerald-50 border-emerald-200 text-emerald-800";
-                msgBox.innerHTML = `<strong>Benar!</strong> ${explanation}`;
-            } else {
-                msgBox.className = "mt-4 p-3 rounded-lg text-sm border bg-red-50 border-red-200 text-red-800";
-                msgBox.innerHTML = `<strong>Kurang Tepat.</strong> ${explanation}`;
-            }
+        function renderRMP(n) {
+            const data = rmpData[n];
+            const container = document.getElementById(`rmp-${n}`);
+            if(!container) return;
+            container.innerHTML = `
+                <h2 class="text-3xl font-bold text-emerald-800 mb-6">${data.title}</h2>
+                <section class="mb-6"><h3 class="font-bold border-b pb-1 mb-2">A. Tujuan Pembelajaran</h3><ul class="list-disc pl-5">${data.tujuan.map(t => `<li>${t}</li>`).join('')}</ul></section>
+                <section class="mb-6"><h3 class="font-bold border-b pb-1 mb-2">B. Keterkaitan Nilai Islam</h3><div class="dalil-box"><p class="italic text-sm">${data.dalil}</p></div></section>
+                <section class="mb-6"><h3 class="font-bold border-b pb-1 mb-2">C. Skenario Pembelajaran</h3><p class="text-slate-700">${data.skenario}</p>${data.visual}<div class="teacher-note"><strong>Poin Diskusi Guru:</strong> ${data.note}</div></section>
+                <div class="grid md:grid-cols-2 gap-4 mt-8">
+                    <div class="simulation-card"><h4><i class="fa-solid fa-flask"></i> Simulasi ${n}.1</h4><button onclick="alert('Simulasi Aktif Sesi ${n}')" class="w-full bg-emerald-600 rounded py-1 mt-2">Mulai</button></div>
+                    <div class="simulation-card"><h4><i class="fa-solid fa-gamepad"></i> Simulasi ${n}.2</h4><button onclick="alert('Game Edukasi Sesi ${n}')" class="w-full bg-amber-600 rounded py-1 mt-2">Mainkan</button></div>
+                </div>
+                <div class="mt-10"><h4 class="font-bold text-xl mb-4 text-emerald-800">Latihan Formatif ${n}</h4><div id="quiz-${n}" class="space-y-6"></div></div>
+            `;
+            renderQuiz(n);
         }
 
-        function loadSumatif() {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
-            document.getElementById('nav-sum').classList.add('tab-active');
+        function renderQuiz(n) {
+            const container = document.getElementById(`quiz-${n}`);
+            const data = quizzes[n];
+            container.innerHTML = data.map((item, idx) => `
+                <div class="p-4 bg-slate-50 rounded-xl border">
+                    <p class="font-bold mb-3">${idx+1}. ${item.q}</p>
+                    <div class="grid md:grid-cols-2 gap-2">
+                        ${item.a.map((ans, i) => `<div onclick="checkQ(${n},${idx},${i},this)" class="quiz-option p-3 bg-white rounded-lg text-sm">${ans}</div>`).join('')}
+                    </div>
+                    <p id="expl-${n}-${idx}" class="hidden mt-3 text-xs text-emerald-700 italic bg-emerald-50 p-2 rounded"><strong>Penjelasan:</strong> ${item.e}</p>
+                </div>
+            `).join('');
+        }
+
+        function checkQ(n, qIdx, choice, el) {
+            const item = quizzes[n][qIdx];
+            const options = el.parentElement.children;
+            if(choice === item.c) { el.classList.add('correct'); }
+            else { el.classList.add('wrong'); options[item.c].classList.add('correct'); }
+            document.getElementById(`expl-${n}-${qIdx}`).classList.remove('hidden');
+            Array.from(options).forEach(opt => opt.onclick = null);
+        }
+
+        function checkSim1() {
+            const val = document.getElementById('sim1-calc').value;
+            if(val == 1) alert('Benar! 100 * 0.01 = 1 mm.');
+            else alert('Coba hitung lagi: 100 dikali 0.01.');
+        }
+
+        function toggleBox(kaku) {
+            const b = document.getElementById('demo-box');
+            if(kaku) { b.style.width = "100%"; b.style.backgroundColor = "#059669"; b.innerText = "KAKU"; }
+            else { b.style.width = "50%"; b.style.backgroundColor = "#94a3b8"; b.innerText = "LENTUR"; }
+        }
+
+        function renderSumatif() {
+            const container = document.getElementById('sumatif-questions');
+            let allQ = [];
+            // Mengambil soal pertama dari setiap pertemuan untuk ujian gabungan
+            for(let i=1; i<=8; i++) {
+                allQ.push({ ...quizzes[i][0], origin: i });
+                allQ.push({ ...quizzes[i][1], origin: i });
+            }
             
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
-                <div class="fade-in text-center py-12">
-                    <h2 class="text-4xl font-black text-slate-800 mb-4">UJIAN SUMATIF AKHIR</h2>
-                    <p class="text-slate-500 mb-8 max-w-md mx-auto">Ujian ini mencakup seluruh materi dari Sesi 1 sampai Sesi 8. Pastikan Anda sudah murojaah seluruh sesi sebelum memulai.</p>
-                    
-                    <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-left max-w-2xl mx-auto">
-                        <p class="text-sm font-bold text-emerald-600 mb-2">INSTRUKSI:</p>
-                        <ul class="text-sm text-slate-600 list-decimal ml-4 space-y-2 mb-8">
-                            <li>Terdiri dari 40 soal pilihan ganda.</li>
-                            <li>Waktu pengerjaan disarankan 60 menit.</li>
-                            <li>Skor kelulusan minimal adalah 75.</li>
-                        </ul>
-                        <button onclick="startSumatif()" class="w-full bg-emerald-900 text-white py-4 rounded-2xl font-black text-xl hover:bg-black transition shadow-lg">MULAI UJIAN SEKARANG</button>
+            container.innerHTML = allQ.map((item, idx) => `
+                <div class="p-6 bg-slate-50 rounded-2xl border">
+                    <p class="font-bold mb-4 text-emerald-800">[Pertemuan ${item.origin}] ${idx+1}. ${item.q}</p>
+                    <div class="space-y-2">
+                        ${item.a.map((ans, i) => `
+                            <label class="flex items-center gap-3 p-3 bg-white border rounded-xl cursor-pointer hover:bg-emerald-50 transition">
+                                <input type="radio" name="sum-${idx}" value="${i}" class="w-4 h-4 text-emerald-600">
+                                <span class="text-sm">${ans}</span>
+                            </label>
+                        `).join('')}
                     </div>
                 </div>
-            `;
+            `).join('');
+            
+            window.sumatifData = allQ;
         }
 
-        function startSumatif() {
-            // Logika Ujian Sumatif bisa dikembangkan dengan menggabungkan semua soal formatif secara acak
-            alert("Ujian sedang dipersiapkan... (Fitur ini dapat dikustomisasi lebih lanjut untuk mengacak 80 soal dari seluruh sesi)");
+        function calcSumatif() {
+            let score = 0;
+            const data = window.sumatifData;
+            data.forEach((item, idx) => {
+                const sel = document.querySelector(`input[name="sum-${idx}"]:checked`);
+                if(sel && parseInt(sel.value) === item.c) score++;
+            });
+            const final = Math.round((score/data.length)*100);
+            document.getElementById('final-score').innerText = final;
+            document.getElementById('result-sumatif').classList.remove('hidden');
+            document.getElementById('submit-sumatif').classList.add('hidden');
+            window.scrollTo(0, document.body.scrollHeight);
         }
 
-        function updateProgress() {
-            const p = Math.round((currentSesi / 8) * 100);
-            document.getElementById('progress-indicator').innerText = `Kemajuan: ${p}%`;
-        }
-
-        function closeModal() {
-            document.getElementById('modal-skor').classList.add('hidden');
-        }
-
-        // Jalankan Sesi 1 saat pertama buka
-        window.onload = () => loadSesi(1);
-
+        window.onload = () => {
+            renderQuiz(1);
+            renderQuiz(2);
+            for(let i=3; i<=8; i++) renderRMP(i);
+            renderSumatif();
+        };
     </script>
 </body>
 </html>
