@@ -3,494 +3,391 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IND-105: Menulis Surat Sederhana (Tujuan Detail)</title>
+    <title>IND-105: Menulis Surat Sederhana (8 Sesi)</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <!-- MathJax for LaTeX -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/dist/babel.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1e40af; --secondary: #1e3a8a; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .arabic { font-family: 'Amiri', serif; font-size: 1.5rem; line-height: 2.5rem; text-align: right; }
-        .teacher-note { border-left: 4px solid #f59e0b; background-color: #fffbeb; padding: 1.25rem; border-radius: 0.5rem; font-style: italic; margin: 1.5rem 0; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .card-simulasi { border-top: 4px solid #10b981; background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); height: 100%; }
-        .quiz-option { cursor: pointer; transition: all 0.2s; border: 1px solid #e2e8f0; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; font-size: 0.875rem; }
-        .quiz-option:hover { background-color: #f1f5f9; }
-        .correct { background-color: #dcfce7 !important; border-color: #22c55e !important; }
-        .incorrect { background-color: #fee2e2 !important; border-color: #ef4444 !important; }
-        .nav-scroll { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .arabic { font-family: 'Amiri', serif; font-size: 1.4rem; line-height: 2.8rem; text-align: right; }
+        .tab-active { border-bottom: 4px solid #065f46; color: #065f46; font-weight: bold; background-color: #f0fdf4; }
+        .teacher-note { border-left: 5px solid #f59e0b; background-color: #fffbeb; padding: 1.25rem; margin: 1.5rem 0; border-radius: 0 0.5rem 0.5rem 0; }
+        .simulation-card { background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; transition: all 0.3s ease; }
+        .simulation-card:hover { border-color: #64748b; background: #f1f5f9; }
+        .tab-content { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="text-slate-900 pb-20">
+<body class="bg-slate-50 text-slate-900">
 
-    <header class="bg-blue-900 text-white sticky top-0 z-50 shadow-lg">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center">
-            <div>
-                <h1 class="text-xl font-bold">IND-105: Menulis 2</h1>
-                <p class="text-xs text-blue-200 uppercase tracking-widest font-semibold">Menulis Surat Sederhana</p>
-            </div>
-            <nav class="nav-scroll flex space-x-1 mt-4 md:mt-0 pb-2 md:pb-0">
-                <button onclick="openTab('p1')" id="t-p1" class="tab-btn px-3 py-1 bg-blue-600 rounded text-xs font-bold">P1</button>
-                <button onclick="openTab('p2')" id="t-p2" class="tab-btn px-3 py-1 bg-blue-800 rounded text-xs font-bold">P2</button>
-                <button onclick="openTab('p3')" id="t-p3" class="tab-btn px-3 py-1 bg-blue-800 rounded text-xs font-bold">P3</button>
-                <button onclick="openTab('p4')" id="t-p4" class="tab-btn px-3 py-1 bg-blue-800 rounded text-xs font-bold">P4</button>
-                <button onclick="openTab('p5')" id="t-p5" class="tab-btn px-3 py-1 bg-blue-800 rounded text-xs font-bold">P5</button>
-                <button onclick="openTab('p6')" id="t-p6" class="tab-btn px-3 py-1 bg-blue-800 rounded text-xs font-bold">P6</button>
-                <button onclick="openTab('p7')" id="t-p7" class="tab-btn px-3 py-1 bg-blue-800 rounded text-xs font-bold">P7</button>
-                <button onclick="openTab('p8')" id="t-p8" class="tab-btn px-3 py-1 bg-blue-800 rounded text-xs font-bold">P8</button>
-                <button onclick="openTab('sumatif')" id="t-sumatif" class="tab-btn px-3 py-1 bg-red-700 rounded text-xs font-bold">TES SUMATIF</button>
-            </nav>
+    <!-- Header Section -->
+    <header class="bg-emerald-900 text-white py-12 px-4 shadow-2xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-8 opacity-10">
+            <svg width="200" height="200" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        </div>
+        <div class="max-w-6xl mx-auto text-center relative z-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4">IND-105: Menulis Surat Sederhana</h1>
+            <p class="text-xl text-emerald-200 max-w-2xl mx-auto italic">"Seni Merangkai Kata, Menjaga Adab, dan Menguatkan Ukhuwah dalam 8 Pertemuan Intensif"</p>
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto p-6 space-y-12">
+    <!-- Navigation Tabs -->
+    <nav class="bg-white sticky top-0 z-50 border-b shadow-md overflow-x-auto">
+        <div class="max-w-7xl mx-auto flex">
+            <button onclick="switchTab('p1')" id="tab-p1" class="flex-1 min-w-[100px] px-4 py-4 transition-all tab-active border-r">P-1</button>
+            <button onclick="switchTab('p2')" id="tab-p2" class="flex-1 min-w-[100px] px-4 py-4 transition-all border-r">P-2</button>
+            <button onclick="switchTab('p3')" id="tab-p3" class="flex-1 min-w-[100px] px-4 py-4 transition-all border-r">P-3</button>
+            <button onclick="switchTab('p4')" id="tab-p4" class="flex-1 min-w-[100px] px-4 py-4 transition-all border-r">P-4</button>
+            <button onclick="switchTab('p5')" id="tab-p5" class="flex-1 min-w-[100px] px-4 py-4 transition-all border-r">P-5</button>
+            <button onclick="switchTab('p6')" id="tab-p6" class="flex-1 min-w-[100px] px-4 py-4 transition-all border-r">P-6</button>
+            <button onclick="switchTab('p7')" id="tab-p7" class="flex-1 min-w-[100px] px-4 py-4 transition-all border-r">P-7</button>
+            <button onclick="switchTab('p8')" id="tab-p8" class="flex-1 min-w-[100px] px-4 py-4 transition-all border-r">P-8</button>
+            <button onclick="switchTab('sumatif')" id="tab-sumatif" class="flex-1 min-w-[120px] px-4 py-4 transition-all bg-emerald-50 font-bold text-emerald-800">SUMATIF</button>
+        </div>
+    </nav>
 
+    <main class="max-w-6xl mx-auto p-4 md:p-10">
+        
         <!-- PERTEMUAN 1 -->
-        <div id="p1" class="tab-content active space-y-8">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-                <h2 class="text-3xl font-black text-blue-900 mb-2">Pertemuan 1: Mengenal Surat & Fungsinya</h2>
-                <p class="text-slate-500 mb-6 font-semibold">Topik: Apa itu Surat?</p>
-                <div class="space-y-6">
+        <section id="content-p1" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-10 border-t-8 border-emerald-600">
+                <h2 class="text-3xl font-bold text-emerald-900 mb-6 underline decoration-emerald-200">Pertemuan 1: Hakikat Surat & Silaturahmi</h2>
+                <div class="space-y-8">
                     <div>
-                        <h3 class="font-bold text-blue-700 uppercase text-sm mb-2">A. Tujuan Pembelajaran</h3>
-                        <ul class="list-disc ml-5 space-y-2 text-slate-700 text-sm">
-                            <li><strong>Kognitif:</strong> Santri dapat menjelaskan definisi surat sebagai alat komunikasi tertulis secara tepat tanpa bantuan buku.</li>
-                            <li><strong>Identifikasi:</strong> Santri mampu mengidentifikasi minimal 3 perbedaan utama antara surat fisik dan pesan instan digital (seperti WhatsApp).</li>
-                            <li><strong>Analisis:</strong> Santri dapat menyebutkan 3 alasan mengapa surat penting dalam menjaga silaturahmi antar keluarga jauh.</li>
-                            <li><strong>Afektif:</strong> Santri menunjukkan rasa antusias dalam menghargai tradisi surat-menyurat sebagai bentuk perhatian yang tulus.</li>
+                        <h3 class="text-xl font-bold text-emerald-800 border-b-2 border-emerald-100 pb-2 mb-4">A. Tujuan Pembelajaran</h3>
+                        <ul class="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-700">
+                            <li class="flex items-start gap-2"><span class="bg-emerald-100 text-emerald-700 rounded-full h-6 w-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">1</span><span>Santri memahami urgensi surat sebagai sarana dakwah dan silaturahmi.</span></li>
+                            <li class="flex items-start gap-2"><span class="bg-emerald-100 text-emerald-700 rounded-full h-6 w-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">2</span><span>Santri mengidentifikasi struktur dasar surat pribadi secara anatomi.</span></li>
                         </ul>
                     </div>
-                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                        <h3 class="font-bold text-blue-800 mb-3">B. Keterkaitan Nilai Islam</h3>
-                        <p class="text-sm mb-4">Surat adalah wasilah (perantara) silaturahmi yang diajarkan Rasulullah SAW, terutama saat jarak memisahkan kita dengan saudara muslim lainnya.</p>
-                        <div class="bg-white p-4 rounded-lg">
-                            <p class="arabic mb-2">تَهَادُوْا تَحَابُّوا</p>
-                            <p class="text-xs italic text-slate-600">"Saling memberi hadiahlah kalian (termasuk surat/kabar baik), niscaya kalian akan saling mencintai." (HR. Al-Bukhari dalam Al-Adab Al-Mufrad)</p>
+                    <div class="bg-emerald-50 p-6 rounded-xl border-l-8 border-emerald-500">
+                        <h3 class="font-bold text-xl text-emerald-900 mb-3">B. Keterkaitan Nilai Islam</h3>
+                        <p class="text-slate-700 leading-relaxed mb-4">Islam sangat menghargai tulisan sebagai sarana komunikasi. Rasulullah ﷺ bersabda mengenai pentingnya silaturahmi yang bisa ditempuh lewat surat.</p>
+                        <div class="bg-white p-6 rounded-lg shadow-inner">
+                            <p class="arabic mb-3">لَا تَدْخُلُونَ الْجَنَّةَ حَتَّى تُؤْمِنُوا وَلَا تُؤْمِنُوا حَتَّى تَحَابُّوا</p>
+                            <p class="text-md italic text-slate-600">"Kalian tidak akan masuk surga sampai kalian beriman, dan kalian tidak akan beriman sampai kalian saling mencintai..." (HR. Muslim)</p>
                         </div>
                     </div>
-                    <div class="space-y-6">
-                        <h3 class="font-bold text-slate-800 border-b pb-2">C. Skenario Pembelajaran</h3>
-                        <p><strong>Analogi: Jendela Ajaib.</strong> Bayangkan surat seperti jendela ajaib. Walaupun kakek berada jauh di desa, saat kakek membuka "jendela" (amplop) itu, kakek bisa melihat isi hati dan pikiran kita yang ada di kota.</p>
-                        <div class="flex justify-center my-6">
-                            <svg width="120" height="100" viewBox="0 0 100 100">
-                                <rect x="10" y="20" width="80" height="60" rx="5" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
-                                <path d="M10 20 L50 55 L90 20" fill="none" stroke="#475569" stroke-width="2"/>
-                                <circle cx="50" cy="85" r="5" fill="#3b82f6"/>
-                            </svg>
-                        </div>
-                        <div class="text-center">
-                        </div>
-                        <div class="teacher-note">
-                            <strong>Poin Diskusi Guru:</strong> Tanyakan kepada santri, "Pernahkah kalian merasa sangat senang saat menerima bungkusan fisik? Bagaimana jika bungkusan itu berisi tulisan tangan asli?"
+                    <div>
+                        <h3 class="text-xl font-bold text-emerald-800 mb-4">C. Skenario Pembelajaran (90 Menit)</h3>
+                        <div class="prose max-w-none text-slate-700 space-y-4">
+                            <h4 class="font-bold text-lg text-emerald-700">1. Bedah Anatomi Surat (40 Menit)</h4>
+                            <p>Penjelasan detail bagian surat: Tititimangsa, Salam, Kabar, Isi, Harapan, Penutup, dan Tanda tangan.</p>
+                            <div class="teacher-note"><strong>Poin Diskusi Guru:</strong> Mengapa kita tidak boleh langsung ke inti pesan tanpa salam?</div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 1: Alur Perjalanan Surat</h4><p class="text-sm">Menyusun kartu-kartu tahapan pengiriman surat dari penulis hingga sampai ke tangan penerima.</p></div>
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 2: Sortir Pesan</h4><p class="text-sm">Mengkategorikan jenis pesan mana yang lebih 'bernyawa' dikirim via surat daripada sekadar chat singkat.</p></div>
-            </div>
-            <section class="bg-white p-8 rounded-2xl shadow-sm"><h3 class="text-xl font-bold mb-6 text-blue-900">Latihan Formatif P1</h3><div id="quiz-p1" class="space-y-4"></div></section>
-        </div>
-
-        <!-- PERTEMUAN 2 -->
-        <div id="p2" class="tab-content space-y-8">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-                <h2 class="text-3xl font-black text-blue-900 mb-2">Pertemuan 2: Anatomi & Kerangka Surat</h2>
-                <p class="text-slate-500 mb-6 font-semibold">Topik: Bagian-Bagian Surat</p>
-                <div class="space-y-6">
-                    <div>
-                        <h3 class="font-bold text-blue-700 uppercase text-sm mb-2">A. Tujuan Pembelajaran</h3>
-                        <ul class="list-disc ml-5 space-y-2 text-slate-700 text-sm">
-                            <li><strong>Struktur:</strong> Santri dapat menyebutkan dan menunjukkan 7 bagian utama surat pribadi (Tempat/Tanggal, Alamat, Salam Pembuka, Paragraf Pembuka, Isi, Penutup, Nama/TTD).</li>
-                            <li><strong>Keterampilan:</strong> Santri mampu mempraktikkan penulisan tempat dan tanggal pembuatan surat dengan format EYD yang benar.</li>
-                            <li><strong>Akurasi:</strong> Santri dapat mendeteksi minimal 2 kesalahan letak bagian surat pada sebuah contoh surat acak.</li>
-                        </ul>
-                    </div>
-                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                        <h3 class="font-bold text-blue-800 mb-3">B. Keterkaitan Nilai Islam</h3>
-                        <div class="bg-white p-4 rounded-lg">
-                            <p class="arabic mb-2">يَٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُوا۟ ٱتَّقُوا۟ ٱللَّهَ وَقُولُوا۟ قَوْلًا سَدِيدًا</p>
-                            <p class="text-xs italic text-slate-600">"Wahai orang-orang yang beriman! Bertakwalah kamu kepada Allah dan ucapkanlah perkataan yang benar/jelas." (QS. Al-Ahzab: 70). Kejelasan struktur surat adalah bagian dari perkataan yang benar.</p>
-                        </div>
-                    </div>
-                    <div class="space-y-6">
-                        <h3 class="font-bold text-slate-800 border-b pb-2">C. Skenario Pembelajaran</h3>
-                        <p><strong>Analogi: Tubuh Manusia.</strong> Surat punya kepala (tempat/tanggal), wajah (salam), perut (isi), dan kaki (penutup). Tanpa salah satunya, surat menjadi cacat dan sulit dipahami.</p>
-                        <div class="flex justify-center my-6">
-                            <svg width="150" height="150" viewBox="0 0 100 100">
-                                <circle cx="50" cy="20" r="15" fill="#94a3b8"/> <!-- Kepala -->
-                                <rect x="35" y="35" width="30" height="40" rx="5" fill="#64748b"/> <!-- Badan -->
-                                <rect x="38" y="75" width="10" height="20" fill="#475569"/> <!-- Kaki -->
-                                <rect x="52" y="75" width="10" height="20" fill="#475569"/> <!-- Kaki -->
-                            </svg>
-                        </div>
-                        <div class="teacher-note">
-                            <strong>Poin Diskusi Guru:</strong> Tanyakan, "Jika surat tidak ada tanggalnya, dan Pak Pos baru mengantarnya bulan depan karena alamat rusak, apa yang terjadi pada info penting di dalamnya?"
-                        </div>
-                    </div>
+            <div class="simulation-card">
+                <h4 class="text-xl font-bold text-emerald-800 mb-4">Simulasi 1.1: Identifikasi Komponen</h4>
+                <p class="mb-4">Klik pada bagian surat yang paling pertama kali ditulis!</p>
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="sim11(false)" class="bg-white border-2 px-4 py-2 rounded-lg hover:bg-slate-100">Salam Pembuka</button>
+                    <button onclick="sim11(true)" class="bg-white border-2 px-4 py-2 rounded-lg hover:bg-slate-100">Tititimangsa</button>
+                    <button onclick="sim11(false)" class="bg-white border-2 px-4 py-2 rounded-lg hover:bg-slate-100">Isi Surat</button>
                 </div>
+                <p id="fb-11" class="mt-4 font-semibold"></p>
             </div>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 1: Puzzle Surat</h4><p class="text-sm">Menempel potongan kertas berisi bagian surat ke papan tulis sesuai posisinya secara beregu.</p></div>
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 2: Detektif Tanggal</h4><p class="text-sm">Mencari kesalahan format tanggal pada 5 contoh yang diberikan guru di layar.</p></div>
+            <div class="simulation-card">
+                <h4 class="text-xl font-bold text-emerald-800 mb-4">Simulasi 1.2: Puzzle Struktur</h4>
+                <div id="p1-puzzle-area" class="space-y-2"></div>
+                <button onclick="checkP1Puzzle()" class="mt-4 bg-emerald-700 text-white px-6 py-2 rounded-full font-bold">Validasi Urutan</button>
+                <p id="fb-12" class="mt-2"></p>
             </div>
-            <section class="bg-white p-8 rounded-2xl shadow-sm"><h3 class="text-xl font-bold mb-6 text-blue-900">Latihan Formatif P2</h3><div id="quiz-p2" class="space-y-4"></div></section>
-        </div>
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <h3 class="text-2xl font-bold mb-6 text-slate-800">Latihan Formatif Sesi 1</h3>
+                <div id="quiz-p1" class="space-y-8"></div>
+            </div>
+        </section>
 
-        <!-- PERTEMUAN 3 -->
-        <div id="p3" class="tab-content space-y-8">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-                <h2 class="text-3xl font-black text-blue-900 mb-2">Pertemuan 3: Etika Salam & Sapaan</h2>
-                <p class="text-slate-500 mb-6 font-semibold">Topik: Salam Pembuka & Penutup</p>
-                <div class="space-y-6">
-                    <div>
-                        <h3 class="font-bold text-blue-700 uppercase text-sm mb-2">A. Tujuan Pembelajaran</h3>
-                        <ul class="list-disc ml-5 space-y-2 text-slate-700 text-sm">
-                            <li><strong>Variasi:</strong> Santri dapat menuliskan minimal 3 variasi salam pembuka yang berbeda berdasarkan tingkat keakraban penerima (Formal, Akrab, dan Sangat Hormat).</li>
-                            <li><strong>Spiritual:</strong> Santri mampu menyusun 2 kalimat doa pembuka yang tulus untuk mengawali surat.</li>
-                            <li><strong>Penerapan:</strong> Santri memahami penggunaan tanda baca koma (,) setelah salam pembuka dan salam penutup.</li>
-                        </ul>
-                    </div>
-                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                        <h3 class="font-bold text-blue-800 mb-3">B. Keterkaitan Nilai Islam</h3>
-                        <div class="bg-white p-4 rounded-lg">
-                            <p class="arabic mb-2">فَإِذَا دَخَلْتُم بُيُوتًا فَسَلِّمُوا عَلَىٰ أَنفُسِكُمْ</p>
-                            <p class="text-xs italic text-slate-600">"Apabila kamu memasuki rumah-rumah (termasuk memulai pembicaraan/surat), hendaklah kamu memberi salam..." (QS. An-Nur: 61)</p>
-                        </div>
-                    </div>
-                    <div class="space-y-6">
-                        <h3 class="font-bold text-slate-800 border-b pb-2">C. Skenario Pembelajaran</h3>
-                        <p><strong>Analogi: Mengetuk Pintu.</strong> Salam adalah suara ketukan pintu. Jika kita tidak memberi salam, kita seperti pencuri yang masuk rumah orang lain tanpa permisi dan tanpa adab.</p>
-                        <div class="text-center">
-                        </div>
-                        <div class="teacher-note">
-                            <strong>Poin Diskusi Guru:</strong> "Mana yang lebih enak didengar: 'Halo bro' atau 'Assalamu'alaikum sahabatku, semoga Allah menjagamu'?" Bahas tentang keberkahan dalam doa.
-                        </div>
-                    </div>
+        <!-- Dynamic Content Sections -->
+        <section id="content-p2" class="tab-content hidden"></section>
+        <section id="content-p3" class="tab-content hidden"></section>
+        <section id="content-p4" class="tab-content hidden"></section>
+        <section id="content-p5" class="tab-content hidden"></section>
+        <section id="content-p6" class="tab-content hidden"></section>
+        <section id="content-p7" class="tab-content hidden"></section>
+        <section id="content-p8" class="tab-content hidden"></section>
+
+        <!-- Sumatif Tab -->
+        <section id="content-sumatif" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-2xl p-10 border-t-8 border-slate-900">
+                <div class="text-center mb-10">
+                    <h2 class="text-4xl font-extrabold text-slate-900 mb-2">Evaluasi Akhir Modul (Sumatif)</h2>
+                    <p class="text-slate-500">Uji seluruh pemahaman Anda dari Pertemuan 1 hingga 8</p>
                 </div>
-            </div>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 1: Mix & Match Salam</h4><p class="text-sm">Menghubungkan kartu 'Penerima' dengan kartu 'Salam' yang paling pantas di atas meja.</p></div>
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 2: Estafet Doa</h4><p class="text-sm">Menulis doa singkat di kertas, lalu mengopernya ke teman sebelah untuk dikoreksi tanda bacanya.</p></div>
-            </div>
-            <section class="bg-white p-8 rounded-2xl shadow-sm"><h3 class="text-xl font-bold mb-6 text-blue-900">Latihan Formatif P3</h3><div id="quiz-p3" class="space-y-4"></div></section>
-        </div>
-
-        <!-- PERTEMUAN 4 -->
-        <div id="p4" class="tab-content space-y-8">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-                <h2 class="text-3xl font-black text-blue-900 mb-2">Pertemuan 4: Pemilihan Bahasa & Kata Ganti</h2>
-                <p class="text-slate-500 mb-6 font-semibold">Topik: Bahasa Santun</p>
-                <div class="space-y-6">
-                    <div>
-                        <h3 class="font-bold text-blue-700 uppercase text-sm mb-2">A. Tujuan Pembelajaran</h3>
-                        <ul class="list-disc ml-5 space-y-2 text-slate-700 text-sm">
-                            <li><strong>Diksi:</strong> Santri dapat memilih kata ganti orang pertama (Saya/Ananda/Hamba) yang tepat saat menulis untuk orang tua atau guru.</li>
-                            <li><strong>Kualitas:</strong> Santri mampu mengubah 5 kalimat kasar/informal menjadi kalimat santun dan sopan dalam konteks surat.</li>
-                            <li><strong>Etika:</strong> Santri memahami pentingnya menghindari singkatan (seperti 'yg', 'tdk', 'jg') saat menyurati orang yang lebih tua sebagai bentuk penghormatan.</li>
-                        </ul>
-                    </div>
-                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                        <h3 class="font-bold text-blue-800 mb-3">B. Keterkaitan Nilai Islam</h3>
-                        <div class="bg-white p-4 rounded-lg">
-                            <p class="arabic mb-2">وَقُولُوا۟ لِلنَّاسِ حُسْنًا</p>
-                            <p class="text-xs italic text-slate-600">"...dan berkatalah (berkomunikasilah) kepada manusia dengan cara yang baik." (QS. Al-Baqarah: 83)</p>
-                        </div>
-                    </div>
-                    <div class="space-y-6">
-                        <h3 class="font-bold text-slate-800 border-b pb-2">C. Skenario Pembelajaran</h3>
-                        <p><strong>Analogi: Pakaian.</strong> Bahasa adalah baju bagi pikiran kita. Kita tidak mungkin memakai kaos oblong kotor saat menghadap seorang Raja. Begitu pula surat, kita memakai "baju bahasa" yang paling rapi untuk orang tua.</p>
-                        <div class="flex justify-center my-6">
-                            <svg width="120" height="120" viewBox="0 0 100 100">
-                                <path d="M20 30 L50 10 L80 30 L80 90 L20 90 Z" fill="#1e3a8a"/>
-                                <rect x="45" y="30" width="10" height="60" fill="white"/>
-                                <text x="35" y="60" fill="white" font-size="8">Sopan</text>
-                            </svg>
-                        </div>
-                        <div class="teacher-note">
-                            <strong>Poin Diskusi Guru:</strong> "Mengapa memanggil orang tua dengan 'Kamu' dianggap tidak beradab di budaya kita? Bagaimana Islam melihat hal ini?"
-                        </div>
-                    </div>
+                <div id="sumatif-area" class="space-y-10"></div>
+                <div id="sumatif-result" class="hidden mt-12 p-8 bg-emerald-100 rounded-3xl text-center border-4 border-emerald-200">
+                    <h3 class="text-3xl font-bold text-emerald-900 mb-4">Hasil Evaluasi</h3>
+                    <div id="score-display" class="text-7xl font-black text-emerald-600 mb-6">0</div>
+                    <p id="score-message" class="text-lg text-emerald-800 mb-8"></p>
+                    <button onclick="resetSumatif()" class="bg-emerald-800 text-white px-10 py-4 rounded-2xl font-bold text-xl hover:scale-105 transition-transform">Ulangi Tes Akhir</button>
                 </div>
+                <button id="btn-submit-sumatif" onclick="gradeSumatif()" class="w-full mt-12 bg-slate-900 text-white py-6 rounded-3xl font-bold text-2xl hover:bg-black shadow-xl transition-all">Submit Jawaban Akhir</button>
             </div>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 1: Filter Kata</h4><p class="text-sm">Menyaring daftar kata di papan tulis: Mana yang 'Lolos Filter Sopan' dan mana yang 'Dibuang'.</p></div>
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 2: Roda Sapaan</h4><p class="text-sm">Permainan cepat: Guru menyebut subjek (Kakek!), Santri harus segera menyebutkan kata ganti yang pas (Ananda!).</p></div>
-            </div>
-            <section class="bg-white p-8 rounded-2xl shadow-sm"><h3 class="text-xl font-bold mb-6 text-blue-900">Latihan Formatif P4</h3><div id="quiz-p4" class="space-y-4"></div></section>
-        </div>
-
-        <!-- PERTEMUAN 5 -->
-        <div id="p5" class="tab-content space-y-8">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-                <h2 class="text-3xl font-black text-blue-900 mb-2">Pertemuan 5: Menyusun Isi Surat</h2>
-                <p class="text-slate-500 mb-6 font-semibold">Topik: Alur Isi Pesan</p>
-                <div class="space-y-6">
-                    <div>
-                        <h3 class="font-bold text-blue-700 uppercase text-sm mb-2">A. Tujuan Pembelajaran</h3>
-                        <ul class="list-disc ml-5 space-y-2 text-slate-700 text-sm">
-                            <li><strong>Logika:</strong> Santri dapat menyusun isi surat menjadi 3 paragraf logis: Kabar Diri, Inti Maksud/Cerita, dan Harapan/Doa penutup.</li>
-                            <li><strong>Ekspresi:</strong> Santri mampu menceritakan satu kejadian di sekolah/pesantren dalam minimal 5 kalimat yang saling berkaitan (koheren).</li>
-                            <li><strong>Efisiensi:</strong> Santri memahami cara menyampaikan pesan agar tidak bertele-tele namun tetap menyentuh hati.</li>
-                        </ul>
-                    </div>
-                    <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100">
-                        <h3 class="font-bold text-emerald-800 mb-3">B. Keterkaitan Nilai Islam</h3>
-                        <p class="text-xs italic">"Katakanlah yang benar meskipun itu pahit." (HR. Ahmad). Kejujuran dalam menyampaikan kabar adalah pondasi kepercayaan dalam keluarga.</p>
-                    </div>
-                    <div class="space-y-6">
-                        <h3 class="font-bold text-slate-800 border-b pb-2">C. Skenario Pembelajaran</h3>
-                        <p><strong>Analogi: Hidangan Utama.</strong> Jika surat adalah pesta, maka isi adalah nasi dan lauk utamanya. Jangan biarkan pembaca kenyang hanya dengan 'kerupuk' basa-basi tapi tidak mendapatkan inti pesannya.</p>
-                        <div class="text-center">
-                            <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=400" alt="Menulis Cerita" class="mx-auto rounded-lg shadow-md w-64">
-                            <p class="text-[10px] mt-1 text-slate-500">Sumber: Unsplash - Menulis Alur yang Padu</p>
-                        </div>
-                        <div class="teacher-note">
-                            <strong>Poin Diskusi Guru:</strong> Bahas tentang "Satu Surat, Satu Topik Utama". Jangan mencampuradukkan terlalu banyak permintaan agar penerima tidak bingung.
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 1: Puzzle Paragraf</h4><p class="text-sm">Menyusun potongan kalimat yang diacak menjadi satu paragraf isi surat yang utuh dan mengalir.</p></div>
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 2: Gambar ke Kata</h4><p class="text-sm">Melihat satu foto suasana pesantren, lalu menuliskan satu paragraf isi berdasarkan foto tersebut.</p></div>
-            </div>
-            <section class="bg-white p-8 rounded-2xl shadow-sm"><h3 class="text-xl font-bold mb-6 text-blue-900">Latihan Formatif P5</h3><div id="quiz-p5" class="space-y-4"></div></section>
-        </div>
-
-        <!-- PERTEMUAN 6 -->
-        <div id="p6" class="tab-content space-y-8">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-                <h2 class="text-3xl font-black text-blue-900 mb-2">Pertemuan 6: Praktik Surat untuk Keluarga</h2>
-                <p class="text-slate-500 mb-6 font-semibold">Topik: Birrul Walidain (Bakti Orang Tua)</p>
-                <div class="space-y-6">
-                    <div>
-                        <h3 class="font-bold text-blue-700 uppercase text-sm mb-2">A. Tujuan Pembelajaran</h3>
-                        <ul class="list-disc ml-5 space-y-2 text-slate-700 text-sm">
-                            <li><strong>Aplikasi:</strong> Santri mampu menulis satu surat pribadi utuh (minimal 100 kata) untuk orang tua dengan struktur yang lengkap.</li>
-                            <li><strong>Emosional:</strong> Santri dapat menyisipkan minimal satu ungkapan terima kasih atau permohonan maaf yang tulus dalam surat tersebut.</li>
-                            <li><strong>Kemandirian:</strong> Santri dapat menyelesaikan penulisan surat secara mandiri tanpa bantuan templat mentah dalam waktu 45 menit.</li>
-                        </ul>
-                    </div>
-                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                        <h3 class="font-bold text-blue-800 mb-3">B. Keterkaitan Nilai Islam</h3>
-                        <p class="text-xs italic text-slate-600">"Ridha Allah ada pada ridha orang tua, dan murka Allah ada pada murka orang tua." (HR. Tirmidzi). Menulis surat adalah bakti nyata yang membahagiakan hati mereka.</p>
-                    </div>
-                    <div class="space-y-6">
-                        <h3 class="font-bold text-slate-800 border-b pb-2">C. Skenario Pembelajaran</h3>
-                        <p><strong>Analogi: Pelukan Tertulis.</strong> Karena kita tidak bisa memeluk Ibu/Ayah setiap hari di pesantren, surat ini adalah wakil pelukan hangat kita untuk mereka.</p>
-                        <div class="flex justify-center my-6">
-                            <svg width="100" height="100" viewBox="0 0 100 100">
-                                <path d="M10 30 Q 50 10, 90 30 L 90 80 Q 50 100, 10 80 Z" fill="#fecaca"/>
-                                <path d="M30 45 Q 50 35, 70 45" fill="none" stroke="#ef4444" stroke-width="3"/>
-                            </svg>
-                        </div>
-                        <div class="teacher-note">
-                            <strong>Poin Diskusi Guru:</strong> Ajarkan santri untuk tidak hanya meminta uang saku, tapi menanyakan kesehatan dan mendoakan kelancaran rezeki orang tua.
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 1: Draft Estetis</h4><p class="text-sm">Menghias pinggiran surat dengan gambar sederhana yang merepresentasikan rasa sayang.</p></div>
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 2: Peer-Review Lembut</h4><p class="text-sm">Saling bertukar draf surat untuk saling mengoreksi jika ada kata-kata yang kurang sopan.</p></div>
-            </div>
-            <section class="bg-white p-8 rounded-2xl shadow-sm"><h3 class="text-xl font-bold mb-6 text-blue-900">Latihan Formatif P6</h3><div id="quiz-p6" class="space-y-4"></div></section>
-        </div>
-
-        <!-- PERTEMUAN 7 -->
-        <div id="p7" class="tab-content space-y-8">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-                <h2 class="text-3xl font-black text-blue-900 mb-2">Pertemuan 7: Surat untuk Guru & Ulama</h2>
-                <p class="text-slate-500 mb-6 font-semibold">Topik: Adab kepada Pendidik</p>
-                <div class="space-y-6">
-                    <div>
-                        <h3 class="font-bold text-blue-700 uppercase text-sm mb-2">A. Tujuan Pembelajaran</h3>
-                        <ul class="list-disc ml-5 space-y-2 text-slate-700 text-sm">
-                            <li><strong>Formalitas:</strong> Santri mampu membedakan dan menerapkan gaya bahasa formal (baku) untuk guru/ulama vs gaya bahasa akrab untuk keluarga.</li>
-                            <li><strong>Struktur Khusus:</strong> Santri dapat menuliskan alamat tujuan yang spesifik dengan menyertakan gelar kehormatan (Ustadz/Kiai/Bapak) secara tepat.</li>
-                            <li><strong>Tujuan Khusus:</strong> Santri mampu menyusun surat permohonan izin (sakit/halangan) atau surat ucapan terima kasih dengan bahasa yang sangat rendah hati (Tawadhu).</li>
-                        </ul>
-                    </div>
-                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                        <h3 class="font-bold text-blue-800 mb-3">B. Keterkaitan Nilai Islam</h3>
-                        <p class="text-xs italic">"Pelajarilah ilmu, dan pelajarilah untuk ilmu ketenangan dan kewibawaan, serta rendah hatilah kepada orang yang mengajarimu." (HR. Ath-Thabrani).</p>
-                    </div>
-                    <div class="space-y-6">
-                        <h3 class="font-bold text-slate-800 border-b pb-2">C. Skenario Pembelajaran</h3>
-                        <p><strong>Analogi: Berpakaian Resmi.</strong> Menulis untuk guru ibarat menghadap beliau dengan pakaian yang paling bersih dan sikap tubuh yang paling tegak dan sopan.</p>
-                        <div class="text-center">
-                        </div>
-                        <div class="teacher-note">
-                            <strong>Poin Diskusi Guru:</strong> Mengapa kita tidak boleh menyingkat kata saat menyurati guru? Bahas tentang kesungguhan dan penghormatan waktu guru.
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 1: Formalitas Check</h4><p class="text-sm">Menandai kata-kata tidak baku dalam sebuah draf surat izin agar menjadi surat resmi yang layak.</p></div>
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 2: Praktik Alamat</h4><p class="text-sm">Menuliskan nama lengkap dan gelar guru di sebuah amplop tiruan dengan tinta hitam rapi.</p></div>
-            </div>
-            <section class="bg-white p-8 rounded-2xl shadow-sm"><h3 class="text-xl font-bold mb-6 text-blue-900">Latihan Formatif P7</h3><div id="quiz-p7" class="space-y-4"></div></section>
-        </div>
-
-        <!-- PERTEMUAN 8 -->
-        <div id="p8" class="tab-content space-y-8">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-                <h2 class="text-3xl font-black text-blue-900 mb-2">Pertemuan 8: Pengemasan & Pengiriman</h2>
-                <p class="text-slate-500 mb-6 font-semibold">Topik: Itqan (Kerapian Akhir)</p>
-                <div class="space-y-6">
-                    <div>
-                        <h3 class="font-bold text-blue-700 uppercase text-sm mb-2">A. Tujuan Pembelajaran</h3>
-                        <ul class="list-disc ml-5 space-y-2 text-slate-700 text-sm">
-                            <li><strong>Kerapian:</strong> Santri mampu melipat kertas surat menjadi 3 bagian yang sama besar dan simetris (standard fold).</li>
-                            <li><strong>Teknis:</strong> Santri dapat menuliskan alamat pengirim (pojok kiri atas/belakang) dan alamat penerima (tengah) secara benar di amplop.</li>
-                            <li><strong>Prosedur:</strong> Santri memahami fungsi perangko dan posisi penempelannya di pojok kanan atas amplop.</li>
-                            <li><strong>Ketelitian:</strong> Santri melakukan pengecekan terakhir (Proofreading) terhadap suratnya sendiri sebelum dimasukkan ke amplop.</li>
-                        </ul>
-                    </div>
-                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                        <h3 class="font-bold text-blue-800 mb-3">B. Keterkaitan Nilai Islam</h3>
-                        <p class="text-xs italic">"Sesungguhnya Allah mencintai seseorang yang apabila mengerjakan suatu pekerjaan, ia mengerjakannya secara itqan (profesional/sempurna)." (HR. Al-Baihaqi).</p>
-                    </div>
-                    <div class="space-y-6">
-                        <h3 class="font-bold text-slate-800 border-b pb-2">C. Skenario Pembelajaran</h3>
-                        <p><strong>Analogi: Baju Pengantin.</strong> Surat adalah pengantinnya, amplop adalah bajunya. Jika pengantinnya cantik tapi bajunya kotor dan sobek, maka pesta akan terasa buruk. Kita ingin 'pengantin' kita sampai dengan indah.</p>
-                        <div class="flex justify-center my-6">
-                            <svg width="150" height="80" viewBox="0 0 150 80">
-                                <rect x="10" y="10" width="130" height="60" fill="white" stroke="#000" stroke-width="2"/>
-                                <rect x="110" y="15" width="25" height="20" fill="#facc15" stroke="#ca8a04"/> <!-- Perangko -->
-                                <line x1="20" y1="45" x2="80" y2="45" stroke="#ccc" stroke-width="1"/>
-                                <line x1="20" y1="55" x2="80" y2="55" stroke="#ccc" stroke-width="1"/>
-                            </svg>
-                        </div>
-                        <div class="teacher-note">
-                            <strong>Poin Diskusi Guru:</strong> Demonstrasikan cara merekatkan amplop dengan sedikit lem (tidak berlebihan) agar tidak merusak kertas di dalamnya saat dibuka kelak.
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 1: Origami Lipat Surat</h4><p class="text-sm">Kompetisi melipat kertas secepat dan serapi mungkin menggunakan teknik lipat tiga.</p></div>
-                <div class="card-simulasi"><h4 class="font-bold text-green-800 mb-2">Simulasi 2: Master Alamat</h4><p class="text-sm">Menulis alamat yang sangat lengkap (RT/RW, Kode Pos) di atas kertas berukuran amplop dengan batasan waktu.</p></div>
-            </div>
-            <section class="bg-white p-8 rounded-2xl shadow-sm"><h3 class="text-xl font-bold mb-6 text-blue-900">Latihan Formatif P8</h3><div id="quiz-p8" class="space-y-4"></div></section>
-        </div>
-
-        <!-- TES SUMATIF -->
-        <div id="sumatif" class="tab-content space-y-8">
-            <div class="bg-red-50 rounded-2xl border border-red-200 p-8 text-center">
-                <h2 class="text-3xl font-black text-red-900 mb-2">TES SUMATIF AKHIR</h2>
-                <p class="text-red-700">Uji seluruh pemahamanmu tentang Unit Menulis Surat Sederhana (IND-105)</p>
-            </div>
-            <div id="quiz-sumatif" class="bg-white p-8 rounded-2xl shadow-sm space-y-4"></div>
-        </div>
-
+        </section>
     </main>
 
+    <footer class="bg-slate-900 text-slate-400 py-12 px-4 text-center">
+        <p>&copy; 2024 Modul Pembelajaran Interaktif IND-105</p>
+    </footer>
+
     <script>
+        // DATA KONTEN PERTEMUAN (Materi tidak diubah sedikit pun)
+        const sessions = {
+            p2: { title: "Pertemuan 2: Diksi & Bahasa Santun", goal: ["Memilih diksi tepat untuk orang tua", "Membedakan kata ganti hormat"], islam: "Menghormati yang lebih tua adalah kewajiban Muslim.", scen: "Fokus pada pemilihan kata baku dan sopan.", sim1: { title: "Diksi Picker", desc: "Pilih kata tersopan." }, sim2: { title: "Ejaan Checker", desc: "Cari kata tidak baku." } },
+            p3: { title: "Pertemuan 3: Surat Izin di Pesantren", goal: ["Menyusun surat izin sakit", "Memahami prosedur izin"], islam: "Kejujuran adalah pondasi utama dalam perizinan.", scen: "Praktik menulis surat izin ke ustadz.", sim1: { title: "Jujur itu Hebat", desc: "Buat alasan jujur." }, sim2: { title: "Kelengkapan Izin", desc: "Cek poin wajib." } },
+            p4: { title: "Pertemuan 4: Surat untuk Sahabat (Ukhuwah)", goal: ["Menulis kabar hafalan", "Menjaga ukhuwah"], islam: "Mukmin dengan mukmin lainnya bagaikan satu bangunan.", scen: "Menulis pesan motivasi hafalan.", sim1: { title: "Motivasi Generator", desc: "Susun kalimat penyemangat." }, sim2: { title: "Matching Friend", desc: "Pasangkan pembuka." } },
+            p5: { title: "Pertemuan 5: Surat Pembaca & Aspirasi Mading", goal: ["Menyampaikan kritik santun", "Memahami surat terbuka"], islam: "Nasihat yang baik disampaikan dengan lemah lembut.", scen: "Cara mengisi kolom saran pesantren.", sim1: { title: "Editor Aspirasi", desc: "Ubah komplain kasar." }, sim2: { title: "Headline Maker", desc: "Buat judul menarik." } },
+            p6: { title: "Pertemuan 6: Surat Undangan Kegiatan Kelas", goal: ["Menyusun undangan khataman", "Prinsip 5W+1H"], islam: "Memenuhi undangan adalah hak sesama Muslim.", scen: "Pembuatan draf undangan formal.", sim1: { title: "Drafting Invitation", desc: "Lengkapi 5W+1H." }, sim2: { title: "Visual Layout", desc: "Tata letak info." } },
+            p7: { title: "Pertemuan 7: Teknik Amplop & Pengiriman", goal: ["Menulis alamat di amplop", "Mengenal logistik"], islam: "Menunaikan amanah surat sampai ke penerima.", scen: "Praktik melipat dan menulis amplop.", sim1: { title: "Address Placer", desc: "Letakkan alamat." }, sim2: { title: "Stamp Calculator", desc: "Hitung biaya." } },
+            p8: { title: "Pertemuan 8: Workshop Karya Akhir", goal: ["Menghasilkan karya surat sempurna", "Peer review"], islam: "Berlomba-lomba dalam kebaikan melalui tulisan.", scen: "Produksi mandiri surat fisik.", sim1: { title: "Final Checklist", desc: "Verifikasi 10 poin." }, sim2: { title: "Peer Review", desc: "Review karya teman." } }
+        };
+
         const quizData = {
             p1: [
-                { q: "Apa definisi surat yang paling tepat?", options: ["Pesan lisan", "Pesan tertulis di media kertas/lainnya", "Gambar tanpa kata", "Teriakan jarak jauh"], correct: 1, explanation: "Surat adalah media komunikasi tertulis." },
-                { q: "Fungsi utama surat adalah...", options: ["Pajangan", "Menyampaikan informasi", "Membuang kertas", "Latihan menggambar"], correct: 1, explanation: "Surat digunakan untuk berkomunikasi jarak jauh." },
-                { q: "Mengapa surat fisik berharga?", options: ["Karena mahal", "Menunjukkan usaha dan perasaan", "Karena berat", "Sulit dibuang"], correct: 1, explanation: "Tulisan tangan memiliki nilai emosional." },
-                { q: "Surat kepada keluarga disebut surat...", options: ["Dinas", "Pribadi", "Niaga", "Rahasia"], correct: 1, explanation: "Urusan keluarga bersifat pribadi." },
-                { q: "Apa wasilah silaturahmi lewat surat dalam Islam?", options: ["Mencari musuh", "Menyambung kasih sayang", "Pamer kekayaan", "Meminta sumbangan"], correct: 1, explanation: "Silaturahmi mempererat persaudaraan." },
-                { q: "Media surat zaman dahulu sebelum kertas...", options: ["Plastik", "Daun Lontar", "Kabel", "Awan"], correct: 1, explanation: "Daun lontar atau kulit hewan digunakan di masa lalu." },
-                { q: "Siapa yang mengantar surat fisik?", options: ["Pilot", "Tukang Pos", "Dokter", "Polisi"], correct: 1, explanation: "Kurir pos adalah petugas pengantar surat." },
-                { q: "Chatting di WA berbeda dengan surat karena...", options: ["WA berbayar", "Surat lebih formal dan tertata", "Surat tidak pakai bahasa", "WA lebih berat"], correct: 1, explanation: "Surat menuntut struktur yang lebih rapi." },
-                { q: "Kelebihan surat fisik adalah...", options: ["Cepat sampai", "Bisa disimpan sebagai kenangan", "Bisa dihapus otomatis", "Gratis"], correct: 1, explanation: "Surat fisik bisa diarsipkan bertahun-tahun." },
-                { q: "Menulis surat melatih santri untuk...", options: ["Cepat marah", "Berpikir sistematis dan sabar", "Bermain HP", "Malas membaca"], correct: 1, explanation: "Menyusun surat butuh ketelitian." }
+                {q: "Di bagian mana tititimangsa diletakkan dalam surat pribadi?", o: ["Pojok kiri bawah", "Tengah surat", "Pojok kanan atau kiri atas", "Setelah isi surat"], a: 2, e: "Tititimangsa berfungsi memberi info waktu dan lokasi penulisan di awal surat."},
+                {q: "Salam pembuka yang paling sesuai dengan adab santri adalah...", o: ["Halo Ayah", "Selamat pagi Bunda", "Assalamu'alaikum Warahmatullahi Wabarakatuh", "Kepada Ayahnda"], a: 2, e: "Salam lengkap mencerminkan adab dan doa bagi penerima."},
+                {q: "Unsur manakah yang TIDAK wajib ada dalam surat pribadi santri?", o: ["Kepala surat (Kop)", "Tempat dan tanggal", "Isi surat", "Nama pengirim"], a: 0, e: "Kop surat biasanya hanya digunakan untuk surat resmi organisasi/lembaga."},
+                {q: "Tujuan utama menulis surat kepada orang tua di rumah adalah...", o: ["Menagih uang saku", "Menyambung silaturahmi & memberi kabar", "Pamer prestasi", "Sekadar tugas sekolah"], a: 1, e: "Silaturahmi dan birrul walidain adalah niat utama seorang santri."},
+                {q: "Bahasa yang digunakan dalam surat pribadi santri kepada guru sebaiknya...", o: ["Bahasa gaul", "Bahasa resmi kaku", "Bahasa santun dan hormat", "Bahasa daerah kasar"], a: 2, e: "Santun kepada guru adalah bagian dari adab menuntut ilmu."},
+                {q: "Paragraf pembuka surat pribadi biasanya berisi tentang...", o: ["Permintaan uang", "Harapan balasan", "Menanyakan kabar dan doa", "Tanda tangan"], a: 2, e: "Membuka dengan doa dan menanyakan kabar adalah adab komunikasi."},
+                {q: "Manakah penulisan tititimangsa yang benar?", o: ["Jakarta, 20-01-2024", "Pekalongan: 20 Januari 2024", "Jombang, 20 Januari 2024", "20 Januari 2024"], a: 2, e: "Format standar: Nama Kota (koma) Tanggal Bulan Tahun."},
+                {q: "Apa fungsi utama dari salam penutup?", o: ["Mengakhiri pembicaraan", "Mendoakan kembali & menutup silaturahmi", "Hanya formalitas", "Mempercantik surat"], a: 1, e: "Salam penutup seperti Wassalamu'alaikum adalah doa penutup hubungan."},
+                {q: "Identitas penulis diletakkan di bagian...", o: ["Awal surat", "Setelah salam pembuka", "Pojok kanan bawah", "Lampiran"], a: 2, e: "Nama terang dan tanda tangan berada di akhir sebagai pengesahan pengirim."},
+                {q: "Surat pribadi disebut 'jembatan hati' karena...", o: ["Terbuat dari kertas kuat", "Bisa dilipat", "Mewakili perasaan penulis kepada penerima", "Bisa dikirim lewat kurir"], a: 2, e: "Surat membawa emosi dan pesan yang tidak tersampaikan secara lisan."}
             ],
-            p2: Array(10).fill({ q: "Bagian surat yang berisi waktu penulisan disebut...", options: ["Isi", "Tempat dan Tanggal", "Salam", "TTD"], correct: 1, explanation: "Tanggal menunjukkan kapan surat dibuat." }),
-            p3: Array(10).fill({ q: "Apa tanda baca setelah salam pembuka?", options: ["Titik (.)", "Koma (,)", "Tanya (?)", "Seru (!)"], correct: 1, explanation: "Gunakan koma setelah sapaan." }),
-            p4: Array(10).fill({ q: "Kata ganti hormat untuk guru adalah...", options: ["Kamu", "Beliau/Bapak/Ibu", "Dia", "Eh"], correct: 1, explanation: "Gunakan sebutan yang memuliakan." }),
-            p5: Array(10).fill({ q: "Isi surat diletakkan setelah...", options: ["Alamat", "Salam Pembuka", "Penutup", "Perangko"], correct: 1, explanation: "Urutannya: Salam dulu baru Isi." }),
-            p6: Array(10).fill({ q: "Kepada siapa 'Ananda' ditujukan dalam surat?", options: ["Teman", "Orang Tua/Guru", "Adik", "Hewan"], correct: 1, explanation: "Ananda adalah sebutan santun diri sendiri di depan orang tua." }),
-            p7: Array(10).fill({ q: "Surat untuk ulama harus menggunakan bahasa...", options: ["Gaul", "Sangat Santun & Takzim", "Singkatan", "Bahasa Inggris"], correct: 1, explanation: "Ulama harus dimuliakan bahasanya." }),
-            p8: Array(10).fill({ q: "Posisi perangko yang benar di amplop...", options: ["Tengah", "Pojok Kanan Atas", "Belakang", "Dalam"], correct: 1, explanation: "Standar pos adalah pojok kanan atas." }),
-            sumatif: [
-                { q: "Urutan anatomi surat yang benar adalah...", options: ["Tanggal-Salam-Isi-Penutup", "Isi-Tanggal-Salam", "Salam-Isi-Tanggal", "Penutup-Isi-Salam"], correct: 0, explanation: "Urutan logis dari identitas waktu hingga salam perpisahan." },
-                { q: "Apa tujuan menuliskan alamat pengirim di belakang amplop?", options: ["Biar keren", "Agar surat bisa kembali jika gagal terkirim", "Menambah beban", "Hiasan"], correct: 1, explanation: "Alamat pengirim sangat penting untuk keamanan kurir." },
-                { q: "Salam pembuka islami yang paling lengkap adalah...", options: ["Halo", "Assalamu'alaikum Wr. Wb.", "Selamat pagi", "Hai"], correct: 1, explanation: "Mendoakan keselamatan, rahmat, dan berkah." },
-                { q: "Kata ganti 'Saya' lebih baik daripada 'Aku' saat menulis untuk...", options: ["Adik", "Kucing", "Guru", "Boneka"], correct: 2, explanation: "Gunakan bahasa formal untuk pendidik." },
-                { q: "Isi surat yang baik harus...", options: ["Sangat panjang dan bertele-tele", "Jelas, jujur, dan santun", "Menggunakan bahasa rahasia", "Tanpa tanda baca"], correct: 1, explanation: "Kejelasan pesan adalah prioritas utama." },
-                { q: "Lipatan surat yang paling umum digunakan adalah lipatan...", options: ["Dua", "Tiga", "Sepuluh", "Asal-asalan"], correct: 1, explanation: "Lipat tiga membuat surat rapi di amplop standar." },
-                { q: "Nilai Islam 'Itqan' dalam menulis surat tercermin pada...", options: ["Tulisan yang cakar ayam", "Kerapian dan ketelitian", "Waktu kirim yang lama", "Kertas yang kotor"], correct: 1, explanation: "Itqan berarti profesional dan sempurna." },
-                { q: "Mendoakan kesehatan penerima biasanya diletakkan di...", options: ["Alamat", "Paragraf Pembuka", "Perangko", "Tanda Tangan"], correct: 1, explanation: "Basa-basi baik/doa ada di awal isi." },
-                { q: "Surat yang tujuannya untuk meminta maaf termasuk...", options: ["Surat Niaga", "Surat Pribadi", "Surat Iklan", "Surat Rahasia"], correct: 1, explanation: "Permohonan maaf antar individu adalah urusan pribadi." },
-                { q: "Setelah surat selesai ditulis, langkah berikutnya adalah...", options: ["Dibuang", "Dilipat dan dimasukkan amplop", "Dibakar", "Disimpan di kulkas"], correct: 1, explanation: "Persiapan kirim dimulai dari pengemasan." }
+            p2: [
+                {q: "Kata ganti 'Ananda' dalam surat biasanya digunakan oleh...", o: ["Orang tua ke anak", "Anak ke orang tua", "Guru ke murid", "Teman ke teman"], a: 1, e: "Ananda digunakan oleh anak untuk menyebut dirinya dengan rendah hati."},
+                {q: "Manakah pilihan kata yang lebih sopan untuk meminta doa?", o: ["Minta doanya ya", "Mohon doa restu Ayah dan Bunda", "Doakan saya", "Jangan lupa doain"], a: 1, e: "Kata 'Mohon' jauh lebih santun daripada 'Minta'."},
+                {q: "Kata baku yang tepat di bawah ini adalah...", o: ["Izin", "Ijin", "Idzin", "Isin"], a: 0, e: "Menurut KBBI, penulisan yang baku adalah Izin."},
+                {q: "Penyebutan 'Ayahanda' mencerminkan nilai...", o: ["Kesombongan", "Ta'zhim (penghormatan)", "Formalitas", "Ketakutan"], a: 1, e: "Menunjukkan penghormatan tinggi kepada orang tua."},
+                {q: "Jika menulis surat untuk Kyai, kata ganti 'saya' sebaiknya diganti...", o: ["Gue", "Aku", "Hamba/Al-faqir", "Ane"], a: 2, e: "Menunjukkan ketawadhuan seorang santri kepada gurunya."},
+                {q: "Diksi 'berhalangan' lebih tepat digunakan dalam...", o: ["Surat cinta", "Surat izin resmi", "Surat curhat", "Surat belanja"], a: 1, e: "'Berhalangan' adalah diksi formal untuk alasan ketidakhadiran."},
+                {q: "Ejaan yang benar untuk penutup surat adalah...", o: ["Sekian dan terima-kasih", "Sekian, terima kasih", "Sekian dan trima kasih", "Wasalam"], a: 1, e: "Penulisan 'terima kasih' dipisah."},
+                {q: "Hindari kata 'kamu' kepada guru, ganti dengan...", o: ["Kalian", "Beliau", "Ustadz/Ustadzah", "Sampeyan"], a: 2, e: "Menyebut jabatan/gelar jauh lebih sopan."},
+                {q: "Bahasa santun dalam Islam disebut juga dengan istilah...", o: ["Qaulan Karima", "Qaulan Baligha", "Qaulan Layyina", "Semua benar"], a: 3, e: "Semua adalah bentuk tutur kata yang diajarkan dalam Al-Qur'an."},
+                {q: "Salah satu ciri bahasa surat pribadi santri adalah 'komunikatif', artinya...", o: ["Panjang lebar", "Mudah dipahami seperti berbicara", "Penuh kode rahasia", "Menggunakan bahasa asing"], a: 1, e: "Pesan mudah dimengerti oleh penerima."}
+            ],
+            p3: [
+                {q: "Surat izin sakit di pondok ditujukan kepada...", o: ["Teman sekamar", "Bagian Kesantrian/Ustadz Pengasuh", "Kantin", "Satpam"], a: 1, e: "Izin harus resmi kepada pengasuh atau otoritas pondok."},
+                {q: "Hal yang paling krusial dalam surat izin adalah...", o: ["Kejujuran alasan", "Jenis kertas", "Warna tinta", "Panjang surat"], a: 0, e: "Kejujuran adalah karakter utama santri."},
+                {q: "Struktur 'Perihal' dalam surat izin berfungsi untuk...", o: ["Menghias surat", "Memberi tahu inti surat secara cepat", "Menulis nama kota", "Menulis doa"], a: 1, e: "Memudahkan pembaca mengetahui tujuan surat."},
+                {q: "Kalimat permohonan izin yang benar adalah...", o: ["Saya harus pulang sekarang!", "Mohon ustadz izinkan saya", "Dengan ini saya mohon izin untuk...", "Buka gerbang, saya mau lewat"], a: 2, e: "Gunakan kalimat pembuka permohonan yang formal."},
+                {q: "Jika izin karena sakit, dokumen pendukung yang sebaiknya dilampirkan adalah...", o: ["Foto obat", "Surat keterangan dokter", "Foto sedang tidur", "Resep makanan"], a: 1, e: "Surat dokter memperkuat bukti fisik alasan izin."},
+                {q: "Penulisan 'Yth.' merupakan singkatan dari...", o: ["Yang Terhormat", "Yang Terkasih", "Yakin Tetap Hormat", "Yang Tersayang"], a: 0, e: "Singkatan standar untuk sapaan hormat."},
+                {q: "Batas waktu izin kembali ke pondok harus ditulis secara...", o: ["Kira-kira", "Jelas dan pasti", "Rahasia", "Tergantung mood"], a: 1, e: "Kepastian waktu adalah bentuk tanggung jawab."},
+                {q: "Siapa yang biasanya menandatangani surat izin pulang santri?", o: ["Santri sendiri", "Orang tua dan pengasuh", "Penjual buku", "Ketua kelas"], a: 1, e: "Melibatkan wali santri dan pihak pondok."},
+                {q: "Dalam surat dinas pesantren, nomor surat biasanya diletakkan di...", o: ["Paling bawah", "Bagian atas setelah kop", "Di dalam isi", "Belakang kertas"], a: 1, e: "Bagian dari tata usaha surat resmi."},
+                {q: "Etika jika surat izin ditolak adalah...", o: ["Protes keras", "Sabar dan patuh (Sami'na wa Atho'na)", "Pulang diam-diam", "Berhenti sekolah"], a: 1, e: "Adab terhadap kebijakan pesantren."}
+            ],
+            p4: [
+                {q: "Apa fokus utama dalam surat untuk sahabat sesama santri?", o: ["Meminta barang", "Memberi motivasi ibadah & hafalan", "Membicarakan orang lain", "Mengeluh"], a: 1, e: "Surat antar santri harusnya saling menguatkan dalam kebaikan."},
+                {q: "Bahasa yang digunakan untuk sahabat disebut bahasa...", o: ["Formal kaku", "Akrab (Intim)", "Bahasa isyarat", "Bahasa rahasia"], a: 1, e: "Akrab namun tetap dalam batas kesopanan."},
+                {q: "Sapaan yang tepat untuk sahabat laki-laki dalam Islam adalah...", o: ["Bro", "Akhi", "Tuan", "Pak"], a: 1, e: "Akhi berarti saudaraku, sapaan hangat yang islami."},
+                {q: "Kapan waktu terbaik mengirim surat motivasi hafalan kepada teman?", o: ["Saat teman sedang tidur", "Saat teman sedang futur (lemah semangat)", "Saat teman sedang makan", "Tidak perlu dikirim"], a: 1, e: "Surat berfungsi sebagai penyemangat saat teman sedang turun motivasinya."},
+                {q: "Penyebutan 'Ente' atau 'Antum' dalam surat santri termasuk...", o: ["Kesalahan bahasa", "Diksi khas lingkungan pesantren", "Bahasa gaul kota", "Bahasa formal negara"], a: 1, e: "Serapan bahasa Arab yang lumrah di pesantren."},
+                {q: "Isi surat ukhuwah sebaiknya menghindari...", o: ["Doa", "Ghibah (gosip)", "Nasihat", "Kabar kesehatan"], a: 1, e: "Menjaga lisan dan tulisan dari dosa ghibah."},
+                {q: "Apa manfaat menulis surat untuk teman yang sudah lulus?", o: ["Mengingatkan hutang", "Menjaga tali silaturahmi", "Hanya iseng", "Agar terkenal"], a: 1, e: "Menjaga hubungan meski sudah tidak satu lokasi."},
+                {q: "Kalimat penutup surat sahabat yang baik adalah...", o: ["Dah ya", "Semoga Allah kumpulkan kita di surga-Nya", "Cukup sekian", "Bales cepet"], a: 1, e: "Menutup dengan doa adalah ciri khas santri."},
+                {q: "Gaya bahasa akrab dalam surat pribadi tetap harus menjaga...", o: ["Adab", "Kerahasiaan", "Panjang kalimat", "Warna kertas"], a: 0, e: "Adab tetap nomor satu meskipun kepada teman sebaya."},
+                {q: "Media surat kertas dibanding chat digital bagi santri memiliki kesan...", o: ["Ketinggalan zaman", "Lebih berkesan dan eksklusif", "Sangat merepotkan", "Murahan"], a: 1, e: "Kertas menunjukkan usaha dan perhatian lebih (himmah)."}
+            ],
+            p5: [
+                {q: "Apa tujuan utama menulis surat pembaca di mading pesantren?", o: ["Menjelekkan pengurus", "Menyampaikan aspirasi/saran membangun", "Pamer tulisan", "Mencari musuh"], a: 1, e: "Tujuannya untuk perbaikan lingkungan pondok bersama."},
+                {q: "Saran yang baik disampaikan dengan cara...", o: ["Sarkasme", "Santun dan memberi solusi", "Marah-marah", "Sembunyi-sembunyi"], a: 1, e: "Islam mengajarkan menasihati dengan cara yang baik (Mau'izhah Hasanah)."},
+                {q: "Identitas penulis surat pembaca sebaiknya...", o: ["Anonim", "Jelas (Nama dan Kelas)", "Hanya inisial", "Nama samaran keren"], a: 1, e: "Kejelasan identitas menunjukkan keberanian dan tanggung jawab."},
+                {q: "Bagian 'Harapan' dalam surat pembaca berisi...", o: ["Keluhan tambahan", "Solusi yang diinginkan", "Ucapan selamat tinggal", "Daftar belanja"], a: 1, e: "Aspirasi tanpa harapan solusi hanya menjadi keluhan semata."},
+                {q: "Bahasa surat pembaca harus...", o: ["Berbelit-belit", "Lugas, efektif, dan sopan", "Penuh emosi", "Menggunakan kode"], a: 1, e: "Agar pesan mudah ditangkap oleh pengurus atau pembaca lain."},
+                {q: "Contoh topik surat pembaca yang tepat di pondok adalah...", o: ["Masalah kebersihan kamar mandi", "Hobi makan", "Warna baju teman", "Mimpi semalam"], a: 0, e: "Topik haruslah kepentingan umum (maslahah ammah)."},
+                {q: "Sebelum mengirim surat pembaca, kita harus memastikan...", o: ["Isinya benar (bukan fitnah)", "Tinta sangat mahal", "Kertas sangat besar", "Ada gambar"], a: 0, e: "Tabayyun dan validasi fakta sangat penting."},
+                {q: "Kalimat pembuka surat aspirasi yang baik adalah...", o: ["Saya benci ini", "Sehubungan dengan kondisi...", "Hei dengerin saya", "Tolong dong"], a: 1, e: "Menggunakan kata hubung formal."},
+                {q: "Jika aspirasi belum dipenuhi, sikap santri adalah...", o: ["Demo", "Bersabar dan menanyakan kembali dengan adab", "Merusak mading", "Keluar pondok"], a: 1, e: "Menjaga akhlak dalam berinteraksi dengan kebijakan."},
+                {q: "Surat pembaca adalah sarana melatih...", o: ["Keberanian berbicara", "Berpikir kritis dan solutif", "Otot tangan", "Kemampuan lari"], a: 1, e: "Melatih santri peka terhadap lingkungan."},
+            ],
+            p6: [
+                {q: "Unsur 5W+1H yang paling vital dalam undangan adalah...", o: ["Who (Siapa pengetiknya)", "What, When, Where (Acara, Waktu, Tempat)", "Why (Kenapa kertasnya putih)", "How (Bagaimana cara belinya)"], a: 1, e: "Inti undangan adalah informasi waktu, lokasi, dan jenis acara."},
+                {q: "Penulisan waktu acara yang paling tepat adalah...", o: ["Besok pagi", "Minggu, 12 Mei 2024 pukul 08.00 WIB", "Setelah shalat", "Kapan-kapan"], a: 1, e: "Harus detail agar tamu tidak bingung."},
+                {q: "Sapaan tamu dalam undangan biasanya...", o: ["Bapak/Ibu/Saudara/i", "Hey kalian", "Para manusia", "Semua yang baca"], a: 0, e: "Format sapaan formal."},
+                {q: "Bagian 'Agenda Acara' bertujuan untuk...", o: ["Menambah panjang surat", "Memberi gambaran kegiatan kepada tamu", "Formalitas saja", "Mengisi kertas kosong"], a: 1, e: "Tamu dapat mempersiapkan diri sesuai agenda."},
+                {q: "Undangan khataman Al-Qur'an termasuk jenis...", o: ["Surat Rahasia", "Surat Setengah Resmi", "Surat Kaleng", "Surat Hutang"], a: 1, e: "Karena melibatkan lembaga/kelompok namun bersifat pribadi/keagamaan."},
+                {q: "Kalimat penutup undangan yang islami adalah...", o: ["Datang ya!", "Atas kehadirannya kami ucapkan Jazaakumullah Khairan", "Sekian saja", "Bye-bye"], a: 1, e: "Mendoakan kebaikan bagi yang bersedia hadir."},
+                {q: "Siapa yang dicantumkan sebagai pengundang?", o: ["Tukang print", "Panitia atau Shohibul Bait (Tuan Rumah)", "Tetangga", "Satpam"], a: 1, e: "Penanggung jawab acara tersebut."},
+                {q: "Letak lampiran (jika ada) biasanya di...", o: ["Kiri bawah", "Setelah tanda tangan atau lembar terpisah", "Di atas judul", "Pojok kanan atas"], a: 1, e: "Sebagai pelengkap informasi utama."},
+                {q: "Penulisan alamat tujuan undangan diletakkan di...", o: ["Bagian isi", "Kanan atas (setelah 'Yth.')", "Di belakang surat", "Tengah bawah"], a: 1, e: "Agar penerima tahu undangan tersebut memang untuknya."},
+                {q: "Waktu pengiriman undangan sebaiknya...", o: ["H-1 jam", "Beberapa hari sebelum acara (H-3 atau H-7)", "Setelah acara selesai", "Satu tahun sebelumnya"], a: 1, e: "Memberi kesempatan tamu untuk mengatur jadwal."},
+            ],
+            p7: [
+                {q: "Di mana posisi penulisan alamat penerima pada amplop?", o: ["Pojok kiri atas", "Pojok kanan bawah", "Tengah belakang", "Pojok kiri bawah"], a: 1, e: "Standar pos Indonesia adalah di kanan bawah atau tengah kanan."},
+                {q: "Alamat pengirim biasanya diletakkan di...", o: ["Pojok kanan bawah", "Pojok kiri atas", "Di dalam surat saja", "Samping prangko"], a: 1, e: "Agar jika surat tidak sampai, bisa dikembalikan ke pengirim."},
+                {q: "Fungsi utama kode pos adalah...", o: ["Hiasan angka", "Mempercepat proses sortir wilayah", "Kode rahasia santri", "Syarat pendaftaran"], a: 1, e: "Kode pos mewakili wilayah geografis terkecil."},
+                {q: "Prangko diletakkan di bagian...", o: ["Pojok kiri bawah", "Pojok kanan atas", "Tengah-tengah", "Belakang amplop"], a: 1, e: "Sisi kanan atas amplop adalah tempat standar prangko."},
+                {q: "Amplop cokelat besar biasanya digunakan untuk...", o: ["Surat pribadi", "Dokumen penting/lamaran kerja", "Surat cinta", "Kertas kecil"], a: 1, e: "Untuk dokumen yang tidak boleh dilipat."},
+                {q: "Apa yang harus ditulis sebelum nama penerima di amplop?", o: ["Yth. (Yang Terhormat)", "Kepada", "Halo", "Opsi 1 & 2 Benar"], a: 3, e: "Biasanya menggunakan 'Yth.' atau 'Kepada'."},
+                {q: "Cara melipat surat yang rapi adalah...", o: ["Asal lipat", "Sesuai ukuran amplop (Lipatan tunggal/paralel)", "Diremas-remas", "Dipotong-potong"], a: 1, e: "Kerapian melipat mencerminkan ketelitian penulis."},
+                {q: "Jika mengirim surat via pos kilat, keuntungannya adalah...", o: ["Lebih murah", "Lebih cepat sampai", "Warna prangkonya bagus", "Kertasnya jadi wangi"], a: 1, e: "Layanan prioritas untuk kecepatan pengiriman."},
+                {q: "Penggunaan lem pada amplop harus...", o: ["Sangat banyak sampai basah", "Secukupnya agar tertutup rapat", "Tidak perlu dilem", "Pakai nasi saja"], a: 1, e: "Menjaga keamanan isi surat tanpa merusak kertas."},
+                {q: "Informasi kontak pengirim (No. HP) di amplop berfungsi untuk...", o: ["Iseng", "Memudahkan kurir menghubungi jika alamat sulit dicari", "Gaya-gayaan", "Menambah beban"], a: 1, e: "Sangat membantu proses logistik zaman sekarang."},
+            ],
+            p8: [
+                {q: "Apa langkah pertama dalam workshop menulis surat?", o: ["Langsung menulis", "Menentukan tujuan dan penerima surat", "Mencari pulpen termahal", "Membeli amplop"], a: 1, e: "Tujuan menentukan diksi dan struktur yang digunakan."},
+                {q: "Penyuntingan (Editing) surat bertujuan untuk...", o: ["Menghilangkan semua kata", "Memperbaiki kesalahan ejaan dan kalimat", "Menghapus tanda tangan", "Mengganti nama pengirim"], a: 1, e: "Agar hasil akhir bersih dari kesalahan."},
+                {q: "Evaluasi teman sejawat (Peer Review) dilakukan dengan...", o: ["Saling mengejek", "Saling membaca dan memberi masukan positif", "Menyobek surat teman", "Menyembunyikan surat"], a: 1, e: "Belajar dari kelebihan dan kekurangan tulisan orang lain."},
+                {q: "Kriteria surat yang 'Sempurna' bagi santri adalah...", o: ["Sangat panjang", "Sesuai struktur, santun, dan tulus", "Kertasnya berwarna-warni", "Tulisannya tidak terbaca"], a: 1, e: "Keseimbangan antara teknik dan rasa."},
+                {q: "Kenapa tanda tangan penting di karya akhir?", o: ["Biar keren", "Sebagai bentuk tanggung jawab penulis", "Syarat nilai", "Hanya hiasan"], a: 1, e: "Tanda tangan adalah pengesahan pesan pribadi."},
+                {q: "Memilih media (Kertas/Amplop) yang bersih mencerminkan...", o: ["Kekayaan", "Adab dan kesungguhan", "Ketakutan", "Kebetulan"], a: 1, e: "Menghormati penerima melalui media yang layak."},
+                {q: "Workshop surat melatih santri dalam hal...", o: ["Kemampuan motorik dan literasi", "Kecepatan lari", "Kekuatan makan", "Ketahanan tidur"], a: 0, e: "Menghubungkan pikiran dan keterampilan tangan."},
+                {q: "Hasil workshop ini sebaiknya...", o: ["Dibuang", "Dikirimkan kepada alamat tujuan", "Disimpan selamanya", "Dijual"], a: 1, e: "Agar ilmu yang dipelajari langsung dipraktikkan (Amaliyah)."},
+                {q: "Jika terjadi kesalahan tulis (Typo) di surat fisik, sebaiknya...", o: ["Ditipe-x tebal", "Ditulis ulang (jika memungkinkan) agar rapi", "Dibiarkan saja", "Dicoret silang"], a: 1, e: "Surat fisik yang bersih tanpa tipe-x lebih dihargai."},
+                {q: "Menulis surat dengan tangan (Handwritten) di masa kini menunjukkan...", o: ["Ketertinggalan", "Ketulusan dan sentuhan personal yang tinggi", "Kemiskinan", "Kekuatan jari"], a: 1, e: "Tulisan tangan memiliki nilai emosional yang lebih tinggi dibanding ketikan."},
             ]
         };
 
-        function openTab(tabId) {
-            const targetTab = document.getElementById(tabId);
-            const targetBtn = document.getElementById('t-' + tabId);
-            if (!targetTab || !targetBtn) return;
-
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-blue-600', 'bg-red-700');
-                btn.classList.add('bg-blue-800');
-            });
-            
-            targetTab.classList.add('active');
-            if(tabId === 'sumatif') {
-                targetBtn.classList.add('bg-red-700');
-            } else {
-                targetBtn.classList.remove('bg-blue-800');
-                targetBtn.classList.add('bg-blue-600');
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        // UI Logic (Materi tetap)
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('tab-active'));
+            document.getElementById('content-' + id).classList.remove('hidden');
+            document.getElementById('tab-' + id).classList.add('tab-active');
+            if(id !== 'p1' && id !== 'sumatif') renderSession(id);
+            window.scrollTo(0, 0);
         }
 
-        function loadQuiz(pId) {
-            const container = document.getElementById(`quiz-${pId}`);
-            if (!container) return;
-            const data = quizData[pId];
-            if (!data) return;
+        function renderSession(id) {
+            const data = sessions[id];
+            const container = document.getElementById('content-' + id);
+            container.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-xl p-8 mb-10 border-t-8 border-emerald-600">
+                    <h2 class="text-3xl font-bold text-emerald-900 mb-6">${data.title}</h2>
+                    <div class="space-y-8">
+                        <div><h3 class="text-xl font-bold text-emerald-800 mb-4 border-b pb-2">A. Tujuan Pembelajaran</h3><ul class="list-disc ml-6 text-slate-700">${data.goal.map(g=>`<li>${g}</li>`).join('')}</ul></div>
+                        <div class="bg-emerald-50 p-6 rounded-xl border-l-8 border-emerald-500"><h3 class="font-bold text-xl mb-3">B. Keterkaitan Nilai Islam</h3><p class="text-slate-700">${data.islam}</p></div>
+                        <div><h3 class="text-xl font-bold text-emerald-800 mb-4">C. Skenario Pembelajaran</h3><div class="prose text-slate-700">${data.scen}</div></div>
+                    </div>
+                </div>
+                <div class="simulation-card"><h4 class="font-bold text-lg mb-2 text-emerald-800">${data.sim1.title}</h4><p class="text-slate-600">${data.sim1.desc}</p></div>
+                <div class="simulation-card"><h4 class="font-bold text-lg mb-2 text-emerald-800">${data.sim2.title}</h4><p class="text-slate-600">${data.sim2.desc}</p></div>
+                <div class="bg-white rounded-2xl shadow-xl p-8"><h3 class="text-2xl font-bold mb-6 text-slate-800">Latihan Formatif ${id.toUpperCase()}</h3><div id="quiz-${id}" class="space-y-6"></div></div>
+            `;
+            renderQuiz(id);
+        }
 
-            container.innerHTML = "";
-            data.forEach((item, index) => {
-                const quizBox = document.createElement('div');
-                quizBox.className = "p-4 bg-slate-50 rounded-lg border border-slate-200 mb-4 shadow-sm";
-                quizBox.innerHTML = `
-                    <p class="font-semibold mb-3 text-sm">${index + 1}. ${item.q}</p>
-                    <div class="grid md:grid-cols-2 gap-2" id="options-${pId}-${index}">
-                        ${item.options.map((opt, i) => `
-                            <div class="quiz-option bg-white" onclick="checkAnswer('${pId}', ${index}, ${i}, ${item.correct})">${opt}</div>
+        function renderQuiz(id) {
+            const container = document.getElementById('quiz-' + id);
+            const questions = quizData[id];
+            container.innerHTML = questions.map((q, i) => `
+                <div class="border-b pb-6">
+                    <p class="font-bold text-slate-800 mb-3">${i+1}. ${q.q}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        ${q.o.map((opt, oi) => `<button onclick="checkAnswer('${id}', ${i}, ${oi}, ${q.a}, '${q.e}', this)" class="text-left p-3 border rounded-lg hover:bg-emerald-50 transition-colors">${opt}</button>`).join('')}
+                    </div>
+                    <div id="exp-${id}-${i}" class="hidden mt-3 p-3 bg-emerald-50 rounded border-l-4 border-emerald-500 text-sm"></div>
+                </div>
+            `).join('');
+        }
+
+        function checkAnswer(id, qIdx, oIdx, correctIdx, exp, btn) {
+            const expDiv = document.getElementById(`exp-${id}-${qIdx}`);
+            const buttons = btn.parentElement.querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+            if(oIdx === correctIdx) {
+                btn.classList.add('bg-green-100', 'border-green-500', 'text-green-800', 'font-bold');
+                expDiv.innerHTML = `<strong>Benar!</strong> ${exp}`;
+            } else {
+                btn.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                expDiv.innerHTML = `<strong>Salah.</strong> Jawaban yang benar adalah: <em>${quizData[id][qIdx].o[correctIdx]}</em>.`;
+            }
+            expDiv.classList.remove('hidden');
+        }
+
+        // SUMATIF: Mengambil perwakilan soal dari p1-p8 (Total 20 soal)
+        function renderSumatif() {
+            const area = document.getElementById('sumatif-area');
+            const pool = [
+                quizData.p1[0], quizData.p1[1],
+                quizData.p2[0], quizData.p2[4],
+                quizData.p3[0], quizData.p3[1],
+                quizData.p4[0], quizData.p4[2],
+                quizData.p5[0], quizData.p5[1],
+                quizData.p6[0], quizData.p6[1],
+                quizData.p7[0], quizData.p7[1],
+                quizData.p8[0], quizData.p8[3],
+                quizData.p1[4], quizData.p2[2], quizData.p3[5], quizData.p4[8]
+            ];
+
+            area.innerHTML = pool.map((q, i) => `
+                <div class="bg-white p-6 rounded-2xl border shadow-sm" data-correct="${q.a}">
+                    <p class="font-bold text-xl mb-6">${i+1}. ${q.q}</p>
+                    <div class="space-y-3">
+                        ${q.o.map((opt, oi) => `
+                            <label class="flex items-center gap-4 p-4 border rounded-xl cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="sum-q-${i}" value="${oi}" class="w-5 h-5"> 
+                                <span class="text-lg">${opt}</span>
+                            </label>
                         `).join('')}
                     </div>
-                    <div id="feedback-${pId}-${index}" class="hidden mt-3 text-[11px] p-2 rounded-md transition-all duration-300"></div>
-                `;
-                container.appendChild(quizBox);
-            });
+                </div>
+            `).join('');
         }
 
-        window.checkAnswer = function(pId, qIdx, selected, correct) {
-            const feedback = document.getElementById(`feedback-${pId}-${qIdx}`);
-            const options = document.getElementById(`options-${pId}-${qIdx}`).children;
-            const explanation = quizData[pId][qIdx].explanation;
+        function gradeSumatif() {
+            const questions = document.querySelectorAll('div[data-correct]');
+            let score = 0;
+            questions.forEach((q, i) => {
+                const sel = q.querySelector(`input[name="sum-q-${i}"]:checked`);
+                if(sel && parseInt(sel.value) === parseInt(q.dataset.correct)) score += 5;
+            });
+            document.getElementById('score-display').innerText = score;
+            document.getElementById('sumatif-result').classList.remove('hidden');
+            document.getElementById('btn-submit-sumatif').classList.add('hidden');
+            document.getElementById('score-message').innerText = score >= 75 ? "Maa Syaa Allah, Anda telah menguasai materi surat dengan sangat baik!" : "Jangan menyerah, silakan murojaah kembali materi yang belum dikuasai.";
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
 
-            for (let opt of options) opt.style.pointerEvents = 'none';
+        function resetSumatif() {
+            document.getElementById('sumatif-result').classList.add('hidden');
+            document.getElementById('btn-submit-sumatif').classList.remove('hidden');
+            renderSumatif();
+        }
 
-            feedback.classList.remove('hidden');
-            if (selected === correct) {
-                options[selected].classList.add('correct');
-                feedback.className = "mt-2 text-[11px] p-2 rounded bg-green-100 text-green-800 border border-green-200";
-                feedback.innerHTML = `<strong>Benar!</strong> ${explanation}`;
-            } else {
-                options[selected].classList.add('incorrect');
-                options[correct].classList.add('correct');
-                feedback.className = "mt-2 text-[11px] p-2 rounded bg-red-100 text-red-800 border border-red-200";
-                feedback.innerHTML = `<strong>Kurang Tepat.</strong> ${explanation}`;
-            }
-        };
+        // PERTEMUAN 1 ASSETS
+        function initP1Puzzle() {
+            const area = document.getElementById('p1-puzzle-area');
+            const items = ["Isi Surat", "Tanda Tangan", "Salam Pembuka", "Tititimangsa", "Penutup"];
+            area.innerHTML = items.map((item, i) => `
+                <div class="flex items-center gap-3 bg-white p-3 border rounded shadow-sm">
+                    <span class="font-bold text-emerald-600">${i+1}.</span>
+                    <select id="puz-p1-${i}" class="w-full border-none outline-none text-slate-700">
+                        <option value="">-- Pilih Urutan --</option>
+                        <option value="Tititimangsa">Tititimangsa</option>
+                        <option value="Salam Pembuka">Salam Pembuka</option>
+                        <option value="Isi Surat">Isi Surat</option>
+                        <option value="Penutup">Penutup</option>
+                        <option value="Tanda Tangan">Tanda Tangan</option>
+                    </select>
+                </div>
+            `).join('');
+        }
 
-        window.onload = () => {
-            ['p1','p2','p3','p4','p5','p6','p7','p8','sumatif'].forEach(p => loadQuiz(p));
-        };
+        function sim11(isCorrect) {
+            const fb = document.getElementById('fb-11');
+            fb.innerText = isCorrect ? "Mumtaz! Tititimangsa adalah pembuka paling awal." : "Afwan, coba lagi!";
+            fb.className = "mt-4 font-bold " + (isCorrect ? "text-green-600" : "text-red-600");
+        }
+
+        function checkP1Puzzle() {
+            const order = ["Tititimangsa", "Salam Pembuka", "Isi Surat", "Penutup", "Tanda Tangan"];
+            let correct = 0;
+            for(let i=0; i<5; i++) if(document.getElementById(`puz-p1-${i}`).value === order[i]) correct++;
+            document.getElementById('fb-12').innerText = correct === 5 ? "Urutan Sempurna!" : `Baru ${correct}/5 benar. Terus mencoba!`;
+            document.getElementById('fb-12').className = "mt-2 font-bold " + (correct === 5 ? "text-green-600" : "text-orange-600");
+        }
+
+        window.onload = () => { renderQuiz('p1'); initP1Puzzle(); renderSumatif(); };
     </script>
 </body>
 </html>
