@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARB-205: Muhadatsah 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .arabic { font-family: 'Amiri', serif; font-size: 1.8rem; line-height: 3rem; text-align: right; color: #1e293b; }
+        .tab-btn { transition: all 0.3s ease; border-bottom: 3px solid transparent; }
+        .tab-active { color: #0369a1; border-bottom-color: #0369a1; background-color: #f0f9ff; font-weight: 800; }
+        .dialog-box { border-left: 4px solid #0369a1; background-color: #ffffff; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .section-title { color: #075985; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #bae6fd; display: inline-block; margin-bottom: 1rem; }
+        .correct-ans { background-color: #dcfce7 !important; border-color: #22c55e !important; }
+        .wrong-ans { background-color: #fee2e2 !important; border-color: #ef4444 !important; }
+        .vocab-badge { background-color: #e0f2fe; color: #0369a1; padding: 2px 8px; rounded: 4px; font-weight: 600; font-size: 0.85rem; }
+        .sumatif-card { background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%); }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Navbar -->
+    <nav class="bg-sky-900 text-white sticky top-0 z-50 shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight">ARB-205 <span class="text-sky-300">MUHADATSAH 1</span></h1>
+                    <p class="text-xs text-sky-200 uppercase tracking-widest">Praktik Percakapan Harian</p>
+                </div>
+                <div class="flex space-x-2 mt-4 md:mt-0">
+                    <span class="bg-sky-800 px-3 py-1 rounded text-xs border border-sky-700">Mustawa 2</span>
+                    <span class="bg-emerald-600 px-3 py-1 rounded text-xs font-bold uppercase">Lisan & Praktik</span>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white border-t border-slate-200 overflow-x-auto no-scrollbar">
+            <div class="container mx-auto flex">
+                <button onclick="loadSesi(1)" id="nav-1" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 whitespace-nowrap border-r">Sesi 1: Perkenalan</button>
+                <button onclick="loadSesi(2)" id="nav-2" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 whitespace-nowrap border-r">Sesi 2: Keluarga</button>
+                <button onclick="loadSesi(3)" id="nav-3" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 whitespace-nowrap border-r">Sesi 3: Di Sekolah</button>
+                <button onclick="loadSesi(4)" id="nav-4" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 whitespace-nowrap border-r">Sesi 4: Hobi</button>
+                <button onclick="loadSesi(5)" id="nav-5" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 whitespace-nowrap border-r">Sesi 5: Di Pasar</button>
+                <button onclick="loadSesi(6)" id="nav-6" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 whitespace-nowrap border-r">Sesi 6: Waktu</button>
+                <button onclick="loadSesi(7)" id="nav-7" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 whitespace-nowrap border-r">Sesi 7: Liburan</button>
+                <button onclick="loadSesi(8)" id="nav-8" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 whitespace-nowrap border-r">Sesi 8: Kesehatan</button>
+                <button onclick="loadSumatif()" id="nav-sum" class="tab-btn px-6 py-4 text-sm font-black text-rose-600 bg-rose-50 whitespace-nowrap">TES SUMATIF</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8 max-w-5xl">
+        <div id="content-container" class="fade-in">
+            <!-- Dynamic Content -->
+        </div>
+    </main>
+
+    <script>
+        const moduleData = {
+            1: {
+                title: "التعارف (Perkenalan)",
+                tujuan: [
+                    "Mampu melakukan perkenalan diri secara formal dan informal.",
+                    "Menguasai kosakata dasar sapaan (Tahiyyah) dan responnya.",
+                    "Membedakan penggunaan 'Anta' dan 'Anti' dalam dialog."
+                ],
+                kitab: {
+                    arab: "عِبَارَاتُ التَّعَارُفِ اليَوْمِيَّةِ",
+                    syarah: "Perkenalan adalah kunci awal komunikasi. Dalam bahasa Arab, penggunaan dhomir (kata ganti) sangat bergantung pada lawan bicara (laki-laki atau perempuan)."
+                },
+                dalil: [
+                    {
+                        teks: "خَالِد: السَّلَامُ عَلَيْكُمْ. خَلِيل: وَعَلَيْكُمُ السَّلَامُ.",
+                        arti: "Khalid: Assalamu'alaikum. Khalil: Wa'alaikumussalam."
+                    },
+                    {
+                        teks: "خَالِد: مَا اسْمُكَ؟ خَلِيل: اِسْمِي خَلِيل. وَأَنْتَ؟",
+                        arti: "Khalid: Siapa namamu? Khalil: Namaku Khalil. Dan kamu?"
+                    }
+                ],
+                skenario: `
+                    <p class="mb-4"><strong>Pendahuluan (15 Menit):</strong> Guru memberikan contoh sapaan hangat dan menanyakan kabar dalam bahasa Arab kepada santri satu per satu.</p>
+                    <p class="mb-4"><strong>Inti (60 Menit):</strong> Praktik berpasangan. Santri melakukan simulasi pertemuan pertama di terminal atau bandara. Fokus pada intonasi dan ekspresi wajah.</p>
+                    <div class="teacher-guide">
+                        <strong>Tips Pengajar:</strong> Pastikan santri tidak tertukar antara "Masmu-ka" (lk) dan "Masmu-ki" (pr). Berikan apresiasi pada setiap usaha bicara.
+                    </div>
+                `,
+                latihan: [
+                    { q: "Apa jawaban dari 'Kaifa Haluk'?", o: ["Ismi Ahmad", "Ana Tholib", "Alhamdulillah, bi khoir", "Ahlan wa Sahlan"], a: 2, e: "Jawaban kabar biasanya diawali tahmid dan kabar baik." },
+                    { q: "Kata tanya 'Siapa' untuk nama adalah...", o: ["Aina", "Ma", "Hal", "Man"], a: 1, e: "Untuk menanyakan nama menggunakan 'Ma'." },
+                    { q: "Sapaan 'Selamat Pagi' adalah...", o: ["Masaul Khoir", "Sobahul Khoir", "Lailatuka Sa'idah", "Ahlan bika"], a: 1, e: "Sobahul Khoir (Pagi), Masaul Khoir (Sore)." },
+                    { q: "Respon dari 'Ahlan wa Sahlan' untuk laki-laki adalah...", o: ["Ahlan biki", "Ahlan bika", "Syukran", "Afwan"], a: 1, e: "Ahlan bika (lk), Ahlan biki (pr)." },
+                    { q: "Kata ganti 'Kamu' untuk perempuan adalah...", o: ["Anta", "Anti", "Huwa", "Hiya"], a: 1, e: "Anti digunakan untuk mukhatab perempuan." },
+                    { q: "Bagaimana cara bertanya 'Dari mana kamu?'", o: ["Man anta?", "Kaifa anta?", "Min aina anta?", "Ma anta?"], a: 2, e: "Min aina artinya dari mana." },
+                    { q: "Apa arti dari 'Fursah Sa'idah'?", o: ["Sampai jumpa", "Maafkan saya", "Senang berkenalan denganmu", "Selamat jalan"], a: 2, e: "Ungkapan penutup perkenalan yang sopan." },
+                    { q: "Jika seseorang berkata 'Syukran', kita menjawab...", o: ["Na'am", "Laa", "Afwan", "Ahlan"], a: 2, e: "Afwan adalah respon standar untuk terima kasih." },
+                    { q: "Ungkapan 'Sampai Jumpa' adalah...", o: ["Ila Liqo", "Ma'as Salamah", "Ahlan", "Benar A dan B"], a: 3, e: "Keduanya umum digunakan saat berpamitan." },
+                    { q: "Pilihlah kalimat yang benar untuk perempuan:", o: ["Maa ismuka?", "Kaifa haluka?", "Min aina anti?", "Anta mudarris"], a: 2, e: "Anti adalah dhomir perempuan." }
+                ]
+            },
+            2: {
+                title: "الأسرة (Keluarga)",
+                tujuan: ["Mampu menyebutkan anggota keluarga inti.", "Mampu bertanya tentang jumlah saudara.", "Menggunakan kata tunjuk (Isim Isyarah) dengan benar."],
+                kitab: { arab: "شَجَرَةُ العَائِلَةِ", syarah: "Membicarakan keluarga adalah topik harian yang penting untuk membangun kedekatan sosial." },
+                dalil: [{ teks: "هَذِهِ صُورَةُ أُسْرَتِي. هَذَا أَبِي وَهَذِهِ أُمِّي.", arti: "Ini foto keluargaku. Ini ayahku dan ini ibuku." }],
+                skenario: `<p>Santri membawa foto keluarga (atau menggambarnya) dan menjelaskannya di depan kelas menggunakan bahasa Arab. Fokus pada penggunaan 'Hadza' dan 'Hadzihi'.</p>`,
+                latihan: [
+                    { q: "Apa bahasa Arabnya 'Ayah'?", o: ["Ummun", "Abun", "Akhun", "Uhtun"], a: 1, e: "Abun (Ayah), Ummun (Ibu)." },
+                    { q: "Kata tunjuk 'Ini' untuk perempuan adalah...", o: ["Hadza", "Hadzihi", "Zalika", "Tilka"], a: 1, e: "Hadzihi untuk muannas." },
+                    { q: "Bahasa Arab dari 'Saudara Laki-laki' adalah...", o: ["Akhun", "Uhtun", "Jaddun", "Ammun"], a: 0, e: "Akhun (lk), Uhtun (pr)." },
+                    { q: "Siapakah 'Al-Jaddah' itu?", o: ["Kakek", "Nenek", "Paman", "Bibi"], a: 1, e: "Jaddun (Kakek), Jaddah (Nenek)." },
+                    { q: "Kata tanya 'Berapa' adalah...", o: ["Kam", "Kaifa", "Ma", "Aina"], a: 0, e: "Kam digunakan untuk menanyakan jumlah." },
+                    { q: "Apa bahasa Arabnya 'Anak Laki-laki'?", o: ["Bintun", "Ibnun", "Thifun", "Waladun"], a: 1, e: "Ibnun atau Waladun." },
+                    { q: "Paman dari pihak ayah disebut...", o: ["Kholun", "Ammun", "Ammah", "Kholah"], a: 1, e: "Ammun (paman ayah), Kholun (paman ibu)." },
+                    { q: "Arti 'Suratun' adalah...", o: ["Buku", "Foto/Gambar", "Tas", "Meja"], a: 1, e: "Sering digunakan dalam konteks 'Shuratul Usrah'." },
+                    { q: "Kalimat yang benar:", o: ["Hadza ummi", "Hadzihi abi", "Hadza akhi", "Hadzihi jaddun"], a: 2, e: "Hadza (lk) dipasangkan dengan Akhi (lk)." },
+                    { q: "Apa arti 'Usratun'?", o: ["Keluarga", "Sekolah", "Rumah", "Pasar"], a: 0, e: "Usratun atau Ailah berarti keluarga." }
+                ]
+            },
+            3: {
+                title: "في المدرسة (Di Sekolah)",
+                tujuan: ["Mengenal kosakata peralatan sekolah.", "Mampu bertanya tentang jadwal pelajaran.", "Mempraktikkan dialog antara guru dan murid."],
+                kitab: { arab: "الحَيَاةُ الدِّرَاسِيَّةُ", syarah: "Lingkungan sekolah adalah tempat utama santri berinteraksi setiap hari." },
+                dalil: [{ teks: "أَيْنَ الكِتَابُ؟ الكِتَابُ فِي المِحْفَظَةِ.", arti: "Di mana buku itu? Buku itu di dalam tas." }],
+                skenario: `<p>Simulasi di dalam kelas. Murid bertanya kepada teman sebangku tentang peminjaman alat tulis dan menanyakan jam pelajaran dimulai.</p>`,
+                latihan: [
+                    { q: "Apa arti 'Qolamun'?", o: ["Buku", "Pena", "Penghapus", "Penggaris"], a: 1, e: "Qolamun adalah pena." },
+                    { q: "Di mana posisi 'Al-Ustadz' biasanya?", o: ["Fil Bait", "Fil Fashl", "Fis Suq", "Fil Maqshoof"], a: 1, e: "Fashl artinya kelas." },
+                    { q: "Apa bahasa Arabnya 'Tas'?", o: ["Kitab", "Mihfadzah", "Sabbuurah", "Maktab"], a: 1, e: "Mihfadzah atau Haqibah." },
+                    { q: "Alat untuk menulis di papan tulis adalah...", o: ["Qolam", "Thobasyir", "Mistoroh", "Mirsam"], a: 1, e: "Thobasyir (kapur) atau Qolamul hibri (spidol)." },
+                    { q: "Apa arti 'Maktabun'?", o: ["Kantor", "Meja", "Kursi", "Lemari"], a: 1, e: "Maktabun bisa berarti meja atau kantor." },
+                    { q: "Bahasa Arabnya 'Ujian' adalah...", o: ["Darsun", "Imtihan", "Qiroah", "Kitabah"], a: 1, e: "Imtihan atau Ikhtibar." },
+                    { q: "Apa arti 'Mursyid'?", o: ["Siswa", "Guru/Pembimbing", "Satpam", "Kepala Sekolah"], a: 1, e: "Sering digunakan untuk pembimbing." },
+                    { q: "Jadwal pelajaran disebut...", o: ["Jadwaluddurus", "Kitab", "Qomus", "Waraqoh"], a: 0, e: "Jadwal artinya daftar/jadwal." },
+                    { q: "Kalimat perintah 'Bacalah' adalah...", o: ["Uktub", "Iqro'", "Ijlis", "Idzhab"], a: 1, e: "Iqro' berasal dari kata Qoro-a." },
+                    { q: "Istirahat dalam bahasa Arab adalah...", o: ["Istirahah", "Nawm", "Aklun", "Syarob"], a: 0, e: "Istirahah berarti istirahat." }
+                ]
+            },
+            4: {
+                title: "الهواية (Hobi)",
+                tujuan: ["Mampu menyebutkan jenis-jenis hobi.", "Mampu bertanya tentang kegemaran orang lain.", "Menggunakan kata kerja 'Yuhibbu' (Suka)."],
+                kitab: { arab: "مَاذَا تُحِبُّ أَنْ تَفْعَلَ؟", syarah: "Topik hobi mempermudah santri untuk berekspresi tentang minat pribadi." },
+                dalil: [{ teks: "هَوِيَّتِي القِرَاءَةُ وَالرِّيَاضَةُ.", arti: "Hobiku membaca dan olahraga." }],
+                skenario: `<p>Masing-masing santri menuliskan 3 hobinya di papan tulis dalam bahasa Arab dan menceritakan alasan singkat mengapa menyukainya.</p>`,
+                latihan: [
+                    { q: "Apa bahasa Arabnya 'Membaca'?", o: ["Al-Kitabah", "Al-Qiroah", "Al-Istima'", "Al-Kalam"], a: 1, e: "Qoro-a (membaca)." },
+                    { q: "Olahraga lari disebut...", o: ["Al-Jaryu", "As-Sibahah", "Al-Masyyu", "Al-Qofzu"], a: 0, e: "Jaryun berarti lari." },
+                    { q: "Apa arti 'Ar-Rosmu'?", o: ["Menulis", "Melukis/Menggambar", "Memasak", "Menjahit"], a: 1, e: "Rosmun adalah gambar/lukis." },
+                    { q: "Jika suka sepak bola, maka ia suka...", o: ["Kurotul Qodam", "Kurotus Sallah", "Kurotur Risyah", "Kurotut Thowilah"], a: 0, e: "Qodam artinya kaki." },
+                    { q: "Memasak dalam bahasa Arab adalah...", o: ["At-Thobkhu", "As-Safar", "At-Tashwir", "Ar-Roqshu"], a: 0, e: "Thobbakh adalah koki." },
+                    { q: "Apa arti 'As-Sibahah'?", o: ["Bermain", "Berenang", "Bersepeda", "Mendaki"], a: 1, e: "Sabbaha (berenang)." },
+                    { q: "Fotografi disebut...", o: ["At-Tashwir", "Ar-Rosmu", "Al-Qiroah", "Al-Ghina'"], a: 0, e: "Suurah (foto) -> Tashwir." },
+                    { q: "Kata kerja 'Saya suka' adalah...", o: ["Uhibbu", "Tuhibbu", "Yuhibbu", "Nuhibbu"], a: 0, e: "Uhibbu (Saya), Tuhibbu (Kamu lk/Dia pr)." },
+                    { q: "Apa bahasa Arabnya 'Berpergian/Traveling'?", o: ["As-Safar", "Al-Iqomah", "Ar-Rihlah", "Benar A dan C"], a: 3, e: "Keduanya berkaitan dengan perjalanan." },
+                    { q: "Menunggang kuda disebut...", o: ["Rukubul Khowil", "Rukubul Khail", "Rukubul Jamal", "Rukubud Darrojah"], a: 1, e: "Khail artinya kuda." }
+                ]
+            },
+            5: {
+                title: "في السوق (Di Pasar)",
+                tujuan: ["Mampu melakukan transaksi jual beli sederhana.", "Mengenal angka-angka harga.", "Mampu menawar harga dalam bahasa Arab."],
+                kitab: { arab: "البَيْعُ وَالشِّرَاءُ", syarah: "Keterampilan negosiasi dan pemahaman nilai mata uang dalam bahasa Arab." },
+                dalil: [{ teks: "بِكَمْ هَذَا القَمِيصُ؟ هَذَا بِعِشْرِينَ رِيَالًا.", arti: "Berapa harga kemeja ini? Ini harganya 20 riyal." }],
+                skenario: `<p>Pasar Tumpah Arab. Guru menyiapkan benda-benda di kelas dengan label harga. Santri berperan sebagai penjual (Ba'i) dan pembeli (Musytari).</p>`,
+                latihan: [
+                    { q: "Apa arti 'Al-Musytari'?", o: ["Penjual", "Pembeli", "Barang", "Uang"], a: 1, e: "Ba'i (Penjual), Musytari (Pembeli)." },
+                    { q: "Kata tanya untuk harga adalah...", o: ["Maza", "Bikam", "Aina", "Man"], a: 1, e: "Bikam artinya berapa harganya." },
+                    { q: "Apa bahasa Arabnya 'Mahal'?", o: ["Rokhis", "Gholi", "Tayyib", "Jayyid"], a: 1, e: "Gholi (Mahal), Rokhis (Murah)." },
+                    { q: "Uang dalam bahasa Arab disebut...", o: ["Fuluus", "Nuquud", "Robi'ah", "Benar A dan B"], a: 3, e: "Fuluus/Nuquud umum digunakan." },
+                    { q: "Apa arti 'Takhfidz'?", o: ["Harga naik", "Diskon/Potongan", "Pasar", "Toko"], a: 1, e: "Khafadz (turun) -> Diskon." },
+                    { q: "Toko baju disebut...", o: ["Mahallul Malabis", "Mahallul At'imah", "Maqshof", "Saydaliyah"], a: 0, e: "Malabis artinya pakaian." },
+                    { q: "Sayur-sayuran adalah...", o: ["Fawakih", "Khodrowat", "Malabis", "Adawat"], a: 1, e: "Fawakih (Buah), Khodrowat (Sayur)." },
+                    { q: "Angka '30' dalam bahasa Arab...", o: ["Isyrun", "Tsalatsun", "Arba'un", "Khomsun"], a: 1, e: "Tsalatsun (30)." },
+                    { q: "Apa bahasa Arabnya 'Kemeja'?", o: ["Sirwal", "Qomis", "Fustan", "Khimar"], a: 1, e: "Qomis (Kemeja), Sirwal (Celana)." },
+                    { q: "Ungkapan 'Ini terlalu mahal' adalah...", o: ["Hadza gholi jiddan", "Hadza rokhis", "Bikam hadza", "Uridu hadza"], a: 0, e: "Jiddan artinya sangat." }
+                ]
+            },
+            6: {
+                title: "الوقت والساعة (Waktu dan Jam)",
+                tujuan: ["Mampu menyebutkan jam.", "Mengenal keterangan waktu (Pagi, Siang, Sore, Malam).", "Mampu membuat janji temu."],
+                kitab: { arab: "كَمِ السَّاعَةُ الآنَ؟", syarah: "Ketepatan waktu adalah disiplin dalam Islam, diungkapkan melalui bahasa." },
+                dalil: [{ teks: "أَذْهَبُ إِلَى المَدْرَسَةِ فِي السَّاعَةِ السَّادِسَةِ صَبَاحًا.", arti: "Saya pergi ke sekolah pada jam 6 pagi." }],
+                skenario: `<p>Santri membuat jadwal harian dari bangun tidur sampai tidur kembali dan mempresentasikannya kepada teman sebelah.</p>`,
+                latihan: [
+                    { q: "Apa arti 'As-Sa'ah'?", o: ["Menit", "Detik", "Jam", "Hari"], a: 2, e: "Sa'ah berarti jam." },
+                    { q: "Jam 1 tepat adalah...", o: ["As-Sa'atul Wahidah", "As-Sa'atuts Tsaniyah", "As-Sa'atuts Tsalitsah", "As-Sa'atur Robi'ah"], a: 0, e: "Wahidah artinya satu." },
+                    { q: "Apa arti 'Nishfu Sa'ah'?", o: ["15 menit", "30 menit", "45 menit", "60 menit"], a: 1, e: "Nishfun artinya setengah." },
+                    { q: "Keterangan waktu 'Malam' adalah...", o: ["Lailan", "Naharon", "Sobahan", "Masaan"], a: 0, e: "Lailan (malam), Naharon (siang)." },
+                    { q: "Apa arti 'Rubu'u Sa'ah'?", o: ["10 menit", "15 menit", "20 menit", "25 menit"], a: 1, e: "Rubu'un artinya seperempat." },
+                    { q: "Jam berapa shalat Dzuhur biasanya?", o: ["As-Sa'ah 12", "As-Sa'ah 5", "As-Sa'ah 9", "As-Sa'ah 3"], a: 0, e: "Dzuhur di tengah hari." },
+                    { q: "Apa bahasa Arabnya 'Sekarang'?", o: ["Ghodan", "Amsi", "Al-Aana", "Ba'da"], a: 2, e: "Al-Aana berarti sekarang." },
+                    { q: "Kapan kita mengucapkan 'Masaul Khoir'?", o: ["Pagi", "Siang", "Sore", "Tengah Malam"], a: 2, e: "Masaan artinya sore/petang." },
+                    { q: "Apa arti 'Daqiqoh'?", o: ["Jam", "Menit", "Detik", "Abad"], a: 1, e: "Daqiqoh (Menit), Tsaniyah (Detik)." },
+                    { q: "Ungkapan 'Tepat' (On time) dalam jam adalah...", o: ["Tamaman", "Illa", "Wa", "Nishfun"], a: 0, e: "Tamaman artinya tepat/pas." }
+                ]
+            },
+            7: {
+                title: "العطلة (Liburan)",
+                tujuan: ["Mampu menceritakan rencana liburan.", "Mengenal nama-nama tempat wisata.", "Menggunakan bentuk Fi'il Mudhari' untuk masa depan."],
+                kitab: { arab: "أَيْنَ تَقْضِي عُطْلَتَكَ؟", syarah: "Mengekspresikan kegembiraan dan rencana di waktu senggang." },
+                dalil: [{ teks: "سَأَقْضِي العُطْلَةَ فِي القَرْيَةِ مَعَ جَدِّي.", arti: "Saya akan menghabiskan liburan di desa bersama kakekku." }],
+                skenario: `<p>Diskusi Panel: 'Rencana Liburan Impian'. Santri dibagi menjadi kelompok kecil untuk merencanakan perjalanan ke negara Arab.</p>`,
+                latihan: [
+                    { q: "Apa arti 'Al-Uthlah'?", o: ["Sekolah", "Kerja", "Liburan", "Sakit"], a: 2, e: "Uthlah berarti hari libur." },
+                    { q: "Ke mana orang pergi jika ingin melihat laut?", o: ["Al-Jabal", "Al-Bahr", "Al-Ghofah", "Al-Madinah"], a: 1, e: "Bahr artinya laut." },
+                    { q: "Apa arti 'Al-Qoryah'?", o: ["Kota", "Desa", "Pasar", "Hutan"], a: 1, e: "Madinah (Kota), Qoryah (Desa)." },
+                    { q: "Gunung dalam bahasa Arab adalah...", o: ["Bahr", "Jabal", "Nahr", "Sama'"], a: 1, e: "Jabal (Gunung)." },
+                    { q: "Apa bahasa Arabnya 'Kebun Binatang'?", o: ["Hadiqatul Hayawanat", "Hadiqatul Azhar", "Sathi'ul Bahr", "Mathof"], a: 0, e: "Hayawanat artinya hewan-hewan." },
+                    { q: "Kata kerja 'Saya akan pergi'...", o: ["Adzhabu", "Sa-adzhabu", "Dzahabtu", "Idzhab"], a: 1, e: "Awalan 'Sa' menunjukkan masa depan." },
+                    { q: "Apa arti 'Sathi'ul Bahr'?", o: ["Puncak Gunung", "Pantai", "Dalam Hutan", "Tengah Kota"], a: 1, e: "Pantai/Pesisir laut." },
+                    { q: "Liburan akhir pekan disebut...", o: ["Uthlatu Nihayatil Usbu'", "Uthlah Thowilah", "Uthlah 'Iid", "Uthlah Romadhon"], a: 0, e: "Usbu' artinya minggu." },
+                    { q: "Apa arti 'Safaro'?", o: ["Makan", "Bepergian", "Tidur", "Belajar"], a: 1, e: "Asal kata dari musafir." },
+                    { q: "Kendaraan untuk liburan jauh adalah...", o: ["Tho-iroh (Pesawat)", "Darrojah", "Misyu", "Maq'ad"], a: 0, e: "Pesawat untuk jarak jauh." }
+                ]
+            },
+            8: {
+                title: "الصحة (Kesehatan)",
+                tujuan: ["Mampu mengeluhkan rasa sakit kepada dokter.", "Mengenal nama-nama anggota tubuh.", "Mampu memberikan saran kesehatan sederhana."],
+                kitab: { arab: "عِنْدَ الطَّبِيبِ", syarah: "Kosa kata darurat yang sangat penting saat berada di lingkungan berbahasa Arab." },
+                dalil: [{ teks: "بِمَاذَا تَشْعُرُ؟ أَشْعُرُ بِأَلَمٍ فِي رَأْسِي.", arti: "Apa yang kamu rasakan? Saya merasa sakit di kepalaku." }],
+                skenario: `<p>Praktik Klinik: Satu santri menjadi Dokter (Thabib) dan satu menjadi Pasien (Maridh). Pasien menjelaskan keluhannya dan Dokter memberikan resep.</p>`,
+                latihan: [
+                    { q: "Apa arti 'At-Thobib'?", o: ["Guru", "Polisi", "Dokter", "Sopir"], a: 2, e: "Thobib adalah dokter." },
+                    { q: "Bahasa Arabnya 'Sakit Kepala' adalah...", o: ["Alamul Batn", "Alamur Ro'si", "Alamul Asnan", "Alamul Udzun"], a: 1, e: "Ro'sun artinya kepala." },
+                    { q: "Apa arti 'Al-Mustasyfa'?", o: ["Sekolah", "Rumah Sakit", "Masjid", "Apotek"], a: 1, e: "Tempat orang berobat." },
+                    { q: "Obat dalam bahasa Arab disebut...", o: ["Dawaa'", "Aklun", "Syarob", "Fakihatun"], a: 0, e: "Dawaa'un adalah obat." },
+                    { q: "Apa arti 'Al-Alam'?", o: ["Senang", "Sakit/Nyeri", "Dunia", "Bendera"], a: 1, e: "Alamun (dengan hamzah) artinya rasa sakit." },
+                    { q: "Gigi dalam bahasa Arab adalah...", o: ["Ainun", "Udzun", "Sinnun", "Anfun"], a: 2, e: "Asnan (jamak dari Sinnun) artinya gigi." },
+                    { q: "Apa bahasa Arabnya 'Perut'?", o: ["Batnun", "Sodrun", "Yadun", "Rijlun"], a: 0, e: "Batnun adalah perut." },
+                    { q: "Istirahat yang cukup disarankan dokter, yaitu...", o: ["Ar-Rohah", "Al-Aklu", "Al-La'bu", "Al-Kalam"], a: 0, e: "Ar-Rohah artinya istirahat." },
+                    { q: "Apotek disebut...", o: ["Mustasyfa", "Saydaliyah", "Mahall", "Math'am"], a: 1, e: "Tempat membeli obat." },
+                    { q: "Ungkapan 'Semoga lekas sembuh' adalah...", o: ["Syafakallah", "Barakallah", "Jazakallah", "Afwan"], a: 0, e: "Syafa (menyembuhkan)." }
+                ]
+            }
+        };
+
+        const sumatifQuestions = [
+            { q: "Jawaban sapaan 'Sobahul Khoir' adalah...", o: ["Masaul Khoir", "Sobahunnur", "Ahlan bika", "Alhamdulillah"], a: 1 },
+            { q: "Bahasa Arab dari 'Kakek' adalah...", o: ["Abun", "Ammun", "Jaddun", "Akhun"], a: 2 },
+            { q: "Di mana kita bisa membeli buku?", o: ["Al-Maqshof", "Al-Maktabah", "Al-Mustasyfa", "Al-Hadiqah"], a: 1 },
+            { q: "Apa arti 'Uhibbu Kurotal Qodam'?", o: ["Saya suka basket", "Saya suka voli", "Saya suka sepak bola", "Saya suka lari"], a: 2 },
+            { q: "Pasar dalam bahasa Arab adalah...", o: ["Al-Fashl", "Al-Bait", "As-Suuq", "Al-Qoryah"], a: 2 },
+            { q: "Jam 7 pagi bahasa Arabnya adalah...", o: ["As-Sa'ah as-sabi'ah masaan", "As-Sa'ah as-sabi'ah sobahan", "As-Sa'ah as-sadisah sobahan", "As-Sa'ah al-wahidah"], a: 1 },
+            { q: "Apa arti 'Al-Goli' dalam transaksi?", o: ["Murah", "Diskon", "Mahal", "Pas"], a: 2 },
+            { q: "Ke mana orang pergi jika sakit perut?", o: ["Al-Madrasah", "Al-Mustasyfa", "Al-Mal'ab", "Al-Ma'rad"], a: 1 },
+            { q: "Apa arti 'Uthlah Nihayatil Usbu'?", o: ["Libur Nasional", "Libur Akhir Pekan", "Libur Sekolah", "Libur Sakit"], a: 1 },
+            { q: "Jika dhomir 'Anta' untuk laki-laki, maka untuk perempuan adalah...", o: ["Huwa", "Hiya", "Anti", "Nahnu"], a: 2 },
+            { q: "Apa bahasa Arabnya 'Pena'?", o: ["Kitab", "Mihfadzah", "Qolam", "Sabbuurah"], a: 2 },
+            { q: "Berapa jam dalam sehari? (Kam sa'atan fil yaum?)", o: ["Asyru sa'at", "Khomsas 'asyar sa'atan", "Arba'un wa 'isyrun sa'atan", "Tsalatsun sa'atan"], a: 2 },
+            { q: "Siapa 'Al-Umm' itu?", o: ["Ayah", "Ibu", "Kakek", "Nenek"], a: 1 },
+            { q: "Apa arti 'Syafakallah'?", o: ["Terima kasih", "Sampai jumpa", "Semoga Allah menyembuhkanmu", "Sama-sama"], a: 2 },
+            { q: "Warna kemeja (Lawnul Qomis) putih adalah...", o: ["Ahmar", "Aswad", "Abyad", "Azraq"], a: 2 }
+        ];
+
+        function loadSesi(id) {
+            const data = moduleData[id];
+            const container = document.getElementById('content-container');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+            document.getElementById(`nav-${id}`).classList.add('tab-active');
+
+            container.innerHTML = `
+                <div class="fade-in space-y-10">
+                    <div class="border-b-4 border-sky-600 pb-2">
+                        <h2 class="text-3xl font-black text-slate-800 uppercase tracking-tighter">PERTEMUAN ${id}: ${data.title}</h2>
+                    </div>
+
+                    <!-- BAGIAN A -->
+                    <section>
+                        <h3 class="section-title">A. Tujuan Pembelajaran</h3>
+                        <ul class="list-disc ml-6 space-y-2 text-slate-700 font-medium">
+                            ${data.tujuan.map(t => `<li>${t}</li>`).join('')}
+                        </ul>
+                    </section>
+
+                    <!-- BAGIAN B -->
+                    <section class="dialog-box">
+                        <h3 class="section-title">B. Contoh Dialog & Kosakata</h3>
+                        <div class="mb-6">
+                            <h4 class="font-bold text-sky-800 mb-2">${data.kitab.arab}</h4>
+                            <p class="text-sm text-slate-600 italic">"${data.kitab.syarah}"</p>
+                        </div>
+                        <div class="space-y-6">
+                            ${data.dalil.map(d => `
+                                <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                    <p class="arabic mb-3" dir="rtl">${d.teks}</p>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] font-bold bg-sky-600 text-white px-2 py-0.5 rounded">ARTI</span>
+                                        <p class="text-sm italic text-slate-700">${d.arti}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>
+
+                    <!-- BAGIAN C -->
+                    <section>
+                        <h3 class="section-title">C. Skenario Praktik (90 Menit)</h3>
+                        <div class="prose prose-sky max-w-none text-slate-700 leading-relaxed bg-white p-6 rounded-2xl border border-slate-200">
+                            ${data.skenario}
+                        </div>
+                    </section>
+
+                    <!-- LATIHAN -->
+                    <section class="mt-12 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                        <h3 class="text-xl font-bold mb-6 text-slate-900 flex items-center">
+                            <span class="bg-sky-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">?</span>
+                            Latihan Interaktif (10 Soal)
+                        </h3>
+                        <div class="space-y-6">
+                            ${data.latihan.map((q, idx) => `
+                                <div class="p-6 rounded-xl border border-slate-100 bg-slate-50/50" id="q-${idx}">
+                                    <p class="font-bold text-slate-800 mb-4">${idx + 1}. ${q.q}</p>
+                                    <div class="grid md:grid-cols-2 gap-3">
+                                        ${q.o.map((opt, oIdx) => `
+                                            <button onclick="checkAnswer(${id}, ${idx}, ${oIdx}, ${q.a}, '${q.e}')" 
+                                                class="text-left p-3 bg-white border border-slate-200 rounded-lg hover:border-sky-400 hover:bg-sky-50 transition text-sm">
+                                                ${opt}
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                    <div id="feedback-${idx}" class="hidden mt-4 p-3 rounded-lg text-xs font-semibold border"></div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>
+                </div>
+            `;
+            window.scrollTo(0,0);
+        }
+
+        function checkAnswer(sId, qIdx, choice, correct, explanation) {
+            const qBox = document.getElementById(`q-${qIdx}`);
+            const feedback = document.getElementById(`feedback-${qIdx}`);
+            const buttons = qBox.querySelectorAll('button');
+
+            buttons.forEach((b, i) => {
+                b.disabled = true;
+                if(i === correct) b.classList.add('correct-ans');
+                if(i === choice && i !== correct) b.classList.add('wrong-ans');
+            });
+
+            feedback.classList.remove('hidden');
+            if(choice === correct) {
+                feedback.className = "mt-4 p-3 rounded-lg text-xs font-semibold border bg-green-50 text-green-700 border-green-200";
+                feedback.innerHTML = `BENAR: ${explanation}`;
+            } else {
+                feedback.className = "mt-4 p-3 rounded-lg text-xs font-semibold border bg-red-50 text-red-700 border-red-200";
+                feedback.innerHTML = `SALAH: ${explanation}`;
+            }
+        }
+
+        function loadSumatif() {
+            const container = document.getElementById('content-container');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+            document.getElementById('nav-sum').classList.add('tab-active');
+
+            container.innerHTML = `
+                <div class="fade-in space-y-8">
+                    <div class="sumatif-card p-10 rounded-3xl text-white text-center shadow-2xl">
+                        <h2 class="text-4xl font-black mb-4">اختبار نهائي (TES SUMATIF)</h2>
+                        <p class="text-sky-100 mb-6">Uji kemampuan Muhadatsah Anda dari Sesi 1 sampai Sesi 8</p>
+                        <div class="flex justify-center gap-4 text-xs">
+                            <span class="bg-white/20 px-4 py-2 rounded-full border border-white/30">15 Soal Pilihan Ganda</span>
+                            <span class="bg-white/20 px-4 py-2 rounded-full border border-white/30">Materi Sesi 1-8</span>
+                        </div>
+                    </div>
+
+                    <div id="quiz-area" class="space-y-6">
+                        ${sumatifQuestions.map((q, idx) => `
+                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm transition hover:border-sky-300" id="sq-${idx}">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm">${idx + 1}</span>
+                                    <p class="font-bold text-slate-800 text-lg">${q.q}</p>
+                                </div>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    ${q.o.map((opt, oIdx) => `
+                                        <button onclick="submitSumatif(${idx}, ${oIdx})" class="text-left p-4 border border-slate-200 rounded-xl hover:bg-sky-50 hover:border-sky-200 transition text-sm font-medium">
+                                            ${opt}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+
+                        <div class="text-center pt-10">
+                            <button onclick="hitungSkor()" class="bg-rose-600 text-white px-10 py-4 rounded-full font-black text-xl hover:bg-rose-700 transition shadow-lg transform hover:-translate-y-1 active:translate-y-0">SELESAI & LIHAT SKOR</button>
+                        </div>
+                    </div>
+
+                    <div id="result-area" class="hidden text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-xl">
+                        <!-- Result will be injected here -->
+                    </div>
+                </div>
+            `;
+            window.scrollTo(0,0);
+            window.userAnswers = new Array(sumatifQuestions.length).fill(null);
+        }
+
+        function submitSumatif(qIdx, choice) {
+            window.userAnswers[qIdx] = choice;
+            const qBox = document.getElementById(`sq-${qIdx}`);
+            const buttons = qBox.querySelectorAll('button');
+            
+            buttons.forEach((b, i) => {
+                b.classList.remove('bg-sky-100', 'border-sky-400', 'ring-2', 'ring-sky-200');
+                if(i === choice) {
+                    b.classList.add('bg-sky-100', 'border-sky-400', 'ring-2', 'ring-sky-200');
+                }
+            });
+        }
+
+        function hitungSkor() {
+            if(window.userAnswers.includes(null)) {
+                const toast = document.createElement('div');
+                toast.className = "fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full text-sm font-bold z-50 shadow-2xl";
+                toast.innerText = "Mohon selesaikan semua soal terlebih dahulu!";
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+                return;
+            }
+
+            let score = 0;
+            sumatifQuestions.forEach((q, idx) => {
+                if(window.userAnswers[idx] === q.a) score++;
+            });
+
+            const finalScore = Math.round((score / sumatifQuestions.length) * 100);
+            const resultArea = document.getElementById('result-area');
+            const quizArea = document.getElementById('quiz-area');
+            
+            quizArea.classList.add('hidden');
+            resultArea.classList.remove('hidden');
+
+            let message = "";
+            let colorClass = "";
+            if(finalScore >= 80) { message = "MUMTAZ! (Luar Biasa)"; colorClass = "text-emerald-600"; }
+            else if(finalScore >= 65) { message = "JAYYID! (Bagus)"; colorClass = "text-sky-600"; }
+            else { message = "KIRANG! (Terus Belajar)"; colorClass = "text-rose-600"; }
+
+            resultArea.innerHTML = `
+                <div class="max-w-md mx-auto px-6">
+                    <div class="text-7xl font-black mb-2 ${colorClass}">${finalScore}</div>
+                    <div class="text-2xl font-bold text-slate-800 mb-6">${message}</div>
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8">
+                        <p class="text-slate-600 text-sm mb-2">Statistik Jawaban:</p>
+                        <div class="flex justify-between font-bold">
+                            <span class="text-emerald-600">Benar: ${score}</span>
+                            <span class="text-rose-600">Salah: ${sumatifQuestions.length - score}</span>
+                        </div>
+                    </div>
+                    <button onclick="loadSumatif()" class="bg-slate-100 text-slate-700 px-8 py-3 rounded-xl font-bold hover:bg-slate-200 transition">Ulangi Tes</button>
+                    <p class="mt-8 text-xs text-slate-400 italic">"Belajarlah bahasa Arab, karena ia adalah bagian dari agamamu."</p>
+                </div>
+            `;
+            window.scrollTo(0,0);
+        }
+
+        window.onload = () => loadSesi(1);
+    </script>
+</body>
+</html>
