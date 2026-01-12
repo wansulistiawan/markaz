@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAD-105: Modul Interaktif Hadits Arba'in 21-25</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --primary: #065f46;
+            --secondary: #047857;
+            --accent: #f59e0b;
+            --bg-light: #f8fafc;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--bg-light);
+            color: #1e293b;
+        }
+
+        .arabic { 
+            font-family: 'Amiri', serif; 
+            direction: rtl; 
+            font-size: 1.8rem; 
+            line-height: 3rem; 
+        }
+
+        .tab-active {
+            border-bottom: 4px solid var(--accent);
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white !important;
+        }
+
+        .teacher-note {
+            border-left: 4px solid #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .scroll-hide::-webkit-scrollbar { display: none; }
+        .scroll-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .explanation { transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+
+    <!-- Sticky Navigation -->
+    <header class="bg-emerald-900 text-white sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between py-4 border-b border-emerald-800">
+                <div class="flex items-center gap-3">
+                    <div class="bg-amber-500 p-2 rounded-lg text-emerald-900 shadow-inner">
+                        <i class="fa-solid fa-mosque text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight">HAD-105: Hadits Arba'in 5</h1>
+                        <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-300 font-semibold">(Hafalan & Makna Hadits #21-25)</p>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center gap-4 text-xs font-medium">
+    
+                    <span id="current-date" class="text-emerald-200"></span>
+                </div>
+            </div>
+            <nav class="flex overflow-x-auto scroll-hide">
+                <button onclick="switchTab(1)" id="tab-1" class="tab-link px-5 py-4 text-sm font-bold whitespace-nowrap transition-all hover:bg-emerald-800/50 tab-active">PERTEMUAN 1</button>
+                <button onclick="switchTab(2)" id="tab-2" class="tab-link px-5 py-4 text-sm font-bold whitespace-nowrap transition-all hover:bg-emerald-800/50">PERTEMUAN 2</button>
+                <button onclick="switchTab(3)" id="tab-3" class="tab-link px-5 py-4 text-sm font-bold whitespace-nowrap transition-all hover:bg-emerald-800/50">PERTEMUAN 3</button>
+                <button onclick="switchTab(4)" id="tab-4" class="tab-link px-5 py-4 text-sm font-bold whitespace-nowrap transition-all hover:bg-emerald-800/50">PERTEMUAN 4</button>
+                <button onclick="switchTab(5)" id="tab-5" class="tab-link px-5 py-4 text-sm font-bold whitespace-nowrap transition-all hover:bg-emerald-800/50">PERTEMUAN 5</button>
+                <button onclick="switchTab(6)" id="tab-6" class="tab-link px-5 py-4 text-sm font-bold whitespace-nowrap transition-all hover:bg-emerald-800/50">PERTEMUAN 6</button>
+                <button onclick="switchTab(7)" id="tab-7" class="tab-link px-5 py-4 text-sm font-bold whitespace-nowrap transition-all hover:bg-emerald-800/50">PERTEMUAN 7</button>
+                <button onclick="switchTab(8)" id="tab-8" class="tab-link px-5 py-4 text-sm font-bold whitespace-nowrap transition-all hover:bg-emerald-800/50">PERTEMUAN 8</button>
+                <button onclick="switchTab(9)" id="tab-9" class="tab-link px-5 py-4 text-sm font-bold whitespace-nowrap transition-all bg-amber-600 hover:bg-amber-700 text-white ml-auto">TES SUMATIF</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <div id="content-container">
+            <!-- Content will be injected by JavaScript -->
+        </div>
+    </main>
+
+    <script>
+        const MODUL_DATA = {
+            1: {
+                judul: "Istiqomah di Atas Tauhid (Hadits Ke-21)",
+                topik: "Hakikat Istiqomah dan Pondasi Iman",
+                tujuan: [
+                    "Santri mampu melafalkan Hadits ke-21 dengan tajwid yang benar.",
+                    "Santri memahami bahwa iman harus diikuti dengan konsistensi (istiqomah).",
+                    "Santri dapat menyebutkan 3 penghalang istiqomah dalam kehidupan sehari-hari.",
+                    "Santri berkomitmen menjaga shalat berjamaah sebagai bentuk istiqomah awal."
+                ],
+                nilaiIslam: {
+                    deskripsi: "Istiqomah adalah kedudukan agama yang paling agung. Ia adalah kunci keselamatan di dunia dan akhirat. Tanpa istiqomah, iman seseorang bagaikan bangunan tanpa pondasi yang kokoh.",
+                    dalil: "Allah Ta'ala berfirman: <br><span class='arabic'>إِنَّ الَّذِينَ قَالُوا رَبُّنَا اللَّهُ ثُمَّ اسْتَقَامُوا تَتَنَزَّلُ عَلَيْهِمُ الْمَلَائِكَةُ</span><br> 'Sesungguhnya orang-orang yang berkata: Rabb kami adalah Allah, kemudian mereka meneguhkan pendirian mereka (istiqomah), maka malaikat akan turun kepada mereka...' (QS. Fussilat: 30)"
+                },
+                skenario: `
+                    <div class='space-y-6'>
+                        <h4 class='text-xl font-bold text-emerald-800'>Materi Utama: Kalimat Singkat, Makna Padat</h4>
+                        <p class='leading-relaxed'>Pertemuan dimulai dengan membahas biografi singkat <strong>Sufyan bin Abdillah radhiyallahu 'anhu</strong>. Beliau meminta sesuatu yang 'mencukupi' sehingga tidak perlu bertanya lagi. Rasulullah ﷺ menjawab dengan dua kata kunci: <strong>Iman</strong> dan <strong>Istiqomah</strong>.</p>
+                        
+                        <div class='flex flex-col md:flex-row gap-6 my-8'>
+                            <div class='flex-1 bg-white p-4 rounded-xl border-t-4 border-emerald-600 shadow-sm'>
+                                <h5 class='font-bold mb-2'>Analogi: Kereta Api</h5>
+                                <p class='text-sm'>Bayangkan iman adalah lokomotif dan istiqomah adalah relnya. Lokomotif secanggih apapun tidak akan sampai tujuan jika keluar dari rel yang lurus.</p>
+                            </div>
+                            <div class='flex-1 flex justify-center items-center'>
+                                <svg width="200" height="100" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="10" y="70" width="180" height="10" fill="#64748b" />
+                                    <rect x="30" y="40" width="60" height="30" fill="#059669" rx="2" />
+                                    <rect x="95" y="50" width="40" height="20" fill="#059669" rx="2" />
+                                    <circle cx="45" cy="80" r="8" fill="#1e293b" />
+                                    <circle cx="75" cy="80" r="8" fill="#1e293b" />
+                                    <circle cx="115" cy="80" r="8" fill="#1e293b" />
+                                    <path d="M40 40 Q 40 20 60 20" stroke="#94a3b8" stroke-width="2" fill="none" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <p class='leading-relaxed'>Istiqomah mencakup tiga hal: <strong>Hati</strong> (bebas dari syirik), <strong>Lisan</strong> (bebas dari dusta/ghibah), dan <strong>Anggota Tubuh</strong> (melaksanakan ketaatan). Guru harus menekankan bahwa istiqomah bukan berarti tidak pernah salah, melainkan segera kembali ke jalan yang benar saat tergelincir.</p>
+
+                        <div class='teacher-note p-4 rounded-lg my-4'>
+                            <p class='text-sm font-bold text-blue-800 mb-1'><i class='fa-solid fa-comment-dots mr-2'></i>Poin Diskusi Guru:</p>
+                            <p class='text-xs text-blue-700 italic'>Tanyakan kepada santri: 'Manakah yang lebih sulit, memulai hijrah atau menjaga keistiqomahan setelah hijrah?' Gunakan jawaban mereka untuk masuk ke pembahasan tentang doa memohon keteguhan hati.</p>
+                        </div>
+                    </div>
+                `,
+                penilaian: `
+                    <div class='bg-slate-100 p-6 rounded-2xl'>
+                        <h4 class='text-lg font-bold mb-4 border-b pb-2'>D. Penilaian Modul (Aspek Komprehensif)</h4>
+                        <div class='grid md:grid-cols-3 gap-4'>
+                            <div class='bg-white p-4 rounded-lg shadow-sm'>
+                                <span class='text-emerald-600 font-bold block mb-1'>1. Sikap/Adab</span>
+                                <p class='text-xs text-slate-500'>Kehadiran tepat waktu, adab saat membacakan hadits, dan ketenangan dalam majelis ilmu.</p>
+                            </div>
+                            <div class='bg-white p-4 rounded-lg shadow-sm'>
+                                <span class='text-emerald-600 font-bold block mb-1'>2. Pengetahuan</span>
+                                <p class='text-xs text-slate-500'>Kelancaran hafalan matan dan pemahaman makna kosa kata kunci (mufradat).</p>
+                            </div>
+                            <div class='bg-white p-4 rounded-lg shadow-sm'>
+                                <span class='text-emerald-600 font-bold block mb-1'>3. Keterampilan</span>
+                                <p class='text-xs text-slate-500'>Kemampuan menganalisis masalah sehari-hari dengan perspektif hadits yang dipelajari.</p>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                simulasi: [
+                    {
+                        judul: "Simulasi Visual: Rel Istiqomah",
+                        html: `
+                            <div class="p-4 text-center">
+                                <p class="text-xs mb-4">Gerakkan bola ke titik finish tanpa menyentuh dinding samping (Syubhat & Syahwat)</p>
+                                <div class="relative w-full h-40 bg-slate-200 rounded-lg overflow-hidden border-4 border-slate-300">
+                                    <div id="ball" class="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 bg-emerald-600 rounded-full transition-all duration-300"></div>
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-emerald-800">SURGA</div>
+                                </div>
+                                <button onclick="moveBall()" class="mt-4 px-4 py-2 bg-emerald-700 text-white rounded-lg text-sm">Langkah Istiqomah</button>
+                            </div>
+                        `
+                    },
+                    {
+                        judul: "Identifikasi Penghalang",
+                        html: `
+                            <div class="p-4">
+                                <p class="text-xs mb-4">Pilih mana yang termasuk 'Pencuri Istiqomah':</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <button onclick="checkBarrier(this, false)" class="px-3 py-1 bg-white border rounded text-xs">Shalat Berjamaah</button>
+                                    <button onclick="checkBarrier(this, true)" class="px-3 py-1 bg-white border rounded text-xs">Teman Buruk</button>
+                                    <button onclick="checkBarrier(this, true)" class="px-3 py-1 bg-white border rounded text-xs">Gadget Berlebih</button>
+                                    <button onclick="checkBarrier(this, false)" class="px-3 py-1 bg-white border rounded text-xs">Membaca Al-Quran</button>
+                                </div>
+                                <p id="barrier-msg" class="text-[10px] mt-2"></p>
+                            </div>
+                        `
+                    }
+                ],
+                latihan: [
+                    { q: "Siapa sahabat yang meriwayatkan hadits ke-21 tentang Istiqomah?", a: ["Abu Hurairah", "Sufyan bin Abdillah Ats-Tsaqafi", "Umar bin Khattab", "Anas bin Malik"], c: 1, e: "Hadits ini diriwayatkan oleh Sufyan bin Abdillah Ats-Tsaqafi radhiyallahu 'anhu." },
+                    { q: "Wasiat utama Rasulullah ﷺ dalam hadits ini adalah...", a: ["Shalatlah tepat waktu", "Berimanlah kepada Allah kemudian istiqomahlah", "Sedekahlah secara sembunyi", "Berbaktilah kepada orang tua"], c: 1, e: "Rasulullah bersabda: 'Katakanlah: Aku beriman kepada Allah, kemudian istiqomahlah'." },
+                    { q: "Istiqomah di atas tauhid berarti...", a: ["Melakukan syirik kecil", "Memurnikan ibadah hanya untuk Allah tanpa menoleh ke lainnya", "Shalat sesekali saja", "Mencampur aduk ajaran agama"], c: 1, e: "Para sahabat menjelaskan istiqomah adalah memurnikan tauhid hanya kepada Allah." },
+                    { q: "Secara bahasa, istiqomah berasal dari kata 'Istaqama' yang berarti...", a: ["Berubah-ubah", "Tegak lurus atau konsisten", "Berhenti", "Berlari"], c: 1, e: "Istaqama berarti tegak lurus, tidak melenceng ke kanan maupun ke kiri." },
+                    { q: "Apa maksud istiqomah dalam lisan?", a: ["Banyak bicara", "Menjaga lisan dari dusta dan ghibah demi ketaatan", "Bicara keras", "Diam seribu bahasa"], c: 1, e: "Istiqomah lisan adalah menggunakan lisan hanya untuk kebenaran dan ketaatan." },
+                    { q: "Istiqomah yang paling sulit dilakukan adalah istiqomah...", a: ["Pakaian", "Hati", "Harta", "Teman"], c: 1, e: "Istiqomah hati adalah akar dari semua istiqomah anggota tubuh lainnya." },
+                    { q: "Keutamaan orang yang istiqomah menurut QS. Fussilat ayat 30 adalah...", a: ["Mendapat harta melimpah", "Ditemani malaikat saat ajal menjemput", "Menjadi terkenal", "Tidak pernah sakit"], c: 1, e: "Allah menjanjikan malaikat akan turun menguatkan mereka saat maut dan di surga." },
+                    { q: "Salah satu faktor penghambat istiqomah adalah...", a: ["Teman shalih", "Ilmu syar'i", "Lingkungan yang buruk (fitnah)", "Zikir pagi petang"], c: 2, e: "Lingkungan yang buruk dan fitnah syubhat/syahwat adalah perusak istiqomah." },
+                    { q: "Nabi Muhammad ﷺ menyebutkan iman sebelum istiqomah, hal ini menunjukkan...", a: ["Iman tidak penting", "Istiqomah adalah buah dari iman yang benar", "Iman bisa dibeli", "Istiqomah hanya untuk nabi"], c: 1, e: "Seseorang tidak bisa istiqomah tanpa memiliki pondasi iman yang kokoh terlebih dahulu." },
+                    { q: "Apa yang harus dilakukan jika seseorang tergelincir dari keistiqomahan?", a: ["Menyerah", "Pura-pura tidak tahu", "Segera bertaubat dan kembali lurus", "Berhenti beribadah"], c: 2, e: "Hakekat istiqomah adalah senantiasa berusaha lurus, dan jika melenceng segera kembali dengan taubat." }
+                ]
+            },
+            2: {
+                judul: "Kunci Masuk Surga (Hadits Ke-22)",
+                topik: "Mencukupkan Diri dengan yang Wajib",
+                tujuan: [
+                    "Santri memahami prioritas amal wajib di atas amal sunnah.",
+                    "Santri mampu menjelaskan definisi 'menghalalkan yang halal dan mengharamkan yang haram'.",
+                    "Santri termotivasi untuk tidak meremehkan amalan wajib.",
+                    "Santri mampu menghafal matan Hadits ke-22 dengan lancar."
+                ],
+                nilaiIslam: {
+                    deskripsi: "Islam adalah agama kemudahan. Seseorang bisa meraih surga dengan menjaga perkara-perkara yang fardhu (wajib) secara konsisten.",
+                    dalil: "Hadits Qudsi: <br><span class='arabic'>وَمَا تَقَرَّبَ إِلَيَّ عَبْدِي بِشَيْءٍ أَحَبَّ إِلَيَّ مِمَّا افْتَرَضْتُ عَلَيْهِ</span><br> 'Tidaklah hamba-Ku mendekatkan diri kepada-Ku dengan sesuatu yang lebih Aku cintai daripada apa yang telah Aku wajibkan kepadanya.' (HR. Bukhari)"
+                },
+                skenario: `
+                    <div class='space-y-6'>
+                        <h4 class='text-xl font-bold text-emerald-800'>Materi: Peta Jalan Menuju Jannah</h4>
+                        <p class='leading-relaxed'>Hadits ini menceritakan seorang laki-laki (An-Nu’man bin Qauqal) yang bertanya dengan sangat spesifik: 'Jika aku melakukan X, Y, Z tanpa menambah apapun, apakah aku masuk surga?' Nabi menjawab 'Ya'.</p>
+                        
+                        <div class='my-6 p-4 bg-emerald-50 rounded-xl border-l-4 border-emerald-500'>
+                            <p class='text-sm italic font-medium'>"Menghalalkan yang halal berarti meyakini kehalalannya dan melakukannya. Mengharamkan yang haram berarti meyakini keharamannya dan menjauhinya."</p>
+                        </div>
+
+                        <div class='flex flex-col items-center gap-4 py-6'>
+                            
+                        </div>
+
+                        <p class='leading-relaxed font-semibold text-emerald-900'>Penting untuk Guru Tekankan:</p>
+                        <ul class='list-disc ml-5 text-sm space-y-2'>
+                            <li>Amalan sunnah adalah penyempurna, namun pondasi utama adalah yang wajib.</li>
+                            <li>Jangan sampai sibuk dengan sunnah tapi lalai yang wajib (misal: Tahajjud sampai Subuh kesiangan).</li>
+                            <li>Definisi 'Haram' dalam hadits ini mencakup meninggalkan dosa-dosa besar.</li>
+                        </ul>
+
+                        <div class='teacher-note p-4 rounded-lg my-4'>
+                            <p class='text-sm font-bold text-blue-800 mb-1'><i class='fa-solid fa-comment-dots mr-2'></i>Poin Diskusi Guru:</p>
+                            <p class='text-xs text-blue-700 italic'>Tanyakan: 'Jika seseorang hanya shalat wajib tapi akhlaknya buruk kepada orang tua, apakah dia sudah menjalankan hadits ini?' Ingatkan bahwa berbakti pada orang tua adalah kewajiban.</p>
+                        </div>
+                    </div>
+                `,
+                simulasi: [
+                    {
+                        judul: "Ceklis Amalan Wajib",
+                        html: `
+                            <div class="p-4 bg-white rounded shadow-inner">
+                                <p class="text-xs mb-2">Pilih yang 'Wajib' saja:</p>
+                                <div id="checklist-wajib" class="space-y-1">
+                                    <label class="block text-xs"><input type="checkbox" data-correct="true"> Shalat 5 Waktu</label>
+                                    <label class="block text-xs"><input type="checkbox" data-correct="false"> Shalat Dhuha</label>
+                                    <label class="block text-xs"><input type="checkbox" data-correct="true"> Puasa Ramadhan</label>
+                                    <label class="block text-xs"><input type="checkbox" data-correct="false"> Puasa Senin-Kamis</label>
+                                </div>
+                                <button onclick="validateWajib()" class="mt-3 bg-emerald-600 text-white px-3 py-1 rounded text-xs">Verifikasi</button>
+                            </div>
+                        `
+                    },
+                    {
+                        judul: "Timbangan Halal-Haram",
+                        html: `
+                            <div class="p-4 text-center">
+                                <div class="flex justify-between items-end h-20 px-10">
+                                    <div id="box-halal" class="w-12 h-12 bg-blue-400 rounded-t flex items-center justify-center text-white text-[10px]">HALAL</div>
+                                    <div id="box-haram" class="w-12 h-12 bg-red-400 rounded-t flex items-center justify-center text-white text-[10px]">HARAM</div>
+                                </div>
+                                <div class="w-full h-2 bg-slate-800 rounded"></div>
+                                <p class="text-[10px] mt-2">Prinsip: Tinggalkan haram, kerjakan halal.</p>
+                            </div>
+                        `
+                    }
+                ],
+                latihan: [
+                    { q: "Siapa perawi Hadits ke-22?", a: ["Jabir bin Abdillah", "Abu Hurairah", "Ibnu Abbas", "Ibnu Umar"], c: 0, e: "Hadits ini diriwayatkan oleh Jabir bin Abdillah radhiyallahu 'anhuma." },
+                    { q: "Apa maksud 'Al-Maktubaat' dalam hadits ini?", a: ["Shalat malam", "Shalat fardhu lima waktu", "Shalat jenazah", "Shalat gerhana"], c: 1, e: "Al-Maktubaat artinya shalat yang telah dituliskan atau diwajibkan oleh Allah." },
+                    { q: "Sahabat dalam hadits ini bertanya: 'Apakah aku akan masuk surga?' Nabi ﷺ menjawab...", a: ["Mungkin saja", "Insya Allah", "Ya", "Hanya jika kamu berjihad"], c: 2, e: "Nabi Muhammad ﷺ menjawab 'Na'am' (Ya) dengan tegas." },
+                    { q: "Arti dari 'Ahramtul Harama' adalah...", a: ["Membenci hal haram", "Mengharamkan (menjauhi) hal yang dilarang Allah", "Menjual barang haram", "Menyimpan barang haram"], c: 1, e: "Maksudnya adalah menjauhi hal-hal yang diharamkan Allah karena meyakini keharamannya." },
+                    { q: "Hadits ini menunjukkan bahwa pintu surga terbuka bagi orang yang...", a: ["Sangat kaya", "Memenuhi kewajiban syariat yang pokok", "Banyak melakukan bid'ah", "Selalu tidur di masjid"], c: 1, e: "Islam memudahkan hamba-Nya untuk masuk surga dengan menjaga kewajiban pokok." },
+                    { q: "Apa yang dilakukan sahabat tersebut terhadap hal yang halal?", a: ["Dia mengharamkannya", "Dia menghalalkannya (meyakini kehalalannya dan melakukannya)", "Dia meragukannya", "Dia membuangnya"], c: 1, e: "Dia menghalalkan yang halal, artinya menganggapnya boleh dan menikmatinya sebagai karunia." },
+                    { q: "Apakah sahabat tersebut berniat melakukan amalan sunnah setelah bertanya?", a: ["Ya, sangat banyak", "Dia mengatakan tidak akan menambah sedikitpun", "Dia masih ragu", "Dia akan melakukan sunnah diam-diam"], c: 1, e: "Dia menegaskan: 'Dan aku tidak menambah atas hal itu sedikitpun'." },
+                    { q: "Salah satu rukun Islam yang disebutkan secara eksplisit dalam hadits ini adalah...", a: ["Zakat", "Haji", "Puasa Ramadhan", "Syahadat"], c: 2, e: "Dalam teks hadits disebutkan: 'Wa shumtu Ramadhan' (Dan aku berpuasa Ramadhan)." },
+                    { q: "Prinsip utama dari hadits ini adalah...", a: ["Mengutamakan sunnah di atas wajib", "Menjaga yang wajib dan menjauhi yang haram", "Boleh melakukan haram sedikit", "Boleh meninggalkan wajib jika lelah"], c: 1, e: "Inti hadits adalah keselamatan terletak pada pemenuhan kewajiban dan penghindaran larangan." },
+                    { q: "Mengapa amalan sunnah tetap penting meski dalam hadits ini tidak disebutkan sebagai syarat mutlak?", a: ["Sebagai hobi", "Untuk menyempurnakan kekurangan amalan wajib", "Supaya dipuji manusia", "Hukumnya jadi wajib kalau sering dilakukan"], c: 1, e: "Amalan sunnah akan menambal kekurangan pada amalan wajib saat dihisab nanti." }
+                ]
+            },
+            3: {
+                judul: "Kesucian, Shalat, dan Sabar (Hadits Ke-23)",
+                topik: "Cahaya Kehidupan Seorang Mukmin",
+                tujuan: [
+                    "Santri memahami urgensi thaharah (bersuci) sebagai separuh iman.",
+                    "Santri mampu membedakan makna Nur dan Dhiya dalam konteks ibadah.",
+                    "Santri memahami posisi Al-Quran sebagai pembela atau penuntut di hari kiamat.",
+                    "Santri mampu menghafal kosa kata kunci dalam Hadits ke-23."
+                ],
+                nilaiIslam: { 
+                    deskripsi: "Kehidupan mukmin penuh dengan sarana pembersih dosa dan pemberi cahaya. Kesucian fisik mencerminkan kesucian hati.",
+                    dalil: "Nabi ﷺ bersabda: <br><span class='arabic'>الطُّهُورُ شَطْرُ الإِيمَانِ</span><br> 'Bersuci itu separuh dari iman.' (HR. Muslim)"
+                },
+                skenario: `
+                    <div class='space-y-6'>
+                        <h4 class='text-xl font-bold text-emerald-800'>Materi: Bekal Perjalanan Akhirat</h4>
+                        <p class='leading-relaxed'>Hadits ini merupakan salah satu hadits yang paling komprehensif tentang amalan harian. Dimulai dengan <strong>Thaharah</strong>. Mengapa disebut separuh iman? Karena iman membersihkan syirik (batin), dan thaharah membersihkan hadats (lahir).</p>
+                        
+                        <div class='grid md:grid-cols-2 gap-4'>
+                            <div class='bg-amber-50 p-4 rounded-xl border border-amber-200'>
+                                <h5 class='font-bold text-amber-800'>Shalat adalah Nur</h5>
+                                <p class='text-xs'>Cahaya petunjuk yang tenang dan menyejukkan hati di dunia maupun di barzakh.</p>
+                            </div>
+                            <div class='bg-red-50 p-4 rounded-xl border border-red-200'>
+                                <h5 class='font-bold text-red-800'>Sabar adalah Dhiya</h5>
+                                <p class='text-xs'>Cahaya yang mengandung panas (perjuangan), seperti matahari yang menerangi namun butuh energi besar.</p>
+                            </div>
+                        </div>
+
+                        <p class='leading-relaxed'>Kalimat <strong>Subhanallah wal Alhamdulillah</strong> memenuhi antara langit dan bumi. Ini menunjukkan betapa besarnya timbangan dzikir bagi orang yang memahaminya.</p>
+
+                        <div class='teacher-note p-4 rounded-lg my-4'>
+                            <p class='text-sm font-bold text-blue-800 mb-1'><i class='fa-solid fa-comment-dots mr-2'></i>Poin Diskusi Guru:</p>
+                            <p class='text-xs text-blue-700 italic'>Diskusikan: 'Setiap manusia di pagi hari menjual dirinya'. Apakah kita menjual diri kepada Allah (dengan ketaatan) atau menjual diri kepada setan (dengan dosa)?</p>
+                        </div>
+                    </div>
+                `,
+                simulasi: [ 
+                    { judul: "Simulasi Senter Nur vs Dhiya", html: "<div class='p-4 text-center'><div class='flex justify-around'><div class='text-center'><i class='fa-solid fa-moon text-blue-400 text-3xl'></i><p class='text-[10px]'>Nur (Sejuk)</p></div><div class='text-center'><i class='fa-solid fa-sun text-amber-500 text-3xl animate-pulse'></i><p class='text-[10px]'>Dhiya (Panas/Kuat)</p></div></div><p class='text-[10px] mt-4'>Sabar itu berat (panas) tapi menerangi jalan yang gelap.</p></div>" }, 
+                    { judul: "Timbangan Mizan", html: "<div class='p-4'><div class='w-full bg-slate-200 h-2 rounded mb-4'></div><div class='flex justify-between'><span class='text-[10px] bg-emerald-100 p-1'>Dzikir</span><span class='text-[10px] bg-blue-100 p-1'>Langit & Bumi</span></div><p class='text-[10px] mt-2'>Dzikir 'Alhamdulillah' memenuhi timbangan Mizan.</p></div>" } 
+                ],
+                latihan: [
+                    { q: "Apa arti dari 'Ath-Thuhuuru syathrul iimaan'?", a: ["Shalat itu tiang agama", "Bersuci itu separuh iman", "Puasa itu perisai", "Zakat itu pembersih harta"], c: 1, e: "Secara tekstual berarti bersuci (baik lahir maupun batin) adalah separuh dari keimanan." },
+                    { q: "Kalimat dzikir apa yang memenuhi timbangan (Mizan)?", a: ["Subhanallah", "Alhamdulillah", "Allahu Akbar", "Laa ilaha illallah"], c: 1, e: "Hadits menyebutkan 'Alhamdulillah tamla-ul mizan' (Alhamdulillah memenuhi timbangan)." },
+                    { q: "Mengapa shalat disebut sebagai 'Nur'?", a: ["Karena lampu masjid terang", "Karena memberi cahaya petunjuk bagi hati dan di kubur", "Karena shalat dilakukan siang hari", "Karena hanya untuk orang yang bersinar"], c: 1, e: "Shalat memberikan ketenangan dan petunjuk bagi pelakunya di dunia dan akhirat." },
+                    { q: "Apa perbedaan antara 'Nur' (Shalat) dan 'Dhiya' (Sabar)?", a: ["Sama saja", "Nur itu sejuk, Dhiya itu cahaya yang mengandung panas/perjuangan", "Nur untuk nabi, Dhiya untuk manusia", "Dhiya lebih redup"], c: 1, e: "Dhiya adalah cahaya yang menyala-nyala, menggambarkan sabar itu butuh perjuangan berat." },
+                    { q: "Sedekah dalam hadits ini disebut sebagai 'Burhan', artinya...", a: ["Hiasan", "Bukti nyata keimanan", "Beban", "Rahasia"], c: 1, e: "Burhan berarti argumen atau bukti kuat bahwa seseorang benar-benar beriman." },
+                    { q: "Al-Quran akan menjadi 'Hujjatun laka' jika...", a: ["Hanya disimpan di lemari", "Dibaca, dipahami, dan diamalkan", "Dijadikan jimat", "Dibawa-bawa tanpa dibaca"], c: 1, e: "Hujjatun laka artinya pembela bagimu di hadapan Allah." },
+                    { q: "Al-Quran bisa menjadi 'Hujjatun 'alaika' (penuntut bagimu) apabila...", a: ["Sering dibaca", "Diabaikan dan tidak diamalkan isinya", "Diberikan kepada orang", "Dipasang di dinding"], c: 1, e: "Jika kita tahu isinya tapi melanggarnya, Al-Quran akan menuntut kita di hari kiamat." },
+                    { q: "Apa maksud 'Setiap orang di pagi hari menjual dirinya'?", a: ["Berdagang di pasar", "Mempertaruhkan dirinya dalam amal ketaatan atau kemaksiatan", "Mencari pekerjaan", "Menjual pakaian"], c: 1, e: "Setiap hari kita memilih: apakah kita memerdekakan diri dari neraka atau mencelakakan diri di dalamnya." },
+                    { q: "Siapa perawi hadits ke-23 ini?", a: ["Abu Hurairah", "Abu Malik Al-Asy'ari", "Umar bin Khattab", "Ibnu Abbas"], c: 1, e: "Diriwayatkan oleh Abu Malik Al-Harits bin Ashim Al-Asy'ari radhiyallahu 'anhu." },
+                    { q: "Apa kaitan antara thaharah lahiriyah dengan iman?", a: ["Tidak ada kaitan", "Kesucian lahir adalah syarat sah ibadah yang merupakan bagian iman", "Iman hanya di hati saja", "Hanya untuk kebersihan fisik"], c: 1, e: "Thaharah adalah kunci ibadah utama seperti shalat, sehingga menjadi bagian tak terpisahkan dari iman." }
+                ]
+            },
+            4: {
+                judul: "Haramnya Kezaliman (Hadits Ke-24)",
+                topik: "Keadilan Allah dan Kebutuhan Hamba",
+                tujuan: [
+                    "Santri memahami bahwa Allah mengharamkan kezaliman bagi diri-Nya dan hamba-Nya.",
+                    "Santri menyadari bahwa semua manusia sesat kecuali yang diberi hidayah Allah.",
+                    "Santri memahami bahwa ketaatan hamba tidak menambah kekuasaan Allah sedikit pun.",
+                    "Santri mampu menghafal poin-poin utama Hadits Qudsi ke-24."
+                ],
+                nilaiIslam: { 
+                    deskripsi: "Allah adalah Dzat yang Maha Adil. Kezaliman adalah kegelapan di hari kiamat. Sifat butuhnya kita kepada Allah adalah mutlak dalam segala hal.",
+                    dalil: "Allah Ta'ala berfirman dalam Hadits Qudsi: <br><span class='arabic'>يَا عِبَادِي إِنِّي حَرَّمْتُ الظُّلْمَ عَلَى نَفْسِي وَجَعَلْتُهُ بَيْنَكُمْ مُحَرَّمًا</span><br> 'Wahai hamba-Ku, sesungguhnya Aku mengharamkan kezaliman atas diri-Ku dan Aku menjadikannya haram di antara kalian.' (HR. Muslim)"
+                },
+                skenario: `
+                    <div class='space-y-6'>
+                        <h4 class='text-xl font-bold text-emerald-800'>Materi: Keagungan Sang Khalik</h4>
+                        <p class='leading-relaxed'>Hadits ini adalah <strong>Hadits Qudsi</strong>. Allah menegaskan bahwa Dia tidak butuh pada makhluk-Nya. Jika semua jin dan manusia menjadi orang yang paling bertaqwa, itu tidak menambah kerajaan Allah.</p>
+                        
+                        <div class='p-4 bg-slate-800 text-white rounded-2xl'>
+                            <p class='text-sm italic'>"Wahai hamba-Ku, kalian semua lapar kecuali yang Aku beri makan... kalian semua telanjang kecuali yang Aku beri pakaian... maka mintalah kepada-Ku!"</p>
+                        </div>
+
+                        <p class='leading-relaxed'>Analogi yang luar biasa: Jika seluruh makhluk meminta dan Allah mengabulkan semuanya, kekayaan Allah hanya berkurang seperti <strong>jarum yang dicelupkan ke samudera</strong>. Artinya, tidak berkurang sedikitpun!</p>
+
+                        <div class='teacher-note p-4 rounded-lg my-4'>
+                            <p class='text-sm font-bold text-blue-800 mb-1'><i class='fa-solid fa-comment-dots mr-2'></i>Poin Diskusi Guru:</p>
+                            <p class='text-xs text-blue-700 italic'>Guru bertanya: 'Jika Allah tidak butuh shalat kita, mengapa kita diperintah shalat?' Jawabannya: Untuk kebaikan kita sendiri, agar kita mendapat hidayah dan rahmat-Nya.</p>
+                        </div>
+                    </div>
+                `,
+                simulasi: [ 
+                    { judul: "Simulasi Kebutuhan Hidayah", html: "<div class='p-4 bg-emerald-50 rounded-xl'><p class='text-[10px] mb-2'>Klik tombol untuk 'Meminta Hidayah'</p><button onclick='alert(\"Allah berfirman: Maka mintalah hidayah kepada-Ku, niscaya Aku beri hidayah.\")' class='bg-emerald-600 text-white p-2 rounded text-xs'>Ihdina (Beri kami hidayah)</button></div>" }, 
+                    { judul: "Visualisasi Samudera Kekayaan Allah", html: "<div class='p-4 text-center'><i class='fa-solid fa-droplet text-blue-500 text-4xl mb-2'></i><p class='text-[10px]'>Setetes air di ujung jarum tidak akan mengurangi samudera yang luas. Begitulah kekayaan Allah.</p></div>" } 
+                ],
+                latihan: [
+                    { q: "Hadits ke-24 termasuk jenis hadits apa?", a: ["Hadits Nabawi", "Hadits Qudsi", "Hadits Hasan", "Hadits Dhaif"], c: 1, e: "Hadits Qudsi adalah hadits yang maknanya dari Allah dan lafaznya dari Nabi ﷺ." },
+                    { q: "Apa hukum asal berbuat zalim dalam Islam?", a: ["Boleh jika perlu", "Makruh", "Haram mutlak", "Mubah"], c: 2, e: "Allah mengharamkan zalim bagi diri-Nya dan menjadikannya haram antar sesama manusia." },
+                    { q: "Menurut hadits ini, kondisi asal semua manusia adalah...", a: ["Sudah pintar", "Sesat, kecuali yang diberi hidayah oleh Allah", "Kaya raya", "Selalu benar"], c: 1, e: "Rasulullah bersabda dari Allah: 'Kalian semua sesat kecuali yang Aku beri hidayah'." },
+                    { q: "Bagaimana cara mendapatkan makan dan pakaian menurut hadits ini?", a: ["Mencuri", "Meminta kepada Allah sambil berusaha", "Diam saja", "Mengandalkan orang lain"], c: 1, e: "Allah memerintahkan hamba-Nya untuk meminta (berdoa) kepada-Nya." },
+                    { q: "Apakah ketaatan seluruh makhluk menambah kerajaan Allah?", a: ["Ya, sedikit", "Tidak menambah sedikitpun", "Hanya jika nabi yang taat", "Menambah secara drastis"], c: 1, e: "Ketaatan kita tidak memberi manfaat bagi Allah, namun bermanfaat bagi diri kita sendiri." },
+                    { q: "Jika semua manusia berbuat maksiat, apakah kekuasaan Allah berkurang?", a: ["Ya", "Berkurang drastis", "Tidak berkurang sedikitpun", "Hampir habis"], c: 2, e: "Kemaksiatan makhluk tidak membahayakan Allah sedikitpun." },
+                    { q: "Analogi jarum yang dicelupkan ke laut menggambarkan tentang...", a: ["Ketajaman jarum", "Kekayaan Allah yang tak terbatas", "Bahaya air laut", "Kecilnya manusia"], c: 1, e: "Satu tetes air pada jarum tidak mampu mengurangi luasnya samudera, demikianlah kekayaan Allah." },
+                    { q: "Mengapa Allah mencatat amalan hamba-Nya?", a: ["Karena Allah lupa", "Untuk dibalas dengan sempurna di akhirat", "Hanya iseng", "Agar malaikat sibuk"], c: 1, e: "Allah mencatat amalan untuk memberikan balasan yang adil dan sempurna." },
+                    { q: "Siapa yang meriwayatkan hadits ke-24 ini?", a: ["Abu Hurairah", "Abu Dzar Al-Ghifari", "Umar bin Khattab", "Anas bin Malik"], c: 1, e: "Diriwayatkan oleh Abu Dzar Al-Ghifari radhiyallahu 'anhu dari Nabi ﷺ." },
+                    { q: "Apa sikap kita setelah mengetahui hadits ini?", a: ["Sombong", "Merasa butuh (faqir) kepada Allah dalam segala hal", "Malas berdoa", "Putus asa"], c: 1, e: "Menyadari bahwa kita adalah fakir di hadapan Allah yang Maha Kaya." }
+                ]
+            },
+            5: {
+                judul: "Macam-Macam Sedekah (Hadits Ke-25)",
+                topik: "Pintu Kebaikan yang Terbuka Lebar",
+                tujuan: [
+                    "Santri memahami bahwa sedekah tidak terbatas pada harta.",
+                    "Santri mampu menyebutkan amalan non-harta yang bernilai sedekah.",
+                    "Santri memahami motivasi para sahabat miskin dalam berlomba-lomba kebaikan.",
+                    "Santri mampu menghafal matan Hadits ke-25 dengan lancar."
+                ],
+                nilaiIslam: { 
+                    deskripsi: "Setiap tasbih, takbir, dan amar ma'ruf adalah sedekah. Islam memberikan peluang bagi siapa saja untuk bersedekah tanpa alasan kemiskinan.",
+                    dalil: "Nabi ﷺ bersabda: <br><span class='arabic'>كُلُّ تَسْبِيحَةٍ صَدَقَةٌ وَكُلُّ تَكْبِيرَةٍ صَدَقَةٌ</span><br> 'Setiap tasbih adalah sedekah, setiap takbir adalah sedekah...' (HR. Muslim)"
+                },
+                skenario: `
+                    <div class='space-y-6'>
+                        <h4 class='text-xl font-bold text-emerald-800'>Materi: Sedekah Bagi Si Miskin</h4>
+                        <p class='leading-relaxed'>Para sahabat miskin datang kepada Nabi dengan rasa 'cemburu' yang mulia. Mereka merasa orang kaya telah memborong semua pahala karena bisa bersedekah dengan harta. Nabi ﷺ menenangkan mereka dengan memperluas definisi <strong>Sedekah</strong>.</p>
+                        
+                        <div class='bg-emerald-50 p-6 rounded-2xl border-2 border-emerald-100'>
+                            <h5 class='font-bold mb-3'>Daftar Sedekah Non-Harta:</h5>
+                            <ul class='grid grid-cols-2 gap-2 text-xs'>
+                                <li class='bg-white p-2 rounded shadow-sm'>- Tasbih (Subhanallah)</li>
+                                <li class='bg-white p-2 rounded shadow-sm'>- Tahmid (Alhamdulillah)</li>
+                                <li class='bg-white p-2 rounded shadow-sm'>- Tahlil (Laa ilaha illallah)</li>
+                                <li class='bg-white p-2 rounded shadow-sm'>- Takbir (Allahu Akbar)</li>
+                                <li class='bg-white p-2 rounded shadow-sm'>- Amar Ma'ruf</li>
+                                <li class='bg-white p-2 rounded shadow-sm'>- Nahi Munkar</li>
+                            </ul>
+                        </div>
+
+                        <p class='leading-relaxed'>Bahkan, mendatangi istri (hubungan suami istri) pun bernilai sedekah. Sahabat kaget, 'Bagaimana memenuhi syahwat dapat pahala?' Nabi menjawab: 'Jika diletakkan di tempat haram, bukankah berdosa? Maka jika di tempat halal, tentu berpahala.'</p>
+
+                        <div class='teacher-note p-4 rounded-lg my-4'>
+                            <p class='text-sm font-bold text-blue-800 mb-1'><i class='fa-solid fa-comment-dots mr-2'></i>Poin Diskusi Guru:</p>
+                            <p class='text-xs text-blue-700 italic'>Diskusikan: 'Apa bedanya sedekah harta dengan sedekah lisan?' Tekankan bahwa sedekah harta manfaatnya untuk orang lain (mutaddi), sedangkan dzikir manfaatnya kembali ke diri sendiri (qashir), namun keduanya mulia.</p>
+                        </div>
+                    </div>
+                `,
+                simulasi: [ 
+                    { judul: "Kalkulator Sedekah Lisan", html: "<div class='p-4 text-center'><p class='text-[10px] mb-2'>Klik Tasbih 3x</p><button onclick='this.innerText=\"Tasbih +1\";' class='bg-blue-600 text-white p-2 rounded text-xs'>Subhanallah</button><p class='text-[10px] mt-2'>Setiap ucapan adalah satu sedekah.</p></div>" }, 
+                    { judul: "Pilah Kebaikan", html: "<div class='p-4'><div class='flex gap-2'><span class='bg-slate-100 p-2 text-[10px]'>Senyum</span><span class='bg-slate-100 p-2 text-[10px]'>Nasehat</span><span class='bg-slate-100 p-2 text-[10px]'>Dzikir</span></div><p class='text-[10px] mt-2'>Semua aktivitas di atas bernilai sedekah menurut hadits ke-25.</p></div>" } 
+                ],
+                latihan: [
+                    { q: "Mengapa para sahabat miskin mengadu kepada Nabi dalam hadits ini?", a: ["Karena kelaparan", "Karena cemburu melihat orang kaya mendapat banyak pahala sedekah", "Karena ingin uang", "Karena ingin pindah rumah"], c: 1, e: "Mereka ingin bisa menyaingi pahala orang kaya yang bisa bersedekah harta." },
+                    { q: "Apa jawaban Nabi ﷺ untuk menenangkan mereka?", a: ["Memberi mereka uang", "Mengatakan bahwa setiap tasbih adalah sedekah", "Menyuruh mereka bekerja keras", "Menyuruh mereka bersabar saja"], c: 1, e: "Nabi menjelaskan bahwa sedekah tidak terbatas pada materi atau uang." },
+                    { q: "Yang tidak termasuk bentuk sedekah dalam hadits ini adalah...", a: ["Membaca tasbih", "Amar ma'ruf", "Bergunjing (ghibah)", "Nahi munkar"], c: 2, e: "Ghibah adalah dosa besar dan perusak amalan." },
+                    { q: "Apa maksud dari 'Amar Ma'ruf Nahi Munkar' sebagai sedekah?", a: ["Mengajak kebaikan dan mencegah kemungkaran", "Berjualan di pasar", "Menabung uang", "Tidur di masjid"], c: 0, e: "Mengajak orang lain berbuat baik adalah sedekah yang manfaatnya luas." },
+                    { q: "Nabi menjelaskan bahwa mendatangi istri secara halal bernilai...", a: ["Biasa saja", "Sedekah (pahala)", "Mubah", "Makruh"], c: 1, e: "Hubungan suami istri yang sah adalah bentuk ketaatan yang bernilai pahala." },
+                    { q: "Bagaimana nabi menganalogikan hubungan suami istri agar sahabat paham pahalanya?", a: ["Seperti makan", "Seperti menanam pohon", "Seperti menaruh syahwat pada tempat haram yang berujung dosa", "Seperti berolahraga"], c: 2, e: "Jika melakukannya di tempat haram berdosa, maka di tempat halal berpahala." },
+                    { q: "Siapa perawi hadits ke-25 ini?", a: ["Abu Dzar Al-Ghifari", "Abu Hurairah", "Aisyah", "Ali bin Abi Thalib"], c: 0, e: "Diriwayatkan oleh Abu Dzar Al-Ghifari radhiyallahu 'anhu." },
+                    { q: "Pesan utama bagi orang yang tidak memiliki harta dari hadits ini adalah...", a: ["Jangan sedih, perbanyak dzikir dan kebaikan", "Teruslah menangis", "Carilah hutang", "Mintalah sedekah"], c: 0, e: "Islam sangat adil dan memberikan jalan pahala bagi semua kalangan." },
+                    { q: "Setiap kalimat 'Alhamdulillah' bernilai...", a: ["Pujian saja", "Sedekah", "Harta karun", "Angin lalu"], c: 1, e: "Setiap tahmid (Alhamdulillah) adalah satu sedekah." },
+                    { q: "Apa hikmah dari cemburunya para sahabat miskin dalam hadits ini?", a: ["Mereka iri hati", "Mereka rakus harta", "Semangat mereka dalam berlomba-lomba mencari pahala (Ghibthah)", "Mereka benci orang kaya"], c: 2, e: "Ghibthah (iri dalam hal kebaikan tanpa mengharap nikmat orang lain hilang) adalah hal yang terpuji." }
+                ]
+            },
+            6: {
+                judul: "Muroja'ah Hafalan 21-25 (Sesi 1)",
+                topik: "Kelancaran dan Tajwid Matan",
+                tujuan: ["Santri mampu menyetorkan hafalan hadits 21-25 sekaligus.", "Santri memahami makhraj dan tajwid saat membaca matan hadits.", "Santri mampu mengidentifikasi perawi masing-masing hadits."],
+                nilaiIslam: { deskripsi: "Menghafal hadits adalah cara menjaga warisan Nabi ﷺ.", dalil: "Hadits: 'Semoga Allah mencerahkan wajah seseorang yang mendengar ucapanku, menghafalnya, dan menyampaikannya'." },
+                skenario: "<p>Metode Tikrar (pengulangan) massal dan setoran berpasangan.</p>",
+                simulasi: [ { judul: "Susun Matan", html: "<p class='text-[10px]'>Susun potongan kata hadits 21.</p>" }, { judul: "Check Perawi", html: "<p class='text-[10px]'>Hubungkan hadits dengan perawinya.</p>" } ],
+                latihan: [
+                    { q: "Hadits ke-21 diriwayatkan oleh...", a: ["Sufyan bin Abdillah", "Abu Malik Al-Asy'ari", "Abu Dzar", "Jabir"], c: 0, e: "Sudah jelas." },
+                    { q: "Hadits ke-23 diriwayatkan oleh...", a: ["Abu Malik Al-Asy'ari", "Abu Dzar", "Ahmad", "Muslim"], c: 0, e: "Ingat urutan." },
+                    { q: "Berapa jumlah hadits yang direview hari ini?", a: ["3", "4", "5", "6"], c: 2, e: "Dari 21 sampai 25." },
+                    { q: "Hadits yang membahas kezaliman adalah hadits ke...", a: ["21", "22", "24", "25"], c: 2, e: "Cek matan." },
+                    { q: "Hadits ke-25 membahas tentang...", a: ["Istiqomah", "Sedekah non-harta", "Zalim", "Shalat"], c: 1, e: "Pintu kebaikan." },
+                    { q: "Perawi hadits 24 dan 25 adalah orang yang sama, yaitu...", a: ["Abu Dzar Al-Ghifari", "Abu Hurairah", "Aisyah", "Ibnu Umar"], c: 0, e: "Keduanya diriwayatkan Abu Dzar." },
+                    { q: "Dalam hadits 23, 'Ath-Thuhuuru' artinya...", a: ["Shalat", "Bersuci", "Sabar", "Dzikir"], c: 1, e: "Lahir dan batin." },
+                    { q: "Dalam hadits 21, perintah setelah iman adalah...", a: ["Sabar", "Istiqomah", "Jihad", "Haji"], c: 1, e: "Istaqim." },
+                    { q: "Bentuk hadits 24 adalah Hadits...", a: ["Nabawi", "Qudsi", "Maudhu", "Dhaif"], c: 1, e: "Firman Allah melalui Nabi." },
+                    { q: "Sahabat yang ingin masuk surga dengan amalan wajib di hadits 22 adalah...", a: ["Jabir bin Abdillah", "An-Nu'man bin Qauqal", "Abu Bakar", "Umar"], c: 0, e: "Perawinya Jabir, penanyanya Nu'man." }
+                ]
+            },
+            7: {
+                judul: "Pendalaman Makna & Aplikasi (Sesi 2)",
+                topik: "Analisis Studi Kasus",
+                tujuan: ["Santri mampu menerapkan hadits dalam konflik nyata"],
+                nilaiIslam: { deskripsi: "Ilmu adalah untuk diamalkan.", dalil: "Al-Qur'an tentang orang yang berilmu tapi tak beramal." },
+                skenario: "<p>Diskusi kelompok membahas kasus bully (zalim), futur (istiqomah), dan malas (sedekah).</p>",
+                simulasi: [ { judul: "Roleplay Digital", html: "<p class='text-[10px]'>Pilih aksi terbaik.</p>" }, { judul: "Mindmap Koneksi", html: "<p class='text-[10px]'>Hubungkan 5 hadits ini.</p>" } ],
+                latihan: [
+                    { q: "Andi diejek teman tapi dia tetap sabar. Hadits mana yang menguatkannya?", a: ["21", "23", "24", "25"], c: 1, e: "Sabar adalah dhiya (cahaya panas/perjuangan)." },
+                    { q: "Budi bingung ingin sedekah tapi tidak punya uang. Hadits mana solusinya?", a: ["21", "22", "25", "23"], c: 2, e: "Dzikir dan amar ma'ruf adalah sedekah." },
+                    { q: "Seseorang shalat fardhu tapi tidak shalat sunnah. Hadits mana yang membolehkan?", a: ["22", "21", "24", "25"], c: 0, e: "Cukup yang fardhu untuk masuk surga." },
+                    { q: "Penguasa menindas rakyat. Dia melanggar hadits ke...", a: ["24", "25", "21", "22"], c: 0, e: "Haramnya kezaliman." },
+                    { q: "Seorang santri mulai malas mengaji. Dia butuh motivasi hadits...", a: ["21", "22", "23", "25"], c: 0, e: "Tentang Istiqomah." },
+                    { q: "Membantu nenek menyeberang jalan termasuk...", a: ["Bukan apa-apa", "Sedekah", "Zalim", "Wajib"], c: 1, e: "Tindakan ma'ruf." },
+                    { q: "Jika kita merasa tersesat, kepada siapa kita meminta hidayah?", a: ["Teman", "Dukun", "Allah (Hadits 24)", "Buku saja"], c: 2, e: "Fas-tahduuni (Mintalah hidayah)." },
+                    { q: "Menghalalkan yang haram hukumnya...", a: ["Murtad/Kufur", "Boleh", "Keren", "Biasa"], c: 0, e: "Keyakinan adalah rukun iman." },
+                    { q: "Menjaga kebersihan asrama pesantren adalah aplikasi hadits...", a: ["23", "21", "25", "22"], c: 0, e: "Bersuci separuh iman." },
+                    { q: "Prinsip utama seorang santri salaf adalah...", a: ["Ilmu dulu, baru amal", "Amal saja tanpa ilmu", "Ilmu untuk debat", "Cari gelar"], c: 0, e: "Ilmu sebelum berkata dan berbuat." }
+                ]
+            },
+            8: {
+                judul: "Persiapan Tes Sumatif",
+                topik: "Review Total & Q&A",
+                tujuan: ["Kesiapan mental dan kognitif santri untuk tes akhir"],
+                nilaiIslam: { deskripsi: "Ihsan dalam segala hal, termasuk ujian.", dalil: "Innallaha katabal ihsana ala kulli syai." },
+                skenario: "<p>Bedah kembali poin-poin tersulit dari pertemuan 1-5.</p>",
+                simulasi: [ { judul: "Quiz Kilat 30 Detik", html: "<p class='text-[10px]'>Jawab cepat.</p>" }, { judul: "Flashcard Digital", html: "<p class='text-[10px]'>Balik kartu makna.</p>" } ],
+                latihan: [
+                    { q: "Apa arti 'Jawami'ul Kalim'?", a: ["Kata panjang", "Singkat tapi padat makna", "Puisi", "Sastra"], c: 1, e: "Keistimewaan ucapan Nabi." },
+                    { q: "Siapa pengarang kitab Arba'in?", a: ["Imam Syafi'i", "Imam Nawawi", "Imam Bukhari", "Imam Muslim"], c: 1, e: "Yahya bin Syaraf An-Nawawi." },
+                    { q: "Hadits ke-21 mengajarkan keteguhan dalam...", a: ["Tauhid", "Dagang", "Politik", "Olahraga"], c: 0, e: "Pondasi agama." },
+                    { q: "Berapa hadits Arba'in totalnya?", a: ["40", "42", "50", "30"], c: 1, e: "Sebenarnya 42." },
+                    { q: "Sabar adalah 'Dhiya', artinya cahaya yang...", a: ["Meredup", "Membakar/Panas", "Dingin", "Gelap"], c: 1, e: "Butuh perjuangan." },
+                    { q: "Sedekah lisan contohnya...", a: ["Ghibah", "Mencela", "Tasbih", "Menyanyi"], c: 2, e: "Dzikir." },
+                    { q: "Dua hadits dari 21-25 yang diriwayatkan Abu Dzar adalah...", a: ["21 & 22", "24 & 25", "23 & 24", "22 & 23"], c: 1, e: "Haram zalim & sedekah." },
+                    { q: "Kunci masuk surga di hadits 22 adalah menjaga...", a: ["Wajib saja", "Sunnah saja", "Semua hadits", "Semua kitab"], c: 0, e: "Fardhu." },
+                    { q: "Hidayah adalah milik...", a: ["Ustadz", "Diri sendiri", "Allah", "Malaikat"], c: 2, e: "Hadits Qudsi 24." },
+                    { q: "Hadits yang menyebutkan Al-Quran sebagai pembela adalah...", a: ["21", "23", "25", "24"], c: 1, e: "Al-Qur'anu hujjatun laka." }
+                ]
+            }
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-link').forEach(btn => btn.classList.remove('tab-active'));
+            const currentTab = document.getElementById('tab-' + tabId);
+            if(currentTab) currentTab.classList.add('tab-active');
+
+            const container = document.getElementById('content-container');
+            
+            if (tabId === 9) {
+                renderSumatif();
+                return;
+            }
+
+            const data = MODUL_DATA[tabId];
+            let html = `
+                <div class="animate-fadeIn">
+                    <div class="bg-white rounded-3xl p-8 mb-8 custom-shadow border border-slate-100">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                            <div>
+                                <h2 class="text-3xl font-extrabold text-emerald-900 mb-2">${data.judul}</h2>
+                                <p class="text-emerald-600 font-semibold tracking-wide"><i class="fa-solid fa-tag mr-2"></i>Topik: ${data.topik}</p>
+                            </div>
+                            <div class="bg-emerald-50 px-6 py-3 rounded-2xl border border-emerald-100 text-center">
+                                <span class="block text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Durasi Sesi</span>
+                                <span class="text-xl font-black text-emerald-800">90 Menit</span>
+                            </div>
+                        </div>
+
+                        <div class="grid lg:grid-cols-3 gap-8">
+                            <div class="lg:col-span-2 space-y-8">
+                                <section>
+                                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center"><span class="w-8 h-8 bg-emerald-700 text-white rounded-lg flex items-center justify-center mr-3 text-sm">A</span> Tujuan Pembelajaran</h3>
+                                    <ul class="grid md:grid-cols-2 gap-3">
+                                        ${data.tujuan.map(t => `<li class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl text-sm text-slate-600 border border-slate-100"><i class="fa-solid fa-check-circle text-emerald-500 mt-0.5"></i>${t}</li>`).join('')}
+                                    </ul>
+                                </section>
+
+                                <section>
+                                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center"><span class="w-8 h-8 bg-emerald-700 text-white rounded-lg flex items-center justify-center mr-3 text-sm">B</span> Keterkaitan Nilai Islam</h3>
+                                    <div class="bg-emerald-900 text-emerald-50 p-6 rounded-2xl shadow-inner relative overflow-hidden">
+                                        <i class="fa-solid fa-quote-right absolute right-4 top-4 text-emerald-800 text-6xl opacity-20"></i>
+                                        <p class="text-sm leading-relaxed mb-6 relative z-10">${data.nilaiIslam.deskripsi}</p>
+                                        <div class="bg-white/10 p-4 rounded-xl border border-white/20 relative z-10">
+                                            <p class="text-center italic text-sm">${data.nilaiIslam.dalil}</p>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section>
+                                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center"><span class="w-8 h-8 bg-emerald-700 text-white rounded-lg flex items-center justify-center mr-3 text-sm">C</span> Skenario Pembelajaran (Guru)</h3>
+                                    <div class="prose prose-emerald max-w-none text-slate-600">
+                                        ${data.skenario}
+                                    </div>
+                                </section>
+
+                                ${tabId === 1 ? data.penilaian : ''}
+                            </div>
+
+                            <aside class="space-y-6">
+                                <h3 class="text-lg font-bold text-slate-800 mb-4">Interaksi & Simulasi</h3>
+                                ${data.simulasi.map((s, idx) => `
+                                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                                        <div class="bg-slate-800 text-white px-4 py-2 text-xs font-bold uppercase tracking-wider">${s.judul}</div>
+                                        <div class="p-4">${s.html}</div>
+                                    </div>
+                                `).join('')}
+                            </aside>
+                        </div>
+                    </div>
+
+                    <!-- Latihan Formatif (10 Soal per Pertemuan) -->
+                    <div class="bg-white rounded-3xl p-8 custom-shadow border border-slate-100">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3 class="text-2xl font-bold text-slate-800">Latihan Formatif</h3>
+                            <span class="bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1 rounded-full">10 Soal Pilihan Ganda</span>
+                        </div>
+                        <div class="space-y-8">
+                            ${data.latihan.map((q, idx) => `
+                                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                                    <p class="font-bold text-slate-800 mb-4">${idx+1}. ${q.q}</p>
+                                    <div class="grid md:grid-cols-2 gap-3">
+                                        ${q.a.map((opt, oIdx) => `
+                                            <button onclick="checkAnswer(this, ${oIdx}, ${q.c}, '${q.e.replace(/'/g, "\\'")}')" class="text-left p-4 bg-white border border-slate-200 rounded-xl text-sm hover:border-emerald-500 hover:bg-emerald-50 transition-all flex items-center justify-between">
+                                                <span>${opt}</span>
+                                                <i class="fa-solid fa-circle-check opacity-0"></i>
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                    <div class="mt-4 hidden explanation text-xs p-3 rounded-lg border"></div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+            window.scrollTo(0, 0);
+        }
+
+        function checkAnswer(btn, selected, correct, explanation) {
+            const parent = btn.parentElement;
+            const allBtns = parent.querySelectorAll('button');
+            const explanationDiv = parent.nextElementSibling;
+
+            allBtns.forEach(b => b.disabled = true);
+            
+            if (selected === correct) {
+                btn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-700');
+                btn.querySelector('i').classList.remove('opacity-0');
+                explanationDiv.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-200');
+            } else {
+                btn.classList.add('bg-red-100', 'border-red-500', 'text-red-700');
+                allBtns[correct].classList.add('bg-emerald-50', 'border-emerald-500');
+                explanationDiv.classList.add('bg-red-50', 'text-red-800', 'border-red-200');
+            }
+
+            explanationDiv.innerHTML = `<strong>Penjelasan:</strong> ${explanation}`;
+            explanationDiv.classList.remove('hidden');
+        }
+
+        function moveBall() {
+            const ball = document.getElementById('ball');
+            let currentLeft = parseInt(ball.style.left) || 16;
+            if (currentLeft < 300) {
+                ball.style.left = (currentLeft + 40) + 'px';
+            } else {
+                alert('Maa syaa Allah! Teruslah istiqomah di jalan yang lurus.');
+                ball.style.left = '16px';
+            }
+        }
+
+        function checkBarrier(btn, isBarrier) {
+            const msg = document.getElementById('barrier-msg');
+            if (isBarrier) {
+                btn.classList.add('bg-red-500', 'text-white');
+                msg.innerText = "Benar, hindari hal ini untuk tetap istiqomah!";
+                msg.className = "text-[10px] mt-2 text-red-600 font-bold";
+            } else {
+                btn.classList.add('bg-emerald-500', 'text-white');
+                msg.innerText = "Betul, ini adalah sarana istiqomah!";
+                msg.className = "text-[10px] mt-2 text-emerald-600 font-bold";
+            }
+        }
+
+        function validateWajib() {
+            const inputs = document.querySelectorAll('#checklist-wajib input');
+            let allCorrect = true;
+            inputs.forEach(input => {
+                const isCorrectType = input.getAttribute('data-correct') === 'true';
+                if (input.checked !== isCorrectType) allCorrect = false;
+            });
+            alert(allCorrect ? "Sempurna! Anda paham prioritas amalan pokok." : "Masih ada yang keliru, pisahkan antara yang wajib dan sunnah.");
+        }
+
+        function renderSumatif() {
+            const container = document.getElementById('content-container');
+            
+            // Mengambil beberapa soal representatif dari setiap hadits
+            const sumatifQuestions = [
+                { q: "Hadits ke-21 menekankan pada dua pondasi, yaitu?", a: ["Iman & Istiqomah", "Ilmu & Amal", "Sabar & Syukur", "Zakat & Haji"], c: 0 },
+                { q: "Menurut Hadits 22, apakah menjaga shalat wajib dan puasa Ramadhan cukup untuk ke surga?", a: ["Tidak cukup", "Ya, jika meyakini halal dan menjauhi haram", "Hanya untuk orang Arab", "Hanya jika ditambah sunnah"], c: 1 },
+                { q: "Apa arti 'Al-Qur'anu hujjatun laka'?", a: ["Quran menuntutmu", "Quran membantumu", "Quran pembelamu", "Quran hiasanmu"], c: 2 },
+                { q: "Dhiya (cahaya panas) adalah perumpamaan untuk?", a: ["Shalat", "Sabar", "Sedekah", "Zakat"], c: 1 },
+                { q: "Hadits Qudsi ke-24 mengharamkan apa bagi Allah?", a: ["Makan", "Tidur", "Kezaliman", "Lupa"], c: 2 },
+                { q: "Jika seluruh manusia menjadi orang paling bertaqwa, maka kekuasaan Allah?", a: ["Bertambah", "Tidak bertambah sedikitpun", "Biasa saja", "Luar biasa"], c: 1 },
+                { q: "Contoh sedekah non-harta dalam hadits 25 adalah?", a: ["Tidur", "Makan enak", "Tasbih & Amar Ma'ruf", "Berlari"], c: 2 },
+                { q: "Siapa perawi hadits 24 dan 25?", a: ["Abu Hurairah", "Anas bin Malik", "Abu Dzar Al-Ghifari", "Umar bin Khattab"], c: 2 },
+                { q: "Thaharah (bersuci) adalah separuh dari?", a: ["Harta", "Ilmu", "Iman", "Adab"], c: 2 },
+                { q: "Apa yang harus dilakukan jika melanggar hal haram?", a: ["Diam saja", "Bertaubat dan kembali istiqomah", "Menyerah", "Mencari pembenaran"], c: 1 }
+            ];
+
+            container.innerHTML = `
+                <div class="bg-white rounded-3xl p-10 custom-shadow border-t-8 border-amber-500 animate-fadeIn">
+                    <div class="text-center mb-10">
+                        <h2 class="text-3xl font-black text-slate-800 mb-2">Tes Sumatif Akhir</h2>
+                        <p class="text-slate-500 italic">Evaluasi Pemahaman Hadits Arba'in 21-25</p>
+                    </div>
+                    <div id="sumatif-form" class="space-y-8">
+                        ${sumatifQuestions.map((sq, idx) => `
+                            <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                                 <p class="font-bold mb-4">${idx+1}. ${sq.q}</p>
+                                 <div class="grid gap-2">
+                                    ${sq.a.map((opt, oIdx) => `
+                                        <label class="flex items-center gap-3 p-3 bg-white border rounded-xl cursor-pointer hover:bg-amber-50">
+                                            <input type="radio" name="sq${idx}" value="${oIdx === sq.c ? 1 : 0}"> ${opt}
+                                        </label>
+                                    `).join('')}
+                                 </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mt-12 flex flex-col items-center">
+                        <button onclick="calculateSumatif(${sumatifQuestions.length})" class="bg-amber-500 hover:bg-amber-600 text-white px-10 py-4 rounded-2xl font-black text-lg shadow-lg transition-transform active:scale-95">HITUNG SKOR AKHIR</button>
+                        <div id="sumatif-result" class="mt-8 hidden text-center p-6 bg-emerald-50 border-2 border-emerald-200 rounded-2xl w-full max-w-md">
+                            <span class="block text-sm text-emerald-600 font-bold uppercase">Skor Anda</span>
+                            <span id="final-score" class="text-6xl font-black text-emerald-800">0</span>
+                            <p id="final-status" class="mt-2 font-bold"></p>
+                            <button onclick="switchTab(9)" class="mt-6 text-sm text-emerald-700 underline font-bold">Ulangi Tes</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function calculateSumatif(total) {
+            let correct = 0;
+            for(let i=0; i<total; i++) {
+                const checked = document.querySelector(`input[name="sq${i}"]:checked`);
+                if(checked && checked.value === "1") correct++;
+            }
+            
+            const score = (correct / total) * 100;
+            document.getElementById('final-score').innerText = score;
+            const status = document.getElementById('final-status');
+            if(score >= 80) {
+                status.innerText = "Maa syaa Allah, Mumtaz!";
+                status.className = "mt-2 font-bold text-emerald-700";
+            } else if (score >= 60) {
+                status.innerText = "Jayyid Jiddan, pertahankan!";
+                status.className = "mt-2 font-bold text-amber-700";
+            } else {
+                status.innerText = "Perlu muroja'ah lagi ya.";
+                status.className = "mt-2 font-bold text-red-700";
+            }
+            document.getElementById('sumatif-result').classList.remove('hidden');
+        }
+
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        window.onload = () => switchTab(1);
+    </script>
+</body>
+</html>
