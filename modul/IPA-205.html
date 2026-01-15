@@ -3,376 +3,1562 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPA-205: Sistem Pernapasan Manusia (RMP Lengkap)</title>
+    <title>Modul IPA Terpadu: Pernapasan, Usaha, & Zat Aditif</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <!-- MathJax for LaTeX -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Font Awesome (Opsional untuk ikon, menggunakan SVG inline untuk performa lebih baik sesuai instruksi, tapi link tetap disiapkan jika perlu) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <style>
-        :root { --primary: #0f766e; --secondary: #14b8a6; --accent: #f59e0b; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #1e293b; }
-        .arabic { font-family: 'Amiri', serif; font-size: 1.8rem; line-height: 2.8rem; text-align: right; color: var(--primary); }
-        .tab-btn { transition: all 0.3s; border-bottom: 4px solid transparent; opacity: 0.6; }
-        .tab-active { opacity: 1; color: var(--primary); border-bottom-color: var(--primary); font-weight: 800; }
-        .teacher-note { background: #fffbeb; border-left: 6px solid #f59e0b; padding: 1.5rem; border-radius: 1rem; margin: 1.5rem 0; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        .rmp-card { background: white; border-radius: 1.5rem; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05); padding: 2rem; margin-bottom: 2rem; }
-        .section-header { border-left: 5px solid var(--primary); padding-left: 1rem; margin-bottom: 1.5rem; font-weight: 800; color: #0f172a; }
-        .correct { background-color: #dcfce7 !important; border-color: #22c55e !important; color: #166534; }
-        .wrong { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b; }
-        .image-container { margin: 1.5rem 0; text-align: center; }
-        .source-text { font-size: 0.7rem; color: #94a3b8; display: block; margin-top: 0.5rem; }
-        .alphabet-box { width: 24px; height: 24px; background: #f1f5f9; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; margin-right: 8px; font-weight: bold; font-size: 0.75rem; }
+        /* Custom Styles for scrollbar and tab transitions */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .teacher-note {
+            background-color: #fef3c7;
+            border-left: 4px solid #d97706;
+            padding: 1rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.25rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sim-box {
+            background-color: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+        .latex-container {
+            overflow-x: auto;
+        }
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+        }
+        input[type=range]:focus {
+            outline: none; 
+        }
     </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 font-sans">
 
-<header class="bg-white border-b sticky top-0 z-50">
-    <div class="container mx-auto px-4 py-4 flex flex-wrap items-center justify-between">
-        <div class="flex items-center gap-3">
-            <div class="bg-teal-700 p-2 rounded-lg text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                </svg>
+    <!-- Header & Navigation -->
+    <header class="bg-emerald-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-center">Modul IPA Terpadu (IPA-205)</h1>
+            <p class="text-center text-emerald-100 text-sm mt-1">Sistem Pernapasan | Usaha & Pesawat Sederhana | Zat Aditif & Adiktif</p>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <nav class="bg-emerald-800 overflow-x-auto">
+            <div class="container mx-auto flex whitespace-nowrap min-w-full md:justify-center">
+                <button onclick="switchTab('p1')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent active-tab" id="btn-p1">P1: Organ Napas</button>
+                <button onclick="switchTab('p2')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p2">P2: Vol & Gangguan</button>
+                <button onclick="switchTab('p3')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p3">P3: Usaha & Daya</button>
+                <button onclick="switchTab('p4')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p4">P4: Energi</button>
+                <button onclick="switchTab('p5')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p5">P5: Tuas & Bid. Miring</button>
+                <button onclick="switchTab('p6')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p6">P6: Katrol & Roda</button>
+                <button onclick="switchTab('p7')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p7">P7: Zat Aditif</button>
+                <button onclick="switchTab('p8')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p8">P8: Zat Adiktif</button>
+                <button onclick="switchTab('sumatif')" class="tab-btn px-4 py-3 text-sm font-medium bg-emerald-900 hover:bg-emerald-950 focus:outline-none transition-colors border-b-4 border-transparent text-yellow-300" id="btn-sumatif">Tes Sumatif</button>
             </div>
-            <div>
-                <h1 class="text-xl font-extrabold text-slate-800">IPA-205 <span class="text-teal-600 font-medium">Sistem Pernapasan</span></h1>
-                <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Unit RMP Mandiri Terpadu</p>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-5xl mb-20">
+
+        <!-- ================= PERTEMUAN 1 ================= -->
+        <div id="p1" class="tab-content active">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b-2 border-emerald-200 pb-2">Pertemuan 1: Struktur dan Fungsi Sistem Pernapasan</h2>
+                
+                <!-- A. Tujuan Pembelajaran -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600">
+                        <li>Santri mampu mengidentifikasi organ-organ penyusun sistem pernapasan manusia.</li>
+                        <li>Santri dapat menjelaskan fungsi spesifik dari hidung, faring, laring, trakea, bronkus, dan paru-paru.</li>
+                        <li>Santri memahami mekanisme pernapasan dada dan pernapasan perut (inspirasi dan ekspirasi).</li>
+                    </ul>
+                </div>
+
+                <!-- B. Nilai Islam -->
+                <div class="mb-6 bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 class="text-xl font-semibold text-green-800 mb-2">B. Tadabbur Ayat Kauniyah</h3>
+                    <p class="text-slate-700 mb-2 text-justify">
+                        Sistem pernapasan adalah bukti kekuasaan Allah yang luar biasa. Kita bernapas sekitar 17.000 hingga 30.000 kali sehari tanpa perlu memikirkannya secara sadar. Allah menciptakan mekanisme otomatis ini agar manusia dapat terus hidup. Ini adalah nikmat yang wajib disyukuri.
+                    </p>
+                    <div class="text-center my-4">
+                        <p class="font-arabic text-2xl text-green-900 mb-2">وَاللّٰهُ اَخْرَجَكُمْ مِّنْۢ بُطُوْنِ اُمَّهٰتِكُمْ لَا تَعْلَمُوْنَ شَيْـًٔاۙ وَّجَعَلَ لَكُمُ السَّمْعَ وَالaَبْصَارَ وَالْاَفْـِٕدَةَ ۙ لَعَلَّكُمْ تَشْكُرُوْنَ</p>
+                        <p class="italic text-sm text-slate-600">"Dan Allah mengeluarkan kamu dari perut ibumu dalam keadaan tidak mengetahui sesuatupun, dan Dia memberi kamu pendengaran, penglihatan dan hati, agar kamu bersyukur." (QS. An-Nahl: 78)</p>
+                    </div>
+                </div>
+
+                <!-- C. Skenario Pembelajaran -->
+                <div class="space-y-6 text-slate-700 leading-relaxed">
+                    <h3 class="text-xl font-semibold text-slate-800">C. Materi Inti: Gerbang Kehidupan</h3>
+                    
+                    <div class="prose max-w-none">
+                        <p>Bernapas (respirasi) adalah proses memasukkan oksigen ke dalam tubuh dan mengeluarkan karbon dioksida serta uap air. Proses ini melibatkan serangkaian organ yang bekerja sangat presisi.</p>
+                        
+                        <h4 class="font-bold text-lg mt-4 text-emerald-700">1. Organ Pernapasan</h4>
+                        <ul class="list-none space-y-4 mt-2">
+                            <li class="pl-4 border-l-4 border-emerald-400">
+                                <strong>Hidung (Cavum Nasalis):</strong> Pintu gerbang utama. Di sini, udara mengalami 3 perlakuan: disaring oleh rambut hidung, dihangatkan oleh kapiler darah, dan dilembapkan oleh selaput lendir. 
+                                <br><em class="text-sm text-gray-500">Analogi: Seperti filter AC yang menyaring debu sebelum udara masuk ke mesin.</em>
+                            </li>
+                            <li class="pl-4 border-l-4 border-emerald-400">
+                                <strong>Faring (Tekak):</strong> Persimpangan antara saluran makanan (esofagus) dan saluran napas.
+                            </li>
+                            <li class="pl-4 border-l-4 border-emerald-400">
+                                <strong>Laring (Pangkal Tenggorokan):</strong> Terdapat katup epiglotis yang menutup saat menelan agar makanan tidak masuk saluran napas, serta pita suara.
+                            </li>
+                            <li class="pl-4 border-l-4 border-emerald-400">
+                                <strong>Trakea (Batang Tenggorokan):</strong> Tersusun dari cincin tulang rawan berbentuk C. Memiliki silia (rambut getar) untuk menolak debu asing.
+                            </li>
+                            <li class="pl-4 border-l-4 border-emerald-400">
+                                <strong>Bronkus & Bronkiolus:</strong> Percabangan trakea menuju paru-paru kanan dan kiri.
+                            </li>
+                            <li class="pl-4 border-l-4 border-emerald-400">
+                                <strong>Alveolus:</strong> Gelembung udara mikroskopis tempat pertukaran gas $O_2$ dan $CO_2$ secara difusi. Dindingnya sangat tipis dan lembap.
+                            </li>
+                        </ul>
+
+                        <!-- SVG Illustrasi -->
+                        <div class="my-6 p-4 bg-white border rounded shadow-sm flex justify-center flex-col items-center">
+                            <h5 class="text-sm font-bold mb-2">Ilustrasi Sistem Pernapasan Manusia</h5>
+                            <svg width="300" height="350" viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg">
+                                <!-- Head & Neck -->
+                                <path d="M70,10 Q70,0 85,0 T100,10 L100,40 L70,40 Z" fill="#fca" stroke="#333" stroke-width="2"/>
+                                <!-- Nose Path -->
+                                <path d="M85,15 Q90,25 90,40" fill="none" stroke="blue" stroke-width="2" stroke-dasharray="2,2"/>
+                                <!-- Trachea -->
+                                <rect x="80" y="40" width="20" height="40" fill="#ddd" stroke="#333"/>
+                                <line x1="80" y1="45" x2="100" y2="45" stroke="#333"/>
+                                <line x1="80" y1="55" x2="100" y2="55" stroke="#333"/>
+                                <line x1="80" y1="65" x2="100" y2="65" stroke="#333"/>
+                                <!-- Lungs -->
+                                <path d="M80,80 Q50,90 40,130 Q30,180 80,190 L90,190 L90,80 Z" fill="#ffcccb" stroke="#e33"/>
+                                <path d="M100,80 Q130,90 140,130 Q150,180 100,190 L90,190 L90,80 Z" fill="#ffcccb" stroke="#e33"/>
+                                <!-- Bronchus -->
+                                <path d="M90,80 L60,120" stroke="#333" stroke-width="2"/>
+                                <path d="M90,80 L120,120" stroke="#333" stroke-width="2"/>
+                                <!-- Diaphragm -->
+                                <path d="M40,190 Q90,160 140,190" fill="none" stroke="#555" stroke-width="3" id="diaphragm-svg"/>
+                            </svg>
+                            <p class="text-xs text-gray-500 mt-2">Gambar: Skema Sederhana Paru-paru dan Diafragma</p>
+                        </div>
+
+                        <h4 class="font-bold text-lg mt-4 text-emerald-700">2. Mekanisme Pernapasan</h4>
+                        <p>Menggunakan Hukum Boyle: <em>Jika volume ruang membesar, tekanan udara mengecil, maka udara masuk.</em></p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                            <div class="bg-blue-50 p-3 rounded">
+                                <strong>Inspirasi (Menarik Napas):</strong>
+                                <ul class="list-disc ml-5 text-sm">
+                                    <li>Otot antartulang rusuk kontraksi (Dada) atau Diafragma kontraksi mendatar (Perut).</li>
+                                    <li>Rongga dada membesar.</li>
+                                    <li>Tekanan paru-paru turun.</li>
+                                    <li>Udara Masuk.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-red-50 p-3 rounded">
+                                <strong>Ekspirasi (Menghembuskan Napas):</strong>
+                                <ul class="list-disc ml-5 text-sm">
+                                    <li>Otot relaksasi.</li>
+                                    <li>Rongga dada mengecil.</li>
+                                    <li>Tekanan paru-paru naik.</li>
+                                    <li>Udara Keluar.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teacher Note -->
+                    <div class="teacher-note">
+                        <strong>👨‍🏫 Poin Diskusi Guru:</strong>
+                        <p>Tanyakan pada santri: "Mengapa saat kita makan sambil berbicara, kita bisa tersedak?" Arahkan jawaban pada fungsi epiglotis yang 'bingung' harus menutup saluran napas atau saluran makan. Ini juga hikmah adab makan dalam Islam: tidak banyak bicara saat mengunyah.</p>
+                    </div>
+                </div>
+
+                <!-- D. Penilaian Modul (Hanya di Pertemuan 1) -->
+                <div class="mb-6 border-t pt-4">
+                    <h3 class="text-xl font-semibold text-slate-800">D. Penilaian Modul (Rubrik)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-slate-600 border">
+                            <thead class="bg-slate-100 text-slate-800 uppercase">
+                                <tr>
+                                    <th class="px-4 py-2 border">Aspek</th>
+                                    <th class="px-4 py-2 border">Indikator</th>
+                                    <th class="px-4 py-2 border">Teknik</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-4 py-2 border">Adab (Sikap)</td>
+                                    <td class="px-4 py-2 border">Bersyukur, disiplin waktu, sopan santun.</td>
+                                    <td class="px-4 py-2 border">Observasi</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 border">Pengetahuan</td>
+                                    <td class="px-4 py-2 border">Nilai Latihan Formatif & Sumatif.</td>
+                                    <td class="px-4 py-2 border">Tes Tulis (Online)</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 border">Keterampilan</td>
+                                    <td class="px-4 py-2 border">Kemampuan analisis simulasi.</td>
+                                    <td class="px-4 py-2 border">Unjuk Kerja</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- E. Simulasi & Latihan P1 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <!-- Simulasi 1 -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2"><i class="fas fa-lungs"></i> Simulasi 1: Model Diafragma</h4>
+                        <p class="text-sm mb-4">Gerakkan slider untuk mensimulasikan kontraksi diafragma.</p>
+                        <div class="flex flex-col items-center">
+                            <svg id="sim1-svg" width="150" height="200" viewBox="0 0 150 200" class="border bg-white mb-2">
+                                <path d="M40,50 L40,150 L110,150 L110,50 Z" fill="none" stroke="#333" stroke-width="2"/> <!-- Chest -->
+                                <circle cx="75" cy="100" r="20" fill="pink" id="sim1-lung"/> <!-- Lung -->
+                                <path d="M40,150 Q75,120 110,150" fill="none" stroke="brown" stroke-width="4" id="sim1-diaphragm"/> <!-- Diaphragm -->
+                            </svg>
+                            <input type="range" min="0" max="100" value="0" class="w-full" id="sim1-slider">
+                            <p id="sim1-status" class="text-sm font-bold mt-2 text-red-500">Ekspirasi (Diafragma Melengkung)</p>
+                        </div>
+                    </div>
+
+                    <!-- Simulasi 2 -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2"><i class="fas fa-route"></i> Simulasi 2: Jalur Udara</h4>
+                        <p class="text-sm mb-2">Klik tombol untuk melacak molekul oksigen.</p>
+                        <div class="relative h-40 bg-slate-200 rounded overflow-hidden mb-2">
+                            <div id="sim2-particle" class="absolute top-2 left-2 w-4 h-4 bg-blue-500 rounded-full shadow-lg transition-all duration-1000"></div>
+                            <div class="absolute top-2 left-10 text-xs">Hidung</div>
+                            <div class="absolute top-10 left-10 text-xs">Trakea</div>
+                            <div class="absolute top-20 left-10 text-xs">Bronkus</div>
+                            <div class="absolute top-30 left-10 text-xs">Alveolus</div>
+                        </div>
+                        <button onclick="runSim2()" class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 text-sm w-full">Tarik Napas</button>
+                    </div>
+                </div>
+
+                <!-- Latihan Formatif P1 -->
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif Pertemuan 1</h3>
+                    <div id="quiz-p1" class="space-y-4">
+                        <!-- Quiz items injected via JS -->
+                    </div>
+                    <button onclick="checkQuiz('p1')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 font-bold w-full md:w-auto">Cek Jawaban</button>
+                    <div id="result-p1" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
             </div>
         </div>
-        <nav class="flex overflow-x-auto gap-4 mt-2 sm:mt-0">
-            <script>
-                const sessions = ["Sesi 1", "Sesi 2", "Sesi 3", "Sesi 4", "Sesi 5", "Sesi 6", "Sesi 7", "Sesi 8", "Ujian Akhir"];
-                sessions.forEach((s, i) => {
-                    const id = i + 1;
-                    document.write(`<button onclick="${id === 9 ? 'loadSumatif()' : 'loadRMP('+id+')'}" id="nav-${id}" class="tab-btn py-2 px-1 text-sm font-bold whitespace-nowrap">${s}</button>`);
-                });
-            </script>
-        </nav>
-    </div>
-</header>
 
-<main class="container mx-auto px-4 py-8 max-w-4xl">
-    <div id="main-container" class="space-y-10">
-        <!-- Content will be injected here -->
-    </div>
-</main>
+        <!-- ================= PERTEMUAN 2 ================= -->
+        <div id="p2" class="tab-content">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b-2 border-emerald-200 pb-2">Pertemuan 2: Volume Udara & Gangguan Pernapasan</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600">
+                        <li>Santri dapat membedakan volume tidal, komplementer, suplementer, dan residu.</li>
+                        <li>Santri mampu menghitung Kapasitas Vital Paru-paru.</li>
+                        <li>Santri dapat menjelaskan penyakit Asma, TBC, dan Pneumonia serta cara pencegahannya.</li>
+                    </ul>
+                </div>
 
-<script>
-    const alphabet = ['A', 'B', 'C', 'D'];
-    const rmpData = {
-        1: {
-            title: "Gerbang Udara: Anatomi Hidung & Faring",
-            A: ["Santri menjelaskan fungsi filtrasi, termoregulasi, dan humidifikasi.", "Mengidentifikasi struktur faring.", "Mengaitkan penyaringan dengan Ar-Raqib."],
-            B: { teks: "Sistem filtrasi menunjukkan sifat Allah Ar-Raqib.", dalil_ar: "وَإِنَّ عَلَيْكُمْ لَحَافِظِينَ", dalil_id: "Sesungguhnya bagi kamu ada yang mengawasi. (QS. Al-Infitar: 10)" },
-            C: `<p>Hidung memiliki Concha Nasalis yang berfungsi sebagai AC alami.</p>
-                <div class="image-container">
-                    <svg viewBox="0 0 200 100" class="w-full max-w-sm mx-auto bg-teal-50 rounded-xl border border-teal-100"><path d="M40,50 Q60,10 80,50 T120,50" fill="none" stroke="#0d9488" stroke-width="2" /></svg>
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Anatomy_of_the_Nose_and_Pharynx.png/800px-Anatomy_of_the_Nose_and_Pharynx.png" class="mt-4 rounded-xl shadow-sm">
+                <div class="mb-6 bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 class="text-xl font-semibold text-green-800 mb-2">B. Tadabbur Ayat Kauniyah</h3>
+                    <p class="text-slate-700 mb-2">
+                        Kesehatan adalah amanah. Ketika saluran napas menyempit karena asma atau infeksi, kita baru menyadari betapa mahalnya setiap hembusan napas normal. Menjaga tubuh dari zat berbahaya adalah bentuk ketaatan.
+                    </p>
+                    <p class="italic text-sm text-slate-600">"Ada dua kenikmatan yang banyak manusia tertipu, yaitu nikmat sehat dan waktu senggang." (HR. Bukhari)</p>
                 </div>
-                <div class="teacher-note">Diskusikan peran lendir saat flu.</div>`,
-            D: `<h3 class="section-header">D. Penilaian Modul</h3><p class="text-sm">Sikap (20%), Pengetahuan (50%), Keterampilan (30%).</p>`,
-            simulasi: [{ title: "Filtrasi Virtual", desc: "Tangkap debu di hidung." }, { title: "Termometer Hidung", desc: "Atur suhu udara." }],
-            latihan: [
-                { q: "Apa fungsi utama rambut hidung (silia) dalam sistem pernapasan?", o: ["Mendinginkan udara", "Menyaring partikel debu besar", "Mengikat oksigen", "Memproduksi lendir"], a: 1, e: "Rambut hidung berfungsi sebagai penyaring mekanis pertama untuk debu." },
-                { q: "Bagian hidung yang berfungsi menghangatkan udara adalah...", o: ["Lendir", "Saraf pembau", "Concha nasalis", "Septum"], a: 2, e: "Concha yang kaya pembuluh darah berfungsi menghangatkan udara (termoregulasi)." },
-                { q: "Manakah urutan jalur udara setelah melewati rongga hidung?", o: ["Laring-Faring", "Faring-Laring", "Trakea-Faring", "Bronkus-Laring"], a: 1, e: "Setelah hidung, udara masuk ke faring (tekak) baru ke laring (pangkal tenggorokan)." },
-                { q: "Mengapa hidung disebut sebagai AC alami tubuh?", o: ["Karena warnanya", "Karena bisa menyaring dan mengatur suhu", "Karena letaknya di luar", "Karena terhubung ke otak"], a: 1, e: "Hidung melakukan filtrasi, humidifikasi, dan termoregulasi layaknya Air Conditioner." },
-                { q: "Sifat Allah Ar-Raqib (Maha Mengawasi) tercermin pada hidung melalui...", o: ["Warna hidung", "Proses penyaringan yang ketat", "Bentuk hidung", "Kekuatan bernapas"], a: 1, e: "Filtrasi menunjukkan adanya pengawasan terhadap zat asing yang masuk ke tubuh." },
-                { q: "Fungsi lendir (mukus) pada hidung adalah...", o: ["Membakar kuman", "Melembapkan udara dan menangkap bakteri", "Membantu bicara", "Menyerap oksigen"], a: 1, e: "Mukus berfungsi untuk humidifikasi dan menjebak partikel mikro." },
-                { q: "Faring merupakan persimpangan antara saluran pernapasan dan...", o: ["Saluran pendengaran", "Saluran pencernaan", "Saluran kelenjar", "Saluran darah"], a: 1, e: "Faring menghubungkan rongga mulut ke kerongkongan dan rongga hidung ke tenggorokan." },
-                { q: "Jika udara di sekitar sangat kering, apa yang dilakukan hidung?", o: ["Menutup", "Melembapkan (Humidifikasi)", "Mendinginkan", "Mengeluarkan darah"], a: 1, e: "Hidung akan menambah uap air ke udara agar paru-paru tidak kering." },
-                { q: "Bagian hidung yang membagi lubang kanan dan kiri disebut...", o: ["Sinus", "Septum", "Silia", "Saraf"], a: 1, e: "Septum nasi adalah sekat pembatas antara dua lubang hidung." },
-                { q: "Udara yang masuk ke hidung mengalami tiga perlakuan kecuali...", o: ["Disaring", "Diatur suhunya", "Dilembapkan", "Diubah menjadi karbon dioksida"], a: 3, e: "Pertukaran gas menjadi CO2 terjadi di paru-paru, bukan di hidung." }
-            ]
-        },
-        2: {
-            title: "Pipa Suara & Katup Kehidupan: Laring & Epiglotis",
-            A: ["Menganalisis kerja epiglotis.", "Memahami produksi suara.", "Mengagumi karunia bicara."],
-            B: { teks: "Allah mengajar manusia pandai berbicara.", dalil_ar: "عَلَّمَهُ الْبَيَانَ", dalil_id: "Mengajarnya pandai berbicara. (QS. Ar-Rahman: 4)" },
-            C: `<p>Laring berisi pita suara. Epiglotis menjaga jalur napas.</p>
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Larynx_anatomy_en.svg/600px-Larynx_anatomy_en.svg.png" class="mx-auto mt-4 rounded-xl">`,
-            simulasi: [{ title: "Simulator Epiglotis", desc: "Makan vs Napas." }, { title: "Vocal Lab", desc: "Ubah nada suara." }],
-            latihan: [
-                { q: "Apa fungsi utama epiglotis saat kita menelan makanan?", o: ["Membantu pencernaan", "Menutup saluran pernapasan", "Membuka tenggorokan", "Menghasilkan suara"], a: 1, e: "Epiglotis menutup laring agar makanan tidak masuk ke jalur napas." },
-                { q: "Pita suara terletak pada bagian...", o: ["Faring", "Trakea", "Laring", "Bronkus"], a: 2, e: "Laring sering disebut kotak suara karena terdapat pita suara di dalamnya." },
-                { q: "Mengapa kita dilarang berbicara saat makan dalam perspektif biologi?", o: ["Agar suara tidak hilang", "Mencegah tersedak karena epiglotis terbuka", "Agar rasa makanan terjaga", "Mencegah haus"], a: 1, e: "Berbicara saat makan membuat epiglotis terbuka, sehingga makanan bisa masuk ke trakea." },
-                { q: "Tersedak merupakan mekanisme tubuh untuk...", o: ["Mengeluarkan benda asing dari saluran napas", "Membantu menelan", "Menghasilkan suara keras", "Mendinginkan paru-paru"], a: 0, e: "Refleks batuk/tersedak membuang benda yang salah masuk ke jalur napas." },
-                { q: "Karunia bicara (Al-Bayan) dalam QS Ar-Rahman berkaitan dengan organ...", o: ["Hidung", "Laring", "Paru-paru", "Hati"], a: 1, e: "Laring adalah alat fisik utama yang memproduksi gelombang suara manusia." },
-                { q: "Adam's Apple (Jakun) pada laki-laki sebenarnya adalah...", o: ["Kelenjar ludah", "Tulang rawan tiroid", "Sisa makanan", "Pita suara"], a: 1, e: "Jakun adalah tonjolan tulang rawan tiroid yang melindungi laring." },
-                { q: "Suara dihasilkan ketika pita suara mengalami...", o: ["Penyusutan", "Getaran", "Pembekuan", "Pencairan"], a: 1, e: "Udara yang keluar menggetarkan pita suara sehingga menghasilkan bunyi." },
-                { q: "Bagian yang menghubungkan faring dengan trakea adalah...", o: ["Bronkus", "Alveolus", "Laring", "Hidung"], a: 2, e: "Laring berada di antara faring dan batang tenggorokan (trakea)." },
-                { q: "Perbedaan nada suara (tinggi-rendah) dipengaruhi oleh...", o: ["Banyaknya oksigen", "Tegangan pita suara", "Panjang hidung", "Ukuran paru"], a: 1, e: "Otot laring mengatur tegangan pita suara untuk mengubah frekuensi suara." },
-                { q: "Apa yang terjadi jika epiglotis gagal menutup?", o: ["Suara menjadi merdu", "Makanan masuk ke paru-paru", "Udara berhenti mengalir", "Pencernaan menjadi cepat"], a: 1, e: "Kegagalan epiglotis menyebabkan aspirasi atau masuknya benda asing ke jalur pernapasan." }
-            ]
-        },
-        3: {
-            title: "Jalur Utama: Trakea & Bronkus",
-            A: ["Menjelaskan struktur cincin tulang rawan.", "Memahami peran silia.", "Mengaitkan kebersihan jalur napas dengan thaharah."],
-            B: { teks: "Tubuh menjaga kebersihannya sendiri melalui silia, sebagaimana mukmin menjaga thaharah.", dalil_ar: "إِنَّ اللَّهَ يُحِبُّ التَّوَّابِينَ وَيُحِبُّ الْمُطَتَهِّرِينَ", dalil_id: "Sesungguhnya Allah menyukai orang yang bertaubat dan menyukai orang yang mensucikan diri. (QS. Al-Baqarah: 222)" },
-            C: `
-                <div class="space-y-6">
-                    <p>Trakea adalah batang tenggorokan sepanjang 10-12 cm yang tersusun dari cincin tulang rawan berbentuk huruf 'C'. Mengapa tidak lingkaran penuh? Agar kerongkongan di belakangnya bisa mengembang saat menelan makanan.</p>
-                    <div class="image-container">
-                        <svg viewBox="0 0 200 100" class="w-full max-w-sm mx-auto bg-teal-50 rounded-xl">
-                            <path d="M100,20 L100,80 M90,30 L110,30 M90,50 L110,50 M90,70 L110,70" stroke="#0f766e" stroke-width="4" fill="none" />
+
+                <div class="space-y-6 text-slate-700 leading-relaxed">
+                    <h3 class="text-xl font-semibold text-slate-800">C. Materi Inti: Kapasitas & Kesehatan</h3>
+                    
+                    <div class="prose max-w-none">
+                        <h4 class="font-bold text-lg text-emerald-700">1. Volume Pernapasan</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-300 text-sm">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="py-2 px-4 border">Jenis Volume</th>
+                                        <th class="py-2 px-4 border">Jumlah (Rata-rata)</th>
+                                        <th class="py-2 px-4 border">Definisi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="py-2 px-4 border font-bold">Volume Tidal (VT)</td>
+                                        <td class="py-2 px-4 border">500 cc</td>
+                                        <td class="py-2 px-4 border">Udara keluar masuk saat napas biasa.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-2 px-4 border font-bold">Vol. Cadangan Inspirasi (Komplementer)</td>
+                                        <td class="py-2 px-4 border">1500 cc</td>
+                                        <td class="py-2 px-4 border">Udara ekstra yang bisa dihirup kuat setelah VT.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-2 px-4 border font-bold">Vol. Cadangan Ekspirasi (Suplementer)</td>
+                                        <td class="py-2 px-4 border">1500 cc</td>
+                                        <td class="py-2 px-4 border">Udara ekstra yang bisa dihembus kuat setelah VT.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-2 px-4 border font-bold">Volume Residu</td>
+                                        <td class="py-2 px-4 border">1000 cc</td>
+                                        <td class="py-2 px-4 border">Udara yang selalu tertinggal di paru agar tidak kempis.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="bg-yellow-50 p-3 mt-2 border-l-4 border-yellow-400">
+                            <strong>Rumus Kapasitas Vital:</strong> $$ KV = VT + VCI + VCE $$ <br>
+                            Kapasitas Vital Paru-paru normal adalah sekitar 3500 cc.
+                        </div>
+
+                        <h4 class="font-bold text-lg mt-4 text-emerald-700">2. Gangguan Pernapasan</h4>
+                        <ul class="list-disc pl-5">
+                            <li><strong>Asma:</strong> Penyempitan saluran pernapasan karena alergi (debu, dingin). Tidak menular.</li>
+                            <li><strong>TBC (Tuberkulosis):</strong> Infeksi bakteri <em>Mycobacterium tuberculosis</em>. Menimbulkan bintil-bintil pada alveolus. Menular.</li>
+                            <li><strong>Pneumonia:</strong> Infeksi bakteri/virus yang menyebabkan alveolus terisi cairan/nanah. Sering disebut paru-paru basah.</li>
+                        </ul>
+                    </div>
+
+                    <div class="teacher-note">
+                        <strong>👨‍🏫 Poin Diskusi Guru:</strong>
+                        <p>Diskusikan perbedaan antara penyakit menular dan tidak menular. Tekankan pentingnya etika batuk/bersin (menutup mulut, mengucapkan Alhamdulillah) sebagai bagian dari sunnah dan pencegahan penyakit.</p>
+                    </div>
+                </div>
+
+                <!-- Simulasi P2 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <!-- Simulasi 3: Grafik Spirometer -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 1: Grafik Spirometer</h4>
+                        <canvas id="spirometerChart" width="300" height="200" class="bg-white border mb-2"></canvas>
+                        <div class="flex gap-2">
+                            <button onclick="drawBreath('normal')" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">Napas Biasa</button>
+                            <button onclick="drawBreath('deep')" class="bg-purple-500 text-white px-2 py-1 rounded text-xs">Napas Dalam</button>
+                        </div>
+                    </div>
+                    <!-- Simulasi 4: Visualisasi Asma -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 2: Saluran Normal vs Asma</h4>
+                        <div class="flex justify-around items-center h-40 bg-white rounded border">
+                            <div class="text-center">
+                                <div class="w-16 h-16 rounded-full border-4 border-pink-400 bg-white mx-auto flex items-center justify-center">O2</div>
+                                <span class="text-xs">Normal</span>
+                            </div>
+                            <div class="text-center">
+                                <div id="asthma-tube" class="w-16 h-16 rounded-full border-8 border-red-500 bg-red-100 mx-auto flex items-center justify-center transition-all">O2</div>
+                                <span class="text-xs">Serangan Asma</span>
+                            </div>
+                        </div>
+                        <button onclick="triggerAsthma()" class="mt-2 bg-red-600 text-white px-4 py-1 rounded w-full">Picu Serangan (Persempit Saluran)</button>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif Pertemuan 2</h3>
+                    <div id="quiz-p2" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p2')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded font-bold">Cek Jawaban</button>
+                    <div id="result-p2" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PERTEMUAN 3 (USAHA & DAYA) ================= -->
+        <div id="p3" class="tab-content">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b-2 border-emerald-200 pb-2">Pertemuan 3: Usaha dan Daya</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600">
+                        <li>Santri dapat mendefinisikan "Usaha" dalam konteks Fisika vs Sehari-hari.</li>
+                        <li>Santri dapat menghitung besar usaha menggunakan rumus $W = F \cdot s$.</li>
+                        <li>Santri dapat menghitung daya ($P$) dan memahami hubungannya dengan kecepatan kerja.</li>
+                    </ul>
+                </div>
+
+                <div class="mb-6 bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 class="text-xl font-semibold text-green-800 mb-2">B. Tadabbur Ayat Kauniyah</h3>
+                    <p class="text-slate-700 mb-2">
+                        Dalam Islam, manusia diwajibkan untuk berusaha (ikhtiar). Namun dalam fisika, usaha hanya dihitung jika ada hasil (perpindahan). Ini mengajarkan kita bahwa ikhtiar harus cerdas dan terarah agar menghasilkan dampak nyata.
+                    </p>
+                    <p class="italic text-sm text-slate-600">"Dan bahwa manusia hanya memperoleh apa yang telah diusahakannya." (QS. An-Najm: 39)</p>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed">
+                    <h3 class="text-xl font-semibold text-slate-800">C. Materi Inti: Fisika Usaha</h3>
+                    
+                    <div class="prose max-w-none">
+                        <h4 class="font-bold text-lg text-emerald-700">1. Konsep Usaha (Work)</h4>
+                        <p>Dalam fisika, Usaha terjadi JIKA dan HANYA JIKA gaya yang diberikan menyebabkan benda <strong>berpindah</strong>.</p>
+                        <ul class="list-disc pl-5">
+                            <li>Mendorong tembok sekuat tenaga tapi tembok diam $\rightarrow$ Usaha = 0.</li>
+                            <li>Mendorong mobil mogok dan bergerak 1 meter $\rightarrow$ Ada Usaha.</li>
+                        </ul>
+                        
+                        <div class="bg-blue-50 p-4 rounded border-l-4 border-blue-500 my-4">
+                            <strong>Rumus Usaha:</strong>
+                            $$ W = F \times s $$
+                            <br>Dimana:
+                            <br>$W$ = Usaha (Joule)
+                            <br>$F$ = Gaya (Newton)
+                            <br>$s$ = Perpindahan (meter)
+                        </div>
+
+                        <h4 class="font-bold text-lg mt-4 text-emerald-700">2. Daya (Power)</h4>
+                        <p>Daya adalah laju melakukan usaha, atau seberapa cepat usaha itu dilakukan.</p>
+                        <div class="bg-purple-50 p-4 rounded border-l-4 border-purple-500 my-4">
+                            <strong>Rumus Daya:</strong>
+                            $$ P = \frac{W}{t} $$
+                            <br>Dimana:
+                            <br>$P$ = Daya (Watt)
+                            <br>$W$ = Usaha (Joule)
+                            <br>$t$ = Waktu (sekon)
+                        </div>
+                    </div>
+
+                    <div class="teacher-note">
+                        <strong>👨‍🏫 Poin Diskusi Guru:</strong>
+                        <p>Beri contoh: Si A memindahkan batu dalam 1 menit, Si B memindahkan batu yang sama dalam 10 detik. Usaha mereka SAMA (karena batu dan jarak sama), tapi Daya si B jauh lebih besar.</p>
+                    </div>
+                </div>
+
+                <!-- Simulasi P3 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 1: Hitung Usaha</h4>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <label>Gaya (N): <input type="number" id="inputF" value="10" class="border rounded px-1 w-16"></label>
+                            <label>Jarak (m): <input type="number" id="inputS" value="5" class="border rounded px-1 w-16"></label>
+                        </div>
+                        <div class="mt-4 relative bg-gray-200 h-20 rounded border-b-4 border-gray-400">
+                            <div id="box-sim3" class="absolute bottom-0 left-0 w-10 h-10 bg-orange-500 flex items-center justify-center text-white text-xs transition-all duration-1000">Box</div>
+                        </div>
+                        <button onclick="calcWork()" class="mt-2 bg-orange-600 text-white px-4 py-1 rounded w-full">Dorong & Hitung</button>
+                        <p id="resultWork" class="font-bold mt-2 text-center text-lg">-</p>
+                    </div>
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 2: Balapan Daya</h4>
+                        <p class="text-sm mb-2">Siapa yang punya daya lebih besar?</p>
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <span class="w-20 text-xs">A (Lambat)</span>
+                                <div class="h-4 bg-gray-300 w-full rounded relative overflow-hidden">
+                                    <div id="bar-A" class="h-full bg-blue-500 w-0 transition-all duration-[3000ms] ease-linear"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-20 text-xs">B (Cepat)</span>
+                                <div class="h-4 bg-gray-300 w-full rounded relative overflow-hidden">
+                                    <div id="bar-B" class="h-full bg-red-500 w-0 transition-all duration-[1000ms] ease-linear"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="runPowerRace()" class="mt-4 bg-slate-700 text-white px-4 py-1 rounded w-full">Mulai Lomba</button>
+                        <p id="powerResult" class="text-xs mt-2 italic text-center"></p>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif Pertemuan 3</h3>
+                    <div id="quiz-p3" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p3')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded font-bold">Cek Jawaban</button>
+                    <div id="result-p3" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PERTEMUAN 4 (ENERGI) ================= -->
+        <div id="p4" class="tab-content">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b-2 border-emerald-200 pb-2">Pertemuan 4: Energi Kinetik & Potensial</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600">
+                        <li>Santri memahami perbedaan Energi Potensial (EP) dan Energi Kinetik (EK).</li>
+                        <li>Santri mampu menggunakan rumus $EP = mgh$ dan $EK = \frac{1}{2}mv^2$.</li>
+                        <li>Santri memahami Hukum Kekekalan Energi Mekanik.</li>
+                    </ul>
+                </div>
+
+                <div class="mb-6 bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 class="text-xl font-semibold text-green-800 mb-2">B. Tadabbur Ayat Kauniyah</h3>
+                    <p class="text-slate-700 mb-2">
+                        Energi tidak dapat diciptakan atau dimusnahkan oleh manusia, hanya berubah bentuk. Ini menunjukkan bahwa Sumber Segala Energi adalah Allah Al-Qawiyyu (Yang Maha Kuat). Kita hanya "peminjam" dan "pengubah" energi.
+                    </p>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed">
+                    <h3 class="text-xl font-semibold text-slate-800">C. Materi Inti: Transformasi Energi</h3>
+                    
+                    <div class="prose max-w-none">
+                        <h4 class="font-bold text-lg text-emerald-700">1. Energi Potensial (EP)</h4>
+                        <p>Energi yang dimiliki benda karena <strong>posisi</strong> atau ketinggiannya.</p>
+                        <p class="font-mono bg-gray-100 p-2 border-l-4 border-gray-500">$$ EP = m \cdot g \cdot h $$</p>
+                        <p class="text-sm">Semakin tinggi benda, semakin besar EP-nya. Contoh: Kelapa di pohon.</p>
+
+                        <h4 class="font-bold text-lg mt-4 text-emerald-700">2. Energi Kinetik (EK)</h4>
+                        <p>Energi yang dimiliki benda karena <strong>gerakannya</strong> (kecepatan).</p>
+                        <p class="font-mono bg-gray-100 p-2 border-l-4 border-gray-500">$$ EK = \frac{1}{2} \cdot m \cdot v^2 $$</p>
+                        <p class="text-sm">Semakin cepat benda, semakin besar EK-nya. Contoh: Mobil yang melaju.</p>
+
+                        <h4 class="font-bold text-lg mt-4 text-emerald-700">3. Energi Mekanik (EM)</h4>
+                        <p>Penjumlahan EP dan EK. Hukum Kekekalan Energi Mekanik: EM selalu konstan jika tidak ada gaya luar (gesekan).</p>
+                        <p class="font-mono">$$ EM = EP + EK = \text{Konstan} $$</p>
+                    </div>
+
+                    <div class="teacher-note">
+                        <strong>👨‍🏫 Poin Diskusi Guru:</strong>
+                        <p>Gunakan analogi 'Roller Coaster'. Di puncak tertinggi, EP maksimal, EK nol. Saat meluncur ke bawah, EP berkurang berubah menjadi EK (makin cepat). Jumlah keduanya tetap.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <!-- Sim 4.1: Pendulum -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 1: Pendulum Energi</h4>
+                        <div class="flex justify-center mb-2">
+                            <canvas id="pendulumCanvas" width="200" height="150" class="border bg-white"></canvas>
+                        </div>
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-blue-600">EP Tinggi</span>
+                            <span class="text-red-600">EK Tinggi</span>
+                            <span class="text-blue-600">EP Tinggi</span>
+                        </div>
+                        <button onclick="startPendulum()" class="mt-2 bg-indigo-600 text-white px-4 py-1 rounded w-full">Ayunkan</button>
+                    </div>
+                    <!-- Sim 4.2: Kalkulator -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 2: Hitung Energi Jatuh</h4>
+                        <div class="space-y-2 text-sm">
+                            <label class="block">Massa (kg): <input type="number" id="mass_p4" value="2" class="border w-16"></label>
+                            <label class="block">Tinggi (m): <input type="number" id="height_p4" value="10" class="border w-16"></label>
+                        </div>
+                        <button onclick="calcEnergy()" class="mt-4 bg-green-600 text-white px-4 py-1 rounded w-full">Jatuhkan Benda</button>
+                        <div id="energyResults" class="mt-2 text-xs bg-white p-2 border rounded">
+                            <p>Di Atas: EP = <span id="ep_top">0</span> J, EK = 0 J</p>
+                            <p>Di Bawah (Sesaat sebelum hit): EP = 0 J, EK = <span id="ek_bottom">0</span> J</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif Pertemuan 4</h3>
+                    <div id="quiz-p4" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p4')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded font-bold">Cek Jawaban</button>
+                    <div id="result-p4" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PERTEMUAN 5 (TUAS & BIDANG MIRING) ================= -->
+        <div id="p5" class="tab-content">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b-2 border-emerald-200 pb-2">Pertemuan 5: Pesawat Sederhana - Tuas & Bidang Miring</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600">
+                        <li>Santri memahami prinsip Pesawat Sederhana untuk mempermudah kerja.</li>
+                        <li>Santri dapat mengidentifikasi Tuas Golongan I, II, dan III.</li>
+                        <li>Santri dapat menghitung Keuntungan Mekanis (KM) Tuas dan Bidang Miring.</li>
+                    </ul>
+                </div>
+
+                <div class="mb-6 bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 class="text-xl font-semibold text-green-800 mb-2">B. Tadabbur Ayat Kauniyah</h3>
+                    <p class="text-slate-700 mb-2">
+                        Allah berfirman "Karena sesungguhnya sesudah kesulitan itu ada kemudahan." (QS. Al-Insyirah: 5). Pesawat sederhana adalah perwujudan ilmu yang diberikan Allah agar manusia bisa mengangkat beban berat (kesulitan) dengan gaya kecil (kemudahan).
+                    </p>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed">
+                    <h3 class="text-xl font-semibold text-slate-800">C. Materi Inti: Mempermudah Kerja</h3>
+                    
+                    <div class="prose max-w-none">
+                        <h4 class="font-bold text-lg text-emerald-700">1. Tuas (Pengungkit)</h4>
+                        <p>Terdiri dari Titik Tumpu (T), Kuasa (K), dan Beban (B).</p>
+                        <div class="flex gap-4 my-2">
+                            <div class="bg-blue-100 p-2 rounded text-sm flex-1">
+                                <strong>Golongan I:</strong> Tumpu di tengah (TBK).<br>Contoh: Gunting, Jungkat-jungkit.
+                            </div>
+                            <div class="bg-green-100 p-2 rounded text-sm flex-1">
+                                <strong>Golongan II:</strong> Beban di tengah (TKB).<br>Contoh: Gerobak roda satu, pemecah kemiri.
+                            </div>
+                            <div class="bg-red-100 p-2 rounded text-sm flex-1">
+                                <strong>Golongan III:</strong> Kuasa di tengah (TBK).<br>Contoh: Sekop, Lengan manusia.
+                            </div>
+                        </div>
+                        <div class="bg-gray-100 p-3 mt-2 border-l-4 border-gray-500">
+                            <strong>Rumus Tuas:</strong> $$ w \cdot l_b = F \cdot l_k $$
+                            <br>$w$ = Berat Beban, $F$ = Gaya Kuasa
+                            <br>$l_b$ = Lengan Beban, $l_k$ = Lengan Kuasa
+                        </div>
+
+                        <h4 class="font-bold text-lg mt-4 text-emerald-700">2. Bidang Miring</h4>
+                        <p>Permukaan datar yang menghubungkan dua tempat berbeda ketinggian.</p>
+                        <div class="bg-gray-100 p-3 mt-2 border-l-4 border-gray-500">
+                            <strong>Rumus:</strong> $$ F \cdot s = w \cdot h $$
+                            <br><strong>Keuntungan Mekanis (KM):</strong> $$ KM = \frac{s}{h} $$
+                            <br>Semakin landai (s makin panjang), gaya makin kecil, tapi jarak tempuh makin jauh.
+                        </div>
+                    </div>
+
+                    <div class="teacher-note">
+                        <strong>👨‍🏫 Poin Diskusi Guru:</strong>
+                        <p>Mengapa jalan di pegunungan dibuat berkelok-kelok? Ini adalah aplikasi bidang miring. Jarak tempuh (s) diperpanjang agar gaya (F) mesin mobil untuk menanjak menjadi lebih kecil.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <!-- Sim 5.1: Tuas -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 1: Keseimbangan Tuas</h4>
+                        <div class="relative h-24 border-b-2 border-black mb-4">
+                            <!-- Plank -->
+                            <div id="lever-plank" class="absolute top-10 left-10 right-10 h-2 bg-amber-700 transition-transform origin-center" style="transform: rotate(0deg);"></div>
+                            <!-- Fulcrum -->
+                            <div class="absolute top-12 left-1/2 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[20px] border-b-black -translate-x-1/2"></div>
+                            <!-- Weights -->
+                            <div class="absolute top-2 left-12 w-8 h-8 bg-blue-500 flex items-center justify-center text-white text-xs rounded">B</div>
+                            <div class="absolute top-2 right-12 w-8 h-8 bg-red-500 flex items-center justify-center text-white text-xs rounded">K</div>
+                        </div>
+                        <p class="text-xs text-center mb-2">Geser Posisi Tumpu (Segitiga Hitam)</p>
+                        <input type="range" min="0" max="100" value="50" class="w-full" oninput="updateLever(this.value)">
+                        <p id="lever-status" class="text-center font-bold text-sm mt-2">Seimbang</p>
+                    </div>
+                    <!-- Sim 5.2: Bidang Miring -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 2: Bidang Miring</h4>
+                        <svg width="200" height="100" class="mx-auto">
+                            <path d="M10,90 L190,90 L190,10 Z" fill="#e2e8f0" stroke="#333" />
+                            <circle cx="100" cy="50" r="10" fill="orange" />
+                            <text x="100" y="80" text-anchor="middle" font-size="10">s (panjang)</text>
+                            <text x="200" y="50" text-anchor="middle" font-size="10">h (tinggi)</text>
                         </svg>
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Trachea_and_bronchi_labeled.png/800px-Trachea_and_bronchi_labeled.png" class="mt-4 rounded-xl">
-                    </div>
-                    <div class="teacher-note"><strong>Poin Diskusi:</strong> Mengapa perokok sering batuk? Karena asap merusak silia (rambut getar) di trakea yang bertugas menyapu kotoran keluar.</div>
-                </div>
-            `,
-            simulasi: [{ title: "Penyapu Silia", desc: "Gunakan mikroskop virtual untuk melihat gerakan silia menyapu lendir." }, { title: "Eksplorasi Bronkus", desc: "Telusuri percabangan bronkus kanan dan kiri." }],
-            latihan: [
-                { q: "Mengapa tulang rawan pada trakea berbentuk huruf 'C'?", o: ["Agar mudah patah", "Memberi ruang kerongkongan mengembang", "Karena kekurangan kalsium", "Agar trakea bisa memanjang"], a: 1, e: "Cincin terbuka di belakang memudahkan bolus makanan lewat di kerongkongan." },
-                { q: "Jaringan epitel yang melapisi trakea memiliki silia yang berfungsi...", o: ["Menyerap oksigen", "Menyapu kotoran ke arah luar", "Mendinginkan udara", "Membantu kontraksi"], a: 1, e: "Silia menyapu lendir yang berisi kotoran agar keluar dari sistem pernapasan." },
-                { q: "Percabangan dua dari trakea yang menuju paru-paru kanan dan kiri disebut...", o: ["Bronkiolus", "Bronkus", "Alveolus", "Pleura"], a: 1, e: "Trakea bercabang menjadi bronkus primer kanan dan kiri." },
-                { q: "Apa yang terjadi jika asap rokok melumpuhkan silia di trakea?", o: ["Pernapasan makin lancar", "Kotoran menumpuk di paru-paru", "Suara makin nyaring", "Hidung menjadi kering"], a: 1, e: "Lumpuhnya silia menyebabkan kotoran dan lendir sulit dibuang (penyebab batuk perokok)." },
-                { q: "Cincin tulang rawan pada trakea berfungsi untuk...", o: ["Menjaga agar trakea tetap terbuka", "Membantu pencernaan", "Mengikat alveolus", "Tempat pita suara"], a: 0, e: "Cincin tulang rawan mencegah trakea kempis saat tekanan udara berubah." },
-                { q: "Letak trakea berada di...", o: ["Belakang kerongkongan", "Depan kerongkongan", "Di dalam mulut", "Di samping lambung"], a: 1, e: "Secara anatomis trakea terletak di anterior (depan) dari esofagus." },
-                { q: "Thaharah (kesucian) pada trakea dilakukan oleh...", o: ["Lendir dan silia", "Asam lambung", "Air liur", "Aliran darah"], a: 0, e: "Lendir menangkap kuman, silia menyapunya keluar (mekanisme pembersihan)." },
-                { q: "Struktur kecil setelah bronkus yang tidak memiliki tulang rawan adalah...", o: ["Bronkus", "Bronkiolus", "Trakea", "Faring"], a: 1, e: "Bronkiolus adalah cabang lebih kecil yang dindingnya didominasi otot polos tanpa rawan." },
-                { q: "Udara dari laring akan langsung menuju ke...", o: ["Bronkus", "Hidung", "Trakea", "Lambung"], a: 2, e: "Laring terhubung langsung ke batang tenggorokan (trakea)." },
-                { q: "Panjang rata-rata trakea manusia dewasa adalah...", o: ["2 cm", "10-12 cm", "50 cm", "1 meter"], a: 1, e: "Trakea memiliki panjang sekitar 10 sampai 12 sentimeter." }
-            ]
-        },
-        4: {
-            title: "Pertukaran Agung: Paru-paru & Alveolus",
-            A: ["Menganalisis difusi gas.", "Memahami struktur alveolus.", "Meresapi kebesaran Allah dalam luas permukaan paru."],
-            B: { teks: "Luas alveolus yang mencapai puluhan meter persegi dalam ruang dada yang kecil adalah mukjizat desain Allah.", dalil_ar: "وَفِي أَنْفُسِكُمْ ۚ أَفَلَا تُبْصِرُونَ", dalil_id: "Dan pada dirimu sendiri. Maka apakah kamu tidak memperhatikan? (QS. Az-Zariyat: 21)" },
-            C: `
-                <div class="space-y-6">
-                    <p>Alveolus adalah kantung udara tipis tempat bertemunya udara dan darah. Bayangkan alveolus seperti anggur yang dikelilingi jaring-jaring kabel (kapiler).</p>
-                    <div class="image-container">
-                         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Alveolus_diagram.svg/800px-Alveolus_diagram.svg.png" class="max-w-xs mx-auto">
-                    </div>
-                    <h4 class="font-bold">Mekanisme Difusi</h4>
-                    <p>Oksigen pindah ke darah karena tekanan parsial, sementara CO2 dibuang. Ini terjadi pada jutaan alveolus secara simultan.</p>
-                </div>
-            `,
-            simulasi: [{ title: "Lab Difusi Gas", desc: "Lihat molekul O2 berpindah ke sel darah merah." }, { title: "Kapasitas Paru", desc: "Ukur volume udara saat napas biasa vs napas dalam." }],
-            latihan: [
-                { q: "Proses berpindahnya oksigen dari alveolus ke pembuluh darah disebut...", o: ["Osmosis", "Difusi", "Filtrasi", "Ekskresi"], a: 1, e: "Difusi adalah perpindahan gas dari konsentrasi tinggi ke rendah." },
-                { q: "Mengapa dinding alveolus harus sangat tipis?", o: ["Agar mudah pecah", "Memudahkan pertukaran gas", "Mencegah air masuk", "Menghasilkan lendir"], a: 1, e: "Dinding tipis satu lapis sel memperpendek jarak difusi gas." },
-                { q: "Selaput pembungkus paru-paru disebut...", o: ["Perikardium", "Pleura", "Meninges", "Peritoneum"], a: 1, e: "Pleura melindungi paru dan melumasinya saat mengembang-kempis." },
-                { q: "Gas yang dibuang dari darah ke alveolus saat kita mengembuskan napas adalah...", o: ["O2", "CO2", "N2", "H2O saja"], a: 1, e: "Sisa metabolisme tubuh berupa Karbon Dioksida dibuang lewat pernapasan." },
-                { q: "Berapa jumlah lobus pada paru-paru kanan manusia?", o: ["1", "2", "3", "4"], a: 2, e: "Paru kanan terdiri dari 3 lobus, sedangkan kiri 2 lobus (memberi ruang bagi jantung)." },
-                { q: "Alveolus dikelilingi oleh banyak pembuluh darah kecil yang disebut...", o: ["Vena", "Arteri", "Kapiler", "Aorta"], a: 2, e: "Kapiler adalah tempat pertukaran zat antara darah dan jaringan/udara." },
-                { q: "Ciri alveolus yang mendukung fungsinya adalah sebagai berikut, kecuali...", o: ["Dinding tipis", "Luas permukaan lebar", "Sangat lembap", "Memiliki tulang rawan"], a: 3, e: "Alveolus tidak memiliki tulang rawan; ia bersifat elastis dan sangat tipis." },
-                { q: "Oksigen yang masuk ke darah di alveolus akan diikat oleh...", o: ["Leukosit", "Plasma darah", "Hemoglobin", "Trombosit"], a: 2, e: "Hemoglobin dalam sel darah merah adalah pengangkut utama oksigen." },
-                { q: "Jika total luas alveolus dibentangkan, ukurannya bisa setara dengan...", o: ["Meja makan", "Lapangan tenis", "Buku tulis", "Ruang kelas"], a: 1, e: "Luas permukaan alveolus mencapai 70-100 meter persegi." },
-                { q: "Pertukaran gas terjadi di alveolus karena perbedaan...", o: ["Suhu", "Tekanan parsial gas", "Kecepatan udara", "Warna darah"], a: 1, e: "Gas bergerak dari area tekanan parsial tinggi ke rendah." }
-            ]
-        },
-        5: {
-            title: "Mesin Napas: Mekanisme Dada & Perut",
-            A: ["Membedakan inspirasi dan ekspirasi.", "Menjelaskan peran Diafragma.", "Mempraktikkan napas perut untuk ketenangan (Zikir)."],
-            B: { teks: "Napas yang tenang membantu kekhusyukan ibadah.", dalil_ar: "أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقلوبُ", dalil_id: "Ingatlah, hanya dengan mengingati Allah-lah hati menjadi tenteram. (QS. Ar-Ra'd: 28)" },
-            C: `
-                <div class="space-y-6">
-                    <p>Inspirasi terjadi saat diafragma berkontraksi (mendatar), menciptakan tekanan rendah yang menarik udara masuk. Ekspirasi adalah relaksasi.</p>
-                    <div class="image-container">
-                        <svg viewBox="0 0 200 100" class="w-full max-w-sm mx-auto bg-teal-50 rounded-xl">
-                             <path d="M70,80 Q100,60 130,80" fill="none" stroke="#f59e0b" stroke-width="5" />
-                             <text x="75" y="95" font-size="8">Diafragma (Relaksasi)</text>
-                        </svg>
-                    </div>
-                    <div class="teacher-note"><strong>Poin Diskusi:</strong> Mengapa saat kaget atau takut napas kita menjadi pendek dan cepat? Hubungkan dengan sistem saraf simpatik.</div>
-                </div>
-            `,
-            simulasi: [{ title: "Pompa Diafragma", desc: "Tarik otot diafragma ke bawah untuk mengembangkan paru-paru virtual." }, { title: "Ritme Napas", desc: "Sesuaikan kecepatan napas dan lihat detak jantung." }],
-            latihan: [
-                { q: "Pada pernapasan perut, otot yang paling berperan adalah...", o: ["Otot antar tulang rusuk", "Otot diafragma", "Otot punggung", "Otot leher"], a: 1, e: "Pernapasan perut didominasi oleh gerakan diafragma." },
-                { q: "Apa yang terjadi pada volume rongga dada saat inspirasi?", o: ["Mengecil", "Membesar", "Tetap", "Hilang"], a: 1, e: "Volume membesar agar tekanan mengecil sehingga udara luar masuk." },
-                { q: "Posisi diafragma saat kita membuang napas (ekspirasi) adalah...", o: ["Mendatar", "Melengkung ke atas", "Mengerut", "Pindah ke samping"], a: 1, e: "Saat ekspirasi, diafragma relaksasi dan melengkung kembali ke arah paru-paru." },
-                { q: "Mekanisme pernapasan dada menggunakan kekuatan dari...", o: ["Diafragma", "Otot antar tulang rusuk", "Otot perut", "Paru-paru itu sendiri"], a: 1, e: "Pernapasan dada melibatkan kontraksi otot interkostal." },
-                { q: "Hukum fisika yang menjelaskan udara masuk ke paru-paru adalah...", o: ["Udara mengalir dari tekanan tinggi ke rendah", "Udara selalu panas", "Cahaya merambat lurus", "Benda jatuh ke bawah"], a: 0, e: "Saat dada membesar, tekanan paru turun di bawah tekanan atmosfer." },
-                { q: "Mengapa bernapas lewat perut dianggap lebih menenangkan?", o: ["Karena lebih cepat", "Karena oksigen masuk lebih maksimal", "Karena lebih berisik", "Karena tidak butuh energi"], a: 1, e: "Napas perut mengaktifkan saraf parasimpatik yang menurunkan stres." },
-                { q: "Udara komplementer adalah...", o: ["Udara sisa yang tidak bisa keluar", "Udara yang bisa dihirup maksimal setelah napas biasa", "Udara napas biasa", "Udara saat bicara"], a: 1, e: "Udara cadangan inspirasi yang bisa ditarik sekuat mungkin." },
-                { q: "Volume udara yang tetap tinggal di paru-paru setelah ekspirasi maksimal disebut...", o: ["Volume Tidal", "Volume Residu", "Kapasitas Vital", "Volume Cadangan"], a: 1, e: "Volume residu mencegah paru-paru kempis total." },
-                { q: "Fungsi utama diafragma adalah...", o: ["Menyaring debu", "Membatasi rongga dada dan perut", "Tempat pertukaran O2", "Menghasilkan suara"], a: 1, e: "Secara anatomi ia adalah sekat, secara fisiologi ia adalah pompa napas." },
-                { q: "Saat berlari, frekuensi pernapasan meningkat karena tubuh butuh...", o: ["Lebih banyak air", "Lebih banyak energi/O2", "Karbondioksida", "Suhu dingin"], a: 1, e: "Aktivitas berat meningkatkan oksidasi sel yang butuh suplai O2 cepat." }
-            ]
-        },
-        6: {
-            title: "Transportasi Oksigen: Darah & Energi",
-            A: ["Menjelaskan peran Hemoglobin.", "Memahami oksidasi biologi.", "Bersyukur atas energi untuk beramal shaleh."],
-            B: { teks: "Energi dari napas harus digunakan untuk ketaatan.", dalil_ar: "فَإِذَا فَرَغْتَ فَانْصَبْ", dalil_id: "Maka apabila kamu telah selesai (dari sesuatu urusan), kerjakanlah dengan sungguh-sungguh (urusan) yang lain. (QS. Asy-Syarh: 7)" },
-            C: `<p>Oksigen diikat oleh Hemoglobin (Hb) menjadi Oksihemoglobin. Tanpa besi (Fe) dalam Hb, kita akan lemas (anemia).</p>
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Hemoglobin.png/800px-Hemoglobin.png" class="max-w-xs mx-auto mt-4">`,
-            simulasi: [{ title: "Kurir Hemoglobin", desc: "Bantu sel darah merah mengambil O2 di paru dan mengantar ke otot." }, { title: "Efek Karbon Monoksida", desc: "Lihat apa yang terjadi jika Hb mengikat asap kendaraan." }],
-            latihan: [
-                { q: "Zat dalam darah yang bertugas mengangkut oksigen adalah...", o: ["Plasma", "Keping darah", "Hemoglobin", "Sel darah putih"], a: 2, e: "Hemoglobin adalah pigmen pengikat O2 pada eritrosit." },
-                { q: "Mineral penting yang dibutuhkan untuk pembentukan hemoglobin adalah...", o: ["Kalsium", "Zat Besi (Fe)", "Yodium", "Kalium"], a: 1, e: "Besi adalah inti dari molekul heme dalam hemoglobin." },
-                { q: "Hasil akhir dari pembakaran (oksidasi) makanan di sel selain energi adalah...", o: ["O2 dan Gula", "CO2 dan Uap Air", "Protein", "Nitrogen"], a: 1, e: "C6H12O6 + 6O2 -> 6CO2 + 6H2O + Energi." },
-                { q: "Apa nama senyawa saat hemoglobin mengikat oksigen?", o: ["Karbaminohemoglobin", "Oksihemoglobin", "Oksimioglobin", "Hemoglobin murni"], a: 1, e: "Hb + O2 -> HbO2 (Oksihemoglobin)." },
-                { q: "Gas beracun yang lebih mudah diikat hemoglobin daripada oksigen adalah...", o: ["Karbon Dioksida", "Karbon Monoksida (CO)", "Nitrogen", "Argon"], a: 1, e: "CO memiliki afinitas jauh lebih tinggi sehingga sangat berbahaya." },
-                { q: "Darah yang kaya karbon dioksida mengalir dari jaringan menuju ke...", o: ["Otak", "Paru-paru", "Ginjal", "Usus"], a: 1, e: "Darah kotor dibawa ke paru-paru untuk dibuang CO2-nya." },
-                { q: "Proses respirasi sel terjadi di dalam organel sel yang disebut...", o: ["Ribosom", "Mitokondria", "Inti sel", "Badan golgi"], a: 1, e: "Mitokondria dikenal sebagai powerhouse karena tempat produksi energi." },
-                { q: "Kekurangan sel darah merah atau hemoglobin menyebabkan kondisi...", o: ["Hipertensi", "Anemia", "Diabetes", "Stroke"], a: 1, e: "Anemia menyebabkan suplai O2 ke jaringan menurun." },
-                { q: "Sebagian besar karbon dioksida diangkut dalam darah dalam bentuk...", o: ["Larut dalam plasma", "Ion bikarbonat (HCO3-)", "Kristal", "Gas bebas"], a: 1, e: "Sekitar 70% CO2 diangkut dalam bentuk ion bikarbonat." },
-                { q: "Energi (ATP) yang dihasilkan dari pernapasan digunakan untuk...", o: ["Bergerak dan berpikir", "Ibadah", "Pertumbuhan", "Semua benar"], a: 3, e: "Energi adalah bahan bakar utama seluruh aktivitas kehidupan." }
-            ]
-        },
-        7: {
-            title: "Ujian Kekuatan: Gangguan & Penyakit",
-            A: ["Mengidentifikasi gejala Asma, TBC, dan Pneumonia.", "Menganalisis bahaya rokok dan polusi.", "Menerapkan gaya hidup sehat Nabawi."],
-            B: { teks: "Menjaga kesehatan paru adalah bagian dari menjaga amanah Allah.", dalil_ar: "لَا ضَرَرَ وَلَا ضِرَارَ", dalil_id: "Tidak boleh membahayakan diri sendiri dan tidak boleh membahayakan orang lain. (Hadits)" },
-            C: `
-                <div class="space-y-6">
-                    <p>Penyakit pernapasan bisa disebabkan bakteri (TBC), virus (Flu), atau penyempitan saluran (Asma). Rokok mengandung tar yang menghitamkan alveolus.</p>
-                    <div class="image-container">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Smoking_lung_comparison.jpg/800px-Smoking_lung_comparison.jpg" class="rounded-xl">
-                        <span class="source-text">Perbandingan paru sehat dan paru perokok.</span>
+                        <div class="grid grid-cols-2 gap-2 text-sm mt-2">
+                            <label>Panjang (s): <input type="number" id="ramp_s" value="10" class="border w-12"></label>
+                            <label>Tinggi (h): <input type="number" id="ramp_h" value="2" class="border w-12"></label>
+                        </div>
+                        <button onclick="calcRampKM()" class="mt-2 bg-emerald-600 text-white px-4 py-1 rounded w-full text-sm">Hitung Keuntungan Mekanis</button>
+                        <p id="ramp_result" class="text-center font-bold mt-2">-</p>
                     </div>
                 </div>
-            `,
-            simulasi: [{ title: "X-Ray Scanner", desc: "Diagnosa penyakit berdasarkan hasil rontgen paru virtual." }, { title: "Filter Polusi", desc: "Bandingkan udara desa vs kota pada paru-paru." }],
-            latihan: [
-                { q: "Penyakit penyempitan saluran pernapasan akibat alergi disebut...", o: ["TBC", "Asma", "Bronkitis", "Influenza"], a: 1, e: "Asma dipicu oleh hipersensitivitas saluran napas." },
-                { q: "Penyakit TBC disebabkan oleh agen infeksi berupa...", o: ["Virus", "Bakteri", "Jamur", "Debu"], a: 1, e: "Mycobacterium tuberculosis adalah bakteri penyebab TBC." },
-                { q: "Zat dalam rokok yang menyebabkan ketagihan (adiksi) adalah...", o: ["Tar", "Nikotin", "Karbon Monoksida", "Ammonia"], a: 1, e: "Nikotin menyerang saraf pusat dan menyebabkan ketergantungan." },
-                { q: "Radang pada dinding alveolus yang menyebabkannya terisi cairan disebut...", o: ["Emfisema", "Pneumonia", "Sinusitis", "Laringitis"], a: 1, e: "Pneumonia sering disebut paru-paru basah." },
-                { q: "Emfisema adalah gangguan pernapasan yang ditandai dengan...", o: ["Lendir berlebih", "Hilangnya elastisitas alveolus", "Batuk berdarah", "Hidung tersumbat"], a: 1, e: "Alveolus rusak dan pecah sehingga pertukaran gas tidak efektif." },
-                { q: "Virus Influenza menyerang bagian...", o: ["Alveolus saja", "Saluran pernapasan atas", "Jantung", "Tulang rusuk"], a: 1, e: "Flu umumnya menyerang hidung, tenggorokan, dan paru-paru atas." },
-                { q: "Bahaya utama asap rokok bagi perokok pasif adalah...", o: ["Tidak ada bahaya", "Risiko penyakit yang sama dengan perokok aktif", "Hanya bau baju", "Hanya batuk biasa"], a: 1, e: "Perokok pasif menghirup zat kimia yang sama berbahayanya." },
-                { q: "Kanker paru-paru sebagian besar dipicu oleh kebiasaan...", o: ["Olah raga", "Merokok", "Minum air putih", "Tidur siang"], a: 1, e: "Zat karsinogenik dalam asap rokok memicu mutasi sel paru." },
-                { q: "Untuk mencegah penularan penyakit pernapasan lewat udara, sebaiknya...", o: ["Menutup hidung saat bersin", "Menggunakan masker", "Menjaga jarak", "Semua benar"], a: 3, e: "Etika bersin dan alat pelindung diri sangat krusial." },
-                { q: "Mengapa penderita TBC sering mengalami batuk berdarah?", o: ["Karena alergi debu", "Kerusakan jaringan paru akibat bakteri", "Karena kurang minum", "Karena terlalu banyak bicara"], a: 1, e: "Bakteri memakan jaringan paru dan merusak pembuluh darah di sana." }
-            ]
-        },
-        8: {
-            title: "Review & Integrasi: Napas Terakhir",
-            A: ["Merangkum seluruh sistem.", "Merenungkan akhir kehidupan (Sakaratulmaut).", "Komitmen menjaga kesehatan."],
-            B: { teks: "Setiap napas memiliki batas. Gunakan setiap hembusan untuk zikir.", dalil_ar: "كُلُّ نَفْسٍ ذَائِقَةُ الْمَوْتِ", dalil_id: "Tiap-tiap yang berjiwa akan merasakan mati. (QS. Ali Imran: 185)" },
-            C: `<p>Sistem pernapasan adalah bukti keteraturan alam semesta. Dari hidung hingga sel, semuanya bekerja harmonis tanpa perintah sadar kita.</p>
-                <div class="teacher-note">Review seluruh materi dan persiapkan untuk ujian akhir.</div>`,
-            simulasi: [{ title: "Peta Konsep Interaktif", desc: "Hubungkan bagian-bagian sistem pernapasan." }, { title: "Refleksi Napas", desc: "Hitung total napas Anda sejak lahir (estimasi)." }],
-            latihan: [
-                { q: "Aliran oksigen berakhir di tingkat sel untuk proses...", o: ["Pencernaan", "Oksidasi/Respirasi Sel", "Ekskresi", "Reproduksi"], a: 1, e: "Tujuan akhir napas adalah menghasilkan energi di sel." },
-                { q: "Udara cadangan ekspirasi disebut juga dengan udara...", o: ["Tidal", "Komplementer", "Suplementer", "Residu"], a: 2, e: "Udara suplementer adalah udara yang bisa diembuskan paksa." },
-                { q: "Organ yang berfungsi menyaring udara sekaligus pengatur suhu adalah...", o: ["Mulut", "Hidung", "Paru-paru", "Faring"], a: 1, e: "Hidung memiliki filtrasi dan termoregulasi." },
-                { q: "Jika kita menahan napas terlalu lama, gas yang menumpuk di darah adalah...", o: ["Oksigen", "Karbon Dioksida", "Nitrogen", "Helium"], a: 1, e: "Kadar CO2 akan naik dan memicu refleks napas otomatis." },
-                { q: "Pusat kontrol pernapasan manusia terletak di...", o: ["Jantung", "Medulla Oblongata (Batak Otak)", "Hati", "Lambung"], a: 1, e: "Batang otak mengatur ritme napas tanpa kita sadari." },
-                { q: "Bernapas secara sadar (mengatur ritme) dikontrol oleh...", o: ["Saraf otonom", "Korteks serebri (Otak besar)", "Sumsum tulang belakang", "Kulit"], a: 1, e: "Saat kita sengaja menarik napas dalam, otak besar mengambil alih." },
-                { q: "Apa yang dimaksud dengan Kapasitas Vital paru-paru?", o: ["Volume Tidal + Cadangan Inspirasi + Cadangan Ekspirasi", "Hanya volume residu", "Jumlah seluruh udara di dunia", "Hanya oksigen"], a: 0, e: "Kapasitas vital adalah jumlah maksimal udara yang dapat digerakkan." },
-                { q: "Bagaimana cara mensyukuri nikmat sistem pernapasan?", o: ["Merokok sesekali", "Berolahraga dan menjauhi polusi", "Begadang tiap malam", "Menahan napas"], a: 1, e: "Menjaga amanah kesehatan adalah bentuk syukur praktis." },
-                { q: "Kapan sistem pernapasan manusia mulai bekerja?", o: ["Saat usia 10 tahun", "Sesaat setelah lahir (tangisan pertama)", "Saat mulai makan", "Saat mulai bicara"], a: 1, e: "Bayi mulai bernapas sendiri setelah tali pusat dipotong." },
-                { q: "Respirasi adalah salah satu ciri makhluk hidup yang bertujuan...", o: ["Mendapatkan berat badan", "Menghasilkan energi", "Mendinginkan tubuh", "Mengeluarkan keringat"], a: 1, e: "Tanpa respirasi, energi untuk hidup tidak akan terbentuk." }
-            ]
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif Pertemuan 5</h3>
+                    <div id="quiz-p5" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p5')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded font-bold">Cek Jawaban</button>
+                    <div id="result-p5" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+         <!-- ================= PERTEMUAN 6 (KATROL & RODA) ================= -->
+         <div id="p6" class="tab-content">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b-2 border-emerald-200 pb-2">Pertemuan 6: Katrol dan Roda Berporos</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600">
+                        <li>Santri dapat membedakan Katrol Tetap, Katrol Bebas, dan Katrol Majemuk.</li>
+                        <li>Santri memahami prinsip Roda Berporos (Gear).</li>
+                        <li>Santri dapat menghitung gaya kuasa pada sistem katrol.</li>
+                    </ul>
+                </div>
+
+                <div class="mb-6 bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 class="text-xl font-semibold text-green-800 mb-2">B. Tadabbur Ayat Kauniyah</h3>
+                    <p class="text-slate-700 mb-2">
+                        Prinsip ta'awun (tolong-menolong) terlihat pada sistem katrol majemuk. Satu tali mungkin lemah, tapi jika dijalin melalui banyak katrol, ia bisa mengangkat beban yang sangat berat. Kebersamaan melahirkan kekuatan.
+                    </p>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed">
+                    <h3 class="text-xl font-semibold text-slate-800">C. Materi Inti: Mengangkat dan Memutar</h3>
+                    
+                    <div class="prose max-w-none">
+                        <h4 class="font-bold text-lg text-emerald-700">1. Katrol (Pulley)</h4>
+                        <ul class="list-disc pl-5">
+                            <li><strong>Katrol Tetap:</strong> Posisinya diam. Hanya mengubah arah gaya. KM = 1. (Contoh: Tiang bendera, sumur timba).</li>
+                            <li><strong>Katrol Bebas:</strong> Katrol ikut bergerak naik turun bersama beban. KM = 2. (Gaya yang dibutuhkan setengah dari beban).</li>
+                            <li><strong>Katrol Majemuk (Takal):</strong> Gabungan tetap dan bebas. KM = Jumlah tali yang menopang beban.</li>
+                        </ul>
+                        <div class="bg-gray-100 p-3 mt-2 border-l-4 border-gray-500">
+                            <strong>Rumus Umum Katrol:</strong> $$ F = \frac{w}{KM} $$
+                        </div>
+
+                        <h4 class="font-bold text-lg mt-4 text-emerald-700">2. Roda Berporos</h4>
+                        <p>Dua roda dengan jari-jari berbeda yang berputar bersamaan. Contoh: Roda sepeda, setir mobil, obeng.</p>
+                        <p>KM = Jari-jari roda besar / Jari-jari poros.</p>
+                    </div>
+
+                    <div class="teacher-note">
+                        <strong>👨‍🏫 Poin Diskusi Guru:</strong>
+                        <p>Mengapa sepeda gunung memiliki banyak gigi (gear)? Diskusikan hubungan antara ukuran gear dengan ringan/beratnya kayuhan saat menanjak.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <!-- Sim 6.1: Sistem Katrol -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 1: Pilih Katrol</h4>
+                        <div class="flex gap-2 mb-4">
+                            <button onclick="setPulley(1)" class="bg-blue-500 text-white px-2 py-1 text-xs rounded">Tetap (KM=1)</button>
+                            <button onclick="setPulley(2)" class="bg-blue-500 text-white px-2 py-1 text-xs rounded">Bebas (KM=2)</button>
+                            <button onclick="setPulley(4)" class="bg-blue-500 text-white px-2 py-1 text-xs rounded">Majemuk (KM=4)</button>
+                        </div>
+                        <p class="text-sm">Beban: 1000 N</p>
+                        <div class="bg-white border p-4 text-center">
+                            <p class="text-lg font-bold">Gaya yang dibutuhkan:</p>
+                            <p id="pulley-force" class="text-2xl text-red-600">1000 N</p>
+                        </div>
+                    </div>
+                    <!-- Sim 6.2: Gear -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 2: Rasio Gear</h4>
+                        <div class="flex items-center justify-center gap-4 h-32 bg-white border">
+                            <div id="gear-small" class="w-10 h-10 border-4 border-dashed border-gray-600 rounded-full animate-spin"></div>
+                            <div id="gear-big" class="w-20 h-20 border-4 border-dashed border-gray-600 rounded-full animate-spin"></div>
+                        </div>
+                        <p class="text-xs text-center mt-2">Gear kecil berputar lebih cepat dari Gear besar untuk menempuh jarak yang sama.</p>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif Pertemuan 6</h3>
+                    <div id="quiz-p6" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p6')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded font-bold">Cek Jawaban</button>
+                    <div id="result-p6" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PERTEMUAN 7 (ZAT ADITIF) ================= -->
+        <div id="p7" class="tab-content">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b-2 border-emerald-200 pb-2">Pertemuan 7: Zat Aditif pada Makanan</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600">
+                        <li>Santri dapat membedakan Zat Aditif Alami dan Buatan (Sintetis).</li>
+                        <li>Santri mengenal jenis pewarna, pemanis, pengawet, dan penyedap.</li>
+                        <li>Santri mampu menganalisis dampak kesehatan dari konsumsi zat aditif berlebih.</li>
+                    </ul>
+                </div>
+
+                <div class="mb-6 bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 class="text-xl font-semibold text-green-800 mb-2">B. Tadabbur Ayat Kauniyah</h3>
+                    <p class="text-slate-700 mb-2">
+                        Allah memerintahkan kita memakan makanan yang Halal dan Tayyib (baik/sehat). Zat aditif buatan yang berbahaya merusak sifat 'Tayyib' makanan tersebut. Menjaga perut adalah menjaga kualitas ibadah.
+                    </p>
+                    <p class="italic text-sm text-slate-600">"Wahai manusia! Makanlah dari (makanan) yang halal dan baik yang terdapat di bumi..." (QS. Al-Baqarah: 168)</p>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed">
+                    <h3 class="text-xl font-semibold text-slate-800">C. Materi Inti: Kimia di Piring Kita</h3>
+                    
+                    <div class="prose max-w-none">
+                        <p>Zat Aditif adalah bahan yang ditambahkan ke makanan untuk meningkatkan kualitas, keawetan, kelezatan, dan kemenarikan.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="border p-3 rounded">
+                                <h5 class="font-bold text-emerald-600">1. Pewarna</h5>
+                                <ul class="text-sm list-disc ml-4">
+                                    <li><strong>Alami:</strong> Daun suji (hijau), Kunyit (kuning), Buah naga (merah). Aman.</li>
+                                    <li><strong>Buatan:</strong> Tartrazin (kuning), Fast Green FCF. Batasi konsumsi.</li>
+                                    <li><strong>DILARANG:</strong> Rhodamin B, Methanyl Yellow (Pewarna tekstil). Karsinogenik!</li>
+                                </ul>
+                            </div>
+                            <div class="border p-3 rounded">
+                                <h5 class="font-bold text-emerald-600">2. Pemanis</h5>
+                                <ul class="text-sm list-disc ml-4">
+                                    <li><strong>Alami:</strong> Gula tebu (sukrosa), Madu.</li>
+                                    <li><strong>Buatan:</strong> Aspartam, Sakarin, Siklamat. (Untuk penderita diabetes, tapi tidak boleh berlebih).</li>
+                                </ul>
+                            </div>
+                            <div class="border p-3 rounded">
+                                <h5 class="font-bold text-emerald-600">3. Pengawet</h5>
+                                <ul class="text-sm list-disc ml-4">
+                                    <li><strong>Alami:</strong> Garam (asinan), Gula (manisan).</li>
+                                    <li><strong>Buatan:</strong> Natrium Benzoat, Asam Sorbat.</li>
+                                    <li><strong>DILARANG:</strong> Formalin, Boraks. Sangat berbahaya!</li>
+                                </ul>
+                            </div>
+                            <div class="border p-3 rounded">
+                                <h5 class="font-bold text-emerald-600">4. Penyedap</h5>
+                                <ul class="text-sm list-disc ml-4">
+                                    <li><strong>Alami:</strong> Bawang, merica, kaldu daging.</li>
+                                    <li><strong>Buatan:</strong> MSG (Monosodium Glutamat). Aman dalam batas wajar (Chinese Restaurant Syndrome jika berlebih).</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="teacher-note">
+                        <strong>👨‍🏫 Poin Diskusi Guru:</strong>
+                        <p>Bawa beberapa bungkus makanan ringan (chiki) ke kelas. Minta santri membaca label komposisi dan mengidentifikasi kode "E" atau nama kimia zat aditif di dalamnya.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <!-- Sim 7.1: Detektif Label -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 1: Detektif Label Makanan</h4>
+                        <p class="text-sm mb-2">Ketik kode atau nama zat untuk cek keamanannya.</p>
+                        <select id="additive-select" class="w-full border p-2 rounded mb-2">
+                            <option value="">-- Pilih Zat --</option>
+                            <option value="kunyit">Ekstrak Kunyit</option>
+                            <option value="msg">Monosodium Glutamat</option>
+                            <option value="boraks">Boraks</option>
+                            <option value="aspartam">Aspartam</option>
+                            <option value="rhodamin">Rhodamin B</option>
+                        </select>
+                        <button onclick="checkAdditive()" class="bg-emerald-600 text-white px-4 py-1 rounded w-full">Cek Status</button>
+                        <div id="additive-result" class="mt-2 p-2 border rounded bg-white hidden text-sm"></div>
+                    </div>
+                    <!-- Sim 7.2: Pewarna -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 2: Uji Pewarna</h4>
+                        <p class="text-xs mb-2">Teteskan sampel ke larutan basa (air sabun). Pewarna alami biasanya berubah warna, pewarna buatan tetap.</p>
+                        <div class="flex justify-around">
+                            <div class="text-center">
+                                <div id="sample-A" class="w-10 h-10 bg-yellow-400 rounded-full mx-auto mb-1 transition-colors duration-500"></div>
+                                <span class="text-xs">Sampel A (Kunyit)</span>
+                            </div>
+                            <div class="text-center">
+                                <div id="sample-B" class="w-10 h-10 bg-yellow-400 rounded-full mx-auto mb-1 transition-colors duration-500"></div>
+                                <span class="text-xs">Sampel B (Tekstil)</span>
+                            </div>
+                        </div>
+                        <button onclick="testColor()" class="mt-4 bg-purple-600 text-white px-4 py-1 rounded w-full">Teteskan Basa</button>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif Pertemuan 7</h3>
+                    <div id="quiz-p7" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p7')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded font-bold">Cek Jawaban</button>
+                    <div id="result-p7" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PERTEMUAN 8 (ZAT ADIKTIF) ================= -->
+        <div id="p8" class="tab-content">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b-2 border-emerald-200 pb-2">Pertemuan 8: Zat Adiktif & Psikotropika</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600">
+                        <li>Santri memahami pengertian Zat Adiktif, Narkotika, dan Psikotropika.</li>
+                        <li>Santri mengetahui bahaya rokok (Nikotin) dan Alkohol.</li>
+                        <li>Santri memahami dampak fisik dan psikis penyalahgunaan narkoba.</li>
+                    </ul>
+                </div>
+
+                <div class="mb-6 bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 class="text-xl font-semibold text-green-800 mb-2">B. Tadabbur Ayat Kauniyah</h3>
+                    <p class="text-slate-700 mb-2">
+                        Islam dengan tegas mengharamkan Khamr (segala yang memabukkan/menutup akal). Narkoba adalah bentuk khamr modern yang merusak akal, satu-satunya pembeda manusia dengan hewan.
+                    </p>
+                    <p class="italic text-sm text-slate-600">"...Sesungguhnya (meminum) khamar, berjudi, (berkorban untuk) berhala... adalah termasuk perbuatan syaitan. Maka jauhilah perbuatan-perbuatan itu agar kamu mendapat keberuntungan." (QS. Al-Maidah: 90)</p>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed">
+                    <h3 class="text-xl font-semibold text-slate-800">C. Materi Inti: Menjauhi Kehancuran</h3>
+                    
+                    <div class="prose max-w-none">
+                        <h4 class="font-bold text-lg text-emerald-700">1. Penggolongan</h4>
+                        <ul class="list-disc pl-5">
+                            <li><strong>Narkotika:</strong> Menurunkan kesadaran, menghilangkan rasa nyeri. (Heroin, Kokain, Ganja, Morfin).</li>
+                            <li><strong>Psikotropika:</strong> Mempengaruhi mental/perilaku. (Ekstasi, Sabu-sabu/Methamphetamine, Diazepam).</li>
+                            <li><strong>Zat Psikoaktif Lain:</strong> Alkohol, Nikotin (Rokok), Kafein (Kopi).</li>
+                        </ul>
+
+                        <h4 class="font-bold text-lg mt-4 text-emerald-700">2. Dampak Penyalahgunaan</h4>
+                        <ul class="list-disc pl-5">
+                            <li><strong>Fisik:</strong> Kerusakan otak, hati, ginjal, HIV/AIDS (jarum suntik), overdosis (kematian).</li>
+                            <li><strong>Psikis:</strong> Halusinasi, paranoid, agresif, depresi berat.</li>
+                            <li><strong>Sosial:</strong> Dikucilkan, kriminalitas, masa depan hancur.</li>
+                        </ul>
+                         <h4 class="font-bold text-lg mt-4 text-emerald-700">3. Rokok</h4>
+                         <p>Mengandung ribuan racun, utamanya: Nikotin (adiktif), Tar (karsinogenik/kanker), Karbon Monoksida (mengikat hemoglobin, menghambat oksigen).</p>
+                    </div>
+
+                    <div class="teacher-note">
+                        <strong>👨‍🏫 Poin Diskusi Guru:</strong>
+                        <p>Tekankan konsep "Saddudz Dzari'ah" (menutup jalan menuju keburukan). Merokok seringkali menjadi pintu gerbang menuju narkoba. Mengapa ulama mengharamkan atau memakruhkan rokok? Karena unsur <em>mudharat</em> (bahaya) yang nyata.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <!-- Sim 8.1: Organ Damage -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 1: Efek Jangka Panjang</h4>
+                        <p class="text-sm mb-2">Pilih zat untuk melihat organ yang diserang.</p>
+                        <div class="flex gap-2 mb-2">
+                            <button onclick="showDamage('rokok')" class="bg-gray-600 text-white px-2 py-1 text-xs rounded">Rokok</button>
+                            <button onclick="showDamage('alkohol')" class="bg-yellow-600 text-white px-2 py-1 text-xs rounded">Alkohol</button>
+                            <button onclick="showDamage('sabu')" class="bg-blue-600 text-white px-2 py-1 text-xs rounded">Sabu</button>
+                        </div>
+                        <div id="organ-display" class="bg-white p-4 h-32 border flex items-center justify-center text-center text-sm font-semibold">
+                            Pilih zat di atas.
+                        </div>
+                    </div>
+                    <!-- Sim 8.2: Say No Game -->
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi 2: Berani Tolak!</h4>
+                        <p id="scenario-text" class="text-sm italic mb-2">"Eh bro, cobain ini dikit aja, biar ga ngantuk pas belajar..."</p>
+                        <div class="grid grid-cols-1 gap-2">
+                            <button onclick="respondNo(1)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm text-left">A. "Maaf, saya tidak berani." (Ragu)</button>
+                            <button onclick="respondNo(2)" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm text-left">B. "Tidak! Itu haram dan merusak otak." (Tegas)</button>
+                            <button onclick="respondNo(3)" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm text-left">C. "Boleh deh dikit." (Salah)</button>
+                        </div>
+                        <p id="scenario-result" class="mt-2 font-bold text-sm"></p>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif Pertemuan 8</h3>
+                    <div id="quiz-p8" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p8')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded font-bold">Cek Jawaban</button>
+                    <div id="result-p8" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TES SUMATIF ================= -->
+        <div id="sumatif" class="tab-content">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-6 text-center">Tes Sumatif Akhir Modul</h2>
+                <p class="text-center text-slate-600 mb-8">Jawablah pertanyaan berikut dengan jujur dan teliti. Soal mencakup materi dari Pertemuan 1 hingga 8.</p>
+                
+                <div id="quiz-sumatif" class="space-y-6">
+                    <!-- Summative questions injected via JS -->
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button onclick="checkSumatif()" class="bg-emerald-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-emerald-700 shadow-lg text-lg">Kumpulkan Jawaban</button>
+                    <button onclick="resetSumatif()" class="ml-4 bg-gray-500 text-white px-8 py-3 rounded-lg font-bold hover:bg-gray-600 shadow-lg text-lg">Ulangi Tes</button>
+                </div>
+
+                <div id="result-sumatif" class="mt-8 hidden text-center bg-emerald-50 p-6 rounded-lg border border-emerald-200">
+                    <h3 class="text-2xl font-bold text-emerald-800">Hasil Tes Anda</h3>
+                    <p id="score-display" class="text-4xl font-extrabold text-emerald-600 my-4">0 / 100</p>
+                    <p id="feedback-sumatif" class="text-slate-700"></p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-emerald-800 text-white py-6 mt-12">
+        <div class="container mx-auto text-center px-4">
+            <p class="font-bold">Modul IPA Terpadu Kelas 8</p>
+            <p class="text-sm opacity-80 mt-1">Disusun untuk Santri Ahlu Sunnah wal Jamaah</p>
+            <p class="text-xs opacity-60 mt-4">&copy; 2024 Modul Pendidikan Islam Profesional</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- 1. Tab Navigation Logic ---
+        function switchTab(tabId) {
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            // Show selected content
+            document.getElementById(tabId).classList.add('active');
+            
+            // Update button styles
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-yellow-400', 'text-white', 'font-bold');
+                btn.classList.add('border-transparent');
+            });
+            
+            // Highlight active button
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if(activeBtn) {
+                activeBtn.classList.remove('border-transparent');
+                activeBtn.classList.add('border-yellow-400', 'text-white', 'font-bold');
+            }
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
         }
-    };
 
-    function loadRMP(id) {
-        const data = rmpData[id];
-        const container = document.getElementById('main-container');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
-        document.getElementById(`nav-${id}`).classList.add('tab-active');
+        // Initialize first tab
+        switchTab('p1');
 
-        if(!data) return;
+        // --- 2. Simulation Logic ---
+        
+        // Sim P1.1: Diaphragm
+        document.getElementById('sim1-slider').addEventListener('input', function(e) {
+            const val = e.target.value;
+            const diaphragm = document.getElementById('sim1-diaphragm');
+            const lung = document.getElementById('sim1-lung');
+            const status = document.getElementById('sim1-status');
+            
+            // Calculate curve (quadratic bezier)
+            // Start 40,150 End 110,150. Control point changes Y.
+            // Val 0 (Ekspirasi) -> Control Y = 120 (Arched up)
+            // Val 100 (Inspirasi) -> Control Y = 170 (Flat/Down)
+            const controlY = 120 + (val * 0.5);
+            diaphragm.setAttribute('d', `M40,150 Q75,${controlY} 110,150`);
+            
+            // Lung size
+            const lungR = 20 + (val * 0.1);
+            lung.setAttribute('r', lungR);
 
-        container.innerHTML = `
-            <div class="rmp-card animate-in fade-in duration-500">
-                <h2 class="text-3xl font-black text-slate-800 mb-8 border-b pb-4">Sesi ${id}: ${data.title}</h2>
-                <section class="mb-10"><h3 class="section-header">A. Tujuan Pembelajaran</h3><ul class="list-disc ml-6 space-y-2 text-slate-700 font-medium">${data.A.map(item => `<li>${item}</li>`).join('')}</ul></section>
-                <section class="mb-10 bg-teal-50 p-8 rounded-2xl border border-teal-100">
-                    <h3 class="section-header">B. Keterkaitan Nilai Islam</h3>
-                    <div class="arabic mb-4">${data.B.dalil_ar}</div><p class="italic text-teal-800 text-sm mb-4">"${data.B.dalil_id}"</p><p class="text-slate-700 leading-relaxed">${data.B.teks}</p>
-                </section>
-                <section class="mb-10"><h3 class="section-header">C. Skenario Pembelajaran</h3><div class="text-slate-700 leading-relaxed">${data.C}</div></section>
-                ${data.D || ''}
-            </div>
-            <div class="space-y-6">
-                <h3 class="text-xl font-black text-slate-800 ml-2">Konten Tambahan</h3>
-                <div class="grid sm:grid-cols-2 gap-4">
-                    ${data.simulasi.map((s, si) => `
-                        <div class="bg-white p-6 rounded-2xl border hover:shadow-lg transition">
-                            <h4 class="font-bold text-slate-800">${si+1}. ${s.title}</h4><p class="text-xs text-slate-500 mt-2">${s.desc}</p>
-                            <button class="mt-4 text-xs font-bold text-teal-600">MULAI SIMULASI →</button>
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="rmp-card border-t-8 border-teal-600">
-                    <h4 class="text-xl font-black text-slate-800 mb-6">Latihan Formatif</h4>
-                    <div class="space-y-8">${data.latihan.map((q, i) => `
-                        <div class="space-y-4">
-                            <p class="font-bold text-slate-800">${i+1}. ${q.q}</p>
-                            <div class="grid sm:grid-cols-2 gap-3">${q.o.map((opt, oi) => `
-                                <button onclick="checkAns(${id}, ${i}, ${oi}, ${q.a}, '${q.e.replace(/'/g, "\\'")}')" class="ans-btn-${id}-${i} text-left p-4 bg-slate-50 border rounded-xl text-sm font-semibold flex items-center">
-                                    <span class="alphabet-box">${alphabet[oi]}</span><span>${opt}</span>
-                                </button>
-                            `).join('')}</div>
-                            <div id="feedback-${id}-${i}" class="hidden p-4 rounded-xl text-xs font-bold border"></div>
-                        </div>
-                    `).join('')}</div>
-                </div>
-            </div>
-        `;
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    }
-
-    function checkAns(sid, qid, choice, correct, exp) {
-        const btns = document.querySelectorAll(`.ans-btn-${sid}-${qid}`);
-        const fb = document.getElementById(`feedback-${sid}-${qid}`);
-        btns.forEach((b, i) => {
-            b.disabled = true;
-            if(i === correct) b.classList.add('correct');
-            if(i === choice && i !== correct) b.classList.add('wrong');
+            if(val > 50) {
+                status.textContent = "Inspirasi (Diafragma Mendatar, Paru Mengembang)";
+                status.className = "text-sm font-bold mt-2 text-blue-500";
+            } else {
+                status.textContent = "Ekspirasi (Diafragma Melengkung, Paru Mengecil)";
+                status.className = "text-sm font-bold mt-2 text-red-500";
+            }
         });
-        fb.classList.remove('hidden');
-        fb.className = choice === correct ? "p-4 rounded-xl text-xs font-bold bg-green-50 text-green-700 border-green-200 mt-2" : "p-4 rounded-xl text-xs font-bold bg-red-50 text-red-700 border-red-200 mt-2";
-        fb.innerHTML = choice === correct ? `✅ BENAR! ${exp}` : `❌ SALAH. Jawaban Benar: ${alphabet[correct]}. ${exp}`;
-    }
 
-    function loadSumatif() {
-        const container = document.getElementById('main-container');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
-        document.getElementById(`nav-9`).classList.add('tab-active');
-        let allPool = [];
-        Object.keys(rmpData).forEach(k => allPool = [...allPool, ...rmpData[k].latihan]);
-        container.innerHTML = `
-            <div class="rmp-card bg-slate-900 text-white text-center py-12"><h2 class="text-4xl font-black mb-4">Ujian Akhir (Sumatif)</h2><p class="opacity-60">Total: ${allPool.length} Soal</p></div>
-            <div id="sumatif-list" class="space-y-6">${allPool.map((q, i) => `
-                <div class="bg-white p-6 rounded-2xl border shadow-sm">
-                    <p class="font-bold text-slate-800 mb-4">${i+1}. ${q.q}</p>
-                    <div class="grid sm:grid-cols-2 gap-3">${q.o.map((opt, oi) => `
-                        <button onclick="selectSum(${i}, ${oi}, ${q.a})" id="sum-btn-${i}-${oi}" class="sum-btn-${i} text-left p-4 border rounded-xl text-sm font-bold flex items-center">
-                            <span class="alphabet-box">${alphabet[oi]}</span><span>${opt}</span>
-                        </button>
-                    `).join('')}</div>
-                </div>
-            `).join('')}</div>
-            <div class="text-center py-10 space-x-4">
-                <button onclick="submitSumatif(${allPool.length})" class="bg-teal-600 text-white px-12 py-4 rounded-2xl font-black">HITUNG SKOR</button>
-                <button onclick="loadSumatif()" class="bg-slate-200 text-slate-700 px-12 py-4 rounded-2xl font-black">ULANGI TES</button>
-            </div>
-            <div id="modal-score" class="hidden fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center p-4">
-                <div class="bg-white p-10 rounded-3xl max-w-sm w-full text-center">
-                    <div id="score-circle" class="w-32 h-32 rounded-full border-8 border-teal-500 flex items-center justify-center text-4xl font-black mx-auto mb-6">0</div>
-                    <h3 class="text-2xl font-black">Skor Akhir</h3>
-                    <button onclick="document.getElementById('modal-score').classList.add('hidden')" class="mt-8 w-full bg-slate-100 py-4 rounded-xl font-bold">Tutup</button>
-                </div>
-            </div>
-        `;
-        window.userSelections = new Array(allPool.length).fill(null);
-    }
+        // Sim P1.2: Particle Path
+        function runSim2() {
+            const p = document.getElementById('sim2-particle');
+            p.style.top = '2px'; p.style.left = '2px'; // Reset
+            
+            setTimeout(() => { p.style.left = '50px'; }, 100); // Hidung
+            setTimeout(() => { p.style.top = '40px'; }, 600); // Trakea
+            setTimeout(() => { p.style.top = '80px'; p.style.left = '80px'; }, 1200); // Bronkus
+            setTimeout(() => { p.style.top = '120px'; p.style.left = '100px'; }, 1800); // Alveolus
+        }
 
-    function selectSum(qi, oi, ai) {
-        window.userSelections[qi] = { choice: oi, correct: ai };
-        document.querySelectorAll(`.sum-btn-${qi}`).forEach(b => {
-            b.classList.remove('bg-teal-600', 'text-white', 'border-teal-600');
-            b.classList.add('bg-white', 'text-slate-700', 'border-slate-200');
-        });
-        const active = document.getElementById(`sum-btn-${qi}-${oi}`);
-        active.classList.remove('bg-white', 'text-slate-700', 'border-slate-200');
-        active.classList.add('bg-teal-600', 'text-white', 'border-teal-600');
-    }
+        // Sim P2.1: Spirometer Graph
+        function drawBreath(type) {
+            const canvas = document.getElementById('spirometerChart');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 100);
+            
+            let amplitude = type === 'normal' ? 20 : 80;
+            let freq = 0.1;
+            
+            ctx.strokeStyle = type === 'normal' ? 'blue' : 'purple';
+            ctx.lineWidth = 2;
 
-    function submitSumatif(total) {
-        let score = 0;
-        window.userSelections.forEach(s => { if(s && s.choice === s.correct) score++; });
-        document.getElementById('score-circle').innerText = Math.round((score / total) * 100);
-        document.getElementById('modal-score').classList.remove('hidden');
-    }
+            for(let x=0; x<canvas.width; x++) {
+                let y = 100 + Math.sin(x * freq) * amplitude;
+                ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = "black";
+            ctx.font = "10px Arial";
+            ctx.fillText(type === 'normal' ? "Volume Tidal" : "Kapasitas Vital", 10, 20);
+        }
 
-    window.onload = () => loadRMP(1);
-</script>
+        // Sim P2.2: Asthma
+        function triggerAsthma() {
+            const tube = document.getElementById('asthma-tube');
+            // Toggle classes
+            if (tube.classList.contains('border-8')) {
+                // To Asthma state (thicker wall, smaller hole)
+                tube.classList.remove('border-8');
+                tube.style.borderWidth = '20px';
+                tube.style.backgroundColor = '#fca5a5';
+            } else {
+                // Back to normal
+                tube.classList.add('border-8');
+                tube.style.borderWidth = '8px';
+                tube.style.backgroundColor = '#fee2e2';
+            }
+        }
+
+        // Sim P3.1: Work Calc
+        function calcWork() {
+            const f = parseFloat(document.getElementById('inputF').value);
+            const s = parseFloat(document.getElementById('inputS').value);
+            const w = f * s;
+            
+            // Animate box
+            const box = document.getElementById('box-sim3');
+            box.style.left = '0%';
+            setTimeout(() => {
+                 box.style.left = '80%'; // Move
+            }, 100);
+
+            document.getElementById('resultWork').innerText = `W = ${f} N x ${s} m = ${w} Joule`;
+        }
+
+        // Sim P3.2: Power Race
+        function runPowerRace() {
+            const barA = document.getElementById('bar-A');
+            const barB = document.getElementById('bar-B');
+            const res = document.getElementById('powerResult');
+            
+            barA.style.width = '0%'; barB.style.width = '0%';
+            res.innerText = "Balapan dimulai...";
+            
+            setTimeout(() => {
+                barA.style.width = '100%';
+                barB.style.width = '100%';
+            }, 100);
+
+            setTimeout(() => {
+                res.innerText = "B selesai lebih dulu! Waktu lebih singkat = Daya lebih BESAR.";
+            }, 1100);
+        }
+
+        // Sim P4.1: Pendulum
+        let pendInterval;
+        function startPendulum() {
+            const canvas = document.getElementById('pendulumCanvas');
+            const ctx = canvas.getContext('2d');
+            let angle = Math.PI / 4;
+            let vel = 0;
+            let t = 0;
+            
+            if(pendInterval) clearInterval(pendInterval);
+            
+            pendInterval = setInterval(() => {
+                ctx.clearRect(0,0,200,150);
+                
+                // Simple harmonic motion approx
+                let acc = -0.01 * Math.sin(angle);
+                vel += acc;
+                vel *= 0.99; // friction
+                angle += vel;
+                
+                let x = 100 + Math.sin(angle) * 100;
+                let y = 0 + Math.cos(angle) * 100;
+                
+                // Draw string
+                ctx.beginPath();
+                ctx.moveTo(100,0);
+                ctx.lineTo(x,y);
+                ctx.stroke();
+                
+                // Draw bob
+                ctx.beginPath();
+                ctx.arc(x,y, 10, 0, Math.PI*2);
+                
+                // Color based on height (Potential Energy)
+                // High y = Low height in canvas coords. 
+                // Top (low y) = High EP (Blue). Bottom (high y) = High EK (Red)
+                let intensity = Math.floor((y / 100) * 255);
+                ctx.fillStyle = `rgb(${255-intensity}, 0, ${intensity})`;
+                ctx.fill();
+                
+            }, 20);
+        }
+
+        // Sim P4.2: Energy Drop
+        function calcEnergy() {
+            const m = parseFloat(document.getElementById('mass_p4').value);
+            const h = parseFloat(document.getElementById('height_p4').value);
+            const g = 10;
+            
+            const ep = m * g * h;
+            const ek_bottom = ep; // Conservation
+            
+            document.getElementById('ep_top').innerText = ep;
+            document.getElementById('ek_bottom').innerText = ek_bottom;
+        }
+
+        // Sim P5.1: Lever
+        function updateLever(val) {
+            // val 0-100. 50 is center (balanced if mass equal).
+            // Let's assume Mass Beban (Left) = 2, Mass Kuasa (Right) = 1.
+            // Balance point: 2 * L1 = 1 * L2 -> L1 = 1/3 Length.
+            // Fulcrum at 33% means balanced.
+            
+            const plank = document.getElementById('lever-plank');
+            const status = document.getElementById('lever-status');
+            const fulcrumPos = parseInt(val);
+            
+            // Visual shift of fulcrum
+            // Simplification for visual only
+            
+            // Logic:
+            // Torque Left = MassB (2) * DistLeft (val)
+            // Torque Right = MassK (1) * DistRight (100-val)
+            let tL = 2 * val;
+            let tR = 1 * (100 - val);
+            
+            let rot = 0;
+            if (Math.abs(tL - tR) < 10) {
+                rot = 0;
+                status.innerText = "Seimbang";
+                status.className = "text-center font-bold text-sm mt-2 text-green-600";
+            } else if (tL > tR) {
+                rot = -15; // Tipt Left down
+                status.innerText = "Beban lebih berat (Turun ke kiri)";
+                status.className = "text-center font-bold text-sm mt-2 text-red-600";
+            } else {
+                rot = 15; // Tip Right down
+                status.innerText = "Kuasa lebih berat (Turun ke kanan)";
+                status.className = "text-center font-bold text-sm mt-2 text-blue-600";
+            }
+            
+            plank.style.transform = `rotate(${rot}deg)`;
+        }
+
+        // Sim P5.2: Ramp
+        function calcRampKM() {
+            const s = parseFloat(document.getElementById('ramp_s').value);
+            const h = parseFloat(document.getElementById('ramp_h').value);
+            const km = s/h;
+            document.getElementById('ramp_result').innerText = `KM = ${s}/${h} = ${km.toFixed(2)}`;
+        }
+
+        // Sim P6.1: Pulley
+        function setPulley(km) {
+            const w = 1000;
+            const f = w / km;
+            document.getElementById('pulley-force').innerText = f + " N";
+        }
+
+        // Sim P7.1: Additive Check
+        function checkAdditive() {
+            const val = document.getElementById('additive-select').value;
+            const res = document.getElementById('additive-result');
+            res.classList.remove('hidden');
+            
+            const data = {
+                'kunyit': {text: "ALAMI. Aman. Pewarna kuning.", color: "text-green-600"},
+                'msg': {text: "BUATAN. Aman dalam batas wajar. Penyedap.", color: "text-blue-600"},
+                'boraks': {text: "DILARANG! Berbahaya. Pengawet mayat/kayu. Merusak organ.", color: "text-red-600 font-bold"},
+                'aspartam': {text: "BUATAN. Pemanis rendah kalori. Aman bagi non-PKU.", color: "text-blue-600"},
+                'rhodamin': {text: "DILARANG! Pewarna tekstil merah. Karsinogenik.", color: "text-red-600 font-bold"}
+            };
+            
+            if(data[val]) {
+                res.textContent = data[val].text;
+                res.className = `mt-2 p-2 border rounded bg-white text-sm ${data[val].color}`;
+            }
+        }
+
+        // Sim P7.2: Color Test
+        function testColor() {
+            // Kunyit turns red/brown in base. Synthetic stays same.
+            document.getElementById('sample-A').classList.remove('bg-yellow-400');
+            document.getElementById('sample-A').classList.add('bg-orange-700'); // Changes
+            
+            document.getElementById('sample-B').classList.remove('bg-yellow-400');
+            document.getElementById('sample-B').classList.add('bg-yellow-400'); // Stays (No change visualized better by doing nothing, but code logic here)
+        }
+
+        // Sim P8.1: Organ Damage
+        function showDamage(zat) {
+            const disp = document.getElementById('organ-display');
+            if(zat === 'rokok') {
+                disp.innerHTML = "🫁 <strong>PARU-PARU</strong><br>Kanker, PPOK, Bronkitis Kronis.";
+                disp.className = "bg-gray-200 p-4 h-32 border flex items-center justify-center text-center text-sm font-semibold transition-all";
+            } else if (zat === 'alkohol') {
+                disp.innerHTML = "🥩 <strong>HATI (LIVER)</strong><br>Sirosis Hati, Hepatitis Alkoholik.";
+                disp.className = "bg-yellow-100 p-4 h-32 border flex items-center justify-center text-center text-sm font-semibold transition-all";
+            } else if (zat === 'sabu') {
+                disp.innerHTML = "🧠 <strong>OTAK & SYARAF</strong><br>Kerusakan permanen neurotransmitter, paranoia, stroke.";
+                disp.className = "bg-blue-100 p-4 h-32 border flex items-center justify-center text-center text-sm font-semibold transition-all";
+            }
+        }
+
+        // Sim P8.2: Say No
+        function respondNo(choice) {
+            const res = document.getElementById('scenario-result');
+            if(choice === 2) {
+                res.innerText = "✅ Benar! Tegas menolak adalah pertahanan terbaik.";
+                res.className = "mt-2 font-bold text-sm text-green-600";
+            } else {
+                res.innerText = "❌ Hati-hati! Keraguan atau mencoba sedikit adalah awal kecanduan.";
+                res.className = "mt-2 font-bold text-sm text-red-600";
+            }
+        }
+
+
+        // --- 3. Data Soal (Quiz Data) ---
+        const quizzes = {
+            p1: [
+                {q: "Tempat pertukaran gas O2 dan CO2 terjadi di...", a: ["Trakea", "Bronkus", "Alveolus", "Hidung"], k: 2, exp: "Alveolus adalah gelembung halus tempat difusi gas."},
+                {q: "Fungsi rambut hidung adalah...", a: ["Menghangatkan udara", "Menyaring debu", "Melembapkan udara", "Mendeteksi bau"], k: 1, exp: "Rambut hidung (silia) menyaring partikel debu kasar."},
+                {q: "Otot yang berperan utama dalam pernapasan perut adalah...", a: ["Antar tulang rusuk", "Diafragma", "Otot dada", "Otot leher"], k: 1, exp: "Pernapasan perut mengandalkan kontraksi diafragma."},
+                {q: "Katup yang mencegah makanan masuk ke tenggorokan disebut...", a: ["Laring", "Faring", "Epiglotis", "Bronkiolus"], k: 2, exp: "Epiglotis menutup laring saat menelan."},
+                {q: "Urutan masuknya udara yang benar adalah...", a: ["Hidung-Trakea-Laring-Paru", "Hidung-Faring-Laring-Trakea", "Hidung-Laring-Faring-Trakea", "Mulut-Kerongkongan-Paru"], k: 1, exp: "Urutan: Hidung -> Faring -> Laring -> Trakea -> Bronkus -> Paru."},
+                {q: "Saat inspirasi, tekanan udara di dalam paru-paru...", a: ["Lebih besar dari luar", "Lebih kecil dari luar", "Sama dengan luar", "Nol"], k: 1, exp: "Tekanan rendah menyedot udara masuk (Hukum Boyle)."},
+                {q: "Trakea tersusun atas tulang...", a: ["Keras", "Rawan", "Pipa", "Pipih"], k: 1, exp: "Cincin tulang rawan berbentuk C menjaga trakea tetap terbuka."},
+                {q: "Selaput pembungkus paru-paru disebut...", a: ["Perikardium", "Pleura", "Meninges", "Diafragma"], k: 1, exp: "Pleura melindungi paru-paru dari gesekan."},
+                {q: "Udara yang keluar dari paru-paru kaya akan...", a: ["Oksigen", "Nitrogen", "Karbon Dioksida", "Hidrogen"], k: 2, exp: "Sisa metabolisme tubuh adalah CO2."},
+                {q: "Ayat Al-Quran yang menyuruh kita bersyukur atas pendengaran, penglihatan dan hati adalah...", a: ["An-Nahl: 78", "Al-Baqarah: 10", "Al-Ikhlas: 1", "Yasin: 5"], k: 0, exp: "Sesuai materi Tadabbur P1."}
+            ],
+            p2: [
+                {q: "Volume udara pernapasan biasa disebut...", a: ["Residu", "Komplementer", "Tidal", "Vital"], k: 2, exp: "Volume tidal sekitar 500 cc."},
+                {q: "Penyakit TBC disebabkan oleh...", a: ["Virus", "Bakteri", "Jamur", "Debu"], k: 1, exp: "Mycobacterium tuberculosis adalah bakteri."},
+                {q: "Kapasitas Vital paru-paru adalah penjumlahan dari...", a: ["VT + VR", "VT + VCI + VCE", "TLC - VR", "VCI + VCE"], k: 1, exp: "KV = Tidal + Cadangan Inspirasi + Cadangan Ekspirasi."},
+                {q: "Penyempitan saluran napas karena alergi disebut...", a: ["Pneumonia", "Bronkitis", "Asma", "Influenza"], k: 2, exp: "Asma dipicu alergen dan menyebabkan penyempitan bronkus."},
+                {q: "Volume udara yang selalu tersisa di paru-paru disebut...", a: ["Tidal", "Residu", "Total", "Suplementer"], k: 1, exp: "Residu (1000 cc) menjaga paru tidak kempes."},
+                {q: "Infeksi alveolus yang terisi cairan disebut...", a: ["Pneumonia", "TBC", "Pleuritis", "Kanker"], k: 0, exp: "Pneumonia sering disebut paru-paru basah."},
+                {q: "Jumlah volume tidal rata-rata orang dewasa adalah...", a: ["1500 cc", "3500 cc", "500 cc", "1000 cc"], k: 2, exp: "Rata-rata 500 cc."},
+                {q: "Peradangan pada bronkus disebut...", a: ["Sinusitis", "Bronkitis", "Laringitis", "Pleuritis"], k: 1, exp: "Itis berarti radang. Bronkus -> Bronkitis."},
+                {q: "Cara menjaga kesehatan paru-paru adalah...", a: ["Merokok", "Olahraga teratur", "Tidur di lantai", "Jarang minum"], k: 1, exp: "Olahraga meningkatkan kapasitas paru."},
+                {q: "Gejala utama TBC adalah...", a: ["Batuk berdarah", "Hidung mampet", "Sakit perut", "Gatal kulit"], k: 0, exp: "Batuk berkepanjangan kadang disertai darah."}
+            ],
+            p3: [
+                {q: "Satuan Usaha dalam SI adalah...", a: ["Newton", "Watt", "Joule", "Meter"], k: 2, exp: "Joule (J) setara Newton.meter."},
+                {q: "Usaha bernilai nol jika...", a: ["Gaya besar", "Perpindahan nol", "Waktu lama", "Arah gaya sama"], k: 1, exp: "W = F.s, jika s=0 maka W=0."},
+                {q: "Rumus daya (Power) adalah...", a: ["W x t", "W / t", "F x s", "m x g"], k: 1, exp: "Daya adalah Usaha per satuan waktu."},
+                {q: "Budi mendorong meja dengan gaya 50 N sejauh 2 meter. Usahanya adalah...", a: ["100 J", "25 J", "52 J", "48 J"], k: 0, exp: "50 N x 2 m = 100 J."},
+                {q: "Satuan Daya adalah...", a: ["Joule", "Newton", "Watt", "Volt"], k: 2, exp: "Watt (Joule/sekon)."},
+                {q: "Ali mengangkat beban 100 J dalam 5 detik. Dayanya adalah...", a: ["500 Watt", "20 Watt", "105 Watt", "95 Watt"], k: 1, exp: "100 / 5 = 20 Watt."},
+                {q: "Gaya yang dikeluarkan untuk memindahkan benda disebut...", a: ["Daya", "Energi", "Usaha", "Gaya Kuasa"], k: 2, exp: "Dalam konteks hasil, disebut Usaha."},
+                {q: "Ayat yang menyebutkan manusia mendapat apa yang diusahakannya...", a: ["An-Najm: 39", "Al-Ikhlas: 1", "Al-Fatihah: 5", "An-Nas: 1"], k: 0, exp: "Sesuai materi tadabbur."},
+                {q: "Mendorong tembok termasuk usaha bernilai...", a: ["Positif", "Negatif", "Nol", "Tak hingga"], k: 2, exp: "Karena tidak ada perpindahan."},
+                {q: "1 Joule setara dengan...", a: ["1 N/m", "1 N.m", "1 kg.m", "1 Watt.s"], k: 1, exp: "Definisi Joule."}
+            ],
+            p4: [
+                {q: "Energi yang dimiliki benda karena posisinya disebut...", a: ["Kinetik", "Mekanik", "Potensial", "Kalor"], k: 2, exp: "Posisi/ketinggian = Potensial."},
+                {q: "Rumus energi kinetik adalah...", a: ["mgh", "0.5 mv^2", "F.s", "ma"], k: 1, exp: "EK = 1/2 m v^2."},
+                {q: "Hukum Kekekalan Energi menyatakan...", a: ["Energi bisa hilang", "Energi bisa diciptakan", "Energi tetap konstan", "Energi selalu berkurang"], k: 2, exp: "Energi tidak dapat diciptakan/dimusnahkan."},
+                {q: "Buah kelapa jatuh dari pohon. Energi yang bertambah adalah...", a: ["Potensial", "Kinetik", "Kimia", "Listrik"], k: 1, exp: "Saat jatuh, kecepatan naik, maka EK naik."},
+                {q: "Benda bermassa 2 kg berada setinggi 10 m. (g=10). EP-nya...", a: ["20 J", "200 J", "100 J", "5 J"], k: 1, exp: "m.g.h = 2.10.10 = 200 J."},
+                {q: "Sumber energi utama di bumi adalah...", a: ["Bulan", "Matahari", "Angin", "Air"], k: 1, exp: "Matahari sumber utama."},
+                {q: "Energi Mekanik adalah penjumlahan dari...", a: ["EP + EK", "EP - EK", "EP x EK", "EK / EP"], k: 0, exp: "EM = EP + EK."},
+                {q: "Semakin cepat benda bergerak, semakin besar energi...", a: ["Potensial", "Kinetik", "Kimia", "Panas"], k: 1, exp: "Kinetik bergantung kecepatan."},
+                {q: "Satuan energi adalah...", a: ["Newton", "Joule", "Watt", "Ampere"], k: 1, exp: "Joule."},
+                {q: "Allah bersifat Al-Qawiyyu yang artinya...", a: ["Maha Melihat", "Maha Kuat", "Maha Mengetahui", "Maha Pengasih"], k: 1, exp: "Sumber kekuatan/energi."}
+            ],
+            p5: [
+                {q: "Alat yang memudahkan kerja manusia disebut...", a: ["Mesin", "Robot", "Pesawat Sederhana", "Elektronik"], k: 2, exp: "Pesawat sederhana adalah alat mekanik dasar."},
+                {q: "Tuas golongan pertama memiliki susunan...", a: ["TBK", "TKB", "KTB", "BKT"], k: 0, exp: "Tumpu berada di antara Beban dan Kuasa."},
+                {q: "Contoh tuas golongan kedua adalah...", a: ["Gunting", "Gerobak roda satu", "Sekop", "Pinset"], k: 1, exp: "Beban di tengah."},
+                {q: "Keuntungan mekanis bidang miring dihitung dengan...", a: ["h/s", "s/h", "w/F", "F/w"], k: 1, exp: "Panjang lintasan dibagi tinggi (s/h)."},
+                {q: "Jalan di pegunungan dibuat berkelok untuk...", a: ["Pemandangan", "Memperkecil gaya", "Memperpendek jarak", "Mempercepat"], k: 1, exp: "Menambah jarak (s) agar gaya (F) mengecil."},
+                {q: "Jika beban 100 N diangkat dengan tuas (Lb=1m, Lk=2m), gayanya...", a: ["50 N", "200 N", "100 N", "25 N"], k: 0, exp: "w.Lb = F.Lk -> 100.1 = F.2 -> F=50."},
+                {q: "Sekop termasuk tuas golongan...", a: ["Pertama", "Kedua", "Ketiga", "Keempat"], k: 2, exp: "Kuasa di tengah (tangan memegang gagang)."},
+                {q: "Surah Al-Insyirah ayat 5 mengajarkan...", a: ["Kesabaran", "Kemudahan setelah kesulitan", "Kekayaan", "Kesehatan"], k: 1, exp: "Fa inna ma'al 'usri yusra."},
+                {q: "Titik tempat gaya bekerja disebut...", a: ["Titik Beban", "Titik Tumpu", "Titik Kuasa", "Titik Putar"], k: 2, exp: "Kuasa = Gaya."},
+                {q: "Semakin panjang lengan kuasa, gaya yang dibutuhkan...", a: ["Semakin besar", "Semakin kecil", "Tetap", "Nol"], k: 1, exp: "Keuntungan mekanis makin besar, gaya makin kecil."}
+            ],
+            p6: [
+                {q: "Katrol yang posisinya tidak berubah disebut...", a: ["Katrol Bebas", "Katrol Tetap", "Katrol Majemuk", "Roda"], k: 1, exp: "Katrol tetap hanya mengubah arah gaya."},
+                {q: "Keuntungan mekanis katrol tetap adalah...", a: ["1", "2", "3", "4"], k: 0, exp: "F = w, jadi KM = 1."},
+                {q: "Keuntungan mekanis katrol bebas adalah...", a: ["1", "2", "3", "4"], k: 1, exp: "Beban ditopang 2 tali, KM = 2."},
+                {q: "Alat yang menggunakan prinsip roda berporos adalah...", a: ["Gunting", "Sekop", "Sepeda (Gear)", "Jungkat-jungkit"], k: 2, exp: "Gear sepeda adalah roda berporos."},
+                {q: "Sistem katrol majemuk dengan 4 tali penopang memiliki KM...", a: ["2", "4", "6", "8"], k: 1, exp: "KM = jumlah tali penopang = 4."},
+                {q: "Untuk mengangkat beban 1000N dengan katrol bebas, butuh gaya...", a: ["1000 N", "500 N", "250 N", "2000 N"], k: 1, exp: "1000 / 2 = 500 N."},
+                {q: "Prinsip tolong-menolong dalam Islam disebut...", a: ["Tasamuh", "Ta'awun", "Tawadhu", "Takabur"], k: 1, exp: "Ta'awun (kerjasama)."},
+                {q: "Katrol yang digunakan pada sumur timba biasanya katrol...", a: ["Tetap", "Bebas", "Majemuk", "Ganda"], k: 0, exp: "Katrol tetap."},
+                {q: "Keuntungan menggunakan roda berporos adalah...", a: ["Memperbesar kecepatan/gaya", "Menghilangkan gaya", "Menambah beban", "Mengurangi gesekan"], k: 0, exp: "Bisa untuk mempercepat (gear) atau memperbesar gaya (setir)."},
+                {q: "Bagian tengah roda tempat as berputar disebut...", a: ["Velg", "Ban", "Poros", "Jari-jari"], k: 2, exp: "Poros (Axle)."}
+            ],
+            p7: [
+                {q: "Zat yang ditambahkan ke makanan disebut...", a: ["Zat Adiktif", "Zat Aditif", "Zat Radioaktif", "Zat Besi"], k: 1, exp: "Aditif = Tambahan."},
+                {q: "Pewarna alami warna hijau adalah...", a: ["Kunyit", "Daun Suji", "Wortel", "Buah Naga"], k: 1, exp: "Daun suji/pandan."},
+                {q: "Pemanis buatan yang aman untuk penderita diabetes adalah...", a: ["Gula Pasir", "Aspartam", "Madu", "Gula Merah"], k: 1, exp: "Aspartam/Sakarin rendah kalori."},
+                {q: "Pewarna tekstil yang dilarang pada makanan adalah...", a: ["Tartrazin", "Rhodamin B", "Klorofil", "Karamel"], k: 1, exp: "Rhodamin B berbahaya (karsinogen)."},
+                {q: "Pengawet mayat yang sering disalahgunakan untuk bakso adalah...", a: ["Garam", "Boraks/Formalin", "Benzoat", "Cuka"], k: 1, exp: "Formalin dilarang keras."},
+                {q: "Penyedap rasa buatan yang populer adalah...", a: ["Garam", "Gula", "MSG", "Merica"], k: 2, exp: "Monosodium Glutamat."},
+                {q: "Tujuan utama pemberian pengawet adalah...", a: ["Mempercantik warna", "Mencegah pembusukan", "Menambah rasa", "Mengurangi harga"], k: 1, exp: "Menghambat bakteri/jamur."},
+                {q: "Makanan yang baik dalam Islam disebut...", a: ["Halal", "Tayyib", "Halal dan Tayyib", "Enak"], k: 2, exp: "Halalan Thayyiban."},
+                {q: "Kode huruf 'E' pada kemasan makanan menunjukkan...", a: ["Expired", "Enak", "Kode Zat Aditif (Eropa)", "Energi"], k: 2, exp: "Kode E number."},
+                {q: "Dampak terlalu banyak makan MSG bagi sebagian orang adalah...", a: ["Chinese Restaurant Syndrome", "Kanker", "Diabetes", "Patah tulang"], k: 0, exp: "Pusing, mual, sesak napas sementara."}
+            ],
+            p8: [
+                {q: "Zat yang menyebabkan ketergantungan disebut zat...", a: ["Aditif", "Adiktif", "Aktif", "Pasif"], k: 1, exp: "Adiktif (Addiction)."},
+                {q: "Contoh zat adiktif dalam kopi adalah...", a: ["Nikotin", "Kafein", "Alkohol", "Thein"], k: 1, exp: "Kafein."},
+                {q: "Zat berbahaya dalam rokok yang menyebabkan kanker adalah...", a: ["Nikotin", "Tar", "CO", "Oksigen"], k: 1, exp: "Tar bersifat karsinogenik."},
+                {q: "Hukum khamr (memabukkan) dalam Islam adalah...", a: ["Makruh", "Haram", "Mubah", "Sunnah"], k: 1, exp: "Haram mutlak."},
+                {q: "Narkotika golongan I (sangat berbahaya, tidak untuk obat) adalah...", a: ["Morfin", "Heroin/Putaw", "Kodein", "Petidin"], k: 1, exp: "Heroin/Ganja dilarang medis sekalipun (di Indo)."},
+                {q: "Dampak alkohol pada organ tubuh terutama merusak...", a: ["Jantung", "Hati (Liver)", "Paru", "Tulang"], k: 1, exp: "Sirosis hati."},
+                {q: "Psikotropika yang sering disebut 'pil koplo' atau ekstasi berefek...", a: ["Stimulan (Menambah semangat semu)", "Depresan", "Halusinogen", "Nutrisi"], k: 0, exp: "Memacu kerja jantung berlebih."},
+                {q: "Cara terbaik menghindari narkoba adalah...", a: ["Mencoba sedikit", "Berteman dengan pemakai", "Mendekatkan diri pada Allah & Menolak tegas", "Mengurung diri"], k: 2, exp: "Iman dan ketegasan."},
+                {q: "Gas dalam asap rokok yang mengikat hemoglobin adalah...", a: ["Oksigen", "Karbon Monoksida", "Karbon Dioksida", "Nitrogen"], k: 1, exp: "CO lebih mudah diikat darah dibanding O2."},
+                {q: "Ayat larangan khamr terdapat dalam surat...", a: ["Al-Maidah: 90", "Al-Baqarah: 183", "Al-Ikhlas", "Al-Fatihah"], k: 0, exp: "Al-Maidah: 90."}
+            ]
+        };
+
+        // --- 4. Quiz Rendering Logic ---
+        function renderQuizzes() {
+            for(let key in quizzes) {
+                const container = document.getElementById('quiz-' + key);
+                if(!container) continue;
+                
+                container.innerHTML = '';
+                quizzes[key].forEach((item, idx) => {
+                    let optionsHTML = '';
+                    item.a.forEach((opt, optIdx) => {
+                        optionsHTML += `
+                            <label class="block mb-2 cursor-pointer hover:bg-slate-50 p-2 rounded">
+                                <input type="radio" name="q-${key}-${idx}" value="${optIdx}" class="mr-2">
+                                ${opt}
+                            </label>
+                        `;
+                    });
+                    
+                    container.innerHTML += `
+                        <div class="border p-4 rounded-lg bg-white shadow-sm" id="q-box-${key}-${idx}">
+                            <p class="font-bold mb-2">${idx+1}. ${item.q}</p>
+                            ${optionsHTML}
+                            <p class="hidden mt-2 text-sm p-2 rounded" id="exp-${key}-${idx}"></p>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        function checkQuiz(key) {
+            let score = 0;
+            const data = quizzes[key];
+            const total = data.length;
+            
+            data.forEach((item, idx) => {
+                const selected = document.querySelector(`input[name="q-${key}-${idx}"]:checked`);
+                const expBox = document.getElementById(`exp-${key}-${idx}`);
+                const qBox = document.getElementById(`q-box-${key}-${idx}`);
+                
+                expBox.classList.remove('hidden');
+                
+                if(selected && parseInt(selected.value) === item.k) {
+                    score++;
+                    expBox.innerHTML = `<span class="text-green-600 font-bold">✓ Benar!</span> ${item.exp}`;
+                    expBox.classList.add('bg-green-100');
+                    qBox.classList.add('border-green-500');
+                } else {
+                    expBox.innerHTML = `<span class="text-red-600 font-bold">✗ Salah.</span> Jawaban: ${item.a[item.k]}. ${item.exp}`;
+                    expBox.classList.add('bg-red-100');
+                    qBox.classList.add('border-red-500');
+                }
+            });
+            
+            const resDiv = document.getElementById(`result-${key}`);
+            resDiv.innerText = `Skor Anda: ${score} / ${total}`;
+            resDiv.classList.remove('hidden', 'text-green-600', 'text-red-600');
+            if(score > 7) resDiv.classList.add('text-green-600');
+            else resDiv.classList.add('text-red-600');
+        }
+
+        // Initialize Quizzes
+        renderQuizzes();
+
+        // --- 5. Summative Logic ---
+        let summativeData = [];
+        
+        function initSummative() {
+            // Pick random questions from all chapters
+            summativeData = [];
+            const chapters = ['p1','p2','p3','p4','p5','p6','p7','p8'];
+            // Take 3 questions from each chapter = 24 questions
+            chapters.forEach(chap => {
+                // Shuffle array copy
+                const shuffled = [...quizzes[chap]].sort(() => 0.5 - Math.random());
+                const selected = shuffled.slice(0, 3);
+                selected.forEach(q => q.source = chap); // tag source
+                summativeData.push(...selected);
+            });
+            
+            const container = document.getElementById('quiz-sumatif');
+            container.innerHTML = '';
+            
+            summativeData.forEach((item, idx) => {
+                 let optionsHTML = '';
+                    item.a.forEach((opt, optIdx) => {
+                        optionsHTML += `
+                            <label class="block mb-2 cursor-pointer hover:bg-slate-50 p-2 rounded">
+                                <input type="radio" name="sum-${idx}" value="${optIdx}" class="mr-2">
+                                ${opt}
+                            </label>
+                        `;
+                    });
+                    
+                    container.innerHTML += `
+                        <div class="border p-4 rounded-lg bg-white shadow-sm" id="sum-box-${idx}">
+                            <p class="font-bold mb-2 text-emerald-800">Soal ${idx+1}</p>
+                            <p class="mb-2">${item.q}</p>
+                            ${optionsHTML}
+                            <p class="hidden mt-2 text-sm p-2 rounded" id="sum-exp-${idx}"></p>
+                        </div>
+                    `;
+            });
+            
+            // Hide result
+            document.getElementById('result-sumatif').classList.add('hidden');
+        }
+
+        function checkSumatif() {
+            let score = 0;
+            summativeData.forEach((item, idx) => {
+                const selected = document.querySelector(`input[name="sum-${idx}"]:checked`);
+                const expBox = document.getElementById(`sum-exp-${idx}`);
+                const qBox = document.getElementById(`sum-box-${idx}`);
+                
+                expBox.classList.remove('hidden');
+                
+                if(selected && parseInt(selected.value) === item.k) {
+                    score++;
+                    expBox.innerHTML = `<span class="text-green-600 font-bold">✓ Benar</span>`;
+                    expBox.classList.add('bg-green-100');
+                } else {
+                    expBox.innerHTML = `<span class="text-red-600 font-bold">✗ Salah.</span> Jawab: ${item.a[item.k]}`;
+                    expBox.classList.add('bg-red-100');
+                }
+            });
+            
+            const finalScore = Math.round((score / summativeData.length) * 100);
+            const resContainer = document.getElementById('result-sumatif');
+            const scoreDisplay = document.getElementById('score-display');
+            const feedback = document.getElementById('feedback-sumatif');
+            
+            resContainer.classList.remove('hidden');
+            scoreDisplay.innerText = finalScore + " / 100";
+            
+            if(finalScore >= 80) feedback.innerText = "Masya Allah! Nilai Mumtaz (Istimewa). Anda telah menguasai materi ini.";
+            else if(finalScore >= 60) feedback.innerText = "Alhamdulillah, nilai Jayyid (Baik). Tingkatkan lagi belajarnya.";
+            else feedback.innerText = "Jangan menyerah. Ulangi membaca materi pertemuan yang belum dipahami.";
+            
+            // Scroll to bottom
+            resContainer.scrollIntoView({behavior: "smooth"});
+        }
+
+        function resetSumatif() {
+            initSummative();
+            window.scrollTo(0,0);
+        }
+
+        // Initialize Summative on Load
+        initSummative();
+
+    </script>
 </body>
 </html>
