@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modul MTK-104: Matematika Terpadu</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax for LaTeX -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Noto Sans', sans-serif; }
+        .font-arabic { font-family: 'Amiri', serif; }
+        
+        /* Transitions */
+        .tab-content {
+            display: none;
+            animation: slideUp 0.4s ease-out;
+        }
+        .tab-content.active { display: block; }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .teacher-note {
+            background-color: #ecfdf5; /* Emerald-50 */
+            border-left: 4px solid #059669; /* Emerald-600 */
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-size: 0.95rem;
+        }
+
+        .dalil-box {
+            background-color: #f8fafc; /* Slate-50 */
+            border: 1px solid #cbd5e1;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .sim-box {
+            background-color: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .sim-box:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transform: translateY(-2px); }
+
+        /* Illustration Styles */
+        figure {
+            margin: 1.5rem 0;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background-color: white;
+            text-align: center;
+        }
+        figure img, figure svg {
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        figcaption {
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #6b7280;
+            background-color: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            font-style: italic;
+        }
+        
+        /* Math Formula Box */
+        .formula-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Times New Roman', Times, serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-emerald-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-center">Modul MTK-104: Matematika Terpadu</h1>
+            <p class="text-center text-emerald-100 text-sm mt-1">Perbandingan | Aljabar | Aritmatika Sosial | Statistika</p>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="bg-emerald-800 overflow-x-auto no-scrollbar shadow-inner">
+            <div class="container mx-auto flex whitespace-nowrap md:justify-center px-2">
+                <button onclick="switchTab('p1')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent active-tab" id="btn-p1">P1: Perbandingan</button>
+                <button onclick="switchTab('p2')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p2">P2: Skala</button>
+                <button onclick="switchTab('p3')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p3">P3: Aljabar Dasar</button>
+                <button onclick="switchTab('p4')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p4">P4: Operasi Aljabar</button>
+                <button onclick="switchTab('p5')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p5">P5: Aritmatika 1</button>
+                <button onclick="switchTab('p6')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p6">P6: Aritmatika 2</button>
+                <button onclick="switchTab('p7')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p7">P7: Data</button>
+                <button onclick="switchTab('p8')" class="tab-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 focus:outline-none transition-colors border-b-4 border-transparent" id="btn-p8">P8: Statistika</button>
+                <button onclick="switchTab('sumatif')" class="tab-btn px-4 py-3 text-sm font-medium bg-emerald-900 hover:bg-emerald-950 text-yellow-300 border-b-4 border-transparent" id="btn-sumatif">Ujian Akhir</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-5xl mb-24">
+
+        <!-- ================= PERTEMUAN 1: PERBANDINGAN ================= -->
+        <div id="p1" class="tab-content active">
+            <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b pb-4">Pertemuan 1: Perbandingan Senilai & Berbalik Nilai</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600 ml-4">
+                        <li>Santri memahami konsep rasio (perbandingan) dua besaran.</li>
+                        <li>Santri dapat membedakan Perbandingan Senilai dan Berbalik Nilai.</li>
+                        <li>Santri mampu menyelesaikan masalah sehari-hari terkait resep masakan atau kecepatan.</li>
+                    </ul>
+                </div>
+
+                <div class="dalil-box">
+                    <h3 class="text-lg font-bold text-emerald-800 mb-2">B. Landasan Wahyu</h3>
+                    <p class="font-arabic text-2xl text-slate-800 mb-3">وَالسَّمَاءَ رَفَعَهَا وَوَضَعَ الْمِيزَانَ</p>
+                    <p class="text-slate-600 italic">"Dan Allah telah meninggikan langit dan Dia meletakkan neraca (keadilan)." (QS. Ar-Rahman: 7)</p>
+                    <p class="text-xs text-slate-500 mt-2">Matematika adalah ilmu tentang keseimbangan (Mizan) dan proporsi yang adil.</p>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed text-justify">
+                    <h3 class="text-lg font-bold text-slate-800">C. Materi Inti: Memahami Proporsi</h3>
+                    
+                    <p>Perbandingan adalah membandingkan dua nilai atau lebih dari suatu besaran yang sejenis dan dinyatakan dengan cara yang sederhana. Ditulis $a : b$ atau $\frac{a}{b}$.</p>
+
+                    <h4 class="font-bold text-emerald-700 mt-4">1. Perbandingan Senilai (Direct Proportion)</h4>
+                    <p>Jika variabel A bertambah, maka variabel B <strong>ikut bertambah</strong>. Contoh: Jumlah bensin dengan jarak tempuh, atau jumlah beras dengan porsi makan.</p>
+                    <div class="formula-box">
+                        $$ \frac{a_1}{b_1} = \frac{a_2}{b_2} \quad \text{atau} \quad a_1 \times b_2 = a_2 \times b_1 $$
+                    </div>
+
+                    <h4 class="font-bold text-emerald-700 mt-4">2. Perbandingan Berbalik Nilai (Inverse Proportion)</h4>
+                    <p>Jika variabel A bertambah, maka variabel B <strong>justru berkurang</strong>. Contoh: Kecepatan dengan waktu tempuh, atau jumlah pekerja dengan lama waktu proyek selesai.</p>
+                    <div class="formula-box">
+                        $$ a_1 \times b_1 = a_2 \times b_2 \quad \text{atau} \quad \frac{a_1}{b_2} = \frac{a_2}{b_1} $$
+                    </div>
+
+                    <figure>
+                        <!-- SVG Illustration for Direct vs Inverse -->
+                        <svg width="400" height="200" viewBox="0 0 400 200" class="border bg-slate-50">
+                            <!-- Direct -->
+                            <text x="100" y="30" text-anchor="middle" font-weight="bold">Senilai</text>
+                            <line x1="50" y1="150" x2="150" y2="50" stroke="#059669" stroke-width="3" />
+                            <text x="100" y="170" text-anchor="middle" font-size="12">A Naik, B Naik</text>
+                            
+                            <!-- Inverse -->
+                            <text x="300" y="30" text-anchor="middle" font-weight="bold">Berbalik Nilai</text>
+                            <path d="M 250 50 Q 250 150 350 150" stroke="#dc2626" stroke-width="3" fill="none"/>
+                            <text x="300" y="170" text-anchor="middle" font-size="12">A Naik, B Turun</text>
+                            
+                            <!-- Axis -->
+                            <line x1="50" y1="150" x2="150" y2="150" stroke="black" />
+                            <line x1="50" y1="150" x2="50" y2="50" stroke="black" />
+                            
+                            <line x1="250" y1="150" x2="350" y2="150" stroke="black" />
+                            <line x1="250" y1="150" x2="250" y2="50" stroke="black" />
+                        </svg>
+                        <figcaption>Gambar 1: Grafik Perbandingan Senilai (Garis Lurus) vs Berbalik Nilai (Kurva Hiperbola).</figcaption>
+                    </figure>
+
+                    <div class="teacher-note">
+                        <strong>👨‍🏫 Poin Diskusi Guru:</strong>
+                        <p>Berikan contoh proyek pembangunan masjid. Jika dikerjakan 10 orang selesai 30 hari, apakah jika ditambah menjadi 20 orang waktunya jadi 60 hari? Tentu tidak, waktunya jadi lebih cepat (15 hari). Inilah logika Berbalik Nilai.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi: Resep Kue (Senilai)</h4>
+                        <div class="text-sm space-y-2">
+                            <p>Resep asli untuk <span id="p1-serve-base">4</span> porsi:</p>
+                            <ul class="list-disc ml-5">
+                                <li>Tepung: 200 gr</li>
+                                <li>Gula: 100 gr</li>
+                                <li>Telur: 2 butir</li>
+                            </ul>
+                            <label class="block font-bold mt-2">Mau buat berapa porsi?</label>
+                            <input type="range" min="1" max="20" value="4" id="p1-slider" class="w-full accent-emerald-600">
+                            <p>Target Porsi: <span id="p1-target" class="font-bold text-emerald-600">4</span></p>
+                            
+                            <div class="mt-2 bg-emerald-50 p-2 rounded">
+                                <strong>Kebutuhan Baru:</strong>
+                                <ul class="list-disc ml-5" id="p1-result">
+                                    <li>Tepung: 200 gr</li>
+                                    <li>Gula: 100 gr</li>
+                                    <li>Telur: 2 butir</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif P1</h3>
+                    <div id="quiz-p1" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p1')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 font-bold">Cek Jawaban</button>
+                    <div id="result-p1" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PERTEMUAN 2: SKALA ================= -->
+        <div id="p2" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b pb-4">Pertemuan 2: Skala dan Peta</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600 ml-4">
+                        <li>Santri memahami pengertian Skala sebagai perbandingan ukuran gambar dengan ukuran sebenarnya.</li>
+                        <li>Santri mampu menghitung Jarak Sebenarnya (JS), Jarak Peta (JP), dan Skala (S).</li>
+                        <li>Santri mahir mengkonversi satuan cm ke km atau m.</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed text-justify">
+                    <h3 class="text-lg font-bold text-slate-800">C. Materi Inti: Merepresentasikan Dunia</h3>
+                    <p>Skala adalah bentuk khusus dari perbandingan senilai. Skala biasanya ditulis $1 : n$, artinya 1 cm di peta mewakili $n$ cm di dunia nyata.</p>
+
+                    <div class="formula-box">
+                        $$ S = \frac{JP}{JS} $$
+                        $$ JP = S \times JS $$
+                        $$ JS = \frac{JP}{S} $$
+                        <br>
+                        <em>Tips: Selalu samakan satuan ke cm saat menghitung! (1 km = 100.000 cm)</em>
+                    </div>
+
+                    <figure>
+                         <img src="https://placehold.co/800x300/e2e8f0/1e293b?text=Peta+Indonesia+dengan+Grid+Skala&font=playfair-display" alt="Ilustrasi Peta">
+                        <figcaption>Gambar 2: Peta dengan skala 1 : 1.000.000. Setiap 1 cm di peta ini sama dengan 10 km jarak asli.</figcaption>
+                    </figure>
+
+                    <h4 class="font-bold text-emerald-700 mt-4">Contoh Soal:</h4>
+                    <p>Jarak kota A dan B di peta adalah 5 cm. Skala peta 1 : 200.000. Berapa jarak sebenarnya?</p>
+                    <p><strong>Jawab:</strong><br>
+                    $JS = \frac{JP}{S} = \frac{5}{1/200.000} = 5 \times 200.000 = 1.000.000 \text{ cm}$<br>
+                    $1.000.000 \text{ cm} = 10 \text{ km}$.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi: Kalkulator Peta</h4>
+                        <div class="grid gap-2 text-sm">
+                            <label>Jarak di Peta (cm): <input type="number" id="p2-jp" value="5" class="border p-1 w-full"></label>
+                            <label>Skala 1 : <input type="number" id="p2-s" value="100000" class="border p-1 w-full"></label>
+                            <button onclick="calcScale()" class="bg-blue-600 text-white py-1 rounded">Hitung Jarak Asli</button>
+                            <p id="p2-result" class="font-bold mt-2">Hasil: -</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif P2</h3>
+                    <div id="quiz-p2" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p2')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 font-bold">Cek Jawaban</button>
+                    <div id="result-p2" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PERTEMUAN 3: ALJABAR DASAR ================= -->
+        <div id="p3" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b pb-4">Pertemuan 3: Pengenalan Bentuk Aljabar</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600 ml-4">
+                        <li>Santri mengenal istilah Variabel, Koefisien, Konstanta, dan Suku.</li>
+                        <li>Santri memahami Suku Sejenis dan Tidak Sejenis.</li>
+                        <li>Santri mampu melakukan Penjumlahan dan Pengurangan bentuk aljabar.</li>
+                    </ul>
+                </div>
+
+                <div class="dalil-box">
+                    <h3 class="text-lg font-bold text-emerald-800 mb-2">B. Tadabbur Nilai Islam</h3>
+                    <p class="text-slate-600 italic">"Aljabar (Al-Jabr) ditemukan oleh ilmuwan Muslim, Al-Khawarizmi. Ini mengajarkan kita untuk menyelesaikan masalah yang belum diketahui (variabel) dengan menyeimbangkan persamaan hidup."</p>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed text-justify">
+                    <h3 class="text-lg font-bold text-slate-800">C. Materi Inti: Bahasa Simbol</h3>
+                    <p>Bentuk aljabar adalah matematika yang menggunakan huruf untuk mewakili angka yang belum diketahui.</p>
+                    
+                    <div class="bg-yellow-50 p-4 rounded border border-yellow-200 text-center">
+                        <span class="text-2xl font-mono">$$ 5x + 3y - 7 $$</span>
+                        <div class="text-left text-sm mt-2 ml-4">
+                            <p><strong>$x, y$:</strong> Variabel (Peubah)</p>
+                            <p><strong>$5, 3$:</strong> Koefisien (Angka di depan huruf)</p>
+                            <p><strong>$-7$:</strong> Konstanta (Angka yang berdiri sendiri)</p>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-emerald-700 mt-4">Penjumlahan & Pengurangan</h4>
+                    <p>Hukum Utamanya: <strong>Hanya suku sejenis yang bisa dijumlahkan atau dikurangkan.</strong></p>
+                    <p>Suku sejenis = Hurufnya sama, pangkatnya sama.</p>
+                    <ul class="list-disc ml-5">
+                        <li>$2 \text{ apel} + 3 \text{ apel} = 5 \text{ apel} \rightarrow 2x + 3x = 5x$ (BISA)</li>
+                        <li>$2 \text{ apel} + 3 \text{ jeruk} \rightarrow 2x + 3y$ (TIDAK BISA DISEDERHANAKAN)</li>
+                    </ul>
+
+                    <figure>
+                        <!-- SVG Algebra Tiles -->
+                        <svg width="300" height="150" viewBox="0 0 300 150" class="border mx-auto bg-slate-50">
+                            <!-- X blocks -->
+                            <rect x="20" y="50" width="30" height="80" fill="#3b82f6" stroke="black" />
+                            <text x="35" y="95" text-anchor="middle" fill="white">x</text>
+                            
+                            <rect x="60" y="50" width="30" height="80" fill="#3b82f6" stroke="black" />
+                            <text x="75" y="95" text-anchor="middle" fill="white">x</text>
+                            
+                            <text x="110" y="95" font-size="20">+</text>
+                            
+                            <!-- Constant blocks -->
+                            <rect x="140" y="90" width="30" height="30" fill="#ef4444" stroke="black" />
+                            <text x="155" y="110" text-anchor="middle" fill="white">1</text>
+                             <rect x="180" y="90" width="30" height="30" fill="#ef4444" stroke="black" />
+                            <text x="195" y="110" text-anchor="middle" fill="white">1</text>
+                            
+                            <text x="150" y="145" text-anchor="middle" font-size="12">2x + 2</text>
+                        </svg>
+                        <figcaption>Gambar 3: Visualisasi Aljabar Tiles (2 balok x dan 2 balok satuan).</figcaption>
+                    </figure>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif P3</h3>
+                    <div id="quiz-p3" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p3')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 font-bold">Cek Jawaban</button>
+                    <div id="result-p3" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PERTEMUAN 4: OPERASI ALJABAR ================= -->
+        <div id="p4" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b pb-4">Pertemuan 4: Perkalian & Pembagian Aljabar</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600 ml-4">
+                        <li>Santri mampu melakukan perkalian suku satu dengan suku dua (Distributif).</li>
+                        <li>Santri memahami perkalian suku dua dengan suku dua (FOIL: Depan, Luar, Dalam, Belakang).</li>
+                        <li>Santri mampu melakukan pembagian bentuk aljabar sederhana.</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed text-justify">
+                    <h3 class="text-lg font-bold text-slate-800">C. Materi Inti: Memperluas & Menyederhanakan</h3>
+                    
+                    <h4 class="font-bold text-emerald-700 mt-4">1. Perkalian (Sifat Distributif)</h4>
+                    <p>Rumus: $a(b+c) = ab + ac$</p>
+                    <p>Contoh: $2(x+3) = 2x + 6$</p>
+                    
+                    <h4 class="font-bold text-emerald-700 mt-4">2. Perkalian Suku Dua (Binomial)</h4>
+                    <p>Rumus: $(x+a)(x+b) = x^2 + bx + ax + ab$</p>
+                    <p>Contoh: $(x+2)(x+3) = x^2 + 3x + 2x + 6 = x^2 + 5x + 6$</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+                        <div class="sim-box">
+                            <h5 class="font-bold text-center mb-2">Model Luas (Area Model)</h5>
+                             <!-- SVG Area Model -->
+                            <svg width="200" height="200" viewBox="0 0 200 200" class="mx-auto border">
+                                <rect x="10" y="10" width="100" height="100" fill="#bfdbfe" stroke="black"/>
+                                <text x="60" y="60" text-anchor="middle">x²</text>
+                                
+                                <rect x="110" y="10" width="50" height="100" fill="#bbf7d0" stroke="black"/>
+                                <text x="135" y="60" text-anchor="middle">3x</text>
+                                
+                                <rect x="10" y="110" width="100" height="50" fill="#bbf7d0" stroke="black"/>
+                                <text x="60" y="135" text-anchor="middle">2x</text>
+                                
+                                <rect x="110" y="110" width="50" height="50" fill="#fecaca" stroke="black"/>
+                                <text x="135" y="135" text-anchor="middle">6</text>
+                                
+                                <text x="60" y="5" font-size="10">x</text>
+                                <text x="135" y="5" font-size="10">3</text>
+                                <text x="0" y="60" font-size="10">x</text>
+                                <text x="0" y="135" font-size="10">2</text>
+                            </svg>
+                            <p class="text-center text-xs mt-1">Ilustrasi (x+3)(x+2)</p>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-emerald-700 mt-4">3. Pembagian</h4>
+                    <p>Bagilah koefisien dengan koefisien, dan variabel dengan variabel (pangkat dikurang).</p>
+                    <p>Contoh: $\frac{12x^3}{4x} = 3x^2$</p>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif P4</h3>
+                    <div id="quiz-p4" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p4')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 font-bold">Cek Jawaban</button>
+                    <div id="result-p4" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PERTEMUAN 5: ARITMATIKA SOSIAL I ================= -->
+        <div id="p5" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b pb-4">Pertemuan 5: Untung, Rugi, dan Diskon</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600 ml-4">
+                        <li>Santri memahami Harga Beli (HB), Harga Jual (HJ), Untung (U), dan Rugi (R).</li>
+                        <li>Santri dapat menghitung persentase keuntungan dan kerugian.</li>
+                        <li>Santri memahami konsep Diskon (Rabat) dan harga bersih.</li>
+                    </ul>
+                </div>
+
+                <div class="dalil-box">
+                    <h3 class="text-lg font-bold text-emerald-800 mb-2">B. Landasan Wahyu</h3>
+                    <p class="font-arabic text-2xl text-slate-800 mb-3">وَأَحَلَّ اللَّهُ الْبَيْعَ وَحَرَّمَ الرِّبَا</p>
+                    <p class="text-slate-600 italic">"Allah telah menghalalkan jual beli dan mengharamkan riba." (QS. Al-Baqarah: 275)</p>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed text-justify">
+                    <h3 class="text-lg font-bold text-slate-800">C. Materi Inti: Perniagaan yang Halal</h3>
+                    
+                    <ul class="list-disc ml-5">
+                        <li><strong>Untung:</strong> Jika Harga Jual > Harga Beli. ($U = HJ - HB$)</li>
+                        <li><strong>Rugi:</strong> Jika Harga Jual < Harga Beli. ($R = HB - HJ$)</li>
+                        <li><strong>Impas:</strong> Jika Harga Jual = Harga Beli.</li>
+                    </ul>
+                    
+                    <div class="formula-box">
+                        $$ \% \text{Untung} = \frac{\text{Untung}}{\text{Harga Beli}} \times 100\% $$
+                    </div>
+                    
+                    <h4 class="font-bold text-emerald-700 mt-4">Simulasi Toko Santri</h4>
+                    <div class="sim-box bg-slate-50">
+                        <div class="grid grid-cols-2 gap-4">
+                            <label>Harga Beli (Rp): <input type="number" id="p5-hb" value="10000" class="border p-1 w-full"></label>
+                            <label>Harga Jual (Rp): <input type="number" id="p5-hj" value="12000" class="border p-1 w-full"></label>
+                        </div>
+                        <button onclick="calcProfit()" class="mt-2 bg-emerald-600 text-white px-4 py-1 rounded w-full">Hitung Keuntungan</button>
+                        <div id="p5-result" class="mt-2 font-bold p-2 bg-white rounded border"></div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif P5</h3>
+                    <div id="quiz-p5" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p5')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 font-bold">Cek Jawaban</button>
+                    <div id="result-p5" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PERTEMUAN 6: ARITMATIKA SOSIAL II ================= -->
+        <div id="p6" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b pb-4">Pertemuan 6: Bruto, Netto, Tara & Pajak</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600 ml-4">
+                        <li>Santri membedakan Bruto (berat kotor), Netto (berat bersih), dan Tara (berat kemasan).</li>
+                        <li>Santri memahami konsep Pajak (PPN/PPh) dalam transaksi.</li>
+                        <li>Santri mengenal Bunga Tunggal (dalam konteks matematika konvensional, dengan catatan tentang Riba).</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed text-justify">
+                    <h3 class="text-lg font-bold text-slate-800">C. Materi Inti: Ketelitian Timbangan</h3>
+                    
+                    <figure>
+                        <img src="https://placehold.co/800x300/f3f4f6/374151?text=Ilustrasi+Karung+Beras+%0A(Bruto+=+Karung+Isi,+Netto+=+Beras,+Tara+=+Karung+Kosong)&font=playfair-display" alt="Ilustrasi Bruto Netto">
+                        <figcaption>Gambar 4: Hubungan Bruto, Netto, dan Tara.</figcaption>
+                    </figure>
+
+                    <div class="formula-box">
+                        $$ \text{Netto} = \text{Bruto} - \text{Tara} $$
+                        $$ \text{Tara} = \% \text{Tara} \times \text{Bruto} $$
+                    </div>
+                    
+                    <h4 class="font-bold text-emerald-700 mt-4">Pajak (Tax)</h4>
+                    <p>Pajak menambah harga bayar (PPN) atau mengurangi penerimaan (PPh).<br>Contoh: Beli makanan Rp 100.000 + PPN 10% = Bayar Rp 110.000.</p>
+                    
+                    <div class="teacher-note">
+                        <strong>👨‍🏫 Catatan Penting:</strong>
+                        <p>Dalam kurikulum nasional diajarkan "Bunga Bank". Sebagai santri, kita mempelajarinya sebagai pengetahuan (ilmu alat) untuk ujian, namun wajib meyakini bahwa dalam Islam, bunga (Riba) adalah haram.</p>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif P6</h3>
+                    <div id="quiz-p6" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p6')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 font-bold">Cek Jawaban</button>
+                    <div id="result-p6" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PERTEMUAN 7: PENGOLAHAN DATA ================= -->
+        <div id="p7" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b pb-4">Pertemuan 7: Penyajian Data (Statistika Dasar)</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600 ml-4">
+                        <li>Santri memahami pengertian Data dan Datum.</li>
+                        <li>Santri mampu menyajikan data dalam bentuk Tabel Frekuensi.</li>
+                        <li>Santri mampu membuat Diagram Batang, Garis, dan Lingkaran.</li>
+                    </ul>
+                </div>
+
+                 <div class="dalil-box">
+                    <h3 class="text-lg font-bold text-emerald-800 mb-2">B. Landasan Wahyu</h3>
+                    <p class="font-arabic text-2xl text-slate-800 mb-3">أَحْصَاهُ اللَّهُ وَنَسُوهُ</p>
+                    <p class="text-slate-600 italic">"Allah mencatat amal itu (menghitung datanya) walaupun mereka melupakannya." (QS. Al-Mujadilah: 6)</p>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed text-justify">
+                    <h3 class="text-lg font-bold text-slate-800">C. Materi Inti: Mencatat dengan Akurat</h3>
+                    <p>Statistika adalah ilmu mengumpulkan, mengolah, dan menyajikan data. Tujuannya agar informasi mudah dibaca.</p>
+
+                    <h4 class="font-bold text-emerald-700 mt-4">1. Diagram Batang (Bar Chart)</h4>
+                    <p>Menggunakan persegi panjang untuk mewakili jumlah.</p>
+                    
+                    <h4 class="font-bold text-emerald-700 mt-4">2. Diagram Lingkaran (Pie Chart)</h4>
+                    <p>Menggunakan juring lingkaran. Total sudut $360^\circ$ atau $100\%$.</p>
+                    <div class="formula-box">
+                        $$ \text{Sudut Data} = \frac{\text{Nilai Data}}{\text{Total Data}} \times 360^\circ $$
+                    </div>
+
+                    <!-- SVG Bar Chart -->
+                    <div class="border p-4 bg-white text-center">
+                        <svg width="300" height="200" viewBox="0 0 300 200">
+                            <!-- Bars -->
+                            <rect x="50" y="100" width="40" height="80" fill="#3b82f6" />
+                            <text x="70" y="195" text-anchor="middle" font-size="12">Kls 7</text>
+                            
+                            <rect x="110" y="50" width="40" height="130" fill="#3b82f6" />
+                            <text x="130" y="195" text-anchor="middle" font-size="12">Kls 8</text>
+                            
+                            <rect x="170" y="80" width="40" height="100" fill="#3b82f6" />
+                            <text x="190" y="195" text-anchor="middle" font-size="12">Kls 9</text>
+                            
+                            <!-- Axis lines -->
+                            <line x1="30" y1="180" x2="250" y2="180" stroke="black" />
+                            <line x1="30" y1="180" x2="30" y2="20" stroke="black" />
+                        </svg>
+                        <p class="text-xs italic">Contoh Diagram Batang Jumlah Santri</p>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif P7</h3>
+                    <div id="quiz-p7" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p7')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 font-bold">Cek Jawaban</button>
+                    <div id="result-p7" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PERTEMUAN 8: STATISTIKA II ================= -->
+        <div id="p8" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-2 border-b pb-4">Pertemuan 8: Ukuran Pemusatan Data</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-slate-700 mb-2">A. Tujuan Pembelajaran</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600 ml-4">
+                        <li>Santri dapat menghitung Mean (Rata-rata).</li>
+                        <li>Santri dapat menentukan Median (Nilai Tengah).</li>
+                        <li>Santri dapat menentukan Modus (Nilai yang paling sering muncul).</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-6 text-slate-700 leading-relaxed text-justify">
+                    <h3 class="text-lg font-bold text-slate-800">C. Materi Inti: Mencari Nilai Pusat</h3>
+                    
+                    <h4 class="font-bold text-emerald-700 mt-4">1. Mean (Rata-rata)</h4>
+                    <div class="formula-box">
+                        $$ \bar{x} = \frac{\text{Jumlah Seluruh Data}}{\text{Banyaknya Data}} $$
+                    </div>
+                    
+                    <h4 class="font-bold text-emerald-700 mt-4">2. Median (Nilai Tengah)</h4>
+                    <p>Urutkan data dari terkecil ke terbesar. Ambil nilai yang berada tepat di tengah. Jika data genap, jumlahkan dua nilai tengah lalu bagi 2.</p>
+                    
+                    <h4 class="font-bold text-emerald-700 mt-4">3. Modus</h4>
+                    <p>Data yang frekuensinya paling banyak (paling sering muncul).</p>
+                    
+                    <div class="sim-box">
+                        <h4 class="font-bold text-emerald-700 mb-2">Simulasi Statistik</h4>
+                        <p class="text-sm">Masukkan angka dipisah koma (contoh: 4,5,5,8,9)</p>
+                        <input type="text" id="p8-input" value="4,5,5,6,7,8" class="border p-2 w-full rounded">
+                        <button onclick="calcStat()" class="mt-2 bg-blue-600 text-white px-4 py-1 rounded w-full">Hitung</button>
+                        <div id="p8-result" class="mt-2 text-sm space-y-1 bg-slate-50 p-2 rounded">
+                            <p>Mean: -</p>
+                            <p>Median: -</p>
+                            <p>Modus: -</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-4">📝 Latihan Formatif P8</h3>
+                    <div id="quiz-p8" class="space-y-4"></div>
+                    <button onclick="checkQuiz('p8')" class="mt-4 bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 font-bold">Cek Jawaban</button>
+                    <div id="result-p8" class="mt-4 hidden font-bold text-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TES SUMATIF ================= -->
+        <div id="sumatif" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-8 border border-slate-200 text-center">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-4">Ujian Akhir Semester</h2>
+                <p class="text-slate-600 mb-8">Kerjakan soal berikut dengan teliti dan jujur.</p>
+                
+                <div id="quiz-sumatif" class="space-y-6 text-left max-w-2xl mx-auto"></div>
+
+                <div class="mt-8">
+                    <button onclick="checkSumatif()" class="bg-emerald-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-emerald-700 shadow-lg text-lg">Kumpulkan Jawaban</button>
+                    <button onclick="initSummative()" class="ml-4 bg-slate-500 text-white px-8 py-3 rounded-lg font-bold hover:bg-slate-600 shadow-lg text-lg">Ulangi</button>
+                </div>
+
+                <div id="result-sumatif" class="mt-8 hidden p-6 rounded-lg border border-emerald-200 bg-emerald-50">
+                    <h3 class="text-2xl font-bold text-emerald-800">Nilai Akhir</h3>
+                    <p id="score-display" class="text-5xl font-extrabold text-emerald-600 my-4">0</p>
+                    <p id="feedback-sumatif" class="text-slate-700 text-lg"></p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-emerald-900 text-white py-8 mt-12">
+        <div class="container mx-auto text-center px-4">
+            <h3 class="font-bold text-xl mb-2">Modul MTK-104</h3>
+            <p class="text-emerald-300 text-sm">Matematika Adalah Bahasa Alam Semesta Ciptaan Allah</p>
+            <p class="text-xs text-emerald-500 mt-4">&copy; 2024 Kurikulum Pendidikan Islam</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // --- Tab Navigation ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-yellow-300', 'text-yellow-300');
+                btn.classList.add('border-transparent');
+            });
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if(activeBtn) {
+                activeBtn.classList.remove('border-transparent');
+                activeBtn.classList.add('border-yellow-300', 'text-yellow-300');
+            }
+            window.scrollTo(0, 0);
+        }
+        switchTab('p1');
+
+        // --- SIMULATIONS ---
+
+        // P1: Recipe
+        document.getElementById('p1-slider').addEventListener('input', function(e) {
+            const val = parseInt(e.target.value);
+            document.getElementById('p1-target').innerText = val;
+            
+            const base = 4;
+            const flour = (200 / base) * val;
+            const sugar = (100 / base) * val;
+            const egg = (2 / base) * val; // Float allowed
+            
+            document.getElementById('p1-result').innerHTML = `
+                <li>Tepung: ${flour.toFixed(0)} gr</li>
+                <li>Gula: ${sugar.toFixed(0)} gr</li>
+                <li>Telur: ${parseFloat(egg.toFixed(1))} butir</li>
+            `;
+        });
+
+        // P2: Scale
+        function calcScale() {
+            const jp = parseFloat(document.getElementById('p2-jp').value);
+            const s = parseFloat(document.getElementById('p2-s').value);
+            const jsCm = jp * s;
+            const jsKm = jsCm / 100000;
+            document.getElementById('p2-result').innerText = `Jarak Sebenarnya: ${jsKm} km (${jsCm.toLocaleString()} cm)`;
+        }
+
+        // P5: Profit
+        function calcProfit() {
+            const hb = parseFloat(document.getElementById('p5-hb').value);
+            const hj = parseFloat(document.getElementById('p5-hj').value);
+            const div = document.getElementById('p5-result');
+            
+            if (hj > hb) {
+                const u = hj - hb;
+                const p = (u/hb) * 100;
+                div.innerHTML = `<span class="text-green-600">Untung: Rp ${u.toLocaleString()} (${p.toFixed(2)}%)</span>`;
+            } else if (hj < hb) {
+                const r = hb - hj;
+                const p = (r/hb) * 100;
+                div.innerHTML = `<span class="text-red-600">Rugi: Rp ${r.toLocaleString()} (${p.toFixed(2)}%)</span>`;
+            } else {
+                div.innerHTML = `<span class="text-gray-600">Impas (Balik Modal)</span>`;
+            }
+        }
+
+        // P8: Stats
+        function calcStat() {
+            const str = document.getElementById('p8-input').value;
+            const arr = str.split(',').map(x => parseFloat(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b);
+            
+            if(arr.length === 0) return;
+            
+            // Mean
+            const sum = arr.reduce((a,b)=>a+b, 0);
+            const mean = sum / arr.length;
+            
+            // Median
+            let median;
+            const mid = Math.floor(arr.length / 2);
+            if(arr.length % 2 === 0) {
+                median = (arr[mid-1] + arr[mid]) / 2;
+            } else {
+                median = arr[mid];
+            }
+            
+            // Mode
+            const freq = {};
+            let maxFreq = 0;
+            let modes = [];
+            arr.forEach(x => {
+                freq[x] = (freq[x] || 0) + 1;
+                if(freq[x] > maxFreq) maxFreq = freq[x];
+            });
+            for(let k in freq) {
+                if(freq[k] === maxFreq && maxFreq > 1) modes.push(k);
+            }
+            const modeStr = modes.length > 0 ? modes.join(', ') : "Tidak ada modus";
+
+            document.getElementById('p8-result').innerHTML = `
+                <p>Urutan Data: ${arr.join(', ')}</p>
+                <p>Mean (Rata-rata): ${mean.toFixed(2)}</p>
+                <p>Median (Tengah): ${median}</p>
+                <p>Modus: ${modeStr}</p>
+            `;
+        }
+
+        // --- QUIZ DATA ---
+        const quizzes = {
+            p1: [
+                {q: "Bentuk sederhana dari 20 cm : 1 m adalah...", a: ["20:1", "1:5", "1:50", "2:1"], k: 1, exp: "1 m = 100 cm. Jadi 20:100 = 1:5."},
+                {q: "Jika 3 buku harganya Rp 9.000, maka harga 5 buku adalah...", a: ["Rp 12.000", "Rp 15.000", "Rp 20.000", "Rp 10.000"], k: 1, exp: "Harga 1 buku = 3000. 5 buku = 15.000 (Senilai)."},
+                {q: "Proyek selesai 30 hari oleh 10 pekerja. Jika pekerja menjadi 15 orang, selesai dalam...", a: ["20 hari", "45 hari", "15 hari", "25 hari"], k: 0, exp: "Berbalik nilai: 30x10 = 300 beban. 300/15 = 20 hari."},
+                {q: "Manakah yang merupakan perbandingan berbalik nilai?", a: ["Banyak bensin dan jarak", "Banyak kue dan harga", "Kecepatan dan waktu tempuh", "Umur dan tinggi badan"], k: 2, exp: "Makin cepat, waktu makin sedikit."},
+                {q: "Rasio 2 jam : 30 menit adalah...", a: ["2:30", "1:15", "4:1", "1:4"], k: 2, exp: "120 menit : 30 menit = 4:1."}
+            ],
+            p2: [
+                {q: "Jarak peta 5 cm, jarak asli 100 km. Skalanya...", a: ["1:200.000", "1:2.000.000", "1:20.000", "1:500.000"], k: 1, exp: "100 km = 10.000.000 cm. 5 : 10.000.000 = 1 : 2.000.000."},
+                {q: "Skala 1:100. Arti 1 cm di peta adalah...", a: ["1 meter asli", "100 meter asli", "1 km asli", "10 meter asli"], k: 0, exp: "100 cm = 1 meter."},
+                {q: "Jarak asli 20 km, skala 1:500.000. Jarak peta adalah...", a: ["2 cm", "4 cm", "10 cm", "40 cm"], k: 1, exp: "2.000.000 / 500.000 = 4 cm."},
+                {q: "Peta diperbesar 2 kali, maka skala berubah menjadi...", a: ["Makin kecil angkanya (misal 1:100 jadi 1:50)", "Makin besar", "Tetap", "Tidak tentu"], k: 0, exp: "Gambar makin besar, penyebut skala makin kecil."},
+                {q: "Satuan standar perhitungan skala adalah...", a: ["Meter", "Kilometer", "Centimeter", "Milimeter"], k: 2, exp: "CM."}
+            ],
+            p3: [
+                {q: "Koefisien x dari 3x + 5y - 2 adalah...", a: ["3", "5", "-2", "x"], k: 0, exp: "Angka di depan x."},
+                {q: "Konstanta dari 2a + 3b - 7 adalah...", a: ["2", "3", "7", "-7"], k: 3, exp: "Angka yang berdiri sendiri (-7)."},
+                {q: "Suku sejenis dari 3x + 4y - 2x + 7 adalah...", a: ["3x dan 4y", "3x dan -2x", "4y dan 7", "Tidak ada"], k: 1, exp: "Variabelnya sama (x)."},
+                {q: "Hasil dari 5a + 3a adalah...", a: ["8a", "8a^2", "15a", "2a"], k: 0, exp: "5+3 = 8."},
+                {q: "Hasil 7x - 2x + 3y adalah...", a: ["8xy", "5x + 3y", "5x - 3y", "10xy"], k: 1, exp: "7x-2x = 5x. 3y tetap."}
+            ],
+            p4: [
+                {q: "Hasil perkalian 3(x + 5) adalah...", a: ["3x + 5", "3x + 15", "x + 15", "3x + 8"], k: 1, exp: "Distributif: 3.x + 3.5"},
+                {q: "Hasil dari (x + 2)(x + 3) adalah...", a: ["x^2 + 5x + 6", "x^2 + 6x + 5", "x^2 + 6", "x^2 + 5"], k: 0, exp: "x^2 + 3x + 2x + 6."},
+                {q: "Bentuk sederhana 12ab : 3a adalah...", a: ["4b", "4a", "4ab", "3b"], k: 0, exp: "12/3 = 4. a/a = 1. Sisa b."},
+                {q: "Hasil 2x(3x - 4) adalah...", a: ["6x - 8", "6x^2 - 8x", "5x^2 - 4", "6x^2 - 4x"], k: 1, exp: "2x.3x - 2x.4"},
+                {q: "(a + b)^2 sama dengan...", a: ["a^2 + b^2", "a^2 + 2ab + b^2", "a^2 + ab + b^2", "2a + 2b"], k: 1, exp: "Rumus kuadrat sempurna."}
+            ],
+            p5: [
+                {q: "HB = 50.000, HJ = 60.000. Maka...", a: ["Rugi 10.000", "Untung 10.000", "Impas", "Untung 20%"], k: 1, exp: "60-50 = 10rb untung."},
+                {q: "Rumus persentase kerugian adalah...", a: ["R/HJ x 100%", "R/HB x 100%", "HB/R x 100%", "HJ/R x 100%"], k: 1, exp: "Selalu dibagi Harga Beli."},
+                {q: "Diskon artinya...", a: ["Potongan harga", "Pajak", "Biaya tambahan", "Keuntungan"], k: 0, exp: "Potongan harga (Rabat)."},
+                {q: "Beli 100rb, Diskon 20%. Bayar...", a: ["20rb", "80rb", "120rb", "100rb"], k: 1, exp: "Potongan 20rb. Sisa 80rb."},
+                {q: "Jika rugi 50% dari modal 10.000, maka uang sisa...", a: ["5.000", "2.000", "0", "7.500"], k: 0, exp: "50% x 10rb = 5rb."}
+            ],
+            p6: [
+                {q: "Berat kotor barang disebut...", a: ["Netto", "Tara", "Bruto", "Diskon"], k: 2, exp: "Bruto."},
+                {q: "Berat kemasan disebut...", a: ["Netto", "Tara", "Bruto", "Pajak"], k: 1, exp: "Tara."},
+                {q: "Bruto 100 kg, Tara 2%. Netto adalah...", a: ["98 kg", "2 kg", "102 kg", "50 kg"], k: 0, exp: "Tara 2kg. 100-2 = 98."},
+                {q: "Pajak PPN biasanya...", a: ["Mengurangi harga bayar", "Menambah harga bayar", "Tidak pengaruh", "Dikembalikan"], k: 1, exp: "Pajak Pertambahan Nilai menambah biaya."},
+                {q: "Jika Netto = Bruto, berarti...", a: ["Kemasan sangat berat", "Tidak ada kemasan (Tara=0)", "Barang rusak", "Salah timbang"], k: 1, exp: "Tara 0."}
+            ],
+            p7: [
+                {q: "Diagram yang menggunakan persegi panjang disebut...", a: ["Diagram Lingkaran", "Diagram Garis", "Diagram Batang", "Piktogram"], k: 2, exp: "Batang (Bar)."},
+                {q: "Total sudut dalam diagram lingkaran adalah...", a: ["180 derajat", "90 derajat", "360 derajat", "100 derajat"], k: 2, exp: "Satu putaran penuh."},
+                {q: "Data tunggal: 2, 3, 3, 4. Datum adalah...", a: ["Kumpulan angka", "Masing-masing angka", "Rata-rata", "Tabel"], k: 1, exp: "Datum adalah bentuk tunggal dari Data."},
+                {q: "Tabel frekuensi digunakan untuk...", a: ["Menghitung luas", "Mengelompokkan data agar rapi", "Menggambar peta", "Menghitung uang"], k: 1, exp: "Memudahkan membaca jumlah."},
+                {q: "Turus (tally) biasanya ditulis dalam kelompok...", a: ["3", "4", "5", "10"], k: 2, exp: "IIII dicoret miring (5)."}
+            ],
+            p8: [
+                {q: "Nilai rata-rata disebut...", a: ["Modus", "Median", "Mean", "Jangkauan"], k: 2, exp: "Mean."},
+                {q: "Data: 2, 5, 5, 7, 9. Modusnya adalah...", a: ["5", "2", "7", "9"], k: 0, exp: "Paling sering muncul (5)."},
+                {q: "Data: 2, 3, 5, 8, 9. Median adalah...", a: ["2", "5", "8", "5.4"], k: 1, exp: "Nilai tengah (5)."},
+                {q: "Untuk mencari median, data harus...", a: ["Diacak", "Diurutkan dulu", "Dijumlahkan", "Dikali"], k: 1, exp: "Wajib urut kecil ke besar."},
+                {q: "Jika data ada 2, 4, 6, 8 (genap). Mediannya...", a: ["4", "6", "5", "10"], k: 2, exp: "(4+6)/2 = 5."}
+            ]
+        };
+
+        function renderQuizzes() {
+            for(let key in quizzes) {
+                const container = document.getElementById('quiz-' + key);
+                if(!container) continue;
+                container.innerHTML = quizzes[key].map((item, i) => `
+                    <div class="border p-3 rounded bg-slate-50 mb-3" id="q-${key}-${i}">
+                        <p class="font-bold text-sm mb-2 text-slate-800">${i+1}. ${item.q}</p>
+                        ${item.a.map((opt, j) => `
+                            <label class="block text-sm cursor-pointer hover:bg-white p-2 rounded transition">
+                                <input type="radio" name="answ-${key}-${i}" value="${j}" class="mr-2 accent-emerald-600"> ${opt}
+                            </label>
+                        `).join('')}
+                        <p class="hidden mt-2 text-xs p-2 rounded font-semibold" id="fb-${key}-${i}"></p>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        function checkQuiz(key) {
+            let score = 0;
+            quizzes[key].forEach((item, i) => {
+                const sel = document.querySelector(`input[name="answ-${key}-${i}"]:checked`);
+                const fb = document.getElementById(`fb-${key}-${i}`);
+                if(fb) {
+                    fb.classList.remove('hidden');
+                    if(sel && parseInt(sel.value) === item.k) {
+                        score++;
+                        fb.innerHTML = `<span class='text-green-700'>✓ Benar.</span> ${item.exp}`;
+                        fb.className = "mt-2 text-xs p-2 rounded bg-green-100 block border border-green-200";
+                    } else {
+                        fb.innerHTML = `<span class='text-red-700'>✗ Salah.</span> Jawaban: ${item.a[item.k]}`;
+                        fb.className = "mt-2 text-xs p-2 rounded bg-red-100 block border border-red-200";
+                    }
+                }
+            });
+            const res = document.getElementById('result-' + key);
+            res.classList.remove('hidden');
+            res.innerHTML = `Skor: ${score*20} / 100`; 
+        }
+        
+        renderQuizzes();
+
+        // --- SUMMATIVE QUIZ ---
+        let summativeQs = [];
+        function initSummative() {
+            summativeQs = [];
+            ['p1','p2','p3','p4','p5','p6','p7','p8'].forEach(k => {
+                const shuffled = [...quizzes[k]].sort(() => 0.5 - Math.random()).slice(0, 3);
+                summativeQs.push(...shuffled);
+            });
+            summativeQs.sort(() => 0.5 - Math.random());
+            
+            const cont = document.getElementById('quiz-sumatif');
+            cont.innerHTML = summativeQs.map((item, i) => `
+                <div class="border-b border-slate-300 pb-4 mb-4" id="sum-q-${i}">
+                    <p class="font-bold text-emerald-900 mb-2">${i+1}. ${item.q}</p>
+                    ${item.a.map((opt, j) => `
+                        <label class="block mb-1 cursor-pointer p-2 hover:bg-slate-100 rounded transition">
+                            <input type="radio" name="sum-ans-${i}" value="${j}" class="mr-2 accent-emerald-600"> ${opt}
+                        </label>
+                    `).join('')}
+                    <p class="hidden mt-2 text-sm text-slate-700 bg-slate-200 p-2 rounded" id="sum-fb-${i}"></p>
+                </div>
+            `).join('');
+            
+            document.getElementById('result-sumatif').classList.add('hidden');
+        }
+
+        function checkSumatif() {
+            let score = 0;
+            summativeQs.forEach((item, i) => {
+                const sel = document.querySelector(`input[name="sum-ans-${i}"]:checked`);
+                const fb = document.getElementById(`sum-fb-${i}`);
+                if(fb) {
+                    fb.classList.remove('hidden');
+                    if(sel && parseInt(sel.value) === item.k) {
+                        score++;
+                        fb.innerHTML = "<span class='text-green-700 font-bold'>✓ Benar</span>";
+                    } else {
+                        fb.innerHTML = `<span class='text-red-700 font-bold'>✗ Salah.</span> Jawab: ${item.a[item.k]}`;
+                    }
+                }
+            });
+            
+            const finalScore = Math.round((score / summativeQs.length) * 100);
+            const resBox = document.getElementById('result-sumatif');
+            resBox.classList.remove('hidden');
+            document.getElementById('score-display').innerText = finalScore;
+            
+            const feed = document.getElementById('feedback-sumatif');
+            if(finalScore >= 80) feed.innerText = "Mumtaz! Anda sangat mahir matematika.";
+            else if(finalScore >= 60) feed.innerText = "Jayyid. Tingkatkan ketelitian.";
+            else feed.innerText = "Teruslah berlatih. Matematika itu mudah jika tekun.";
+            
+            resBox.scrollIntoView({behavior: 'smooth'});
+        }
+
+        initSummative();
+
+    </script>
+</body>
+</html>
