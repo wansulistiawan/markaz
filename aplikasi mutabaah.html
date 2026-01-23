@@ -44,72 +44,44 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo } = React;
 
-        // --- MASTER DATA SANTRI ---
+        // ==========================================
+        // 1. UTILITIES & CONSTANTS
+        // ==========================================
+
         const MASTER_STUDENT_LIST = [
-            "Ahmad Royyan",
-            "Annisa Akbar Siregar",
-            "Intan Akbar Siregar",
-            "Aprilia Alvana Rikay",
-            "Aprilia Alvani Rikay",
-            "Abdullah Ridho Selamet",
-            "M. Alvin Ramadhan Lubis",
-            "Rizki Fadilah",
-            "Rahmah Azizah Lubis",
-            "Nur Alfia Fauzana",
-            "Nur Halimah",
-            "Aisyah Az-Zahra",
-            "Aisyah Nur Fadillah",
-            "Putri Maharani Br. Tarigan",
-            "Dedek Suci Ramadhani",
-            "Ahsin Lutfaka Sitorus",
-            "Dira Adiana Putri",
-            "Hadjira Inayah Safa",
-            "Rara Azahrah",
-            "Suci Agus Anggira",
-            "Yasir Nur Arfatah"
+            "Ahmad Royyan", "Annisa Akbar Siregar", "Intan Akbar Siregar",
+            "Aprilia Alvana Rikay", "Aprilia Alvani Rikay", "Abdullah Ridho Selamet",
+            "M. Alvin Ramadhan Lubis", "Rizki Fadilah", "Rahmah Azizah Lubis",
+            "Nur Alfia Fauzana", "Nur Halimah", "Aisyah Az-Zahra",
+            "Aisyah Nur Fadillah", "Putri Maharani Br. Tarigan", "Dedek Suci Ramadhani",
+            "Ahsin Lutfaka Sitorus", "Dira Adiana Putri", "Hadjira Inayah Safa",
+            "Rara Azahrah", "Suci Agus Anggira", "Yasir Nur Arfatah"
         ];
 
-        // --- ICON COMPONENTS ---
-        const Icons = {
-            Users: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-            Plus: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
-            ChevronLeft: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m15 18-6-6 6-6"/></svg>,
-            Save: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
-            Check: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="20 6 9 17 4 12"/></svg>,
-            X: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 6 6 18"/><path d="m6 6 18 18"/></svg>,
-            BookOpen: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
-            Trash2: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>,
-            RefreshCw: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>,
-            Send: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>,
-            Target: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
-            Edit: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>,
-            Sun: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41-1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>,
-            Calendar: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>,
-            Database: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>,
-            Download: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>,
-            Upload: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>,
-            Merge: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m8 6 4-4 4 4"/><path d="M12 2v10.3"/><path d="m8 18 4 4 4-4"/><path d="M12 22v-6.3"/><path d="M6 12h12"/></svg>,
-            ListCheck: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 6h-6"/><path d="M16 12h-6"/><path d="M16 18h-6"/><path d="M20 6h.01"/><path d="M20 12h.01"/><path d="M20 18h.01"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/><path d="M8 6h.01"/><path d="M8 12h.01"/><path d="M8 18h.01"/></svg>,
-            Zap: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        const getTodayString = () => new Date().toISOString().split('T')[0];
+
+        const formatDatePretty = (dateStr) => {
+            if (!dateStr) return '';
+            return new Date(dateStr).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
         };
 
-        const { Users, Plus, ChevronLeft, Save, Check, X, BookOpen, Trash2, RefreshCw, Send, Target, Edit, Sun, Calendar, Database, Download, Upload, Merge, ListCheck, Zap } = Icons;
+        const formatJuz = (val) => {
+            return Number(val).toLocaleString('id-ID', { maximumFractionDigits: 3 });
+        };
 
-        // --- UTILS & LOGIC ---
-        
-        const getTodayString = () => new Date().toISOString().split('T')[0];
+        const calculateTilawahTargetJuz = (hafalan, mode = 'dynamic') => {
+            if (mode === 'standard') return 1;
+            if (hafalan < 2) return 2;
+            if (hafalan < 4) return 3;
+            if (hafalan < 6) return 4;
+            return 5;
+        };
 
         const getDailyStats = (student, date) => {
             const record = student.records[date] || { ziyadah: 0, murajaah: 0, tilawah: { amount: 0, unit: 'halaman' } };
             const dailyMurajaahTarget = Math.ceil((student.totalHafalan * 20) / (student.murajaahCycle || 7));
             
-            let dailyTilawahJuz = 1;
-            if (student.tilawahMode !== 'standard') {
-                if (student.totalHafalan < 2) dailyTilawahJuz = 2;
-                else if (student.totalHafalan < 4) dailyTilawahJuz = 3;
-                else if (student.totalHafalan < 6) dailyTilawahJuz = 4;
-                else dailyTilawahJuz = 5;
-            }
+            let dailyTilawahJuz = calculateTilawahTargetJuz(student.totalHafalan, student.tilawahMode);
             const dailyTilawahHal = dailyTilawahJuz * 20;
 
             let murajaahStatus = "pending";
@@ -131,7 +103,38 @@
             };
         };
 
-        // --- COMPONENTS ---
+        // ==========================================
+        // 2. ICONS
+        // ==========================================
+        const Icons = {
+            Users: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+            Plus: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
+            ChevronLeft: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m15 18-6-6 6-6"/></svg>,
+            Save: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+            Check: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="20 6 9 17 4 12"/></svg>,
+            X: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 6 6 18"/><path d="m6 6 18 18"/></svg>,
+            BookOpen: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+            Trash2: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>,
+            RefreshCw: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>,
+            Send: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>,
+            Target: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+            Edit: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>,
+            Sun: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41-1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>,
+            Calendar: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>,
+            Database: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>,
+            Download: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>,
+            Upload: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>,
+            Merge: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m8 6 4-4 4 4"/><path d="M12 2v10.3"/><path d="m8 18 4 4 4-4"/><path d="M12 22v-6.3"/><path d="M6 12h12"/></svg>,
+            ListCheck: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 6h-6"/><path d="M16 12h-6"/><path d="M16 18h-6"/><path d="M20 6h.01"/><path d="M20 12h.01"/><path d="M20 18h.01"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/><path d="M8 6h.01"/><path d="M8 12h.01"/><path d="M8 18h.01"/></svg>,
+            Zap: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+            BarChart: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>
+        };
+
+        const { Users, Plus, ChevronLeft, Save, Check, X, BookOpen, Trash2, RefreshCw, Send, Target, Edit, Sun, Calendar, Database, Download, Upload, Merge, ListCheck, Zap, BarChart } = Icons;
+
+        // ==========================================
+        // 3. UI COMPONENTS
+        // ==========================================
 
         const Toast = ({ message, onClose }) => {
             useEffect(() => {
@@ -164,57 +167,56 @@
             return (
                 <div 
                     onClick={() => onClick(student)}
-                    className={`bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition active:scale-[0.99] cursor-pointer flex justify-between items-center group relative overflow-hidden ${statusClass}`}
+                    className={`bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition active:scale-[0.99] cursor-pointer relative ${statusClass}`}
                 >
-                    <div className="flex items-center gap-4">
-                        <div className={`
-                            w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0
-                            ${record.ziyadah > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}
-                        `}>
-                            {student.name.charAt(0)}
+                    <div className="flex justify-between items-start pr-8">
+                        <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0 ${record.ziyadah > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                                {student.name.charAt(0)}
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-800 truncate max-w-[140px]">{student.name}</h3>
+                                <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                    <span className="flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded">
+                                        <BookOpen className="w-3 h-3" /> {formatJuz(student.totalHafalan)} J
+                                    </span>
+                                    {record.ziyadah > 0 && (
+                                        <span className="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">+{record.ziyadah} Brs</span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="font-bold text-slate-800 truncate max-w-[140px]">{student.name}</h3>
-                            <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
-                                <span className="flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded">
-                                    <BookOpen className="w-3 h-3" /> {parseFloat(student.totalHafalan).toFixed(3)} J
-                                </span>
-                                {record.ziyadah > 0 && (
-                                    <span className="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">
-                                        +{record.ziyadah} Brs
+                        
+                        <div className="text-right mt-2">
+                            <div className="flex flex-col items-end gap-1">
+                                {record.murajaah > 0 && (
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${status.murajaah === 'met' || status.murajaah === 'exceeded' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-teal-50 text-teal-600 border-teal-100'}`}>
+                                        {record.murajaah}/{target.murajaah} M
                                     </span>
                                 )}
+                                <span className={`${tilawahBadgeClass} text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1`}>
+                                    {record.tilawah.amount > 0 ? `T: ${record.tilawah.amount} ${record.tilawah.unit === 'juz' ? 'J' : 'H'}` : 'T: -'}
+                                    <span className="opacity-40">/ {target.tilawah.juz}J</span>
+                                </span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="text-right">
-                            <div className="flex flex-col items-end gap-1">
-                            {record.murajaah > 0 && (
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border 
-                                    ${status.murajaah === 'met' || status.murajaah === 'exceeded' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-teal-50 text-teal-600 border-teal-100'}
-                                `}>
-                                    {record.murajaah}/{target.murajaah} M
-                                </span>
-                            )}
-                            
-                            <span className={`${tilawahBadgeClass} text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1`}>
-                                {record.tilawah.amount > 0 ? `T: ${record.tilawah.amount} ${record.tilawah.unit === 'juz' ? 'J' : 'H'}` : 'T: -'}
-                                <span className="opacity-40">/ {target.tilawah.juz}J</span>
-                            </span>
-                            </div>
-                    </div>
-                    
                     <button 
-                        onClick={(e) => onDelete(student.id, e)}
-                        className="absolute right-0 top-0 bottom-0 w-16 bg-red-500 text-white flex items-center justify-center translate-x-full group-hover:translate-x-0 transition-transform duration-200"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(student.id, e);
+                        }} 
+                        className="absolute top-3 right-3 p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition z-10"
+                        title="Hapus Santri"
                     >
-                        <Trash2 className="w-5 h-5" />
+                        <Trash2 className="w-4 h-4" />
                     </button>
                 </div>
             );
         };
 
+        // --- SUB-COMPONENT: Student Card (Bulk Mode) ---
         const StudentBulkCard = ({ student, date, onUpdate }) => {
             const stats = useMemo(() => getDailyStats(student, date), [student, date]);
             const { record, target } = stats;
@@ -222,7 +224,6 @@
             const updateRecord = (key, delta) => {
                 const currentVal = key === 'tilawah' ? record.tilawah.amount : record[key];
                 const newVal = Math.max(0, currentVal + delta);
-                
                 const newRecord = { ...record };
                 if (key === 'tilawah') {
                     newRecord.tilawah = { ...newRecord.tilawah, amount: newVal };
@@ -241,11 +242,9 @@
                             <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">{student.name.charAt(0)}</div>
                             <span className="text-sm font-bold text-slate-800 truncate max-w-[150px]">{student.name}</span>
                         </div>
-                        <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">{parseFloat(student.totalHafalan).toFixed(2)} J</span>
+                        <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">{formatJuz(student.totalHafalan)} J</span>
                     </div>
-
                     <div className="grid grid-cols-3 gap-2">
-                        {/* Ziyadah */}
                         <div className="bg-indigo-50 rounded-lg p-1.5 text-center">
                             <p className="text-[9px] text-indigo-400 uppercase font-bold mb-1">Ziyadah</p>
                             <div className="flex items-center justify-between">
@@ -254,8 +253,6 @@
                                 <button onClick={() => updateRecord('ziyadah', 1)} className="w-6 h-6 bg-indigo-600 rounded shadow text-white font-bold text-sm">+</button>
                             </div>
                         </div>
-
-                        {/* Murajaah */}
                         <div className="bg-teal-50 rounded-lg p-1.5 text-center">
                             <p className="text-[9px] text-teal-400 uppercase font-bold mb-1">Muraja'ah</p>
                             <div className="flex items-center justify-between">
@@ -264,8 +261,6 @@
                                 <button onClick={() => updateRecord('murajaah', 1)} className="w-6 h-6 bg-teal-600 rounded shadow text-white font-bold text-sm">+</button>
                             </div>
                         </div>
-
-                        {/* Tilawah */}
                         <div className="bg-amber-50 rounded-lg p-1.5 text-center">
                             <p className="text-[9px] text-amber-400 uppercase font-bold mb-1">Tilawah ({tUnit})</p>
                             <div className="flex items-center justify-between">
@@ -279,6 +274,148 @@
             );
         };
 
+        // --- SUB-COMPONENT: Analytics Chart ---
+        const AnalyticsView = ({ students, date, onClose }) => {
+            const [mode, setMode] = useState('overall'); // 'overall' or 'student'
+            const [selectedStudentId, setSelectedStudentId] = useState(students.length > 0 ? students[0].id : null);
+
+            // Calculate Overall Stats - UPDATED TO COUNT STUDENTS
+            const overallStats = useMemo(() => {
+                let countZiyadah = 0;
+                let countMurajaah = 0;
+                let countTilawah = 0;
+
+                students.forEach(s => {
+                    const rec = s.records[date] || { ziyadah: 0, murajaah: 0, tilawah: {amount:0, unit:'halaman'} };
+                    if (rec.ziyadah > 0) countZiyadah++;
+                    if (rec.murajaah > 0) countMurajaah++;
+                    if (rec.tilawah.amount > 0) countTilawah++;
+                });
+
+                return { countZiyadah, countMurajaah, countTilawah, totalStudents: students.length };
+            }, [students, date]);
+
+            // Calculate Per Student History (Last 7 Days)
+            const studentHistory = useMemo(() => {
+                if (!selectedStudentId) return [];
+                const s = students.find(st => st.id === parseInt(selectedStudentId)); 
+                if (!s) return [];
+
+                const history = [];
+                const anchorDate = new Date(); 
+                
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date(anchorDate);
+                    d.setDate(d.getDate() - i);
+                    const dStr = d.toISOString().split('T')[0];
+                    const rec = s.records[dStr] || { ziyadah: 0 };
+                    history.push({ date: dStr, day: d.toLocaleDateString('id-ID', {weekday:'short'}), val: rec.ziyadah });
+                }
+                return history;
+            }, [students, selectedStudentId]); 
+
+            const maxHistoryVal = Math.max(...studentHistory.map(h => h.val), 5);
+
+            return (
+                <div className="fixed inset-0 bg-slate-900/95 z-50 overflow-y-auto">
+                    <div className="min-h-screen p-6 max-w-md mx-auto">
+                        <div className="flex justify-between items-center mb-6 text-white">
+                            <h2 className="text-xl font-bold flex items-center gap-2">
+                                <BarChart className="w-6 h-6 text-emerald-400" /> Analitik Hafalan
+                            </h2>
+                            <button onClick={onClose}><X className="w-6 h-6" /></button>
+                        </div>
+
+                        {/* Tabs */}
+                        <div className="flex bg-slate-800 rounded-xl p-1 mb-6">
+                            <button onClick={() => setMode('overall')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${mode === 'overall' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>Keseluruhan</button>
+                            <button onClick={() => setMode('student')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${mode === 'student' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}>Per Santri</button>
+                        </div>
+
+                        {mode === 'overall' ? (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                                <div className="text-center mb-4">
+                                    <p className="text-slate-400 text-xs uppercase tracking-widest">Data Tanggal</p>
+                                    <p className="text-white font-bold text-lg">{formatDatePretty(date)}</p>
+                                </div>
+
+                                {/* Bar Chart - Overall Counts */}
+                                <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                                    <h3 className="text-white font-bold mb-4">Jumlah Santri Setor</h3>
+                                    <div className="space-y-4">
+                                        {/* Ziyadah Bar */}
+                                        <div>
+                                            <div className="flex justify-between text-xs text-slate-300 mb-1">
+                                                <span>Ziyadah</span>
+                                                <span className="text-emerald-400 font-bold">{overallStats.countZiyadah} / {overallStats.totalStudents}</span>
+                                            </div>
+                                            <div className="w-full bg-slate-700 rounded-full h-3">
+                                                <div className="bg-emerald-500 h-3 rounded-full" style={{width: `${(overallStats.countZiyadah / overallStats.totalStudents) * 100}%`}}></div>
+                                            </div>
+                                        </div>
+                                        {/* Murajaah Bar */}
+                                        <div>
+                                            <div className="flex justify-between text-xs text-slate-300 mb-1">
+                                                <span>Muraja'ah</span>
+                                                <span className="text-teal-400 font-bold">{overallStats.countMurajaah} / {overallStats.totalStudents}</span>
+                                            </div>
+                                            <div className="w-full bg-slate-700 rounded-full h-3">
+                                                <div className="bg-teal-500 h-3 rounded-full" style={{width: `${(overallStats.countMurajaah / overallStats.totalStudents) * 100}%`}}></div>
+                                            </div>
+                                        </div>
+                                        {/* Tilawah Bar */}
+                                        <div>
+                                            <div className="flex justify-between text-xs text-slate-300 mb-1">
+                                                <span>Tilawah</span>
+                                                <span className="text-amber-400 font-bold">{overallStats.countTilawah} / {overallStats.totalStudents}</span>
+                                            </div>
+                                            <div className="w-full bg-slate-700 rounded-full h-3">
+                                                <div className="bg-amber-500 h-3 rounded-full" style={{width: `${(overallStats.countTilawah / overallStats.totalStudents) * 100}%`}}></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                                <div>
+                                    <label className="text-slate-400 text-xs font-bold block mb-2">Pilih Santri</label>
+                                    <select 
+                                        className="w-full p-3 bg-slate-800 border border-slate-700 text-white rounded-xl outline-none"
+                                        value={selectedStudentId || ''}
+                                        onChange={(e) => setSelectedStudentId(Number(e.target.value))}
+                                    >
+                                        {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                    </select>
+                                </div>
+
+                                <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700 relative h-64 flex items-end justify-between px-2 pb-6 gap-2">
+                                    <div className="absolute top-4 left-4 text-xs text-slate-400 font-bold">Tren Ziyadah (7 Hari Terakhir)</div>
+                                    {studentHistory.map((h, i) => {
+                                        const heightPct = (h.val / maxHistoryVal) * 100;
+                                        return (
+                                            <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
+                                                <div className="relative w-full flex justify-center items-end h-40">
+                                                    {/* Bar styling */}
+                                                    <div 
+                                                        className="w-full max-w-[20px] bg-indigo-500 rounded-t-sm transition-all duration-500 group-hover:bg-indigo-400"
+                                                        style={{height: `${Math.max(5, heightPct)}%`}} 
+                                                    ></div>
+                                                    <div className="absolute -top-6 text-[10px] text-white bg-slate-900 px-1 rounded opacity-0 group-hover:opacity-100 transition">{h.val}</div>
+                                                </div>
+                                                <span className="text-[9px] text-slate-400">{h.day}</span>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- SUB-COMPONENT: Modals ---
         const SettingsModal = ({ isOpen, onClose, students, onRestore, onMerge, onMasterImport }) => {
             const fileInputRef = useRef(null);
             const [mode, setMode] = useState(null); 
@@ -305,69 +442,48 @@
             const handleFileChange = (event) => {
                 const fileObj = event.target.files && event.target.files[0];
                 if (!fileObj) return;
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
                         const json = JSON.parse(e.target.result);
-                        if (!Array.isArray(json)) {
-                            alert("Format file tidak valid.");
-                            return;
-                        }
+                        if (!Array.isArray(json)) return alert("Format file tidak valid.");
                         if (mode === 'restore') {
                             if (confirm(`PERINGATAN: Mode Restore akan MENGHAPUS semua data santri saat ini dan menggantinya dengan data dari file.\n\nLanjutkan?`)) {
-                                onRestore(json);
-                                onClose();
+                                onRestore(json); onClose();
                             }
                         } else if (mode === 'merge') {
-                            if (confirm(`Mode Gabung: Data dari file akan ditambahkan ke daftar santri saat ini.\n\nCocok untuk Kepala RTQ menggabungkan data Musyrif.\n\nLanjutkan?`)) {
-                                onMerge(json);
-                                onClose();
+                            if (confirm(`Mode Gabung akan menambahkan data baru. Lanjutkan?`)) {
+                                onMerge(json); onClose();
                             }
                         }
-                    } catch (error) {
-                        alert("Gagal membaca file backup.");
-                    }
+                    } catch (error) { alert("Gagal membaca file."); }
                 };
                 reader.readAsText(fileObj);
                 event.target.value = null; 
             };
 
             const handleMasterToggle = (name) => {
-                if (selectedMasterNames.includes(name)) {
-                    setSelectedMasterNames(selectedMasterNames.filter(n => n !== name));
-                } else {
-                    setSelectedMasterNames([...selectedMasterNames, name]);
-                }
+                if (selectedMasterNames.includes(name)) setSelectedMasterNames(selectedMasterNames.filter(n => n !== name));
+                else setSelectedMasterNames([...selectedMasterNames, name]);
             };
 
             const executeMasterImport = () => {
                 if (selectedMasterNames.length === 0) return;
                 onMasterImport(selectedMasterNames);
-                setSelectedMasterNames([]);
-                setShowMasterList(false);
-                onClose();
+                setSelectedMasterNames([]); setShowMasterList(false); onClose();
             };
 
-            // VIEW: SELECT FROM MASTER LIST
             if (showMasterList) {
                 return (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                         <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl animate-in fade-in zoom-in duration-200 flex flex-col max-h-[85vh]">
                             <div className="flex justify-between items-center mb-4 shrink-0">
-                                <h3 className="text-lg font-bold text-slate-800">Pilih Santri Binaan</h3>
+                                <h3 className="text-lg font-bold text-slate-800">Pilih Santri</h3>
                                 <button onClick={() => setShowMasterList(false)} className="p-1 hover:bg-slate-100 rounded-full"><X className="w-5 h-5 text-slate-400"/></button>
                             </div>
-                            
                             <div className="overflow-y-auto flex-1 space-y-2 pr-1 custom-scrollbar">
                                 {MASTER_STUDENT_LIST.map((name, idx) => (
-                                    <div 
-                                        key={idx} 
-                                        onClick={() => handleMasterToggle(name)}
-                                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition
-                                            ${selectedMasterNames.includes(name) ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-slate-200 hover:bg-slate-50'}
-                                        `}
-                                    >
+                                    <div key={idx} onClick={() => handleMasterToggle(name)} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition ${selectedMasterNames.includes(name) ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
                                         <div className={`w-5 h-5 rounded border flex items-center justify-center ${selectedMasterNames.includes(name) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'}`}>
                                             {selectedMasterNames.includes(name) && <Check className="w-3 h-3 text-white" />}
                                         </div>
@@ -375,65 +491,38 @@
                                     </div>
                                 ))}
                             </div>
-
                             <div className="mt-4 pt-4 border-t shrink-0">
-                                <button 
-                                    onClick={executeMasterImport}
-                                    disabled={selectedMasterNames.length === 0}
-                                    className="w-full bg-indigo-600 disabled:bg-slate-300 text-white py-3 rounded-xl font-bold transition"
-                                >
-                                    Tambahkan ({selectedMasterNames.length}) Santri
-                                </button>
+                                <button onClick={executeMasterImport} disabled={selectedMasterNames.length === 0} className="w-full bg-indigo-600 disabled:bg-slate-300 text-white py-3 rounded-xl font-bold transition">Tambahkan</button>
                             </div>
                         </div>
                     </div>
                 );
             }
 
-            // VIEW: MAIN SETTINGS
             return (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl animate-in fade-in zoom-in duration-200">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                <Database className="w-5 h-5 text-indigo-600"/> Manajemen Data
-                            </h3>
+                            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Database className="w-5 h-5 text-indigo-600"/> Manajemen Data</h3>
                             <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-full"><X className="w-5 h-5 text-slate-400"/></button>
                         </div>
-                        
                         <div className="space-y-3">
-                            <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100 flex items-center gap-3 cursor-pointer hover:bg-indigo-100 transition" onClick={handleBackup}>
+                            <div onClick={handleBackup} className="bg-indigo-50 p-3 rounded-xl border border-indigo-100 flex items-center gap-3 cursor-pointer hover:bg-indigo-100 transition">
                                 <div className="bg-white p-2 rounded-lg text-indigo-600"><Download className="w-5 h-5" /></div>
-                                <div>
-                                    <h4 className="font-bold text-indigo-800 text-sm">Backup Data</h4>
-                                    <p className="text-[10px] text-indigo-600">Simpan data ke file JSON.</p>
-                                </div>
+                                <div><h4 className="font-bold text-indigo-800 text-sm">Backup Data</h4><p className="text-[10px] text-indigo-600">Download JSON.</p></div>
                             </div>
-
-                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center gap-3 cursor-pointer hover:bg-slate-100 transition" onClick={() => triggerFileSelect('restore')}>
+                            <div onClick={() => triggerFileSelect('restore')} className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center gap-3 cursor-pointer hover:bg-slate-100 transition">
                                 <div className="bg-white p-2 rounded-lg text-slate-600"><Upload className="w-5 h-5" /></div>
-                                <div>
-                                    <h4 className="font-bold text-slate-700 text-sm">Restore Data</h4>
-                                    <p className="text-[10px] text-slate-500">Ganti data dari file backup.</p>
-                                </div>
+                                <div><h4 className="font-bold text-slate-700 text-sm">Restore Data</h4><p className="text-[10px] text-slate-500">Timpa data lama.</p></div>
                             </div>
-
-                            <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex items-center gap-3 cursor-pointer hover:bg-emerald-100 transition" onClick={() => triggerFileSelect('merge')}>
+                            <div onClick={() => triggerFileSelect('merge')} className="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex items-center gap-3 cursor-pointer hover:bg-emerald-100 transition">
                                 <div className="bg-white p-2 rounded-lg text-emerald-600"><Merge className="w-5 h-5" /></div>
-                                <div>
-                                    <h4 className="font-bold text-emerald-800 text-sm">Gabung Data</h4>
-                                    <p className="text-[10px] text-emerald-600">Gabung file Musyrif lain.</p>
-                                </div>
+                                <div><h4 className="font-bold text-emerald-800 text-sm">Gabung Data</h4><p className="text-[10px] text-emerald-600">Tambah data baru.</p></div>
                             </div>
-
                             <hr className="border-slate-100 my-2" />
-
-                            <div className="bg-amber-50 p-3 rounded-xl border border-amber-100 flex items-center gap-3 cursor-pointer hover:bg-amber-100 transition" onClick={() => setShowMasterList(true)}>
+                            <div onClick={() => setShowMasterList(true)} className="bg-amber-50 p-3 rounded-xl border border-amber-100 flex items-center gap-3 cursor-pointer hover:bg-amber-100 transition">
                                 <div className="bg-white p-2 rounded-lg text-amber-600"><ListCheck className="w-5 h-5" /></div>
-                                <div>
-                                    <h4 className="font-bold text-amber-800 text-sm">Ambil dari Database Pusat</h4>
-                                    <p className="text-[10px] text-amber-600">Pilih santri dari daftar nama.</p>
-                                </div>
+                                <div><h4 className="font-bold text-amber-800 text-sm">Database Pusat</h4><p className="text-[10px] text-amber-600">Pilih nama santri.</p></div>
                             </div>
                         </div>
                         <input type="file" ref={fileInputRef} style={{display: 'none'}} accept=".json" onChange={handleFileChange} />
@@ -458,11 +547,7 @@
                         setCycle(initialData.murajaahCycle || 7);
                         setTilawahMode(initialData.tilawahMode || 'dynamic');
                     } else {
-                        setName('');
-                        setInitialJuz('');
-                        setTargetSemester('');
-                        setCycle(7);
-                        setTilawahMode('dynamic');
+                        setName(''); setInitialJuz(''); setTargetSemester(''); setCycle(7); setTilawahMode('dynamic');
                     }
                 }
             }, [isOpen, initialData]);
@@ -489,57 +574,33 @@
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl animate-in fade-in zoom-in duration-200 overflow-y-auto max-h-[90vh]">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-slate-800">
-                                {initialData ? 'Edit Data Santri' : 'Tambah Santri Baru'}
-                            </h3>
+                            <h3 className="text-lg font-bold text-slate-800">{initialData ? 'Edit Santri' : 'Tambah Santri'}</h3>
                             <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-full"><X className="w-5 h-5 text-slate-400"/></button>
                         </div>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nama Lengkap</label>
-                                <input 
-                                    type="text" 
-                                    list="master_names"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-                                    placeholder="Ketik atau pilih..."
-                                    required
-                                />
-                                <datalist id="master_names">
-                                    {MASTER_STUDENT_LIST.map((n, i) => <option key={i} value={n} />)}
-                                </datalist>
+                                <input type="text" list="master_names" value={name} onChange={e => setName(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl outline-none" required />
+                                <datalist id="master_names">{MASTER_STUDENT_LIST.map((n, i) => <option key={i} value={n} />)}</datalist>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Total Hafalan</label>
-                                    <input type="number" step="0.001" value={initialJuz} onChange={e => setInitialJuz(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="1.5" required />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Target Smt</label>
-                                    <input type="number" step="0.5" value={targetSemester} onChange={e => setTargetSemester(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="3.0" />
-                                </div>
+                                <div><label className="block text-xs font-bold text-slate-500 uppercase mb-1">Hafalan (Juz)</label><input type="number" step="0.001" value={initialJuz} onChange={e => setInitialJuz(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl outline-none" required /></div>
+                                <div><label className="block text-xs font-bold text-slate-500 uppercase mb-1">Target Smt</label><input type="number" step="0.5" value={targetSemester} onChange={e => setTargetSemester(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl outline-none" /></div>
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Siklus Muraja'ah</label>
-                                <select value={cycle} onChange={e => setCycle(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
-                                    <option value="7">7 Hari (Standar)</option>
-                                    <option value="10">10 Hari</option>
-                                    <option value="30">1 Bulan</option>
-                                    <option value="60">2 Bulan</option>
-                                    <option value="90">3 Bulan</option>
+                                <select value={cycle} onChange={e => setCycle(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl bg-white outline-none">
+                                    <option value="7">7 Hari (Standar)</option><option value="10">10 Hari</option><option value="30">1 Bulan</option>
+                                    <option value="60">2 Bulan</option><option value="90">3 Bulan</option>
                                 </select>
                             </div>
                              <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mode Target Tilawah</label>
-                                <select value={tilawahMode} onChange={e => setTilawahMode(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
-                                    <option value="dynamic">Intensif (Sesuai Jumlah Hafalan)</option>
-                                    <option value="standard">Standar (1 Juz/Hari)</option>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Target Tilawah</label>
+                                <select value={tilawahMode} onChange={e => setTilawahMode(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl bg-white outline-none">
+                                    <option value="dynamic">Intensif (Sesuai Hafalan)</option><option value="standard">Standar (1 Juz/Hari)</option>
                                 </select>
                             </div>
-                            <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition">
-                                Simpan Data
-                            </button>
+                            <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition">Simpan Data</button>
                         </form>
                     </div>
                 </div>
@@ -549,179 +610,88 @@
         const StudentDetail = ({ student, selectedDate, onBack, onUpdate }) => {
             const stats = useMemo(() => getDailyStats(student, selectedDate), [student, selectedDate]);
             const { record: dailyRecord, target, status } = stats;
-
             const [currentRecord, setCurrentRecord] = useState(dailyRecord);
             const [tilawahUnit, setTilawahUnit] = useState(dailyRecord.tilawah.unit || 'halaman');
             const [isEditOpen, setIsEditOpen] = useState(false);
 
-            useEffect(() => {
-                setCurrentRecord(dailyRecord);
-                setTilawahUnit(dailyRecord.tilawah.unit || 'halaman');
-            }, [dailyRecord]);
+            useEffect(() => { setCurrentRecord(dailyRecord); setTilawahUnit(dailyRecord.tilawah.unit || 'halaman'); }, [dailyRecord]);
 
-            const handleTilawahChange = (amount) => {
-                setCurrentRecord(prev => ({
-                    ...prev,
-                    tilawah: { amount: Number(amount), unit: tilawahUnit }
-                }));
-            };
-
-            const handleSave = () => {
-                onUpdate(student.id, selectedDate, currentRecord);
-                onBack();
-            };
-
-            const handleEditProfile = (updatedProfile) => {
-                onUpdate(updatedProfile.id, null, null, updatedProfile);
-            };
+            const handleTilawahChange = (amount) => { setCurrentRecord(prev => ({...prev, tilawah: { amount: Number(amount), unit: tilawahUnit }})); };
+            const handleSave = () => { onUpdate(student.id, selectedDate, currentRecord); onBack(); };
+            const handleEditProfile = (updatedProfile) => { onUpdate(updatedProfile.id, null, null, updatedProfile); };
             
-            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const dateLabel = new Date(selectedDate).toLocaleDateString('id-ID', dateOptions);
-
             return (
                 <div className="bg-slate-50 min-h-screen pb-20">
                     <div className="bg-white px-4 py-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
-                        <button onClick={onBack} className="flex items-center text-slate-500 hover:text-emerald-600 font-medium">
-                            <ChevronLeft className="w-5 h-5 mr-1" /> Kembali
-                        </button>
-                        <div className="text-center">
-                            <h2 className="font-bold text-slate-800">Input Setoran</h2>
-                            <p className="text-[10px] text-slate-500">{dateLabel}</p>
-                        </div>
-                        <button onClick={() => setIsEditOpen(true)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-full transition">
-                            <Edit className="w-5 h-5" />
-                        </button>
+                        <button onClick={onBack} className="flex items-center text-slate-500 hover:text-emerald-600 font-medium"><ChevronLeft className="w-5 h-5 mr-1" /> Kembali</button>
+                        <div className="text-center"><h2 className="font-bold text-slate-800">Input Setoran</h2><p className="text-[10px] text-slate-500">{formatDatePretty(selectedDate)}</p></div>
+                        <button onClick={() => setIsEditOpen(true)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-full transition"><Edit className="w-5 h-5" /></button>
                     </div>
-
                     <div className="p-4 max-w-lg mx-auto space-y-6">
-                        <div className="bg-emerald-600 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-500">
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <Target className="w-24 h-24" />
-                            </div>
-                            <div className="relative z-10 flex items-center gap-4">
-                                <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold">
-                                    {student.name.charAt(0)}
-                                </div>
-                                <div>
-                                    <h1 className="text-xl font-bold">{student.name}</h1>
-                                    <p className="text-emerald-100 text-sm">Hafalan: {parseFloat(student.totalHafalan).toFixed(3)} Juz</p>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                        <span className="bg-emerald-800/40 px-3 py-1 rounded-full text-[10px] border border-emerald-400/30">
-                                            Target Smt: {student.targetSemester} Juz
-                                        </span>
-                                        <span className="bg-emerald-800/40 px-3 py-1 rounded-full text-[10px] border border-emerald-400/30">
-                                            Siklus: {student.murajaahCycle || 7} Hari
-                                        </span>
-                                    </div>
-                                </div>
+                        <div className="bg-emerald-600 text-white p-6 rounded-2xl shadow-lg flex items-center gap-4">
+                            <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold">{student.name.charAt(0)}</div>
+                            <div>
+                                <h1 className="text-xl font-bold">{student.name}</h1>
+                                <p className="text-emerald-100 text-sm">Hafalan: {formatJuz(student.totalHafalan)} Juz</p>
                             </div>
                         </div>
-
-                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
-                             {currentRecord.ziyadah > 0 && (
-                                <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">
-                                    Total Bertambah
-                                </div>
-                            )}
-                            <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                                <span className="bg-indigo-100 p-1 rounded text-indigo-600"><BookOpen className="w-4 h-4"/></span>
-                                Ziyadah (Hafalan Baru)
-                            </label>
-                            <div className={`flex items-center justify-between bg-slate-50 p-2 rounded-xl border ${currentRecord.ziyadah > 0 ? 'border-indigo-300 ring-2 ring-indigo-50' : 'border-slate-200'}`}>
-                                <button onClick={() => setCurrentRecord(prev => ({...prev, ziyadah: Math.max(0, prev.ziyadah - 1)}))} className="w-12 h-12 bg-white border rounded-lg text-xl font-bold text-slate-500 hover:bg-slate-100 active:scale-95 transition">-</button>
-                                <div className="text-center">
-                                    <input type="number" value={currentRecord.ziyadah} onChange={(e) => setCurrentRecord(prev => ({...prev, ziyadah: Number(e.target.value)}))} className="text-3xl font-bold text-slate-800 w-20 text-center bg-transparent outline-none" />
-                                    <span className="text-xs text-slate-400 block uppercase font-bold tracking-wider">Baris</span>
-                                </div>
-                                <button onClick={() => setCurrentRecord(prev => ({...prev, ziyadah: prev.ziyadah + 1}))} className="w-12 h-12 bg-indigo-600 rounded-lg text-xl font-bold text-white hover:bg-indigo-700 active:scale-95 transition shadow-lg shadow-indigo-200">+</button>
-                            </div>
-                        </div>
-
-                        <div className={`bg-white p-5 rounded-2xl shadow-sm border transition duration-500
-                            ${status.murajaah === 'exceeded' ? 'border-blue-400 shadow-blue-100' : 
-                              status.murajaah === 'met' ? 'border-emerald-400 shadow-emerald-100' : 'border-slate-100'}
-                        `}>
-                            <div className="flex justify-between items-start mb-3">
-                                <label className="block text-sm font-bold text-slate-700 flex items-center gap-2">
-                                    <span className="bg-teal-100 p-1 rounded text-teal-600"><RefreshCw className="w-4 h-4"/></span>
-                                    Muraja'ah
-                                </label>
-                                <div className="text-right">
-                                    <span className="text-[10px] bg-teal-50 text-teal-600 px-2 py-1 rounded border border-teal-100 font-bold">
-                                        Target: {target.murajaah} Hal
-                                    </span>
-                                </div>
-                            </div>
-                            
+                        {/* Ziyadah Input */}
+                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                            <label className="text-sm font-bold text-slate-700 mb-3 block">Ziyadah (Baris)</label>
                             <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-200">
-                                <button onClick={() => setCurrentRecord(prev => ({...prev, murajaah: Math.max(0, prev.murajaah - 1)}))} className="w-12 h-12 bg-white border rounded-lg text-xl font-bold text-slate-500 hover:bg-slate-100 active:scale-95 transition">-</button>
-                                <div className="text-center">
-                                    <input type="number" value={currentRecord.murajaah} onChange={(e) => setCurrentRecord(prev => ({...prev, murajaah: Number(e.target.value)}))} className="text-3xl font-bold text-slate-800 w-20 text-center bg-transparent outline-none" />
-                                    <span className="text-xs text-slate-400 block uppercase font-bold tracking-wider">Halaman</span>
-                                </div>
-                                <button onClick={() => setCurrentRecord(prev => ({...prev, murajaah: prev.murajaah + 1}))} className="w-12 h-12 bg-teal-600 rounded-lg text-xl font-bold text-white hover:bg-teal-700 active:scale-95 transition shadow-lg shadow-teal-200">+</button>
+                                <button onClick={() => setCurrentRecord(p => ({...p, ziyadah: Math.max(0, p.ziyadah - 1)}))} className="w-12 h-12 bg-white border rounded text-slate-500 font-bold">-</button>
+                                <input type="number" value={currentRecord.ziyadah} onChange={e => setCurrentRecord(p => ({...p, ziyadah: Number(e.target.value)}))} className="text-3xl font-bold text-slate-800 w-24 text-center bg-transparent outline-none" />
+                                <button onClick={() => setCurrentRecord(p => ({...p, ziyadah: p.ziyadah + 1}))} className="w-12 h-12 bg-indigo-600 text-white rounded font-bold">+</button>
                             </div>
                         </div>
-
-                        <div className={`bg-white p-5 rounded-2xl shadow-sm border transition duration-500
-                            ${status.tilawah === 'met' ? 'border-amber-400 shadow-amber-100' : 'border-slate-100'}
-                        `}>
-                            <div className="flex justify-between items-start mb-3">
-                                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                                    <span className="bg-amber-100 p-1 rounded text-amber-600"><BookOpen className="w-4 h-4"/></span>
-                                    Tilawah Harian
-                                </label>
-                                <div className="text-right">
-                                     <span className="text-[10px] bg-amber-50 text-amber-600 px-2 py-1 rounded border border-amber-100 font-bold">
-                                        Target: {target.tilawah.juz} Juz ({target.tilawah.hal} Hal)
-                                    </span>
-                                </div>
+                        {/* Murajaah Input */}
+                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                            <div className="flex justify-between mb-3"><label className="text-sm font-bold text-slate-700">Muraja'ah</label><span className="text-xs bg-teal-50 text-teal-600 px-2 py-1 rounded font-bold">Target: {target.murajaah}</span></div>
+                            <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-200">
+                                <button onClick={() => setCurrentRecord(p => ({...p, murajaah: Math.max(0, p.murajaah - 1)}))} className="w-12 h-12 bg-white border rounded text-slate-500 font-bold">-</button>
+                                <input type="number" value={currentRecord.murajaah} onChange={e => setCurrentRecord(p => ({...p, murajaah: Number(e.target.value)}))} className="text-3xl font-bold text-slate-800 w-24 text-center bg-transparent outline-none" />
+                                <button onClick={() => setCurrentRecord(p => ({...p, murajaah: p.murajaah + 1}))} className="w-12 h-12 bg-teal-600 text-white rounded font-bold">+</button>
                             </div>
-                            
-                            <div className="flex justify-end mb-2">
-                                <div className="flex bg-slate-100 rounded-lg p-1">
-                                    <button onClick={() => { setTilawahUnit('halaman'); handleTilawahChange(currentRecord.tilawah.amount); }} className={`text-[10px] px-3 py-1 rounded-md font-bold transition ${tilawahUnit === 'halaman' ? 'bg-white shadow text-amber-600' : 'text-slate-400'}`}>Halaman</button>
-                                    <button onClick={() => { setTilawahUnit('juz'); handleTilawahChange(currentRecord.tilawah.amount); }} className={`text-[10px] px-3 py-1 rounded-md font-bold transition ${tilawahUnit === 'juz' ? 'bg-white shadow text-amber-600' : 'text-slate-400'}`}>Juz</button>
-                                </div>
+                        </div>
+                        {/* Tilawah Input */}
+                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                            <div className="flex justify-between mb-3">
+                                <label className="text-sm font-bold text-slate-700">Tilawah</label>
+                                <div className="flex bg-slate-100 rounded p-0.5"><button onClick={() => { setTilawahUnit('halaman'); handleTilawahChange(currentRecord.tilawah.amount); }} className={`px-2 py-0.5 text-[10px] rounded font-bold ${tilawahUnit==='halaman'?'bg-white shadow text-amber-600':'text-slate-400'}`}>Hal</button><button onClick={() => { setTilawahUnit('juz'); handleTilawahChange(currentRecord.tilawah.amount); }} className={`px-2 py-0.5 text-[10px] rounded font-bold ${tilawahUnit==='juz'?'bg-white shadow text-amber-600':'text-slate-400'}`}>Juz</button></div>
                             </div>
-                            
                             <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex items-center gap-4">
-                                <input type="number" step={tilawahUnit === 'juz' ? '0.5' : '1'} value={currentRecord.tilawah.amount} onChange={(e) => handleTilawahChange(e.target.value)} className="w-full text-3xl font-bold bg-transparent border-b-2 border-amber-300 focus:border-amber-500 outline-none text-amber-900 text-center py-2" placeholder="0" />
-                                <div className="text-right w-20 shrink-0">
-                                    <span className="text-xs font-bold text-amber-400 uppercase block">Satuan</span>
-                                    <span className="text-sm font-bold text-amber-700 capitalize">{tilawahUnit}</span>
-                                </div>
+                                <input type="number" step={tilawahUnit === 'juz' ? '0.5' : '1'} value={currentRecord.tilawah.amount} onChange={e => handleTilawahChange(e.target.value)} className="w-full text-3xl font-bold bg-transparent border-b-2 border-amber-300 outline-none text-center" />
+                                <span className="text-xs font-bold text-amber-700 capitalize">{tilawahUnit}</span>
                             </div>
                         </div>
-
-                        <button onClick={handleSave} className="w-full bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-slate-900 transition active:scale-[0.98]">
-                            <Save className="w-5 h-5" /> Simpan & Update Hafalan
-                        </button>
+                        <button onClick={handleSave} className="w-full bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg">Simpan & Update Hafalan</button>
                     </div>
-
                     <StudentFormModal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} onSave={handleEditProfile} initialData={student} />
                 </div>
             );
         };
+
+        // ==========================================
+        // 4. MAIN APP COMPONENT
+        // ==========================================
 
         const App = () => {
             const [students, setStudents] = useState([]);
             const [selectedStudent, setSelectedStudent] = useState(null);
             const [isFormModalOpen, setIsFormModalOpen] = useState(false);
             const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+            const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
             const [isBulkMode, setIsBulkMode] = useState(false);
             const [toast, setToast] = useState(null);
             const [selectedDate, setSelectedDate] = useState(getTodayString());
 
+            // Initialize & Load Data
             useEffect(() => {
                 const savedData = localStorage.getItem('musyrif_app_data');
-                const lastDate = localStorage.getItem('musyrif_last_date');
-                const currentDate = getTodayString();
-
                 if (savedData) {
                     let parsedData = JSON.parse(savedData);
                     const todayStr = getTodayString();
-
+                    // Migration
                     parsedData = parsedData.map(s => {
                         const hasNewStructure = s.records !== undefined;
                         const updatedStudent = {
@@ -736,54 +706,19 @@
                                 ...s.today,
                                 tilawah: s.today.tilawah.unit ? s.today.tilawah : { amount: 0, unit: 'halaman' }
                             };
-                            delete updatedStudent.today; 
+                            delete updatedStudent.today;
                         }
                         return updatedStudent;
                     });
-
-                    if (lastDate !== currentDate) {
-                        localStorage.setItem('musyrif_last_date', currentDate);
-                        setToast("☀️ Hari Baru! Input setoran siap untuk hari ini.");
-                    }
                     setStudents(parsedData);
-                } else {
-                    localStorage.setItem('musyrif_last_date', currentDate);
                 }
             }, []);
 
-            useEffect(() => {
-                localStorage.setItem('musyrif_app_data', JSON.stringify(students));
-            }, [students]);
+            useEffect(() => { localStorage.setItem('musyrif_app_data', JSON.stringify(students)); }, [students]);
 
-            const addStudent = (newStudent) => {
-                setStudents([...students, newStudent]);
-            };
-
-            // LOGIKA IMPORT DARI MASTER DATABASE
-            const handleMasterImport = (selectedNames) => {
-                const newStudents = selectedNames.map(name => ({
-                    id: Date.now() + Math.random(), // Unique ID
-                    name: name,
-                    totalHafalan: 0,
-                    targetSemester: 0,
-                    murajaahCycle: 7,
-                    tilawahMode: 'dynamic',
-                    records: {}
-                }));
-                
-                // Cek duplikasi nama
-                const currentNames = new Set(students.map(s => s.name));
-                const filteredNew = newStudents.filter(s => !currentNames.has(s.name));
-
-                if (filteredNew.length < newStudents.length) {
-                    setToast(`Beberapa santri sudah ada. ${filteredNew.length} santri baru ditambahkan.`);
-                } else {
-                    setToast(`${filteredNew.length} Santri berhasil ditambahkan dari Database!`);
-                }
-
-                setStudents([...students, ...filteredNew]);
-            };
-
+            // CRUD Handlers
+            const addStudent = (newStudent) => setStudents([...students, newStudent]);
+            
             const handleUpdate = (id, date, newRecord, updatedProfile = null) => {
                 setStudents(prevStudents => prevStudents.map(s => {
                     if (s.id !== id) return s;
@@ -800,9 +735,7 @@
                     }
                     return s;
                 }));
-                if (updatedProfile && selectedStudent && selectedStudent.id === updatedProfile.id) {
-                    setSelectedStudent(updatedProfile);
-                }
+                if (updatedProfile && selectedStudent && selectedStudent.id === updatedProfile.id) setSelectedStudent(updatedProfile);
             };
 
             const deleteStudent = (id, e) => {
@@ -819,172 +752,143 @@
                         newRecords[selectedDate] = { ziyadah: 0, murajaah: 0, tilawah: { amount: 0, unit: 'halaman' } };
                         return { ...s, records: newRecords };
                     }));
-                    setToast(`Setoran tanggal ${selectedDate} di-reset.`);
+                    setToast(`Setoran reset.`);
                 }
             };
 
-            const handleRestoreData = (restoredData) => {
-                setStudents(restoredData);
-                setToast("Data berhasil dipulihkan dari backup!");
-            };
-
+            // Data Mgmt Handlers
+            const handleRestoreData = (data) => { setStudents(data); setToast("Data restored!"); };
             const handleMergeData = (newData) => {
                 const currentIds = new Set(students.map(s => s.id));
-                const uniqueNewStudents = newData.filter(s => !currentIds.has(s.id));
-                if (uniqueNewStudents.length === 0) {
-                    alert("Tidak ada data santri baru yang berbeda untuk digabungkan.");
-                    return;
-                }
-                setStudents([...students, ...uniqueNewStudents]);
-                setToast(`Berhasil menggabungkan! ${uniqueNewStudents.length} santri baru ditambahkan.`);
+                const uniqueNew = newData.filter(s => !currentIds.has(s.id));
+                if (uniqueNew.length === 0) return alert("Tidak ada data baru.");
+                setStudents([...students, ...uniqueNew]); setToast(`${uniqueNew.length} santri digabung.`);
+            };
+            const handleMasterImport = (names) => {
+                const newS = names.map(n => ({ id: Date.now() + Math.random(), name: n, totalHafalan: 0, targetSemester: 0, murajaahCycle: 7, tilawahMode: 'dynamic', records: {} }));
+                setStudents([...students, ...newS]); setToast(`${newS.length} santri ditambahkan.`);
             };
 
+            // Calculate Totals for Header - UPDATED TO COUNT STUDENTS
+            const totals = useMemo(() => {
+                let countZiyadah = 0;
+                let countMurajaah = 0;
+                let countTilawah = 0;
+
+                students.forEach(s => {
+                    const rec = s.records[selectedDate] || { ziyadah: 0, murajaah: 0, tilawah: { amount: 0 } };
+                    if (rec.ziyadah > 0) countZiyadah++;
+                    if (rec.murajaah > 0) countMurajaah++;
+                    if (rec.tilawah.amount > 0) countTilawah++;
+                });
+                return { countZiyadah, countMurajaah, countTilawah };
+            }, [students, selectedDate]);
+
+            // WA Report
             const sendWAReport = () => {
                 const dataStr = JSON.stringify(students);
                 const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-                const exportFileDefaultName = `Laporan_Data_${getTodayString()}.json`;
-                const linkElement = document.createElement('a');
-                linkElement.setAttribute('href', dataUri);
-                linkElement.setAttribute('download', exportFileDefaultName);
-                linkElement.click();
+                const link = document.createElement('a');
+                link.href = dataUri; link.download = `Laporan_${getTodayString()}.json`; link.click();
 
-                const dateObj = new Date(selectedDate);
-                const dateStr = dateObj.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                let reportText = `*Laporan Mutaba'ah Harian*\n📅 ${dateStr}\n\n`;
-
-                students.forEach((s, index) => {
+                const dateStr = new Date(selectedDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
+                let report = `*Laporan Mutaba'ah Harian*\n📅 ${dateStr}\n\n`;
+                students.forEach((s, i) => {
                     const stats = getDailyStats(s, selectedDate);
                     const { record, target, status } = stats;
-                    
-                    let murajaahIcon = "⚠️"; 
-                    if (status.murajaah === "met") murajaahIcon = "✅"; 
-                    if (status.murajaah === "exceeded") murajaahIcon = "🔥";
-                    if (record.murajaah === 0) murajaahIcon = "❌";
-
-                    let tilawahIcon = "⚠️";
-                    if (status.tilawah === "met") tilawahIcon = "✅";
-                    if (record.tilawah.amount === 0) tilawahIcon = "❌";
-
-                    let ziyadahIcon = record.ziyadah > 0 ? "✨" : "⚪";
-                    const unitLabel = record.tilawah.unit === 'juz' ? 'Juz' : 'Hal';
-
-                    reportText += `*${index + 1}. ${s.name}* (Target: ${s.targetSemester}J)\n`;
-                    reportText += `   ${ziyadahIcon} Ziyadah: ${record.ziyadah} Baris\n`;
-                    reportText += `   ${murajaahIcon} Muraja'ah: ${record.murajaah}/${target.murajaah} Hal\n`;
-                    reportText += `   ${tilawahIcon} Tilawah: ${record.tilawah.amount} ${unitLabel}\n`;
-                    reportText += `   📊 Total: ${parseFloat(s.totalHafalan).toFixed(3)} Juz\n\n`;
+                    const iconM = status.murajaah === 'met' ? '✅' : status.murajaah === 'exceeded' ? '🔥' : record.murajaah===0?'❌':'⚠️';
+                    const iconZ = record.ziyadah > 0 ? '✨' : '⚪';
+                    const tLabel = record.tilawah.unit === 'juz' ? 'J' : 'H';
+                    report += `*${i+1}. ${s.name}*\n   ${iconZ} Ziyadah: ${record.ziyadah}\n   ${iconM} Muraja'ah: ${record.murajaah}/${target.murajaah}\n   📖 Tilawah: ${record.tilawah.amount}${tLabel}\n\n`;
                 });
-
-                reportText += `_Ket: ✅Tercapai | 🔥Melampaui | ⚠️Kurang_\n\n*Catatan:* File data (.json) telah terdownload otomatis. Silakan lampirkan file tersebut di chat ini.`;
-
-                const phoneNumber = "6285261804096";
-                const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(reportText)}`;
-                
-                window.open(url, '_blank');
-                setToast("File terdownload! Lampirkan file JSON tersebut ke WhatsApp.");
+                report += `_File JSON terdownload otomatis._`;
+                window.open(`https://wa.me/6285261804096?text=${encodeURIComponent(report)}`, '_blank');
+                setToast("File JSON terdownload.");
             };
 
             if (selectedStudent) {
-                const freshStudent = students.find(s => s.id === selectedStudent.id) || selectedStudent;
-                return (
-                    <StudentDetail 
-                        student={freshStudent} 
-                        selectedDate={selectedDate}
-                        onBack={() => setSelectedStudent(null)}
-                        onUpdate={handleUpdate}
-                    />
-                );
+                const fresh = students.find(s => s.id === selectedStudent.id) || selectedStudent;
+                return <StudentDetail student={fresh} selectedDate={selectedDate} onBack={() => setSelectedStudent(null)} onUpdate={handleUpdate} />;
             }
 
             return (
                 <div className="max-w-md mx-auto min-h-screen bg-slate-50 relative pb-24">
-                    <div className="bg-white p-6 pb-8 rounded-b-3xl shadow-sm border-b border-slate-100 sticky top-0 z-10">
+                    {/* HEADER */}
+                    <div className="bg-white p-6 pb-4 rounded-b-3xl shadow-sm border-b border-slate-100 sticky top-0 z-10">
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex gap-2">
-                                <button onClick={() => setIsSettingsOpen(true)} className="flex items-center gap-2 group">
-                                    <div className="bg-indigo-100 p-2 rounded-lg group-hover:bg-indigo-200 transition">
-                                        <Database className="w-5 h-5 text-indigo-600" />
-                                    </div>
-                                </button>
-                                
-                                <button onClick={() => setIsBulkMode(!isBulkMode)} className={`flex items-center gap-2 group transition-all duration-300 ${isBulkMode ? 'scale-110' : ''}`}>
-                                    <div className={`p-2 rounded-lg transition ${isBulkMode ? 'bg-amber-100' : 'bg-slate-100 hover:bg-slate-200'}`}>
-                                        <Zap className={`w-5 h-5 ${isBulkMode ? 'text-amber-600 fill-amber-600' : 'text-slate-600'}`} />
-                                    </div>
-                                </button>
+                                <button onClick={() => setIsSettingsOpen(true)} className="bg-indigo-100 p-2 rounded-lg"><Database className="w-5 h-5 text-indigo-600" /></button>
+                                <button onClick={() => setIsBulkMode(!isBulkMode)} className={`p-2 rounded-lg transition ${isBulkMode ? 'bg-amber-100' : 'bg-slate-100'}`}><Zap className={`w-5 h-5 ${isBulkMode ? 'text-amber-600' : 'text-slate-600'}`} /></button>
+                                <button onClick={() => setIsAnalyticsOpen(true)} className="bg-emerald-100 p-2 rounded-lg"><BarChart className="w-5 h-5 text-emerald-600" /></button>
                             </div>
-                            
                             <div className="flex gap-2">
-                                <button onClick={resetDailyAll} title="Reset Data Tanggal Ini" className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition"><RefreshCw className="w-5 h-5" /></button>
-                                <button onClick={() => setIsFormModalOpen(true)} className="p-2 bg-emerald-600 text-white rounded-full shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition">
-                                    <Plus className="w-6 h-6" />
-                                </button>
+                                <button onClick={resetDailyAll} className="p-2 text-slate-400 bg-slate-100 rounded-lg"><RefreshCw className="w-5 h-5" /></button>
+                                <button onClick={() => setIsFormModalOpen(true)} className="p-2 bg-emerald-600 text-white rounded-lg"><Plus className="w-6 h-6" /></button>
                             </div>
                         </div>
-
-                        <div className="flex items-center justify-between mb-4">
-                            <h1 className="text-2xl font-bold text-slate-800">{isBulkMode ? 'Mode Input Massal' : 'Dashboard Musyrif'}</h1>
+                        
+                        <div className="flex justify-between items-center mb-4">
+                            <h1 className="text-2xl font-bold text-slate-800">{isBulkMode ? 'Mode Cepat' : 'Dashboard'}</h1>
+                            <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-sm font-bold text-slate-600 outline-none" />
                         </div>
 
-                        <div className="bg-slate-50 p-2 rounded-xl border border-slate-200 flex items-center gap-3 mb-4">
-                            <div className="bg-white p-2 rounded-lg text-emerald-600 shadow-sm"><Calendar className="w-5 h-5" /></div>
-                            <div className="flex-1">
-                                <label className="text-[10px] text-slate-400 font-bold uppercase block">Tanggal Laporan</label>
-                                <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="bg-transparent font-bold text-slate-700 w-full outline-none text-sm" />
+                        {/* TOTALS SUMMARY */}
+                        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                            <div className="bg-slate-800 text-white p-3 rounded-xl min-w-[100px] flex-1 shadow-lg shadow-slate-200">
+                                <p className="text-slate-400 text-[10px] uppercase font-bold">Total Santri</p>
+                                <p className="text-xl font-bold">{students.length}<span className="text-xs font-normal opacity-70"> Org</span></p>
                             </div>
-                        </div>
-
-                        <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-                            <div className="bg-indigo-600 text-white p-4 rounded-xl min-w-[120px] flex-1 shadow-lg shadow-indigo-200">
-                                <p className="text-indigo-200 text-xs">Total Santri</p>
-                                <p className="text-2xl font-bold">{students.length}</p>
+                            <div className="bg-indigo-600 text-white p-3 rounded-xl min-w-[100px] flex-1">
+                                <p className="text-indigo-200 text-[10px] uppercase font-bold">Setor Ziyadah</p>
+                                <p className="text-xl font-bold">{totals.countZiyadah}<span className="text-xs font-normal opacity-70"> Org</span></p>
                             </div>
-                            <div className="bg-slate-800 text-white p-4 rounded-xl min-w-[120px] flex-1 shadow-lg shadow-slate-300">
-                                <p className="text-slate-300 text-xs">Setor Ziyadah</p>
-                                <p className="text-2xl font-bold">
-                                    {students.filter(s => (s.records[selectedDate]?.ziyadah || 0) > 0).length} <span className="text-sm font-normal text-slate-400">Org</span>
-                                </p>
+                            <div className="bg-teal-600 text-white p-3 rounded-xl min-w-[100px] flex-1">
+                                <p className="text-teal-200 text-[10px] uppercase font-bold">Setor Muraja'ah</p>
+                                <p className="text-xl font-bold">{totals.countMurajaah}<span className="text-xs font-normal opacity-70"> Org</span></p>
+                            </div>
+                            <div className="bg-amber-500 text-white p-3 rounded-xl min-w-[100px] flex-1">
+                                <p className="text-amber-200 text-[10px] uppercase font-bold">Setor Tilawah</p>
+                                <p className="text-xl font-bold">{totals.countTilawah}<span className="text-xs font-normal opacity-70"> Org</span></p>
                             </div>
                         </div>
                     </div>
 
+                    {/* LIST */}
                     <div className="p-4 space-y-3">
                         {students.length === 0 ? (
                             <div className="text-center py-20 text-slate-400">
                                 <Users className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                                <p>Belum ada data santri.</p>
-                                <p className="text-sm">Klik tombol + untuk menambah.</p>
+                                <p>Belum ada santri.</p>
                             </div>
                         ) : (
-                            students.map(student => (
-                                isBulkMode ? (
-                                    <StudentBulkCard key={student.id} student={student} date={selectedDate} onUpdate={handleUpdate} />
-                                ) : (
-                                    <StudentCard key={student.id} student={student} date={selectedDate} onClick={setSelectedStudent} onDelete={deleteStudent} />
-                                )
+                            students.map(s => (
+                                isBulkMode ? 
+                                <StudentBulkCard key={s.id} student={s} date={selectedDate} onUpdate={handleUpdate} /> :
+                                <StudentCard key={s.id} student={s} date={selectedDate} onClick={setSelectedStudent} onDelete={deleteStudent} />
                             ))
                         )}
                     </div>
 
+                    {/* FAB */}
                     {students.length > 0 && (
                         <div className="fixed bottom-6 left-0 right-0 px-4 flex justify-center z-20">
-                            <button onClick={sendWAReport} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-full shadow-xl flex items-center gap-2 transition transform hover:scale-105">
-                                <Send className="w-5 h-5" /> Kirim Laporan ({new Date(selectedDate).toLocaleDateString('id-ID', {day: 'numeric', month: 'short'})})
+                            <button onClick={sendWAReport} className="bg-emerald-600 text-white font-bold py-3 px-6 rounded-full shadow-xl flex items-center gap-2 transform hover:scale-105 transition">
+                                <Send className="w-5 h-5" /> Kirim Laporan
                             </button>
                         </div>
                     )}
 
+                    {/* MODALS */}
                     {toast && <Toast message={toast} onClose={() => setToast(null)} />}
-
                     <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} students={students} onRestore={handleRestoreData} onMerge={handleMergeData} onMasterImport={handleMasterImport} />
                     <StudentFormModal isOpen={isFormModalOpen} onClose={() => setIsFormModalOpen(false)} onSave={addStudent} />
+                    {isAnalyticsOpen && <AnalyticsView students={students} date={selectedDate} onClose={() => setIsAnalyticsOpen(false)} />}
                 </div>
             );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
-
     </script>
 </body>
 </html>
