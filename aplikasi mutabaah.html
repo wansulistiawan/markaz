@@ -150,6 +150,7 @@
             );
         };
 
+        // --- SUB-COMPONENT: Student Card (Standard) ---
         const StudentCard = ({ student, date, onClick, onDelete }) => {
             const stats = useMemo(() => getDailyStats(student, date), [student, date]);
             const { record, target, status } = stats;
@@ -169,6 +170,7 @@
                     onClick={() => onClick(student)}
                     className={`bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition active:scale-[0.99] cursor-pointer relative ${statusClass}`}
                 >
+                    {/* Header with Padding Right to avoid overlapping with Delete button */}
                     <div className="flex justify-between items-start pr-8">
                         <div className="flex items-center gap-4">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0 ${record.ziyadah > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
@@ -202,6 +204,7 @@
                         </div>
                     </div>
 
+                    {/* Tombol Hapus: Absolute Top Right */}
                     <button 
                         onClick={(e) => {
                             e.stopPropagation();
@@ -245,27 +248,43 @@
                         <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">{formatJuz(student.totalHafalan)} J</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
+                        {/* Ziyadah */}
                         <div className="bg-indigo-50 rounded-lg p-1.5 text-center">
                             <p className="text-[9px] text-indigo-400 uppercase font-bold mb-1">Ziyadah</p>
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-1">
                                 <button onClick={() => updateRecord('ziyadah', -1)} className="w-6 h-6 bg-white rounded shadow text-indigo-600 font-bold text-sm">-</button>
-                                <span className="font-bold text-indigo-700 text-sm">{record.ziyadah}</span>
+                                <div className="flex flex-col leading-none">
+                                    <span className="font-bold text-indigo-700 text-sm">{record.ziyadah}</span>
+                                    <span className="text-[8px] text-indigo-400 font-normal opacity-80">Baris</span>
+                                </div>
                                 <button onClick={() => updateRecord('ziyadah', 1)} className="w-6 h-6 bg-indigo-600 rounded shadow text-white font-bold text-sm">+</button>
                             </div>
                         </div>
+
+                        {/* Murajaah */}
                         <div className="bg-teal-50 rounded-lg p-1.5 text-center">
                             <p className="text-[9px] text-teal-400 uppercase font-bold mb-1">Muraja'ah</p>
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-1">
                                 <button onClick={() => updateRecord('murajaah', -1)} className="w-6 h-6 bg-white rounded shadow text-teal-600 font-bold text-sm">-</button>
-                                <span className="font-bold text-teal-700 text-sm">{record.murajaah}</span>
+                                <div className="flex flex-col leading-none">
+                                    <span className="font-bold text-teal-700 text-sm">{record.murajaah}</span>
+                                    <span className="text-[8px] text-teal-400 font-normal opacity-80">Hal</span>
+                                </div>
                                 <button onClick={() => updateRecord('murajaah', 1)} className="w-6 h-6 bg-teal-600 rounded shadow text-white font-bold text-sm">+</button>
                             </div>
                         </div>
+
+                        {/* Tilawah */}
                         <div className="bg-amber-50 rounded-lg p-1.5 text-center">
                             <p className="text-[9px] text-amber-400 uppercase font-bold mb-1">Tilawah ({tUnit})</p>
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-1">
                                 <button onClick={() => updateRecord('tilawah', -1)} className="w-6 h-6 bg-white rounded shadow text-amber-600 font-bold text-sm">-</button>
-                                <span className="font-bold text-amber-700 text-sm">{record.tilawah.amount}</span>
+                                <div className="flex flex-col leading-none">
+                                    <span className="font-bold text-amber-700 text-sm">{record.tilawah.amount}</span>
+                                    <span className="text-[8px] text-amber-400 font-normal opacity-80">
+                                        {record.tilawah.unit === 'juz' ? 'Juz' : 'Hal'}
+                                    </span>
+                                </div>
                                 <button onClick={() => updateRecord('tilawah', 1)} className="w-6 h-6 bg-amber-500 rounded shadow text-white font-bold text-sm">+</button>
                             </div>
                         </div>
@@ -425,6 +444,10 @@
             if (!isOpen) return null;
 
             const handleBackup = () => {
+                if (students.length === 0) {
+                    alert("Tidak ada data santri untuk di-backup.");
+                    return;
+                }
                 const dataStr = JSON.stringify(students);
                 const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
                 const exportFileDefaultName = `mutabaah-backup-${getTodayString()}.json`;
@@ -620,11 +643,14 @@
             const handleSave = () => { onUpdate(student.id, selectedDate, currentRecord); onBack(); };
             const handleEditProfile = (updatedProfile) => { onUpdate(updatedProfile.id, null, null, updatedProfile); };
             
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateLabel = new Date(selectedDate).toLocaleDateString('id-ID', dateOptions);
+
             return (
                 <div className="bg-slate-50 min-h-screen pb-20">
                     <div className="bg-white px-4 py-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
                         <button onClick={onBack} className="flex items-center text-slate-500 hover:text-emerald-600 font-medium"><ChevronLeft className="w-5 h-5 mr-1" /> Kembali</button>
-                        <div className="text-center"><h2 className="font-bold text-slate-800">Input Setoran</h2><p className="text-[10px] text-slate-500">{formatDatePretty(selectedDate)}</p></div>
+                        <div className="text-center"><h2 className="font-bold text-slate-800">Input Setoran</h2><p className="text-[10px] text-slate-500">{dateLabel}</p></div>
                         <button onClick={() => setIsEditOpen(true)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-full transition"><Edit className="w-5 h-5" /></button>
                     </div>
                     <div className="p-4 max-w-lg mx-auto space-y-6">
@@ -632,38 +658,57 @@
                             <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold">{student.name.charAt(0)}</div>
                             <div>
                                 <h1 className="text-xl font-bold">{student.name}</h1>
-                                <p className="text-emerald-100 text-sm">Hafalan: {formatJuz(student.totalHafalan)} Juz</p>
+                                <p className="text-emerald-100 text-sm">Hafalan: {parseFloat(student.totalHafalan).toFixed(3)} Juz</p>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    <span className="bg-emerald-800/40 px-3 py-1 rounded-full text-[10px] border border-emerald-400/30">Target: {student.targetSemester} Juz</span>
+                                    <span className="bg-emerald-800/40 px-3 py-1 rounded-full text-[10px] border border-emerald-400/30">Siklus: {student.murajaahCycle || 7} Hari</span>
+                                </div>
                             </div>
                         </div>
+
                         {/* Ziyadah Input */}
-                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                            <label className="text-sm font-bold text-slate-700 mb-3 block">Ziyadah (Baris)</label>
+                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+                            {currentRecord.ziyadah > 0 && <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">Total Bertambah</div>}
+                            <label className="text-sm font-bold text-slate-700 mb-3 block">Ziyadah</label>
                             <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-200">
-                                <button onClick={() => setCurrentRecord(p => ({...p, ziyadah: Math.max(0, p.ziyadah - 1)}))} className="w-12 h-12 bg-white border rounded text-slate-500 font-bold">-</button>
-                                <input type="number" value={currentRecord.ziyadah} onChange={e => setCurrentRecord(p => ({...p, ziyadah: Number(e.target.value)}))} className="text-3xl font-bold text-slate-800 w-24 text-center bg-transparent outline-none" />
-                                <button onClick={() => setCurrentRecord(p => ({...p, ziyadah: p.ziyadah + 1}))} className="w-12 h-12 bg-indigo-600 text-white rounded font-bold">+</button>
+                                <button onClick={() => setCurrentRecord(p => ({...p, ziyadah: Math.max(0, p.ziyadah - 1)}))} className="w-12 h-12 bg-white border rounded-lg text-xl font-bold text-slate-500 hover:bg-slate-100 active:scale-95 transition">-</button>
+                                <div className="text-center">
+                                    <input type="number" value={currentRecord.ziyadah} onChange={e => setCurrentRecord(p => ({...p, ziyadah: Number(e.target.value)}))} className="text-3xl font-bold text-slate-800 w-24 text-center bg-transparent outline-none" />
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Baris</span>
+                                </div>
+                                <button onClick={() => setCurrentRecord(p => ({...p, ziyadah: p.ziyadah + 1}))} className="w-12 h-12 bg-indigo-600 text-white rounded-lg font-bold">+</button>
                             </div>
                         </div>
+
                         {/* Murajaah Input */}
                         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
                             <div className="flex justify-between mb-3"><label className="text-sm font-bold text-slate-700">Muraja'ah</label><span className="text-xs bg-teal-50 text-teal-600 px-2 py-1 rounded font-bold">Target: {target.murajaah}</span></div>
                             <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-200">
-                                <button onClick={() => setCurrentRecord(p => ({...p, murajaah: Math.max(0, p.murajaah - 1)}))} className="w-12 h-12 bg-white border rounded text-slate-500 font-bold">-</button>
-                                <input type="number" value={currentRecord.murajaah} onChange={e => setCurrentRecord(p => ({...p, murajaah: Number(e.target.value)}))} className="text-3xl font-bold text-slate-800 w-24 text-center bg-transparent outline-none" />
-                                <button onClick={() => setCurrentRecord(p => ({...p, murajaah: p.murajaah + 1}))} className="w-12 h-12 bg-teal-600 text-white rounded font-bold">+</button>
+                                <button onClick={() => setCurrentRecord(p => ({...p, murajaah: Math.max(0, p.murajaah - 1)}))} className="w-12 h-12 bg-white border rounded-lg text-xl font-bold text-slate-500 hover:bg-slate-100 active:scale-95 transition">-</button>
+                                <div className="text-center">
+                                    <input type="number" value={currentRecord.murajaah} onChange={e => setCurrentRecord(p => ({...p, murajaah: Number(e.target.value)}))} className="text-3xl font-bold text-slate-800 w-24 text-center bg-transparent outline-none" />
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Halaman</span>
+                                </div>
+                                <button onClick={() => setCurrentRecord(p => ({...p, murajaah: p.murajaah + 1}))} className="w-12 h-12 bg-teal-600 text-white rounded-lg font-bold">+</button>
                             </div>
                         </div>
+
                         {/* Tilawah Input */}
                         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
                             <div className="flex justify-between mb-3">
                                 <label className="text-sm font-bold text-slate-700">Tilawah</label>
                                 <div className="flex bg-slate-100 rounded p-0.5"><button onClick={() => { setTilawahUnit('halaman'); handleTilawahChange(currentRecord.tilawah.amount); }} className={`px-2 py-0.5 text-[10px] rounded font-bold ${tilawahUnit==='halaman'?'bg-white shadow text-amber-600':'text-slate-400'}`}>Hal</button><button onClick={() => { setTilawahUnit('juz'); handleTilawahChange(currentRecord.tilawah.amount); }} className={`px-2 py-0.5 text-[10px] rounded font-bold ${tilawahUnit==='juz'?'bg-white shadow text-amber-600':'text-slate-400'}`}>Juz</button></div>
                             </div>
-                            <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex items-center gap-4">
-                                <input type="number" step={tilawahUnit === 'juz' ? '0.5' : '1'} value={currentRecord.tilawah.amount} onChange={e => handleTilawahChange(e.target.value)} className="w-full text-3xl font-bold bg-transparent border-b-2 border-amber-300 outline-none text-center" />
-                                <span className="text-xs font-bold text-amber-700 capitalize">{tilawahUnit}</span>
+                            <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-200">
+                                <button onClick={() => handleTilawahChange(Number(currentRecord.tilawah.amount) - (tilawahUnit === 'juz' ? 0.5 : 1))} className="w-12 h-12 bg-white border rounded-lg text-xl font-bold text-slate-500 hover:bg-slate-100 active:scale-95 transition">-</button>
+                                <div className="text-center">
+                                    <input type="number" step={tilawahUnit === 'juz' ? '0.5' : '1'} value={currentRecord.tilawah.amount} onChange={e => handleTilawahChange(e.target.value)} className="text-3xl font-bold text-slate-800 w-24 text-center bg-transparent outline-none" />
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase block">{tilawahUnit}</span>
+                                </div>
+                                <button onClick={() => handleTilawahChange(Number(currentRecord.tilawah.amount) + (tilawahUnit === 'juz' ? 0.5 : 1))} className="w-12 h-12 bg-amber-500 text-white rounded-lg font-bold">+</button>
                             </div>
                         </div>
+
                         <button onClick={handleSave} className="w-full bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg">Simpan & Update Hafalan</button>
                     </div>
                     <StudentFormModal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} onSave={handleEditProfile} initialData={student} />
@@ -740,9 +785,7 @@
 
             const deleteStudent = (id, e) => {
                 e.stopPropagation();
-                if (confirm('Hapus data santri ini?')) {
-                    setStudents(students.filter(s => s.id !== id));
-                }
+                if (confirm('Hapus data santri ini?')) setStudents(students.filter(s => s.id !== id));
             };
 
             const resetDailyAll = () => {
@@ -793,16 +836,39 @@
 
                 const dateStr = new Date(selectedDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
                 let report = `*Laporan Mutaba'ah Harian*\n📅 ${dateStr}\n\n`;
+                
+                // Unicode icons
+                const CHECK_MARK = "\u2705"; 
+                const FIRE = "\uD83D\uDD25"; 
+                const WARNING = "\u26A0\uFE0F"; 
+                const CROSS = "\u274C"; 
+                const SPARKLES = "\u2728"; 
+                const CIRCLE = "\u26AA";
+
                 students.forEach((s, i) => {
                     const stats = getDailyStats(s, selectedDate);
                     const { record, target, status } = stats;
-                    const iconM = status.murajaah === 'met' ? '✅' : status.murajaah === 'exceeded' ? '🔥' : record.murajaah===0?'❌':'⚠️';
-                    const iconZ = record.ziyadah > 0 ? '✨' : '⚪';
-                    const tLabel = record.tilawah.unit === 'juz' ? 'J' : 'H';
-                    report += `*${i+1}. ${s.name}*\n   ${iconZ} Ziyadah: ${record.ziyadah}\n   ${iconM} Muraja'ah: ${record.murajaah}/${target.murajaah}\n   📖 Tilawah: ${record.tilawah.amount}${tLabel}\n\n`;
+                    const iconM = status.murajaah === 'met' ? CHECK_MARK : status.murajaah === 'exceeded' ? FIRE : record.murajaah===0?'❌': WARNING;
+                    const iconZ = record.ziyadah > 0 ? SPARKLES : CIRCLE;
+
+                    // Tilawah Logic for Icon
+                    let iconT = WARNING;
+                    const tValJuz = record.tilawah.unit === 'juz' ? record.tilawah.amount : record.tilawah.amount / 20;
+                    if (tValJuz >= target.tilawah.juz) iconT = CHECK_MARK;
+                    if (record.tilawah.amount === 0) iconT = CROSS;
+
+                    const tLabel = record.tilawah.unit === 'juz' ? 'Juz' : 'Hal';
+                    const cleanName = s.name.replace(/[^\w\s]/gi, '');
+
+                    report += `*${i+1}. ${cleanName}*\n`;
+                    report += `   ${iconZ} Ziyadah: ${record.ziyadah} Baris\n`;
+                    report += `   ${iconM} Muraja'ah: ${record.murajaah}/${target.murajaah} Hal\n`;
+                    report += `   ${iconT} Tilawah: ${record.tilawah.amount}/${target.tilawah[record.tilawah.unit==='juz'?'juz':'hal']} ${tLabel}\n\n`;
                 });
+                
                 report += `_File JSON terdownload otomatis._`;
-                window.open(`https://wa.me/6285261804096?text=${encodeURIComponent(report)}`, '_blank');
+                const encodedReport = encodeURIComponent(report);
+                window.open(`https://wa.me/6285261804096?text=${encodedReport}`, '_blank');
                 setToast("File JSON terdownload.");
             };
 
