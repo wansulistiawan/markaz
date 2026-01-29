@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Jaringan: ISP vs Mikrotik RB941</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        canvas {
+            touch-action: none;
+        }
+        .device-card {
+            transition: all 0.2s ease;
+        }
+        .lagging {
+            border: 2px solid #ef4444 !important;
+            animation: shake 0.5s infinite;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-1px); }
+            75% { transform: translateX(1px); }
+            100% { transform: translateX(0); }
+        }
+        .tab-active {
+            border-bottom: 3px solid #3b82f6;
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen font-sans overflow-x-hidden">
+
+    <!-- Header & Dashboard -->
+    <div class="fixed top-0 left-0 w-full bg-slate-800/95 backdrop-blur-md z-50 border-b border-slate-700">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-6">
+                    <div>
+                        <h1 class="text-xl font-bold text-blue-400">Network Simulator v2.5</h1>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-tighter">ISP Speed: 30 Mbps | 10 Devices</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="switchTab('isp')" id="tab-isp" class="tab-active py-2 px-3 font-bold text-xs rounded-t-lg transition-all">ROUTER ISP</button>
+                        <button onclick="switchTab('mikrotik')" id="tab-mikrotik" class="py-2 px-3 font-bold text-xs text-slate-400 hover:text-white transition-all rounded-t-lg">MIKROTIK + SWITCH</button>
+                    </div>
+                </div>
+                
+                <div class="flex gap-4 items-center bg-slate-950 p-2 rounded-xl border border-slate-700">
+                    <div class="text-center px-2">
+                        <div class="text-xl font-mono font-bold text-blue-400" id="bandwidth-meter">0 / 30</div>
+                        <div class="text-[9px] uppercase text-slate-500">Mbps Digunakan</div>
+                    </div>
+                    <div class="w-32 h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                        <div id="bandwidth-bar" class="h-full bg-blue-500 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div id="network-status" class="px-2 py-1 rounded text-[10px] font-bold bg-green-500/20 text-green-400 border border-green-500/50 min-w-[70px] text-center">
+                        STABIL
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="pt-32 pb-10 px-4 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- Visualization Canvas -->
+        <div class="lg:col-span-3 relative bg-black rounded-2xl border border-slate-800 h-[700px] overflow-hidden shadow-2xl">
+            <canvas id="simCanvas"></canvas>
+            
+            <!-- Controls Overlay -->
+            <div class="absolute top-4 right-4 flex gap-2">
+                <button id="resetBtn" title="Reset All" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg border border-slate-600 transition text-yellow-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </button>
+                <button id="stressTestBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-lg shadow-red-900/20">STRESS TEST</button>
+            </div>
+
+            <!-- Labels -->
+            <div id="labels-overlay" class="absolute bottom-20 left-0 w-full flex justify-around pointer-events-none opacity-0 transition-opacity duration-500">
+                <div class="text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-1 rounded border border-green-500/20">ZONA KABEL (SWITCH)</div>
+                <div class="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20">ZONA WIFI (ACCESS POINT)</div>
+            </div>
+
+            <!-- Floating Info -->
+            <div class="absolute bottom-4 left-4 right-4 bg-slate-900/90 p-3 rounded-xl text-xs text-slate-300 border border-slate-700 backdrop-blur-sm pointer-events-none">
+                <div id="scenario-info">
+                    <strong class="text-blue-400">Skenario Router ISP:</strong> Alur data mengalir dari Cloud ke Router ISP lalu langsung ke perangkat. Tanpa manajemen, paket berat (merah) menghambat jalur.
+                </div>
+            </div>
+        </div>
+
+        <!-- Device Controls -->
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 flex flex-col h-[700px] shadow-xl overflow-hidden">
+            <div class="p-4 border-b border-slate-700 bg-slate-800/50">
+                <h2 class="font-bold text-sm">Perangkat (10)</h2>
+            </div>
+            <div id="device-list" class="flex-1 overflow-y-auto p-3 space-y-2">
+                <!-- Devices injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const deviceListContainer = document.getElementById('device-list');
+        const bandwidthMeter = document.getElementById('bandwidth-meter');
+        const bandwidthBar = document.getElementById('bandwidth-bar');
+        const networkStatus = document.getElementById('network-status');
+        const stressTestBtn = document.getElementById('stressTestBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const scenarioInfo = document.getElementById('scenario-info');
+        const labelsOverlay = document.getElementById('labels-overlay');
+
+        const TOTAL_CAPACITY = 30; 
+        const DEVICE_COUNT = 10;
+        let currentTab = 'isp';
+        let devices = [];
+        let packets = [];
+
+        const ACTIVITIES = {
+            IDLE: { name: 'Idle', load: 0.1, color: '#64748b', baseSpeed: 0.04 },
+            BROWSING: { name: 'Browsing', load: 2, color: '#22c55e', baseSpeed: 0.04 },
+            GAMING: { name: 'Gaming (Low Latency)', load: 1.5, color: '#a855f7', baseSpeed: 0.05 },
+            STREAMING_HD: { name: 'Streaming HD', load: 8, color: '#eab308', baseSpeed: 0.015 },
+            STREAMING_4K: { name: 'Streaming 4K', load: 25, color: '#ef4444', baseSpeed: 0.006 }
+        };
+
+        const DEVICE_CONFIG = [
+            { type: 'PC Desktop 1', path: 'wired', icon: '🖥️' },
+            { type: 'PC Desktop 2', path: 'wired', icon: '🖥️' },
+            { type: 'Smartphone 1', path: 'wireless', icon: '📱' },
+            { type: 'Smartphone 2', path: 'wireless', icon: '📱' },
+            { type: 'Smartphone 3', path: 'wireless', icon: '📱' },
+            { type: 'Smartphone 4', path: 'wireless', icon: '📱' },
+            { type: 'Smartphone 5', path: 'wireless', icon: '📱' },
+            { type: 'Smartphone 6', path: 'wireless', icon: '📱' },
+            { type: 'Laptop WiFi 1', path: 'wireless', icon: '💻' },
+            { type: 'Laptop WiFi 2', path: 'wireless', icon: '💻' }
+        ];
+
+        function init() {
+            resize();
+            createDevices();
+            animate();
+        }
+
+        function resize() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+
+        function createDevices() {
+            deviceListContainer.innerHTML = '';
+            devices = [];
+            
+            DEVICE_CONFIG.forEach((config, i) => {
+                devices.push({
+                    id: i,
+                    type: config.type,
+                    path: config.path,
+                    icon: config.icon,
+                    x: Math.random() * canvas.width, 
+                    y: Math.random() * canvas.height,
+                    targetX: 0,
+                    targetY: 0,
+                    activity: 'IDLE',
+                    effectiveLoad: 0.1,
+                    lagging: false
+                });
+
+                const card = document.createElement('div');
+                card.id = `card-${i}`;
+                card.className = 'device-card bg-slate-900/50 p-2 rounded-lg border border-slate-700 flex justify-between items-center';
+                card.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm">${config.icon}</span>
+                        <div class="text-[9px] font-bold truncate w-24">${config.type}</div>
+                    </div>
+                    <select class="bg-slate-800 text-[9px] p-1 rounded border border-slate-600 outline-none text-white w-24" onchange="updateDeviceActivity(${i}, this.value)">
+                        ${Object.keys(ACTIVITIES).map(key => `<option value="${key}">${ACTIVITIES[key].name}</option>`).join('')}
+                    </select>
+                `;
+                deviceListContainer.appendChild(card);
+            });
+            updateDevicePositions();
+        }
+
+        function updateDevicePositions() {
+            const width = canvas.width;
+            const height = canvas.height;
+
+            if (currentTab === 'isp') {
+                devices.forEach((d, i) => {
+                    const row = Math.floor(i / 5);
+                    const col = i % 5;
+                    d.targetX = (width * 0.15) + (col * (width * 0.17));
+                    d.targetY = (height * 0.65) + (row * (height * 0.15));
+                });
+            } else {
+                const wiredDevices = devices.filter(d => d.path === 'wired');
+                const wirelessDevices = devices.filter(d => d.path === 'wireless');
+
+                wiredDevices.forEach((d, i) => {
+                    d.targetX = (width * 0.15) + (i * (width * 0.15));
+                    d.targetY = height * 0.85;
+                });
+
+                wirelessDevices.forEach((d, i) => {
+                    const row = Math.floor(i / 4);
+                    const col = i % 4;
+                    d.targetX = (width * 0.5) + (col * (width * 0.12));
+                    d.targetY = (height * 0.7) + (row * (height * 0.12));
+                });
+            }
+        }
+
+        window.updateDeviceActivity = (id, activityKey) => {
+            devices[id].activity = activityKey;
+        };
+
+        window.switchTab = (tab) => {
+            currentTab = tab;
+            document.getElementById('tab-isp').className = tab === 'isp' ? 'tab-active py-2 px-3 font-bold text-xs rounded-t-lg transition-all' : 'py-2 px-3 font-bold text-xs text-slate-400 hover:text-white transition-all';
+            document.getElementById('tab-mikrotik').className = tab === 'mikrotik' ? 'tab-active py-2 px-3 font-bold text-xs rounded-t-lg transition-all' : 'py-2 px-3 font-bold text-xs text-slate-400 hover:text-white transition-all';
+            
+            if (tab === 'isp') {
+                labelsOverlay.style.opacity = '0';
+                scenarioInfo.innerHTML = `<strong class="text-blue-400">Skenario Router ISP:</strong> Data mengalir dari Cloud ke Router lalu langsung ke perangkat. Tanpa QoS, semua paket tercampur dan berat (merah).`;
+            } else {
+                labelsOverlay.style.opacity = '1';
+                scenarioInfo.innerHTML = `<strong class="text-green-400">Skenario Mikrotik + QoS:</strong> Data melewati Router ISP ke Mikrotik baru dibagi ke Switch/AP. Mikrotik menjamin jalur PC Kantor tetap lancar (hijau).`;
+            }
+            updateDevicePositions();
+            packets = []; 
+        }
+
+        resetBtn.onclick = () => {
+            const selects = document.querySelectorAll('select');
+            devices.forEach((d, i) => {
+                selects[i].value = 'IDLE';
+                updateDeviceActivity(i, 'IDLE');
+            });
+            packets = [];
+        };
+
+        stressTestBtn.onclick = () => {
+            devices.forEach((d, i) => {
+                const selects = document.querySelectorAll('select');
+                const activity = i % 4 === 0 ? 'STREAMING_4K' : (i % 2 === 0 ? 'STREAMING_HD' : 'BROWSING');
+                selects[i].value = activity;
+                updateDeviceActivity(i, activity);
+            });
+        };
+
+        function drawInfrastructure() {
+            const width = canvas.width;
+            const cx = width / 2;
+            const topY = 40;
+
+            // Common Cloud
+            drawCloud(cx, topY, "ISP CLOUD");
+            const ispRouterY = topY + 90;
+            drawBox(cx, ispRouterY, 110, 50, "#3b82f6", "ISP ROUTER", true);
+            drawLine(cx, topY + 15, cx, ispRouterY - 25, '#1e293b', 1);
+
+            if (currentTab === 'isp') {
+                window.topo = { 
+                    cloudX: cx, cloudY: topY,
+                    ispX: cx, ispY: ispRouterY,
+                    finalX: cx, finalY: ispRouterY 
+                };
+            } else {
+                const mkY = ispRouterY + 100;
+                drawBox(cx, mkY, 120, 45, "#10b981", "MIKROTIK RB941", true);
+                drawLine(cx, ispRouterY + 25, cx, mkY - 22, '#334155', 2);
+
+                const branchY = mkY + 100;
+                const swX = width * 0.25;
+                const apX = width * 0.75;
+
+                // Cabang Mikrotik ke Switch dan AP
+                drawLine(cx, mkY + 22, swX, branchY - 15, '#334155', 2);
+                drawLine(cx, mkY + 22, apX, branchY - 20, '#334155', 2);
+
+                drawBox(swX, branchY, 130, 30, "#6366f1", "SWITCH HUB", false);
+                drawBox(apX, branchY, 90, 40, "#3b82f6", "ACCESS POINT", true);
+                
+                window.topo = { 
+                    cloudX: cx, cloudY: topY,
+                    ispX: cx, ispY: ispRouterY,
+                    mkX: cx, mkY: mkY,
+                    swX: swX, swY: branchY, 
+                    apX: apX, apY: branchY 
+                };
+            }
+        }
+
+        function drawBox(x, y, w, h, color, label, antennas) {
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(x - w/2, y - h/2, w, h, 8);
+            ctx.fill();
+            ctx.stroke();
+            if (antennas) {
+                ctx.beginPath();
+                ctx.moveTo(x - w/4, y - h/2); ctx.lineTo(x - w/4, y - h/2 - 12);
+                ctx.moveTo(x + w/4, y - h/2); ctx.lineTo(x + w/4, y - h/2 - 12);
+                ctx.stroke();
+            }
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, y + 4);
+        }
+
+        function drawCloud(x, y, label) {
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath(); 
+            ctx.arc(x - 18, y, 12, 0, Math.PI * 2);
+            ctx.arc(x + 18, y, 12, 0, Math.PI * 2);
+            ctx.arc(x, y - 6, 16, 0, Math.PI * 2); 
+            ctx.fill();
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'bold 8px sans-serif';
+            ctx.fillText(label, x, y + 5);
+        }
+
+        function drawLine(x1, y1, x2, y2, color, width) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        }
+
+        function spawnPacket(deviceId, activityKey) {
+            const device = devices[deviceId];
+            const activity = ACTIVITIES[activityKey];
+            if (activity.load < 0.2) return;
+
+            let finalColor = activity.color;
+            let finalSpeed = activity.baseSpeed;
+            let pathPoints = [];
+
+            if (currentTab === 'isp') {
+                // Path: Cloud -> ISP Router -> Device
+                pathPoints = [
+                    {x: window.topo.cloudX, y: window.topo.cloudY},
+                    {x: window.topo.ispX, y: window.topo.ispY},
+                    {x: device.x, y: device.y}
+                ];
+                finalColor = ACTIVITIES.STREAMING_4K.color; 
+                finalSpeed = ACTIVITIES.STREAMING_4K.baseSpeed * 0.7;
+            } else {
+                // Path: Cloud -> ISP Router -> Mikrotik -> [Switch/AP] -> Device
+                const branchPoint = (device.path === 'wired') ? 
+                    {x: window.topo.swX, y: window.topo.swY} : 
+                    {x: window.topo.apX, y: window.topo.apY};
+
+                pathPoints = [
+                    {x: window.topo.cloudX, y: window.topo.cloudY},
+                    {x: window.topo.ispX, y: window.topo.ispY},
+                    {x: window.topo.mkX, y: window.topo.mkY},
+                    branchPoint,
+                    {x: device.x, y: device.y}
+                ];
+
+                if (device.path === 'wired') {
+                    finalColor = ACTIVITIES.BROWSING.color; 
+                    finalSpeed = ACTIVITIES.GAMING.baseSpeed; 
+                } else {
+                    if (activityKey === 'STREAMING_4K' || activityKey === 'STREAMING_HD') {
+                        finalColor = ACTIVITIES.STREAMING_HD.color; 
+                        finalSpeed = 0.012; 
+                    } else {
+                        finalColor = ACTIVITIES.BROWSING.color; 
+                        finalSpeed = 0.035;
+                    }
+                }
+            }
+
+            const count = Math.ceil(activity.load / 8);
+            for(let i=0; i<count; i++) {
+                packets.push({
+                    targetId: deviceId,
+                    color: finalColor,
+                    path: pathPoints,
+                    currentSegment: 0,
+                    segmentProgress: Math.random() * -0.2, // Offset start
+                    speed: finalSpeed + (Math.random() * (finalSpeed * 0.1))
+                });
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            let actualTotalLoad = 0;
+            const MIKROTIK_USER_LIMIT = 2.8; 
+
+            devices.forEach(d => {
+                d.x += (d.targetX - d.x) * 0.08;
+                d.y += (d.targetY - d.y) * 0.08;
+
+                const requested = ACTIVITIES[d.activity].load;
+                if (currentTab === 'mikrotik') {
+                    d.effectiveLoad = Math.min(requested, MIKROTIK_USER_LIMIT);
+                } else {
+                    d.effectiveLoad = requested;
+                }
+                actualTotalLoad += d.effectiveLoad;
+            });
+
+            const capacityExceeded = actualTotalLoad > TOTAL_CAPACITY;
+            const congestionFactor = capacityExceeded ? TOTAL_CAPACITY / actualTotalLoad : 1;
+            
+            bandwidthMeter.innerText = `${Math.min(actualTotalLoad, 100).toFixed(1)} / ${TOTAL_CAPACITY}`;
+            bandwidthBar.style.width = `${Math.min((actualTotalLoad/TOTAL_CAPACITY)*100, 100)}%`;
+            bandwidthBar.className = capacityExceeded ? "h-full bg-red-500" : (actualTotalLoad > 22 ? "h-full bg-yellow-500" : "h-full bg-blue-500");
+            
+            networkStatus.innerText = capacityExceeded ? "OVERLOAD" : (actualTotalLoad > 22 ? "SESAK" : "STABIL");
+            networkStatus.className = `px-2 py-1 rounded text-[10px] font-bold min-w-[70px] text-center ${capacityExceeded ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-green-500/20 text-green-400 border border-green-500/50'}`;
+
+            drawInfrastructure();
+
+            // Render Device Connections (Lines)
+            devices.forEach(d => {
+                let startX, startY;
+                if (currentTab === 'isp') {
+                    startX = window.topo.ispX; startY = window.topo.ispY;
+                } else {
+                    if (d.path === 'wired') { startX = window.topo.swX; startY = window.topo.swY; }
+                    else { startX = window.topo.apX; startY = window.topo.apY; }
+                }
+
+                ctx.lineWidth = d.path === 'wired' ? 3 : 1;
+                ctx.strokeStyle = d.path === 'wired' ? '#10b98133' : '#1e293b';
+                if (currentTab === 'isp' && capacityExceeded && d.activity !== 'IDLE') ctx.strokeStyle = '#ef444422';
+
+                ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(d.x, d.y); ctx.stroke();
+
+                // Draw Device Icon
+                const isActuallyLagging = currentTab === 'isp' && capacityExceeded && ACTIVITIES[d.activity].load > 1.5;
+                const isThrottled = currentTab === 'mikrotik' && ACTIVITIES[d.activity].load > MIKROTIK_USER_LIMIT;
+                
+                ctx.font = '28px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowBlur = 15;
+                
+                if (currentTab === 'isp' && d.activity !== 'IDLE') ctx.shadowColor = '#ef4444';
+                else if (currentTab === 'mikrotik' && d.path === 'wired' && d.activity !== 'IDLE') ctx.shadowColor = '#22c55e';
+                else ctx.shadowColor = ACTIVITIES[d.activity].color;
+
+                if (isActuallyLagging && Math.sin(Date.now() / 150) > 0) ctx.shadowColor = '#ef4444';
+                ctx.fillText(d.icon, d.x, d.y);
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 8px sans-serif';
+                ctx.fillText(d.type.split(' ')[0], d.x, d.y + 25);
+
+                if (currentTab === 'mikrotik' && isThrottled) {
+                    ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 8px sans-serif';
+                    ctx.fillText("QoS LIMIT", d.x, d.y - 22);
+                } else if (isActuallyLagging) {
+                    ctx.fillStyle = '#ef4444'; ctx.font = 'bold 8px sans-serif';
+                    ctx.fillText("LAG", d.x, d.y - 22);
+                }
+            });
+
+            // Packet Spawning
+            if (Math.random() < 0.45) {
+                const rand = Math.floor(Math.random() * DEVICE_COUNT);
+                spawnPacket(rand, devices[rand].activity);
+            }
+
+            // Packet Animation Logic
+            packets.forEach((p, index) => {
+                if (p.segmentProgress < 0) {
+                    p.segmentProgress += p.speed;
+                    return;
+                }
+
+                p.segmentProgress += p.speed * (currentTab === 'isp' ? congestionFactor : 1);
+                
+                if (p.segmentProgress >= 1) {
+                    p.currentSegment++;
+                    p.segmentProgress = 0;
+                }
+
+                if (p.currentSegment >= p.path.length - 1) {
+                    packets.splice(index, 1);
+                    return;
+                }
+
+                const start = p.path[p.currentSegment];
+                const end = p.path[p.currentSegment + 1];
+
+                const px = start.x + (end.x - start.x) * p.segmentProgress;
+                const py = start.y + (end.y - start.y) * p.segmentProgress;
+
+                ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI * 2); ctx.fill();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        init();
+
+    </script>
+</body>
+</html>
