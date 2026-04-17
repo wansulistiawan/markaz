@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IND-206: Karya Tulis Ilmiah Populer & Resensi</title>
+    <style>
+        /* TEMA WARNA LITERASI (Biru & Teal) */
+        :root {
+            --primary: #1565c0; /* Blue 800 */
+            --secondary: #00838f; /* Cyan 800 */
+            --light: #e3f2fd;
+            --dark: #0d47a1;
+            --white: #ffffff;
+            --text: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--dark), var(--secondary));
+            color: var(--white);
+            text-align: center;
+            padding: 2.5rem 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 { margin: 0; font-size: 2.2rem; }
+        header p { font-size: 1.1rem; opacity: 0.9; margin-top: 5px; }
+
+        /* --- STYLES UNTUK TAB MENU PERTEMUAN --- */
+        .nav-container {
+            background: var(--white);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .tab-menu {
+            display: flex;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0;
+            list-style: none;
+        }
+
+        .tab-item {
+            padding: 1rem 1.2rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .tab-item:hover {
+            background-color: #f0f0f0;
+            color: var(--primary);
+        }
+
+        .tab-item.active-tab {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            background-color: var(--light);
+        }
+
+        /* --- KONTEN PER PERTEMUAN --- */
+        .meeting-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .meeting-content.active-content {
+            display: block;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            min-height: 400px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            color: var(--dark);
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+        }
+
+        /* Toggle Buttons */
+        .toggle-container { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; }
+        .toggle-btn {
+            flex: 1; min-width: 150px; padding: 1rem; font-size: 1rem; font-weight: bold;
+            border: none; border-radius: 8px; cursor: pointer;
+            transition: all 0.3s; background-color: #eee; color: var(--text);
+        }
+        .toggle-btn.active { background-color: var(--primary); color: var(--white); box-shadow: 0 4px 10px rgba(21, 101, 192, 0.4); }
+        
+        .info-box { display: none; padding: 1.5rem; background-color: #f9f9f9; border-left: 5px solid var(--primary); margin-top: 1rem; border-radius: 0 8px 8px 0; }
+        .info-box.active { display: block; animation: fadeIn 0.4s ease-in; }
+
+        /* Grid Elements */
+        .grid-elements { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+        .element-card { 
+            background: #fafafa; padding: 1.5rem; border-radius: 8px; 
+            border: 2px solid #e0e0e0; transition: transform 0.3s, border 0.3s; 
+        }
+        .element-card:hover { transform: translateY(-5px); border-color: var(--secondary); }
+
+        /* Contoh Tulisan Box */
+        .example-box {
+            background-color: #e0f7fa;
+            border-left: 5px solid var(--secondary);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* Quiz Section */
+        .quiz-question { margin-bottom: 1.5rem; }
+        .options label { display: block; background: #f5f5f5; padding: 10px 15px; margin-bottom: 8px; border-radius: 5px; cursor: pointer; transition: background 0.2s; }
+        .options label:hover { background: #e0e0e0; }
+        .submit-btn { background: var(--secondary); color: white; border: none; padding: 10px 20px; font-size: 1.1rem; border-radius: 5px; cursor: pointer; }
+        .submit-btn:hover { background: var(--dark); }
+
+        .empty-state { text-align: center; padding: 4rem 2rem; color: #999; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Portal Bahasa IND-206</h1>
+        <p>Karya Tulis Ilmiah Populer & Resensi Buku</p>
+    </header>
+
+    <div class="nav-container">
+        <ul class="tab-menu">
+            <li class="tab-item active-tab" onclick="openMeeting(event, 'p1')">P1 : Fiksi vs Non-Fiksi</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p2')">P2 : Struktur Opini</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p3')">P3 : Kerangka Tulisan</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p4')">P4 : Praktik Menulis</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p5')">P5 : Dasar Resensi</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p6')">P6 : Unsur Resensi</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p7')">P7 : Praktik Resensi</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p8')">P8 : Bedah Tulisan</li>
+        </ul>
+    </div>
+
+    <div class="container">
+        
+        <div id="p1" class="meeting-content active-content">
+            
+            <div class="card">
+                <h2>1. Membedah Jenis Tulisan</h2>
+                <p>Di kelas dasar, kita sudah belajar menulis narasi dan laporan pengamatan. Sekarang di tingkat lanjut, kita akan membedah dunia tulis-menulis menjadi tiga cabang utama. Mari pahami perbedaannya agar kita tahu di mana posisi "Artikel Opini" yang akan kita pelajari.</p>
+                
+                <div class="toggle-container">
+                    <button class="toggle-btn active" onclick="showInfo('fiksi', this)" style="background-color: #f3e5f5; color: #4a148c;">📖 Teks Fiksi</button>
+                    <button class="toggle-btn" onclick="showInfo('nonfiksi', this)" style="background-color: #e8f5e9; color: #1b5e20;">📰 Teks Non-Fiksi</button>
+                    <button class="toggle-btn" onclick="showInfo('ilmiah', this)" style="background-color: #e3f2fd; color: #0d47a1;">💡 Opini Ilmiah Populer</button>
+                </div>
+
+                <div id="info-fiksi" class="info-box active">
+                    <h3 style="color: #4a148c;">Teks Fiksi (Imajinasi)</h3>
+                    <p>Tulisan yang lahir dari imajinasi, rekaan, atau khayalan penulisnya. Tujuannya adalah untuk menghibur atau menyampaikan pesan moral melalui cerita.</p>
+                    <ul>
+                        <li><strong>Ciri:</strong> Bahasanya kiasan (majas), tokoh dan kejadian bisa jadi tidak nyata.</li>
+                        <li><strong>Bentuk:</strong> Cerpen, Novel, Puisi, Dongeng.</li>
+                        <li><strong>Contoh Judul:</strong> <em>"Mimpi Bintang di Bawah Langit Asahan"</em> (Sebuah novel tentang anak yang mengejar cita-cita).</li>
+                    </ul>
+                </div>
+
+                <div id="info-nonfiksi" class="info-box">
+                    <h3 style="color: #1b5e20;">Teks Non-Fiksi (Fakta & Data)</h3>
+                    <p>Tulisan yang didasarkan pada fakta, realita, dan data objektif. Tidak ada unsur khayalan di dalamnya.</p>
+                    <ul>
+                        <li><strong>Ciri:</strong> Bahasanya lugas (denotatif), informatif, dan dapat dipertanggungjawabkan kebenarannya.</li>
+                        <li><strong>Bentuk:</strong> Berita (Jurnalistik), Biografi tokoh, Laporan Keuangan, Ensiklopedia.</li>
+                        <li><strong>Contoh Judul:</strong> <em>"Laporan Demografi dan Tingkat Curah Hujan di Kabupaten Asahan Tahun 2026"</em>.</li>
+                    </ul>
+                </div>
+
+                <div id="info-ilmiah" class="info-box">
+                    <h3 style="color: #0d47a1;">Karya Tulis Ilmiah Populer (Perpaduan)</h3>
+                    <p>Ini adalah fokus kita! Sebuah tulisan yang bersumber dari gagasan, fakta, dan data ilmiah (seperti Non-Fiksi), namun <strong>dikemas dengan bahasa yang santai, ringan, dan mudah dipahami oleh masyarakat umum</strong>.</p>
+                    <ul>
+                        <li><strong>Ciri:</strong> Berisi pendapat pribadi (opini) penulis yang didukung alasan logis, gaya bahasanya mengalir tidak kaku seperti skripsi atau jurnal akademik.</li>
+                        <li><strong>Bentuk:</strong> Artikel kolom di koran/majalah, Esai, Blog opini, Ulasan isu terkini.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>2. Membedah Judul: Mana yang Opini Populer?</h2>
+                <p>Karya ilmiah populer mengambil isu-isu yang ada di masyarakat dan memberikan pandangan solutif dari penulisnya. Perhatikan contoh berikut:</p>
+                
+                <div class="example-box">
+                    <h3 style="margin-top: 0;">Contoh 1: Pendekatan Akademis (Kaku)</h3>
+                    <p><em>"Analisis Pengaruh Pola Asuh Terhadap Kemampuan Kognitif Anak Panti Asuhan di Sumatera Utara: Studi Kasus Pendekatan Kuantitatif"</em></p>
+                    <p style="font-size: 0.9rem; color: #555;">(Ini adalah murni karya ilmiah/skripsi. Bahasanya berat dan ditujukan untuk akademisi).</p>
+                </div>
+
+                <div class="example-box" style="background-color: #fff8e1; border-color: #ffc107;">
+                    <h3 style="margin-top: 0;">Contoh 2: Pendekatan Ilmiah Populer (Menarik)</h3>
+                    <p><em>"Membangun Generasi Tangguh: Mengapa Pendidikan Karakter Sangat Krusial di Markaz Yatim Duafa Qurani?"</em></p>
+                    <p style="font-size: 0.9rem; color: #555;">(Ini adalah opini populer. Judulnya mengundang rasa ingin tahu. Isinya pasti memuat fakta pentingnya pendidikan karakter, namun disampaikan dengan bahasa yang menyentuh dan mudah dipahami siapa saja).</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Mengapa Kita Harus Berlatih Menulis Opini?</h2>
+                <div class="grid-elements">
+                    <div class="element-card" style="border-left: 4px solid #1976d2;">
+                        <h3 style="margin-top: 0; font-size: 1.1rem;">Menyuarakan Gagasan</h3>
+                        <p>Dunia butuh ide-idemu. Dengan opini, kamu bisa memberikan solusi atas masalah yang terjadi di sekitarmu dengan cara yang elegan.</p>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid #388e3c;">
+                        <h3 style="margin-top: 0; font-size: 1.1rem;">Melatih Logika</h3>
+                        <p>Menulis opini memaksa otak kita untuk menyusun argumen secara runtut. Kamu belajar berdebat menggunakan pena, bukan emosi.</p>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid #f57c00;">
+                        <h3 style="margin-top: 0; font-size: 1.1rem;">Jejak Rekam (Portofolio)</h3>
+                        <p>Tulisan opini yang dimuat di blog, majalah, atau koran bisa menjadi bukti kecerdasan dan kemampuan analisismu di masa depan.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>4. Kuis Evaluasi Pertemuan 1</h2>
+                <div id="quiz-container-p1">
+                    <div class="quiz-question">
+                        <strong>1. Sebuah tulisan yang memuat pendapat pribadi penulis mengenai bahaya membuang sampah, namun dikemas dengan bahasa santai dan didukung data-data riset, termasuk ke dalam jenis teks...</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p1q1" value="wrong"> Fiksi Imajinatif</label>
+                            <label><input type="radio" name="p1q1" value="wrong"> Jurnal Ilmiah Akademik</label>
+                            <label><input type="radio" name="p1q1" value="correct"> Karya Ilmiah Populer (Opini)</label>
+                        </div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <strong>2. Di antara judul berikut, manakah yang paling mencerminkan sebuah tulisan Fiksi?</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p1q2" value="wrong"> Sejarah Masuknya Islam di Sumatera Utara</label>
+                            <label><input type="radio" name="p1q2" value="correct"> Petualangan Si Kancil Mencari Matahari</label>
+                            <label><input type="radio" name="p1q2" value="wrong"> Tata Cara Merakit Komputer Jaringan</label>
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="checkQuizP1()">Periksa Jawaban</button>
+                    <div id="quiz-result-p1" style="margin-top: 1rem; font-weight: bold; padding: 1rem; border-radius: 8px; display: none;"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="p2" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. Anatomi Tulisan: Membangun Rangka Opini</h2>
+                <p>Menulis opini bukan berarti menumpahkan uneg-uneg secara sembarangan. Agar gagasan kita diterima secara logis oleh pembaca, tulisan harus dibangun dengan kerangka yang kokoh. Secara umum, artikel opini memiliki <strong>4 bagian utama</strong>.</p>
+                <p>Klik tombol di bawah ini secara berurutan untuk membedah struktur artikel opini:</p>
+                
+                <div class="toggle-container">
+                    <button class="toggle-btn" onclick="showInfo('struktur-1', this)" style="background-color: #e3f2fd; color: #0d47a1;">1. Judul</button>
+                    <button class="toggle-btn" onclick="showInfo('struktur-2', this)" style="background-color: #e0f7fa; color: #006064;">2. Tesis (Pendahuluan)</button>
+                    <button class="toggle-btn" onclick="showInfo('struktur-3', this)" style="background-color: #e8f5e9; color: #1b5e20;">3. Argumentasi (Isi)</button>
+                    <button class="toggle-btn" onclick="showInfo('struktur-4', this)" style="background-color: #fff3e0; color: #e65100;">4. Penegasan Ulang (Penutup)</button>
+                </div>
+
+                <div id="info-struktur-1" class="info-box">
+                    <h3 style="color: #0d47a1;">Judul (Headline)</h3>
+                    <p>Judul adalah etalase tulisanmu. Dalam opini populer, judul harus dibuat <strong>menarik, singkat (maksimal 6-8 kata), dan provokatif</strong> (mengundang rasa penasaran) tanpa menjadi <em>clickbait</em> yang menipu.</p>
+                    <p><em>Contoh: "Bahaya Laten Gadget pada Balita"</em></p>
+                </div>
+
+                <div id="info-struktur-2" class="info-box">
+                    <h3 style="color: #006064;">Tesis / Pernyataan Pendapat (Pendahuluan)</h3>
+                    <p>Bagian awal artikel (paragraf 1-2). Di sinilah kamu memperkenalkan isu atau masalah yang sedang hangat terjadi di masyarakat, sekaligus menyampaikan sudut pandangmu secara tegas terhadap isu tersebut.</p>
+                    <p><em>Contoh: Fenomena anak balita yang kecanduan HP semakin mengkhawatirkan. Menurut saya, hal ini terjadi karena orang tua menjadikan gadget sebagai 'pengasuh digital' yang praktis.</em></p>
+                </div>
+
+                <div id="info-struktur-3" class="info-box">
+                    <h3 style="color: #1b5e20;">Argumentasi (Isi Utama)</h3>
+                    <p>Ini adalah jantung dari opinimu (paragraf 3-5). Kamu harus membuktikan bahwa pendapatmu di bagian awal (tesis) itu benar. Argumentasi tidak boleh sekadar asumsi, melainkan harus didukung oleh:</p>
+                    <ul>
+                        <li>Fakta lapangan.</li>
+                        <li>Data statistik atau hasil riset ahli.</li>
+                        <li>Logika sebab-akibat yang masuk akal.</li>
+                    </ul>
+                </div>
+
+                <div id="info-struktur-4" class="info-box">
+                    <h3 style="color: #e65100;">Penegasan Ulang / Kesimpulan (Penutup)</h3>
+                    <p>Paragraf terakhir. Bagian ini berisi kesimpulan dari seluruh argumenmu. Biasanya, opini populer yang bagus juga menyertakan <strong>Saran, Ajakan (Persuasif), atau Solusi</strong> atas masalah yang dibahas.</p>
+                    <p><em>Contoh: Oleh karena itu, sudah saatnya orang tua membatasi screen-time anak...</em></p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>2. Bedah Kasus: Menemukan Struktur</h2>
+                <p>Bacalah penggalan artikel di bawah ini dan perhatikan bagaimana penulis menyusun gagasannya:</p>
+                
+                <div class="example-box" style="border-color: #1565c0; background-color: #f5f5f5;">
+                    <h4 style="margin: 0 0 10px 0; color: #1565c0;">Sampah Plastik: Bencana yang Kita Ciptakan Sendiri (Judul)</h4>
+                    <p><strong>(Tesis)</strong> Setiap hari kita melihat tumpukan sampah plastik di selokan dan sungai. Kebiasaan menggunakan plastik sekali pakai telah membawa lingkungan kita ke jurang krisis. Saya menilai, masyarakat masih terlalu manja dan enggan beralih ke alternatif ramah lingkungan.</p>
+                    <p><strong>(Argumentasi)</strong> Hal ini bukan tanpa alasan. Berdasarkan data KLHK tahun 2025, Indonesia menghasilkan puluhan juta ton sampah per tahun, yang 20% di antaranya adalah plastik yang sulit terurai. Sampah ini menyumbat saluran air yang berujung pada banjir rob di kawasan pesisir.</p>
+                    <p><strong>(Penegasan Ulang)</strong> Kesimpulannya, krisis sampah ini tidak bisa hanya diselesaikan dengan menyalahkan pemerintah. Mulai sekarang, bawalah tas belanja sendiri dan kurangi pemakaian sedotan plastik. Perubahan besar dimulai dari langkah kecil kita.</p>
+                </div>
+            </div>
+
+            <div class="card" style="background-color: #e0f7fa;">
+                <h2>3. Tips Jitu Menulis Paragraf Pembuka (Lead)</h2>
+                <p>Paragraf pertama (Tesis) adalah penentu apakah pembaca mau melanjutkan membaca atau tidak. Gunakan teknik ini agar pembukamu kuat:</p>
+                <ul>
+                    <li><strong>Gunakan Data Mengejutkan:</strong> <em>"Tahukah Anda bahwa rata-rata orang Indonesia menghabiskan 8 jam sehari menatap layar kaca?"</em></li>
+                    <li><strong>Gunakan Pertanyaan Retoris:</strong> <em>"Masihkah kita bisa bernapas lega 10 tahun ke depan jika hutan terus ditebang hari ini?"</em></li>
+                    <li><strong>Gunakan Kutipan Tokoh:</strong> <em>"Nelson Mandela pernah berkata, 'Pendidikan adalah senjata paling ampuh...' namun ironisnya..."</em></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>4. Kuis Evaluasi Pertemuan 2</h2>
+                <div id="quiz-container-p2">
+                    <div class="quiz-question">
+                        <strong>1. Bagian dalam struktur artikel opini yang berisi bukti-bukti, fakta, dan data riset untuk mendukung pendapat penulis disebut...</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p2q1" value="wrong"> Tesis</label>
+                            <label><input type="radio" name="p2q1" value="correct"> Argumentasi</label>
+                            <label><input type="radio" name="p2q1" value="wrong"> Penegasan Ulang</label>
+                        </div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <strong>2. Paragraf terakhir dari artikel opini ilmiah populer biasanya tidak hanya berisi kesimpulan, tetapi juga memuat...</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p2q2" value="wrong"> Data statistik terbaru</label>
+                            <label><input type="radio" name="p2q2" value="wrong"> Pengenalan masalah baru</label>
+                            <label><input type="radio" name="p2q2" value="correct"> Saran, ajakan, atau solusi</label>
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="checkQuizP2()">Periksa Jawaban</button>
+                    <div id="quiz-result-p2" style="margin-top: 1rem; font-weight: bold; padding: 1rem; border-radius: 8px; display: none;"></div>
+                </div>
+            </div>
+
+            <script>
+                function checkQuizP2() {
+                    let score = 0;
+                    const q1 = document.querySelector('input[name="p2q1"]:checked');
+                    const q2 = document.querySelector('input[name="p2q2"]:checked');
+                    
+                    if(!q1 || !q2) {
+                        alert("Pilih jawaban untuk semua pertanyaan Pertemuan 2 terlebih dahulu!");
+                        return;
+                    }
+
+                    if (q1.value === "correct") score++;
+                    if (q2.value === "correct") score++;
+
+                    const resultDiv = document.getElementById('quiz-result-p2');
+                    resultDiv.style.display = 'block';
+
+                    if (score === 2) {
+                        resultDiv.innerHTML = "Luar biasa! Kamu sudah memahami anatomi tulisan opini dengan sangat baik. Bersiaplah untuk mulai menyusun kerangka! 📝✨";
+                        resultDiv.style.backgroundColor = "#e0f2f1";
+                        resultDiv.style.color = "#00695c";
+                    } else {
+                        resultDiv.innerHTML = "Kamu menjawab benar " + score + " dari 2 soal. Ayo baca lagi fungsi dari masing-masing struktur (Tesis, Argumen, Penutup)! 📚";
+                        resultDiv.style.backgroundColor = "#fff3e0";
+                        resultDiv.style.color = "#e65100";
+                    }
+                }
+            </script>
+        </div>
+        <div id="p3" class="meeting-content"><div class="empty-state"><h3>Pertemuan 3</h3><p>Materi Menyusun Kerangka belum tersedia.</p></div></div>
+        <div id="p4" class="meeting-content"><div class="empty-state"><h3>Pertemuan 4</h3><p>Praktik Menulis & Menyunting belum tersedia.</p></div></div>
+        <div id="p5" class="meeting-content"><div class="empty-state"><h3>Pertemuan 5</h3><p>Pengantar Resensi Buku belum tersedia.</p></div></div>
+        <div id="p6" class="meeting-content"><div class="empty-state"><h3>Pertemuan 6</h3><p>Materi Unsur-unsur Resensi belum tersedia.</p></div></div>
+        <div id="p7" class="meeting-content"><div class="empty-state"><h3>Pertemuan 7</h3><p>Praktik Resensi Islami belum tersedia.</p></div></div>
+        <div id="p8" class="meeting-content"><div class="empty-state"><h3>Pertemuan 8</h3><p>Bedah Tulisan (Peer Review) belum tersedia.</p></div></div>
+
+    </div>
+
+    <script>
+        // FUNGSI UNTUK PINDAH TAB PERTEMUAN
+        function openMeeting(evt, meetingId) {
+            var i, meetingcontent, tablinks;
+            
+            meetingcontent = document.getElementsByClassName("meeting-content");
+            for (i = 0; i < meetingcontent.length; i++) {
+                meetingcontent[i].classList.remove("active-content");
+            }
+
+            tablinks = document.getElementsByClassName("tab-item");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active-tab");
+            }
+
+            document.getElementById(meetingId).classList.add("active-content");
+            evt.currentTarget.classList.add("active-tab");
+            window.scrollTo(0, 0);
+        }
+
+        // FUNGSI TOGGLE PENJELASAN
+        function showInfo(type, btnElement) {
+            document.querySelectorAll('.info-box').forEach(box => box.classList.remove('active'));
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('info-' + type).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        // FUNGSI KUIS P1
+        function checkQuizP1() {
+            let score = 0;
+            const q1 = document.querySelector('input[name="p1q1"]:checked');
+            const q2 = document.querySelector('input[name="p1q2"]:checked');
+            
+            if(!q1 || !q2) {
+                alert("Pilih jawaban untuk semua pertanyaan terlebih dahulu!");
+                return;
+            }
+
+            if (q1.value === "correct") score++;
+            if (q2.value === "correct") score++;
+
+            const resultDiv = document.getElementById('quiz-result-p1');
+            resultDiv.style.display = 'block';
+
+            if (score === 2) {
+                resultDiv.innerHTML = "Sempurna! Kamu sudah bisa membedakan Fiksi, Non-Fiksi, dan Opini Populer dengan baik. ✍️✨";
+                resultDiv.style.backgroundColor = "#e0f2f1";
+                resultDiv.style.color = "#00695c";
+            } else {
+                resultDiv.innerHTML = "Kamu menjawab benar " + score + " dari 2 soal. Mari tinjau ulang karakteristik ketiga jenis teks tersebut! 📚";
+                resultDiv.style.backgroundColor = "#fff3e0";
+                resultDiv.style.color = "#e65100";
+            }
+        }
+    </script>
+</body>
+</html>
