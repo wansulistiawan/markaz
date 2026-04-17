@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AKH-106: Akhlak Tercela & Terapinya</title>
+    <style>
+        /* TEMA WARNA ISLAMI (Hijau/Emerald) */
+        :root {
+            --primary: #2e7d32;
+            --secondary: #4caf50;
+            --light: #e8f5e9;
+            --dark: #1b5e20;
+            --white: #ffffff;
+            --text: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--dark), var(--primary));
+            color: var(--white);
+            text-align: center;
+            padding: 2.5rem 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 { margin: 0; font-size: 2.2rem; }
+        header p { font-size: 1.1rem; opacity: 0.9; margin-top: 5px; }
+
+        /* --- STYLES UNTUK TAB MENU PERTEMUAN --- */
+        .nav-container {
+            background: var(--white);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .tab-menu {
+            display: flex;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0;
+            list-style: none;
+        }
+
+        .tab-item {
+            padding: 1rem 1.2rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .tab-item:hover {
+            background-color: #f0f0f0;
+            color: var(--primary);
+        }
+
+        .tab-item.active-tab {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            background-color: var(--light);
+        }
+
+        /* --- KONTEN PER PERTEMUAN --- */
+        .meeting-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .meeting-content.active-content {
+            display: block;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            min-height: 400px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            color: var(--dark);
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+        }
+
+        /* Toggle Buttons */
+        .toggle-container { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; }
+        .toggle-btn {
+            flex: 1; min-width: 150px; padding: 1rem; font-size: 1rem; font-weight: bold;
+            border: none; border-radius: 8px; cursor: pointer;
+            transition: all 0.3s; background-color: #eee; color: var(--text);
+        }
+        .toggle-btn.active { background-color: var(--primary); color: var(--white); box-shadow: 0 4px 10px rgba(46, 125, 50, 0.4); }
+        
+        .info-box { display: none; padding: 1.5rem; background-color: #f9f9f9; border-left: 5px solid var(--primary); margin-top: 1rem; border-radius: 0 8px 8px 0; }
+        .info-box.active { display: block; animation: fadeIn 0.4s ease-in; }
+
+        /* Grid Elements */
+        .grid-elements { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+        .element-card { 
+            background: #fafafa; padding: 1.5rem; border-radius: 8px; 
+            border: 2px solid #e0e0e0; transition: transform 0.3s, border 0.3s; 
+        }
+        .element-card:hover { transform: translateY(-5px); border-color: var(--secondary); }
+
+        /* Quote Box Islami */
+        .quote-box {
+            background-color: #f1f8e9;
+            border-left: 5px solid var(--primary);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #2e7d32;
+        }
+
+        /* Quiz Section */
+        .quiz-question { margin-bottom: 1.5rem; }
+        .options label { display: block; background: #f5f5f5; padding: 10px 15px; margin-bottom: 8px; border-radius: 5px; cursor: pointer; transition: background 0.2s; }
+        .options label:hover { background: #e0e0e0; }
+        .submit-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; font-size: 1.1rem; border-radius: 5px; cursor: pointer; }
+        .submit-btn:hover { background: var(--dark); }
+
+        .empty-state { text-align: center; padding: 4rem 2rem; color: #999; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Portal Akhlak AKH-106</h1>
+        <p>Akhlak Tercela & Terapi Pembersihan Hati (Tazkiyatun Nafs)</p>
+    </header>
+
+    <div class="nav-container">
+        <ul class="tab-menu">
+            <li class="tab-item active-tab" onclick="openMeeting(event, 'p1')">P1 : Bahaya Riya'</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p2')">P2 : Ujub & Sombong</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p3')">P3 : Penyakit Hasad</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p4')">P4 : Gibah & Namimah</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p5')">P5 : Bakhil vs Qana'ah</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p6')">P6 : Menahan Amarah</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p7')">P7 : Sifat Pemalas</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p8')">P8 : Muhasabah Diri</li>
+        </ul>
+    </div>
+
+    <div class="container">
+        
+        <div id="p1" class="meeting-content active-content">
+            
+            <div class="card">
+                <h2>1. Mengenal Penyakit Riya'</h2>
+                <p>Secara bahasa, Riya' berasal dari kata <em>Ru'yah</em> yang artinya "memperlihatkan". Secara istilah, Riya' adalah <strong>melakukan suatu ibadah atau amal kebaikan dengan niat agar dilihat, dipuji, atau mendapat kedudukan di mata manusia</strong>, bukan murni karena Allah ﷻ.</p>
+                
+                <div class="quote-box">
+                    "Sesuatu yang paling aku khawatirkan menimpa kalian adalah Syirik Asghar (Syirik Kecil)." Para sahabat bertanya, "Apakah syirik kecil itu ya Rasulullah?" Beliau menjawab, <strong>"Riya'."</strong> <br><br><em>(HR. Ahmad)</em>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>2. Wujud Riya' yang Samar</h2>
+                <p>Riya' itu sangat halus, bagaikan semut hitam yang berjalan di atas batu hitam pada malam yang gelap gulita. Mari kenali bentuk-bentuknya dengan mengklik tombol di bawah:</p>
+                
+                <div class="toggle-container">
+                    <button class="toggle-btn active" onclick="showInfo('riya-amal', this)">👁️ Riya' dalam Amal</button>
+                    <button class="toggle-btn" onclick="showInfo('sumah', this)">👂 Sum'ah (Menceritakan)</button>
+                    <button class="toggle-btn" onclick="showInfo('penampilan', this)">👕 Riya' Penampilan</button>
+                </div>
+
+                <div id="info-riya-amal" class="info-box active">
+                    <h3 style="color: #1b5e20;">Riya' dalam Ibadah Badan</h3>
+                    <p>Memperbagus atau memanjangkan ibadah hanya saat ada orang lain yang melihat.</p>
+                    <ul>
+                        <li><strong>Contoh:</strong> Shalat sendirian sangat cepat dan tidak ruku' dengan sempurna. Tapi ketika shalat di masjid atau dilihat guru/teman, shalatnya dibuat sangat lama dan khusyu'.</li>
+                        <li><strong>Contoh Lain:</strong> Sedekah dengan jumlah besar jika di depan publik, tapi enggan sedekah jika tidak ada yang tahu.</li>
+                    </ul>
+                </div>
+
+                <div id="info-sumah" class="info-box">
+                    <h3 style="color: #33691e;">Sum'ah (Ingin Didengar)</h3>
+                    <p>Sum'ah berasal dari kata <em>Sami'a</em> (Mendengar). Jika Riya' adalah beramal agar <strong>dilihat</strong>, maka Sum'ah adalah beramal sembunyi-sembunyi, lalu <strong>menceritakannya</strong> kepada orang lain agar mendapat pujian.</p>
+                    <ul>
+                        <li><strong>Contoh:</strong> "Tadi malam ngantuk banget, padahal baru shalat tahajud 8 rakaat." (Menceritakan tahajudnya agar dianggap shalih).</li>
+                    </ul>
+                </div>
+
+                <div id="info-penampilan" class="info-box">
+                    <h3 style="color: #004d40;">Riya' dalam Penampilan Fisik</h3>
+                    <p>Membuat diri terlihat lemas, pucat, atau menundukkan kepala saat berjalan agar disangka sebagai ahli puasa, ahli ibadah, atau orang yang sangat tawadhu' (rendah hati).</p>
+                    <ul>
+                        <li>Seorang mukmin sejati justru menutupi keletihan ibadahnya dan tetap tampil segar di hadapan manusia.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Analogi Bahaya Riya' (Debu di Atas Batu)</h2>
+                <p>Allah ﷻ memberikan perumpamaan yang sangat indah nan menakutkan tentang orang yang beramal karena Riya' di dalam <strong>QS. Al-Baqarah ayat 264</strong>.</p>
+                
+                <div class="grid-elements">
+                    <div class="element-card" style="border-left: 4px solid #f44336;">
+                        <h3 style="margin-top: 0;">1. Seperti Batu Licin (Hati yang Keras)</h3>
+                        <p>Orang yang pamer amal diumpamakan seperti batu yang licin. Di atas batu itu ada sedikit debu (amal kebaikan).</p>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid #2196f3;">
+                        <h3 style="margin-top: 0;">2. Disapu Hujan Lebat (Riya')</h3>
+                        <p>Kemudian turunlah hujan lebat. Hujan tersebut bukannya menumbuhkan tanaman, malah menyapu bersih debu tersebut.</p>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid #9e9e9e;">
+                        <h3 style="margin-top: 0;">3. Hilang Tak Bersisa</h3>
+                        <p>Batu itu kembali licin. Orang yang Riya' akan datang di hari kiamat membawa amal segunung, namun amalnya terhapus tidak tersisa sedikitpun untuk ditimbang.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="background-color: #f1f8e9;">
+                <h2>4. Resep Terapi Hati (Menyembuhkan Riya')</h2>
+                <p>Penyakit hati harus diobati. Berikut adalah cara melatih diri agar ikhlas:</p>
+                <ol>
+                    <li style="margin-bottom: 10px;"><strong>Menyembunyikan Amal Kebaikan:</strong> Latihlah dirimu untuk memiliki "amal rahasia" yang hanya diketahui olehmu dan Allah saja (seperti sedekah sembunyi-sembunyi).</li>
+                    <li style="margin-bottom: 10px;"><strong>Berdoa Meminta Perlindungan:</strong> Rasulullah ﷺ mengajarkan doa khusus agar kita terhindar dari kesyirikan yang tidak disadari: 
+                        <br><em>"Allahumma inni a’udzu bika an usyrika bika wa ana a’lam, wa astaghfiruka lima la a’lam."</em> (Ya Allah, aku berlindung kepada-Mu dari perbuatan syirik yang aku sadari, dan aku memohon ampunan-Mu atas apa yang tidak aku sadari).</li>
+                    <li style="margin-bottom: 10px;"><strong>Mengingat Pujian Manusia Itu Semu:</strong> Sadarilah bahwa pujian manusia tidak akan menambah umurmu, tidak menambah rezekimu, dan tidak akan menyelamatkanmu di akhirat.</li>
+                </ol>
+            </div>
+
+            <div class="card">
+                <h2>5. Kuis Evaluasi Pertemuan 1</h2>
+                <div id="quiz-container-p1">
+                    <div class="quiz-question">
+                        <strong>1. Menceritakan amal ibadah yang sudah berlalu (misal: tahajud atau sedekah) agar didengar dan dipuji orang lain disebut dengan istilah...</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p1q1" value="wrong"> Ujub</label>
+                            <label><input type="radio" name="p1q1" value="correct"> Sum'ah</label>
+                            <label><input type="radio" name="p1q1" value="wrong"> Gibah</label>
+                        </div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <strong>2. Di dalam Al-Qur'an, amal orang yang Riya' diumpamakan seperti... yang tersapu bersih oleh hujan lebat.</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p1q2" value="wrong"> Pohon yang kering</label>
+                            <label><input type="radio" name="p1q2" value="wrong"> Api yang membakar kayu</label>
+                            <label><input type="radio" name="p1q2" value="correct"> Debu di atas batu yang licin</label>
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="checkQuizP1()">Periksa Jawaban</button>
+                    <div id="quiz-result-p1" style="margin-top: 1rem; font-weight: bold; padding: 1rem; border-radius: 8px; display: none;"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="p2" class="meeting-content"><div class="empty-state"><h3>Pertemuan 2</h3><p>Materi Ujub & Sombong belum tersedia.</p></div></div>
+        <div id="p3" class="meeting-content"><div class="empty-state"><h3>Pertemuan 3</h3><p>Materi Penyakit Hasad belum tersedia.</p></div></div>
+        <div id="p4" class="meeting-content"><div class="empty-state"><h3>Pertemuan 4</h3><p>Materi Gibah & Namimah belum tersedia.</p></div></div>
+        <div id="p5" class="meeting-content"><div class="empty-state"><h3>Pertemuan 5</h3><p>Materi Bakhil vs Qana'ah belum tersedia.</p></div></div>
+        <div id="p6" class="meeting-content"><div class="empty-state"><h3>Pertemuan 6</h3><p>Materi Menahan Amarah belum tersedia.</p></div></div>
+        <div id="p7" class="meeting-content"><div class="empty-state"><h3>Pertemuan 7</h3><p>Materi Sifat Pemalas belum tersedia.</p></div></div>
+        <div id="p8" class="meeting-content"><div class="empty-state"><h3>Pertemuan 8</h3><p>Evaluasi & Muhasabah Diri belum tersedia.</p></div></div>
+
+    </div>
+
+    <script>
+        // FUNGSI UNTUK PINDAH TAB PERTEMUAN
+        function openMeeting(evt, meetingId) {
+            var i, meetingcontent, tablinks;
+            
+            meetingcontent = document.getElementsByClassName("meeting-content");
+            for (i = 0; i < meetingcontent.length; i++) {
+                meetingcontent[i].classList.remove("active-content");
+            }
+
+            tablinks = document.getElementsByClassName("tab-item");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active-tab");
+            }
+
+            document.getElementById(meetingId).classList.add("active-content");
+            evt.currentTarget.classList.add("active-tab");
+            window.scrollTo(0, 0);
+        }
+
+        // FUNGSI TOGGLE PENJELASAN
+        function showInfo(type, btnElement) {
+            document.querySelectorAll('.info-box').forEach(box => box.classList.remove('active'));
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('info-' + type).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        // FUNGSI KUIS P1
+        function checkQuizP1() {
+            let score = 0;
+            const q1 = document.querySelector('input[name="p1q1"]:checked');
+            const q2 = document.querySelector('input[name="p1q2"]:checked');
+            
+            if(!q1 || !q2) {
+                alert("Pilih jawaban untuk semua pertanyaan terlebih dahulu!");
+                return;
+            }
+
+            if (q1.value === "correct") score++;
+            if (q2.value === "correct") score++;
+
+            const resultDiv = document.getElementById('quiz-result-p1');
+            resultDiv.style.display = 'block';
+
+            if (score === 2) {
+                resultDiv.innerHTML = "Alhamdulillah! Jawabanmu benar semua. Semoga Allah menjaga hati kita dari sifat Riya'. 🌿";
+                resultDiv.style.backgroundColor = "#c8e6c9";
+                resultDiv.style.color = "#1b5e20";
+            } else {
+                resultDiv.innerHTML = "Kamu menjawab benar " + score + " dari 2 soal. Mari muraja'ah (ulang) kembali materinya ya! 📖";
+                resultDiv.style.backgroundColor = "#ffecb3";
+                resultDiv.style.color = "#f57f17";
+            }
+        }
+    </script>
+</body>
+</html>

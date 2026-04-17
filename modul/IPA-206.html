@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPA-206: Sistem Ekskresi & Gelombang</title>
+    <style>
+        /* TEMA WARNA BIOLOGI (Ungu/Magenta) */
+        :root {
+            --primary: #6a1b9a;
+            --secondary: #8e24aa;
+            --light: #f3e5f5;
+            --dark: #4a148c;
+            --white: #ffffff;
+            --text: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            text-align: center;
+            padding: 2.5rem 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 { margin: 0; font-size: 2.2rem; }
+        header p { font-size: 1.1rem; opacity: 0.9; margin-top: 5px; }
+
+        /* --- STYLES UNTUK TAB MENU PERTEMUAN --- */
+        .nav-container {
+            background: var(--white);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .tab-menu {
+            display: flex;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0;
+            list-style: none;
+        }
+
+        .tab-item {
+            padding: 1rem 1.2rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .tab-item:hover {
+            background-color: #f0f0f0;
+            color: var(--primary);
+        }
+
+        .tab-item.active-tab {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            background-color: var(--light);
+        }
+
+        /* --- KONTEN PER PERTEMUAN --- */
+        .meeting-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .meeting-content.active-content {
+            display: block;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            min-height: 400px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            color: var(--dark);
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+        }
+
+        /* Toggle Buttons */
+        .toggle-container { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; }
+        .toggle-btn {
+            flex: 1; min-width: 150px; padding: 1rem; font-size: 1rem; font-weight: bold;
+            border: none; border-radius: 8px; cursor: pointer;
+            transition: all 0.3s; background-color: #eee; color: var(--text);
+        }
+        .toggle-btn.active { background-color: var(--primary); color: var(--white); box-shadow: 0 4px 10px rgba(106, 27, 154, 0.4); }
+        
+        .info-box { display: none; padding: 1.5rem; background-color: #f9f9f9; border-left: 5px solid var(--primary); margin-top: 1rem; border-radius: 0 8px 8px 0; }
+        .info-box.active { display: block; animation: fadeIn 0.4s ease-in; }
+
+        /* Grid Elements untuk Tahapan */
+        .grid-elements { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+        .element-card { 
+            background: #fafafa; padding: 1.5rem; border-radius: 8px; 
+            border: 2px solid #e0e0e0; transition: transform 0.3s, border 0.3s; 
+        }
+        .element-card:hover { transform: translateY(-5px); border-color: var(--secondary); }
+        .step-number { 
+            display: inline-block; background: var(--primary); color: white; 
+            width: 30px; height: 30px; text-align: center; line-height: 30px; 
+            border-radius: 50%; font-weight: bold; margin-bottom: 10px;
+        }
+
+        /* Quiz Section */
+        .quiz-question { margin-bottom: 1.5rem; }
+        .options label { display: block; background: #f5f5f5; padding: 10px 15px; margin-bottom: 8px; border-radius: 5px; cursor: pointer; transition: background 0.2s; }
+        .options label:hover { background: #e0e0e0; }
+        .submit-btn { background: #4caf50; color: white; border: none; padding: 10px 20px; font-size: 1.1rem; border-radius: 5px; cursor: pointer; }
+        .submit-btn:hover { background: #43a047; }
+
+        .empty-state { text-align: center; padding: 4rem 2rem; color: #999; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Portal Sains IPA-206</h1>
+        <p>Sistem Ekskresi Manusia & Pengantar Gelombang</p>
+    </header>
+
+    <div class="nav-container">
+        <ul class="tab-menu">
+            <li class="tab-item active-tab" onclick="openMeeting(event, 'p1')">P1 : Ekskresi & Ginjal</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p2')">P2 : Kulit & Paru-paru</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p3')">P3 : Organ Hati</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p4')">P4 : Kelainan & Penyakit</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p5')">P5 : Konsep Getaran</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p6')">P6 : Dasar Gelombang</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p7')">P7 : Gelombang Bunyi</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p8')">P8 : Evaluasi Akhir</li>
+        </ul>
+    </div>
+
+    <div class="container">
+        
+        <div id="p1" class="meeting-content active-content">
+            
+            <div class="card">
+                <h2>1. Tiga Istilah Pembuangan Tubuh</h2>
+                <p>Tubuh kita seperti sebuah pabrik. Setelah mengolah makanan dan minuman, pasti ada sampah atau zat sisa yang harus dibuang agar tubuh tidak keracunan. Tapi awas, jangan sampai salah sebut! Klik tombol di bawah untuk mengetahui bedanya.</p>
+                
+                <div class="toggle-container">
+                    <button class="toggle-btn active" onclick="showInfo('ekskresi', this)">🗑️ Ekskresi</button>
+                    <button class="toggle-btn" onclick="showInfo('sekresi', this)">📦 Sekresi</button>
+                    <button class="toggle-btn" onclick="showInfo('defekasi', this)">🚽 Defekasi</button>
+                </div>
+
+                <div id="info-ekskresi" class="info-box active">
+                    <h3>Ekskresi (Pembuangan Racun)</h3>
+                    <p>Proses pengeluaran zat sisa metabolisme yang sudah <strong>tidak berguna dan beracun</strong> bagi tubuh.</p>
+                    <ul>
+                        <li><strong>Contoh:</strong> Urine (air kencing) dari ginjal, Keringat dari kulit, dan Karbon Dioksida dari paru-paru.</li>
+                        <li>Jika tidak dibuang, kita bisa sakit parah atau keracunan.</li>
+                    </ul>
+                </div>
+
+                <div id="info-sekresi" class="info-box">
+                    <h3>Sekresi (Pengeluaran Zat Berguna)</h3>
+                    <p>Proses pengeluaran zat cair oleh kelenjar yang <strong>masih digunakan</strong> oleh tubuh untuk fungsi tertentu.</p>
+                    <ul>
+                        <li><strong>Contoh:</strong> Air liur untuk mencerna makanan, enzim lambung, dan hormon pertumbuhan.</li>
+                        <li>Ingat kuncinya: <em>Sekresi = Masih berfungsi.</em></li>
+                    </ul>
+                </div>
+
+                <div id="info-defekasi" class="info-box">
+                    <h3>Defekasi (Pembuangan Ampas)</h3>
+                    <p>Proses pengeluaran sisa-sisa pencernaan makanan yang tidak bisa diserap oleh usus kita.</p>
+                    <ul>
+                        <li><strong>Contoh:</strong> Feses (tinja/kotoran) melalui anus.</li>
+                        <li>Ini adalah sisa makanan, bukan sisa hasil pembakaran sel di dalam tubuh.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>2. Ginjal: Sang Penyaring Darah</h2>
+                <p>Manusia memiliki sepasang ginjal yang bentuknya mirip seperti kacang merah, terletak di rongga perut bagian belakang (area pinggang). Meski ukurannya hanya sebesar kepalan tangan, ginjal menyaring sekitar 200 liter darah setiap hari!</p>
+                
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <strong>Bagian-Bagian Ginjal:</strong>
+                    <ol>
+                        <li><strong>Korteks (Kulit Ginjal):</strong> Bagian terluar tempat terjadinya penyaringan darah. Di sini terdapat jutaan alat penyaring super kecil bernama <em>Nefron</em>.</li>
+                        <li><strong>Medula (Sumsum Ginjal):</strong> Bagian tengah berbentuk seperti piramida, tempat menyalurkan sisa cairan.</li>
+                        <li><strong>Pelvis (Rongga Ginjal):</strong> Bagian dalam tempat berkumpulnya urine sementara sebelum dialirkan ke kandung kemih (tempat penampungan air kencing).</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Tiga Tahap Pembentukan Urine</h2>
+                <p>Bagaimana darah kotor bisa berubah menjadi urine yang kita keluarkan? Prosesnya melewati 3 tahapan ketat di dalam mesin penyaring (Nefron).</p>
+
+                <div class="grid-elements">
+                    <div class="element-card">
+                        <span class="step-number">1</span>
+                        <h3 style="margin-top: 0;">Filtrasi (Penyaringan)</h3>
+                        <p><strong>Tempat:</strong> Glomerulus</p>
+                        <p>Darah yang masuk akan disaring secara paksa. Sel darah dan protein ditahan agar tidak terbuang, sedangkan air, garam, dan racun (urea) lolos.</p>
+                        <p style="color: var(--primary);"><strong>Hasil:</strong> Urine Primer (masih mengandung glukosa/gula yang berguna).</p>
+                    </div>
+
+                    <div class="element-card">
+                        <span class="step-number">2</span>
+                        <h3 style="margin-top: 0;">Reabsorpsi (Penyerapan Kembali)</h3>
+                        <p><strong>Tempat:</strong> Tubulus Kontortus Proksimal</p>
+                        <p>Zat-zat yang masih berguna (seperti glukosa, asam amino, dan sebagian air) diserap KEMBALI masuk ke dalam aliran darah.</p>
+                        <p style="color: var(--primary);"><strong>Hasil:</strong> Urine Sekunder (sudah tidak mengandung gula).</p>
+                    </div>
+
+                    <div class="element-card">
+                        <span class="step-number">3</span>
+                        <h3 style="margin-top: 0;">Augmentasi (Penambahan)</h3>
+                        <p><strong>Tempat:</strong> Tubulus Kontortus Distal</p>
+                        <p>Urine sekunder akan ditambahkan zat-zat sisa lainnya, vitamin yang berlebihan, dan pigmen empedu yang membuat warna urine menjadi kekuningan.</p>
+                        <p style="color: var(--primary);"><strong>Hasil:</strong> Urine Sesungguhnya (siap dibuang).</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>4. Kuis Evaluasi Pertemuan 1</h2>
+                <div id="quiz-container-p1">
+                    <div class="quiz-question">
+                        <strong>1. Mengeluarkan keringat saat berolahraga termasuk dalam proses...</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p1q1" value="wrong"> Sekresi</label>
+                            <label><input type="radio" name="p1q1" value="correct"> Ekskresi</label>
+                            <label><input type="radio" name="p1q1" value="wrong"> Defekasi</label>
+                        </div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <strong>2. Pada tahapan manakah zat-zat yang masih berguna (seperti glukosa/gula) diserap kembali ke dalam tubuh?</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p1q2" value="wrong"> Filtrasi</label>
+                            <label><input type="radio" name="p1q2" value="wrong"> Augmentasi</label>
+                            <label><input type="radio" name="p1q2" value="correct"> Reabsorpsi</label>
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="checkQuizP1()">Periksa Jawaban</button>
+                    <div id="quiz-result-p1" style="margin-top: 1rem; font-weight: bold; padding: 1rem; border-radius: 8px; display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="p2" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. AC dan Knalpot Alami Tubuh Kita</h2>
+                <p>Jika ginjal adalah mesin penyaring air kotor, maka hari ini kita akan membahas dua organ ekskresi lainnya yang tidak kalah penting: <strong>Kulit</strong> sebagai pengatur suhu (bekerja seperti AC) dan <strong>Paru-paru</strong> sebagai pembuang gas beracun (bekerja seperti knalpot mesin).</p>
+            </div>
+
+            <div class="card">
+                <h2>2. Kulit: Pabrik Keringat & Pelindung Tubuh</h2>
+                <p>Kulit adalah organ tubuh yang paling luas permukaannya. Selain sebagai indera peraba, kulit bertugas mengeluarkan zat sisa berupa <strong>keringat</strong> (campuran air, garam, dan sedikit urea). Mari kita bedah 3 lapisan utama kulit! <em>Klik tombol di bawah:</em></p>
+                
+                <div class="toggle-container">
+                    <button class="toggle-btn" onclick="showInfo('epidermis', this)" style="background-color: #fce4ec; color: #880e4f;">🛡️ Epidermis</button>
+                    <button class="toggle-btn" onclick="showInfo('dermis', this)" style="background-color: #f3e5f5; color: #4a148c;">⚙️ Dermis</button>
+                    <button class="toggle-btn" onclick="showInfo('hipodermis', this)" style="background-color: #fff3e0; color: #e65100;">🧽 Hipodermis</button>
+                </div>
+
+                <div id="info-epidermis" class="info-box">
+                    <h3 style="color: #880e4f;">Epidermis (Kulit Ari)</h3>
+                    <p>Ini adalah lapisan paling luar yang bisa kita sentuh. Sangat tipis dan <strong>tidak memiliki pembuluh darah</strong> (makanya kalau tergores sedikit permukaannya, kita tidak berdarah).</p>
+                    <ul>
+                        <li><strong>Fungsi:</strong> Melindungi tubuh dari kuman, air, dan paparan sinar matahari.</li>
+                        <li>Lapisan paling atasnya tersusun atas sel mati yang selalu mengelupas (menjadi daki), lalu secara otomatis diganti dengan sel baru dari bawahnya.</li>
+                    </ul>
+                </div>
+
+                <div id="info-dermis" class="info-box">
+                    <h3 style="color: #4a148c;">Dermis (Kulit Jangat)</h3>
+                    <p>Ini adalah "mesin utama" kulit yang jauh lebih tebal di bawah epidermis. Di sinilah letak <strong>Kelenjar Keringat (Glandula Sudorifera)</strong>.</p>
+                    <ul>
+                        <li>Selain kelenjar keringat, di dermis terdapat pembuluh darah, akar rambut, kelenjar minyak (sebum), dan saraf peraba panas/dingin.</li>
+                        <li><strong>Cara kerja Ekskresi:</strong> Saat suhu tubuh panas akibat olahraga, kelenjar keringat akan menyerap air dan garam dari pembuluh darah, lalu memompanya keluar lewat pori-pori untuk mendinginkan mesin tubuh.</li>
+                    </ul>
+                </div>
+
+                <div id="info-hipodermis" class="info-box">
+                    <h3 style="color: #e65100;">Hipodermis (Jaringan Ikat Bawah Kulit)</h3>
+                    <p>Ini adalah fondasi lapisan paling dalam yang sebagian besar terdiri dari <strong>Jaringan Lemak</strong>.</p>
+                    <ul>
+                        <li><strong>Fungsi:</strong> Sebagai bantalan pelindung organ dari benturan, tempat menyimpan cadangan makanan, dan sebagai isolator (penahan panas) agar tubuh kita tidak kedinginan saat cuaca ekstrim.</li>
+                    </ul>
+                </div>
+            </div>
+			
+			<div class="card">
+			
+                    <h3>Kenapa Kita Berkeringat?</h3>
+                    <ul>
+                        <li><strong>Termoregulasi:</strong> Mendinginkan suhu tubuh melalui penguapan.</li>
+                        <li><strong>Ekskresi:</strong> Membuang urea, asam urat, dan amonia.</li>
+                        <li><strong>Keseimbangan:</strong> Menjaga kadar air dan elektrolit (garam).</li>
+                    </ul>
+                </div></div>
+			
+			<div class="card">
+                    <h3>Dua "Mesin" Keringat</h3>
+                    <p><strong>1. Kelenjar Ekrin:</strong> Tersebar di seluruh tubuh. Menghasilkan keringat encer untuk mendinginkan suhu. Tidak berbau.</p>
+                    <p><strong>2. Kelenjar Apokrin:</strong> Di ketiak dan area genital. Keringatnya lebih kental dan mengandung lemak. Inilah yang memicu bau badan saat bertemu bakteri.</p>
+                </div>
+            
+
+            <div class="card">
+                <h2>2. Apa Saja Isi Keringat Kita?</h2>
+                <p>Keringat bukan hanya air. Di dalamnya terkandung sisa metabolisme protein dan purin yang harus dibuang.</p>
+                <div class="grid-elements">
+                    <div class="element-card" style="border-left: 4px solid #2196f3;">
+                        <strong>💧 Air (99%)</strong>
+                        <p>Pelarut utama dan media pendingin.</p>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid #ff9800;">
+                        <strong>🧂 Garam (NaCl)</strong>
+                        <p>Menjaga keseimbangan elektrolit.</p>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid #9c27b0;">
+                        <strong>🧪 Urea & Amonia</strong>
+                        <p>Sisa pembuangan metabolisme protein.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Faktor Pengaruh & Gangguan Kulit</h2>
+                <p>Klik tab untuk mempelajari apa yang memengaruhi keringat dan masalah yang sering muncul.</p>
+                <div class="toggle-container">
+                    <button class="toggle-btn" onclick="showInfo('faktor', this)">📈 Faktor Pemicu</button>
+                    <button class="toggle-btn" onclick="showInfo('gangguan', this)">⚠️ Gangguan Fungsi</button>
+                </div>
+
+                <div id="info-faktor" class="info-box">
+                    <ul>
+                        <li><strong>Suhu & Aktivitas:</strong> Semakin panas atau berat beban fisik, semakin banyak keringat.</li>
+                        <li><strong>Emosi:</strong> Stres atau cemas memicu kelenjar apokrin.</li>
+                        <li><strong>Makanan:</strong> Pedas dan kafein merangsang saraf simpatik.</li>
+                    </ul>
+                </div>
+
+                <div id="info-gangguan" class="info-box">
+                    <p><strong>Hiperhidrosis:</strong> Keringat berlebihan (tangan/ketiak basah kuyup).</p>
+                    <p><strong>Hipohidrosis:</strong> Sulit berkeringat (bahaya, tubuh bisa <em>overheat</em>).</p>
+                    <p><strong>Miliaria:</strong> Biang keringat akibat pori-pori tersumbat.</p>
+                </div>
+            </div>
+			
+			
+			<div class="card" style="background-color: #f1f8e9;">
+                <h2>5. Tips Kulit Sehat (Ekskresi Optimal)</h2>
+                <ul style="columns: 2;">
+                    <li>Mandi teratur (sabun lembut).</li>
+                    <li>Pakaian katun (menyerap keringat).</li>
+                    <li>Minum air putih cukup (hidrasi).</li>
+                    <li>Eksfoliasi (angkat sel mati).</li>
+                    <li>Gunakan produk non-komedogenik.</li>
+                    <li>Kelola stres (meditasi/yoga).</li>
+                </ul>
+            </div>
+			
+
+            <div class="card">
+                <h2>3. Paru-Paru: Sang Pembuang Gas Sisa</h2>
+                <p>Kamu mungkin tahu paru-paru adalah organ pernapasan (tempat menghirup Oksigen). Tetapi, secara bersamaan paru-paru juga merupakan organ ekskresi karena ia bertugas membuang sampah hasil pembakaran sel di dalam tubuh. Klik ikon di bawah!</p>
+                
+                <div class="grid-elements">
+                    <div class="element-card" onclick="alert('KARBON DIOKSIDA (CO2)\n\nGas ini adalah sisa asap dari sel-sel tubuh kita yang membakar makanan dengan oksigen untuk dijadikan energi.\n\nJika CO2 tidak dibuang lewat hembusan napas, darah kita akan menjadi asam, sel tubuh mati, dan kita bisa keracunan.')">
+                        <div class="element-icon">💨</div>
+                        <strong>Karbon Dioksida (CO2)</strong>
+                        <p style="font-size: 0.85rem; color: #555;">Gas sisa pembakaran dalam tubuh.</p>
+                    </div>
+
+                    <div class="element-card" onclick="alert('UAP AIR (H2O)\n\nSelain gas CO2, paru-paru juga membuang sisa air dalam bentuk uap atau gas. \n\nBukti Eksperimen: Coba hembuskan napasmu ke permukaan kaca, cermin, atau kacamata. Pasti kaca tersebut akan berembun dan menjadi buram! Embun itulah uap air dari paru-paru.')">
+                        <div class="element-icon">🌫️</div>
+                        <strong>Uap Air (H2O)</strong>
+                        <p style="font-size: 0.85rem; color: #555;">Bukti: Napas berembun di cermin.</p>
+                    </div>
+                </div>
+                <p style="text-align: center; font-size: 0.9rem; color: #666; margin-top: 1rem;"><em>*Klik kotak di atas untuk melihat fakta dan eksperimen ringannya.</em></p>
+            </div>
+
+            <div class="card">
+                <h2>4. Kuis Evaluasi Pertemuan 2</h2>
+                <div id="quiz-container-p2">
+                    <div class="quiz-question">
+                        <strong>1. Di lapisan kulit manakah letaknya Kelenjar Keringat, pembuluh darah, dan akar rambut?</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p2q1" value="wrong"> Epidermis</label>
+                            <label><input type="radio" name="p2q1" value="correct"> Dermis</label>
+                            <label><input type="radio" name="p2q1" value="wrong"> Hipodermis</label>
+                        </div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <strong>2. Zat ekskresi apa saja yang dibuang oleh Paru-paru saat kita menghembuskan napas?</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p2q2" value="wrong"> Oksigen dan Glukosa</label>
+                            <label><input type="radio" name="p2q2" value="wrong"> Urine dan Garam</label>
+                            <label><input type="radio" name="p2q2" value="correct"> Karbon Dioksida dan Uap Air</label>
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="checkQuizP2()">Periksa Jawaban</button>
+                    <div id="quiz-result-p2" style="margin-top: 1rem; font-weight: bold; padding: 1rem; border-radius: 8px; display: none;"></div>
+                </div>
+            </div>
+
+            <script>
+                // Fungsi Validasi Kuis Khusus P2
+                function checkQuizP2() {
+                    let score = 0;
+                    const q1 = document.querySelector('input[name="p2q1"]:checked');
+                    const q2 = document.querySelector('input[name="p2q2"]:checked');
+                    
+                    if(!q1 || !q2) {
+                        alert("Harap jawab semua pertanyaan Pertemuan 2 terlebih dahulu!");
+                        return;
+                    }
+
+                    if (q1.value === "correct") score++;
+                    if (q2.value === "correct") score++;
+
+                    const resultDiv = document.getElementById('quiz-result-p2');
+                    resultDiv.style.display = 'block';
+
+                    if (score === 2) {
+                        resultDiv.innerHTML = "Luar Biasa! Jawabanmu benar semua. Kamu sudah paham fungsi Kulit & Paru-paru dengan sangat baik! 🌬️💧";
+                        resultDiv.style.backgroundColor = "#c8e6c9";
+                        resultDiv.style.color = "#2e7d32";
+                    } else {
+                        resultDiv.innerHTML = "Kamu menjawab benar " + score + " dari 2 soal. Ayo, baca lagi penjelasan Dermis dan fungsi hembusan napas di atas! 📖";
+                        resultDiv.style.backgroundColor = "#ffecb3";
+                        resultDiv.style.color = "#f57f17";
+                    }
+                }
+            </script>
+        </div>
+        <div id="p3" class="meeting-content"><div class="empty-state"><h3>Pertemuan 3</h3><p>Materi Organ Hati belum tersedia.</p></div></div>
+        <div id="p4" class="meeting-content"><div class="empty-state"><h3>Pertemuan 4</h3><p>Materi Kelainan & Penyakit belum tersedia.</p></div></div>
+        <div id="p5" class="meeting-content"><div class="empty-state"><h3>Pertemuan 5</h3><p>Materi Konsep Getaran belum tersedia.</p></div></div>
+        <div id="p6" class="meeting-content"><div class="empty-state"><h3>Pertemuan 6</h3><p>Materi Dasar Gelombang belum tersedia.</p></div></div>
+        <div id="p7" class="meeting-content"><div class="empty-state"><h3>Pertemuan 7</h3><p>Materi Gelombang Bunyi belum tersedia.</p></div></div>
+        <div id="p8" class="meeting-content"><div class="empty-state"><h3>Pertemuan 8</h3><p>Evaluasi Akhir belum tersedia.</p></div></div>
+
+    </div>
+
+    <script>
+        // FUNGSI UNTUK PINDAH TAB PERTEMUAN
+        function openMeeting(evt, meetingId) {
+            var i, meetingcontent, tablinks;
+            
+            meetingcontent = document.getElementsByClassName("meeting-content");
+            for (i = 0; i < meetingcontent.length; i++) {
+                meetingcontent[i].classList.remove("active-content");
+            }
+
+            tablinks = document.getElementsByClassName("tab-item");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active-tab");
+            }
+
+            document.getElementById(meetingId).classList.add("active-content");
+            evt.currentTarget.classList.add("active-tab");
+            window.scrollTo(0, 0);
+        }
+
+        // FUNGSI TOGGLE PENJELASAN
+        function showInfo(type, btnElement) {
+            document.querySelectorAll('.info-box').forEach(box => box.classList.remove('active'));
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('info-' + type).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        // FUNGSI KUIS P1
+        function checkQuizP1() {
+            let score = 0;
+            const q1 = document.querySelector('input[name="p1q1"]:checked');
+            const q2 = document.querySelector('input[name="p1q2"]:checked');
+            
+            if(!q1 || !q2) {
+                alert("Pilih jawaban untuk semua pertanyaan terlebih dahulu!");
+                return;
+            }
+
+            if (q1.value === "correct") score++;
+            if (q2.value === "correct") score++;
+
+            const resultDiv = document.getElementById('quiz-result-p1');
+            resultDiv.style.display = 'block';
+
+            if (score === 2) {
+                resultDiv.innerHTML = "Luar Biasa! Jawabanmu benar semua (Skor 100). Kamu sudah memahami dasar sistem ekskresi. 💯";
+                resultDiv.style.backgroundColor = "#c8e6c9";
+                resultDiv.style.color = "#2e7d32";
+            } else {
+                resultDiv.innerHTML = "Kamu menjawab benar " + score + " dari 2 soal. Mari baca kembali tahapan pembentukan urine! 🔬";
+                resultDiv.style.backgroundColor = "#ffecb3";
+                resultDiv.style.color = "#f57f17";
+            }
+        }
+    </script>
+</body>
+</html>
