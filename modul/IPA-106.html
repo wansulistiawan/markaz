@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPA-106: Portal Pembelajaran Sains</title>
+    <style>
+        :root {
+            --primary: #0288d1;
+            --secondary: #03a9f4;
+            --light: #e1f5fe;
+            --dark: #01579b;
+            --white: #ffffff;
+            --text: #333333;
+            --tab-bg: #f5f5f5;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            text-align: center;
+            padding: 2rem 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 { margin: 0; font-size: 2.2rem; }
+        header p { font-size: 1.1rem; opacity: 0.9; margin-top: 5px; }
+
+        /* --- STYLES UNTUK TAB MENU PERTEMUAN --- */
+        .nav-container {
+            background: var(--white);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .tab-menu {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0;
+            list-style: none;
+        }
+
+        .tab-item {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .tab-item:hover {
+            background-color: #f0f0f0;
+            color: var(--primary);
+        }
+
+        .tab-item.active-tab {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            background-color: var(--light);
+        }
+
+        /* --- KONTEN PER PERTEMUAN --- */
+        .meeting-content {
+            display: none; /* Sembunyikan semua secara default */
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .meeting-content.active-content {
+            display: block; /* Tampilkan yang aktif */
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            min-height: 400px;
+        }
+
+        /* Re-using your original card styles */
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            color: var(--dark);
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+        }
+
+        /* Interactive Toggle Section */
+        .toggle-container { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        .toggle-btn {
+            flex: 1; padding: 1rem; font-size: 1.1rem; font-weight: bold;
+            border: none; border-radius: 8px; cursor: pointer;
+            transition: all 0.3s; background-color: #eee; color: var(--text);
+        }
+        .toggle-btn.active { background-color: var(--primary); color: var(--white); box-shadow: 0 4px 10px rgba(2, 136, 209, 0.4); }
+        .info-box { display: none; padding: 1.5rem; background-color: #f9f9f9; border-left: 5px solid var(--primary); margin-top: 1rem; border-radius: 0 8px 8px 0; }
+        .info-box.active { display: block; animation: fadeIn 0.5s ease-in; }
+
+        /* Grid for Weather Elements */
+        .grid-elements { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+        .element-card { background: #f1f8e9; padding: 1.5rem; border-radius: 8px; text-align: center; border: 2px solid transparent; transition: transform 0.3s, border 0.3s; cursor: pointer; }
+        .element-card:hover { transform: translateY(-5px); border-color: #8bc34a; }
+        .element-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+        /* Cloud Cards */
+        .cloud-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+        .cloud-card { background: var(--white); border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+        .cloud-img { height: 150px; background: #ccc; display: flex; align-items: center; justify-content: center; font-size: 4rem; color: white; }
+        .cloud-sirus { background: linear-gradient(to right, #4facfe 0%, #00f2fe 100%); }
+        .cloud-kumulus { background: linear-gradient(to top, #a18cd1 0%, #fbc2eb 100%); }
+        .cloud-stratus { background: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%); }
+        .cloud-kumulonimbus { background: linear-gradient(to top, #5c677d 0%, #33415c 100%); }
+        .cloud-content { padding: 1.5rem; }
+
+        /* Quiz Section */
+        .quiz-question { margin-bottom: 1.5rem; }
+        .options label { display: block; background: #f5f5f5; padding: 10px 15px; margin-bottom: 8px; border-radius: 5px; cursor: pointer; transition: background 0.2s; }
+        .options label:hover { background: #e0e0e0; }
+        #quiz-result { margin-top: 1rem; font-weight: bold; padding: 1rem; border-radius: 8px; display: none; }
+        button.submit-btn { background: #4caf50; color: white; border: none; padding: 10px 20px; font-size: 1.1rem; border-radius: 5px; cursor: pointer; }
+        button.submit-btn:hover { background: #43a047; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .empty-state { text-align: center; padding: 4rem 2rem; color: #999; }
+        .empty-state h3 { margin-bottom: 10px; color: #666; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Portal Sains IPA-106</h1>
+        <p>Silabus Pertemuan 1 - 8: Astronomi & Meteorologi</p>
+    </header>
+
+    <div class="nav-container">
+        <ul class="tab-menu">
+            <li class="tab-item active-tab" onclick="openMeeting(event, 'p1')">P1 : Cuaca, Iklim & Awan</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p2')">P2 : Siklus Hidrologi</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p3')">P3 : Pusat Tata Surya</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p4')">P4 : Planet Dalam</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p5')">P5 : Planet Luar</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p6')">P6 : Pergerakan Bumi</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p7')">P7 : Benda Langit Lainnya</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p8')">P8 : Evaluasi & Simulasi</li>
+        </ul>
+    </div>
+
+    <div class="container">
+        
+        <div id="p1" class="meeting-content active-content">
+            <div class="card">
+                <h2>1. Perbedaan Cuaca dan Iklim</h2>
+                <p>Sering tertukar antara cuaca dan iklim? Mari kita pelajari bedanya menggunakan analogi sederhana. Klik tombol di bawah ini!</p>
+                
+                <div class="toggle-container">
+                    <button class="toggle-btn active" onclick="showInfo('cuaca', this)">🌤️ Cuaca</button>
+                    <button class="toggle-btn" onclick="showInfo('iklim', this)">🌍 Iklim</button>
+                </div>
+
+                <div id="info-cuaca" class="info-box active">
+                    <h3>Apa itu Cuaca?</h3>
+                    <p><strong>Cuaca</strong> adalah keadaan udara di suatu tempat yang sempit dan bisa berubah dalam waktu sangat singkat (hitungan jam).</p>
+                    <p><em>Analogi:</em> Pakaian yang kita pakai hari ini. Pagi kita pakai jaket karena dingin, siang kita lepas karena panas terik, lalu sore pakai jas hujan karena gerimis.</p>
+                    <ul>
+                        <li>Sifatnya cepat berubah (dinamis).</li>
+                        <li>Area cakupannya kecil (misal: di kecamatan A hujan, tapi kecamatan B cerah).</li>
+                        <li>Ilmu yang mempelajarinya disebut <strong>Meteorologi</strong>.</li>
+                    </ul>
+                </div>
+
+                <div id="info-iklim" class="info-box">
+                    <h3>Apa itu Iklim?</h3>
+                    <p><strong>Iklim</strong> adalah rata-rata keadaan cuaca di wilayah yang sangat luas dan dalam rentang waktu yang sangat lama (biasanya diamati selama 30 tahun).</p>
+                    <p><em>Analogi:</em> Isi lemari pakaian kita secara keseluruhan. Karena kita tinggal di Indonesia, isi lemari kita kebanyakan baju tipis, bukan mantel salju tebal.</p>
+                    <ul>
+                        <li>Sifatnya stabil dan butuh waktu lama untuk berubah.</li>
+                        <li>Area cakupannya sangat luas (negara atau benua).</li>
+                        <li>Ilmu yang mempelajarinya disebut <strong>Klimatologi</strong>.</li>
+                        <li>Contoh: Iklim Tropis di Indonesia, Iklim Gurun di Arab.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>2. Unsur-Unsur Pembentuk Cuaca</h2>
+                <p>Kenapa cuaca bisa berubah-ubah? Hal ini dikarenakan adanya 5 unsur utama yang saling berinteraksi di udara. Klik pada setiap ikon untuk membaca penjelasannya!</p>
+                
+                <div class="grid-elements">
+                    <div class="element-card" onclick="alert('SUHU UDARA: Tingkat panas atau dinginnya udara. Dipengaruhi oleh seberapa terik sinar matahari menyinari bumi. Diukur dengan Termometer.')">
+                        <div class="element-icon">🌡️</div>
+                        <strong>Suhu Udara</strong>
+                    </div>
+                    <div class="element-card" onclick="alert('KELEMBAPAN: Seberapa banyak uap air yang terkandung di udara. Semakin lembap, badan kita terasa makin lengket dan gerah, pertanda awan mendung sedang berkumpul.')">
+                        <div class="element-icon">💧</div>
+                        <strong>Kelembapan</strong>
+                    </div>
+                    <div class="element-card" onclick="alert('ANGIN: Udara yang bergerak dari tempat yang bersuhu dingin (tekanan tinggi) ke tempat yang panas (tekanan rendah). Angin bertugas memindahkan awan.')">
+                        <div class="element-icon">🌬️</div>
+                        <strong>Angin</strong>
+                    </div>
+                    <div class="element-card" onclick="alert('CURAH HUJAN: Jumlah air yang jatuh dari langit. Jika terlalu banyak bisa banjir, jika terlalu sedikit bisa kekeringan.')">
+                        <div class="element-icon">🌧️</div>
+                        <strong>Curah Hujan</strong>
+                    </div>
+                    <div class="element-card" onclick="alert('TEKANAN UDARA: Berat lapisan udara yang menekan permukaan bumi. Diukur menggunakan Barometer.')">
+                        <div class="element-icon">⏬</div>
+                        <strong>Tekanan Udara</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Jurnal Langit: Membaca Jenis Awan</h2>
+                <div class="cloud-grid">
+                    <div class="cloud-card">
+                        <div class="cloud-img cloud-sirus">🪶</div>
+                        <div class="cloud-content">
+                            <h3>Awan Sirus</h3>
+                            <p>Tipis memanjang seperti bulu burung. Tanda cuaca cerah.</p>
+                        </div>
+                    </div>
+                    <div class="cloud-card">
+                        <div class="cloud-img cloud-kumulus">☁️</div>
+                        <div class="cloud-content">
+                            <h3>Awan Kumulus</h3>
+                            <p>Menggumpal seperti kapas. Tanda cuaca stabil.</p>
+                        </div>
+                    </div>
+                    <div class="cloud-card">
+                        <div class="cloud-img cloud-stratus">🌫️</div>
+                        <div class="cloud-content">
+                            <h3>Awan Stratus</h3>
+                            <p>Mendatar seperti selimut. Tanda gerimis awet.</p>
+                        </div>
+                    </div>
+                    <div class="cloud-card">
+                        <div class="cloud-img cloud-kumulonimbus">⛈️</div>
+                        <div class="cloud-content">
+                            <h3>Kumulonimbus</h3>
+                            <p>Hitam menjulang tinggi. Tanda badai & petir.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>4. Kuis Evaluasi Mini</h2>
+                <div id="quiz-container">
+                    <div class="quiz-question">
+                        <strong>Keadaan udara pada waktu yang singkat dan tempat yang sempit disebut...</strong>
+                        <div class="options">
+                            <label><input type="radio" name="q1" value="wrong"> Iklim</label>
+                            <label><input type="radio" name="q1" value="correct"> Cuaca</label>
+                        </div>
+                    </div>
+                    <button class="submit-btn" onclick="checkQuiz()">Periksa Jawaban</button>
+                    <div id="quiz-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="p2" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. Misteri Air yang Tidak Pernah Habis</h2>
+                <p>Pernahkah kamu berpikir, kenapa air di bumi tidak pernah habis meskipun kita gunakan setiap hari untuk mandi, minum, dan mencuci? Jawabannya adalah karena air melakukan perjalanan panjang yang disebut <strong>Siklus Hidrologi (Siklus Air)</strong>.</p>
+                <div style="background-color: var(--light); border-left: 5px solid var(--primary); padding: 15px; border-radius: 0 8px 8px 0; margin-top: 15px;">
+                    <strong>Fakta Unik:</strong> Karena air di bumi terus berputar sejak zaman dahulu, air yang kamu minum hari ini bisa jadi adalah air yang sama yang pernah diminum oleh dinosaurus jutaan tahun yang lalu! 🦕💧
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>2. Empat Tahapan Perjalanan Air</h2>
+                <p>Air melakukan perjalanan dari darat ke langit, lalu kembali lagi ke darat. Klik pada masing-masing tahapan di bawah ini untuk melihat bagaimana prosesnya terjadi!</p>
+                
+                <div class="grid-elements">
+                    <div class="element-card" onclick="alert('EVAPORASI (Penguapan)\n\nPanas matahari membuat air di laut, sungai, dan danau menjadi panas lalu berubah menjadi uap air (gas) yang terbang ke atas langit.\n\nAnalogi: Seperti air yang dimasak di atas kompor, lama-lama akan keluar asap (uap) yang terbang ke atas.')">
+                        <div class="element-icon">☀️🌊</div>
+                        <strong>1. Evaporasi</strong>
+                        <p style="font-size: 0.85rem; color: #555;">Air menguap ke langit</p>
+                    </div>
+                    
+                    <div class="element-card" onclick="alert('KONDENSASI (Pembentukan Awan)\n\nSemakin tinggi uap air terbang, udara akan semakin dingin. Uap air yang kedinginan itu berkumpul dan menempel menjadi satu membentuk AWAN.\n\nAnalogi: Coba perhatikan gelas kaca yang berisi es batu. Bagian luar gelas akan basah dan berembun karena udara di sekitarnya mendingin.')">
+                        <div class="element-icon">☁️❄️</div>
+                        <strong>2. Kondensasi</strong>
+                        <p style="font-size: 0.85rem; color: #555;">Uap air menjadi awan</p>
+                    </div>
+
+                    <div class="element-card" onclick="alert('PRESIPITASI (Turunnya Hujan)\n\nKetika awan sudah terlalu banyak menampung air, awan akan berubah menjadi hitam (mendung) dan sangat berat. Akhirnya, air tersebut jatuh kembali ke bumi sebagai HUJAN (atau salju di negara dingin).')">
+                        <div class="element-icon">🌧️☔</div>
+                        <strong>3. Presipitasi</strong>
+                        <p style="font-size: 0.85rem; color: #555;">Awan jatuh menjadi hujan</p>
+                    </div>
+
+                    <div class="element-card" onclick="alert('INFILTRASI & LIMPASAN\n\nAir hujan yang jatuh ke tanah akan meresap ke dalam tanah menjadi air tanah (Infiltrasi). Sebagian lagi akan mengalir di atas tanah menuju selokan, sungai, dan akhirnya kembali lagi ke laut (Limpasan).')">
+                        <div class="element-icon">🌱💧</div>
+                        <strong>4. Infiltrasi</strong>
+                        <p style="font-size: 0.85rem; color: #555;">Air meresap ke tanah</p>
+                    </div>
+                </div>
+                <p style="text-align: center; font-size: 0.9rem; color: #666; margin-top: 1rem;"><em>*Klik setiap kotak untuk membaca penjelasan lengkapnya.</em></p>
+            </div>
+
+            <div class="card">
+                <h2>3. Menjaga Resapan Air (Mencegah Bencana)</h2>
+                <p>Tahap akhir dari siklus air adalah kembali ke tanah. Namun, apa yang terjadi jika tanah kita tutupi dengan aspal dan kita buang sampah sembarangan?</p>
+                <div class="toggle-container">
+                    <button class="toggle-btn" onclick="showInfo('banjir', this)" style="background-color: #ffebee;">🛑 Bahaya Banjir</button>
+                    <button class="toggle-btn" onclick="showInfo('pohon', this)" style="background-color: #e8f5e9;">🌳 Peran Pohon</button>
+                </div>
+
+                <div id="info-banjir" class="info-box">
+                    <h3 style="color: #c62828;">Kenapa bisa Banjir?</h3>
+                    <p>Jika parit dipenuhi sampah plastik dan jalanan dipenuhi aspal tanpa ada taman/tanah, air hujan (Presipitasi) <strong>tidak bisa meresap</strong> ke dalam tanah (Infiltrasi). Karena air tidak punya jalan pulang, akhirnya air menggenang dan menyebabkan banjir.</p>
+                </div>
+
+                <div id="info-pohon" class="info-box">
+                    <h3 style="color: #2e7d32;">Akar Pohon sebagai Spons Raksasa</h3>
+                    <p>Akar pohon berfungsi seperti spons pencuci piring. Saat hujan turun, akar pohon akan menyerap dan menahan air di dalam tanah. Itulah mengapa wilayah yang banyak pohonnya jarang terkena banjir dan memiliki air sumur yang jernih.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>4. Kuis Evaluasi: Perjalanan Air</h2>
+                <div id="quiz-container-p2">
+                    <div class="quiz-question">
+                        <strong>1. Proses berubahnya air laut menjadi uap air karena panas matahari disebut...</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p2q1" value="wrong"> Presipitasi</label>
+                            <label><input type="radio" name="p2q1" value="correct"> Evaporasi</label>
+                            <label><input type="radio" name="p2q1" value="wrong"> Infiltrasi</label>
+                        </div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <strong>2. Ketika uap air berkumpul di langit dan mendingin, mereka akan membentuk...</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p2q2" value="wrong"> Pelangi</label>
+                            <label><input type="radio" name="p2q2" value="wrong"> Bintang</label>
+                            <label><input type="radio" name="p2q2" value="correct"> Awan</label>
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="checkQuizP2()">Periksa Jawaban</button>
+                    <div id="quiz-result-p2" style="margin-top: 1rem; font-weight: bold; padding: 1rem; border-radius: 8px; display: none;"></div>
+                </div>
+            </div>
+
+            <script>
+                // Fungsi khusus untuk kuis pertemuan 2
+                function checkQuizP2() {
+                    let score = 0;
+                    const q1 = document.querySelector('input[name="p2q1"]:checked');
+                    const q2 = document.querySelector('input[name="p2q2"]:checked');
+                    
+                    if(!q1 || !q2) {
+                        alert("Harap jawab semua pertanyaan Pertemuan 2 terlebih dahulu!");
+                        return;
+                    }
+
+                    if (q1.value === "correct") score++;
+                    if (q2.value === "correct") score++;
+
+                    const resultDiv = document.getElementById('quiz-result-p2');
+                    resultDiv.style.display = 'block';
+
+                    if (score === 2) {
+                        resultDiv.innerHTML = "Sempurna! Kamu sudah memahami siklus air dengan sangat baik. 🌧️✨";
+                        resultDiv.style.backgroundColor = "#c8e6c9";
+                        resultDiv.style.color = "#2e7d32";
+                    } else {
+                        resultDiv.innerHTML = "Kamu menjawab benar " + score + " dari 2 soal. Coba ingat-ingat lagi materi di atas! 💪";
+                        resultDiv.style.backgroundColor = "#ffecb3";
+                        resultDiv.style.color = "#f57f17";
+                    }
+                }
+            </script>
+        </div>
+        <div id="p3" class="meeting-content"><div class="empty-state"><h3>Pertemuan 3</h3><p>Materi Pusat Tata Surya belum tersedia.</p></div></div>
+        <div id="p4" class="meeting-content"><div class="empty-state"><h3>Pertemuan 4</h3><p>Materi Planet Dalam belum tersedia.</p></div></div>
+        <div id="p5" class="meeting-content"><div class="empty-state"><h3>Pertemuan 5</h3><p>Materi Planet Luar belum tersedia.</p></div></div>
+        <div id="p6" class="meeting-content"><div class="empty-state"><h3>Pertemuan 6</h3><p>Materi Pergerakan Bumi belum tersedia.</p></div></div>
+        <div id="p7" class="meeting-content"><div class="empty-state"><h3>Pertemuan 7</h3><p>Materi Benda Langit Lainnya belum tersedia.</p></div></div>
+        <div id="p8" class="meeting-content"><div class="empty-state"><h3>Pertemuan 8</h3><p>Evaluasi & Simulasi Kelas belum tersedia.</p></div></div>
+
+    </div>
+
+    <script>
+        // FUNGSI UNTUK PINDAH TAB PERTEMUAN
+        function openMeeting(evt, meetingId) {
+            var i, meetingcontent, tablinks;
+            
+            // Sembunyikan semua konten
+            meetingcontent = document.getElementsByClassName("meeting-content");
+            for (i = 0; i < meetingcontent.length; i++) {
+                meetingcontent[i].classList.remove("active-content");
+            }
+
+            // Hapus kelas aktif dari tab
+            tablinks = document.getElementsByClassName("tab-item");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active-tab");
+            }
+
+            // Tampilkan konten yang dipilih & tambahkan kelas aktif pada tab
+            document.getElementById(meetingId).classList.add("active-content");
+            evt.currentTarget.classList.add("active-tab");
+            
+            // Scroll ke atas saat ganti tab
+            window.scrollTo(0, 0);
+        }
+
+        // FUNGSI ORIGINAL PERTEMUAN 1
+        function showInfo(type, btnElement) {
+            document.querySelectorAll('.info-box').forEach(box => box.classList.remove('active'));
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('info-' + type).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        function checkQuiz() {
+            const q1 = document.querySelector('input[name="q1"]:checked');
+            const resultDiv = document.getElementById('quiz-result');
+            resultDiv.style.display = 'block';
+            if(!q1) { alert("Pilih jawaban dulu!"); return; }
+            if (q1.value === "correct") {
+                resultDiv.innerHTML = "Benar! Bagus sekali.";
+                resultDiv.style.backgroundColor = "#c8e6c9";
+            } else {
+                resultDiv.innerHTML = "Salah. Ayo baca lagi materinya.";
+                resultDiv.style.backgroundColor = "#ffecb3";
+            }
+        }
+    </script>
+</body>
+</html>
