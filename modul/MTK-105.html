@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTK-105: Aritmatika Sosial & Persamaan Linear</title>
+    <style>
+        /* TEMA WARNA MATEMATIKA (Orange & Indigo) */
+        :root {
+            --primary: #f57c00; /* Orange 700 */
+            --secondary: #3949ab; /* Indigo 600 */
+            --light: #fff3e0;
+            --dark: #e65100;
+            --white: #ffffff;
+            --text: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--dark), var(--primary));
+            color: var(--white);
+            text-align: center;
+            padding: 2.5rem 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 { margin: 0; font-size: 2.2rem; }
+        header p { font-size: 1.1rem; opacity: 0.9; margin-top: 5px; }
+
+        /* --- STYLES UNTUK TAB MENU PERTEMUAN --- */
+        .nav-container {
+            background: var(--white);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .tab-menu {
+            display: flex;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0;
+            list-style: none;
+        }
+
+        .tab-item {
+            padding: 1rem 1.2rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .tab-item:hover {
+            background-color: #f0f0f0;
+            color: var(--primary);
+        }
+
+        .tab-item.active-tab {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            background-color: var(--light);
+        }
+
+        /* --- KONTEN PER PERTEMUAN --- */
+        .meeting-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .meeting-content.active-content {
+            display: block;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            min-height: 400px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            color: var(--secondary);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+        }
+
+        /* Toggle Buttons */
+        .toggle-container { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; }
+        .toggle-btn {
+            flex: 1; min-width: 150px; padding: 1rem; font-size: 1rem; font-weight: bold;
+            border: none; border-radius: 8px; cursor: pointer;
+            transition: all 0.3s; background-color: #eee; color: var(--text);
+        }
+        .toggle-btn.active { background-color: var(--primary); color: var(--white); box-shadow: 0 4px 10px rgba(245, 124, 0, 0.4); }
+        
+        .info-box { display: none; padding: 1.5rem; background-color: #f9f9f9; border-left: 5px solid var(--primary); margin-top: 1rem; border-radius: 0 8px 8px 0; }
+        .info-box.active { display: block; animation: fadeIn 0.4s ease-in; }
+
+        /* Grid Elements */
+        .grid-elements { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+        .element-card { 
+            background: #fafafa; padding: 1.5rem; border-radius: 8px; 
+            border: 2px solid #e0e0e0; transition: transform 0.3s, border 0.3s; 
+        }
+        .element-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+
+        /* Formula Box */
+        .formula-box {
+            background-color: #e8eaf6;
+            border-left: 5px solid var(--secondary);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        /* Islami Quote Box */
+        .quote-box {
+            background-color: #e8f5e9;
+            border-left: 5px solid #2e7d32;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #1b5e20;
+        }
+
+        /* Quiz Section */
+        .quiz-question { margin-bottom: 1.5rem; }
+        .options label { display: block; background: #f5f5f5; padding: 10px 15px; margin-bottom: 8px; border-radius: 5px; cursor: pointer; transition: background 0.2s; }
+        .options label:hover { background: #e0e0e0; }
+        .submit-btn { background: var(--secondary); color: white; border: none; padding: 10px 20px; font-size: 1.1rem; border-radius: 5px; cursor: pointer; }
+        .submit-btn:hover { background: var(--dark); }
+
+        .empty-state { text-align: center; padding: 4rem 2rem; color: #999; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Portal Matematika MTK-105</h1>
+        <p>Aritmatika Sosial & Persamaan Linear Satu Variabel</p>
+    </header>
+
+    <div class="nav-container">
+        <ul class="tab-menu">
+            <li class="tab-item active-tab" onclick="openMeeting(event, 'p1')">P1 : Dasar Jual Beli</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p2')">P2 : Menghitung Diskon</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p3')">P3 : Bruto, Tara, Netto</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p4')">P4 : Studi Kasus Dagang</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p5')">P5 : Gerbang Aljabar (PLSV)</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p6')">P6 : Menyelesaikan PLSV</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p7')">P7 : Pengantar PtLSV</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p8')">P8 : Aplikasi & Evaluasi</li>
+        </ul>
+    </div>
+
+    <div class="container">
+        
+        <div id="p1" class="meeting-content active-content">
+            
+            <div class="card">
+                <h2>1. Berniaga yang Berkah (Adab Berdagang)</h2>
+                <p>Sebelum belajar menghitung angka, sebagai seorang muslim kita wajib memahami adab dalam jual beli. Perdagangan yang diberkahi oleh Allah ﷻ bukan sekadar mencari keuntungan uang, melainkan harus memenuhi syarat kerelaan (suka sama suka) dan kejujuran.</p>
+                
+                <div class="quote-box">
+                    "Pedagang yang jujur dan dapat dipercaya akan bersama para Nabi, orang-orang yang jujur, dan para syuhada (di hari kiamat)." <br><em>(HR. Tirmidzi)</em>
+                </div>
+
+                <p><strong>Syarat Dasar Jual Beli:</strong></p>
+                <ul style="list-style-type: square;">
+                    <li>Penjual dan pembeli berakal sehat dan atas kemauan sendiri.</li>
+                    <li>Barang yang dijual harus halal (bukan barang haram/curian).</li>
+                    <li>Sifat dan kondisi barang harus dijelaskan dengan jujur (tidak menyembunyikan cacat).</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>2. Konsep Modal dan Harga Jual</h2>
+                <p>Dalam dunia perdagangan, matematika selalu hadir. Ada dua istilah dasar yang harus kamu pahami terlebih dahulu: <strong>Modal (Harga Beli)</strong> dan <strong>Harga Jual</strong>.</p>
+                
+                <div class="toggle-container">
+                    <button class="toggle-btn active" onclick="showInfo('kondisi-untung', this)" style="background-color: #e8f5e9; color: #2e7d32;">📈 Keuntungan</button>
+                    <button class="toggle-btn" onclick="showInfo('kondisi-rugi', this)" style="background-color: #ffebee; color: #c62828;">📉 Kerugian</button>
+                    <button class="toggle-btn" onclick="showInfo('kondisi-impas', this)" style="background-color: #fff3e0; color: #e65100;">⚖️ Impas (Balik Modal)</button>
+                </div>
+
+                <div id="info-kondisi-untung" class="info-box active">
+                    <h3 style="color: #2e7d32;">Syarat Terjadinya Keuntungan</h3>
+                    <p>Seorang pedagang dikatakan <strong>Untung</strong> jika uang yang ia terima dari pembeli (Harga Jual) LEBIH BESAR daripada uang yang ia keluarkan saat kulakan (Modal).</p>
+                    <div class="formula-box" style="border-color: #2e7d32; background-color: #c8e6c9;">
+                        <strong>Rumus:</strong> <br> Harga Jual > Harga Beli <br><br>
+                        <strong>Besar Untung</strong> = Harga Jual - Harga Beli
+                    </div>
+                </div>
+
+                <div id="info-kondisi-rugi" class="info-box">
+                    <h3 style="color: #c62828;">Syarat Terjadinya Kerugian</h3>
+                    <p>Seorang pedagang dikatakan <strong>Rugi</strong> jika uang yang ia terima (Harga Jual) LEBIH KECIL daripada modal yang ia keluarkan (misalnya barangnya rusak atau dijual obral).</p>
+                    <div class="formula-box" style="border-color: #c62828; background-color: #ffcdd2;">
+                        <strong>Rumus:</strong> <br> Harga Jual < Harga Beli <br><br>
+                        <strong>Besar Rugi</strong> = Harga Beli - Harga Jual
+                    </div>
+                </div>
+
+                <div id="info-kondisi-impas" class="info-box">
+                    <h3 style="color: #e65100;">Impas (Balik Modal)</h3>
+                    <p>Impas terjadi saat Harga Jual sama persis dengan Harga Beli. Pedagang tidak mendapatkan untung uang, tetapi juga tidak rugi. Namun ingat, ia sudah 'rugi' tenaga dan waktu.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Studi Kasus Koperasi Asrama</h2>
+                <p>Mari kita bantu <strong>Ahmad</strong> menghitung hasil penjualan di Koperasi Asrama hari ini!</p>
+                
+                <div class="grid-elements">
+                    <div class="element-card" style="border-left: 4px solid #2e7d32;">
+                        <h3 style="margin-top: 0;">Kasus 1: Buku Tulis</h3>
+                        <p>Ahmad membeli 1 pak buku tulis berisi 10 buku seharga <strong>Rp 30.000</strong> (Modal). Ahmad kemudian menjual buku tersebut secara eceran seharga <strong>Rp 4.000 / buku</strong>.</p>
+                        <p>Semua buku laku terjual. <strong>Apakah Ahmad untung atau rugi? Berapa nominalnya?</strong></p>
+                        
+                        <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-size: 0.9rem;">
+                            <em>Jawab:</em><br>
+                            Modal (HB) = Rp 30.000<br>
+                            Harga Jual Total (HJ) = 10 buku x Rp 4.000 = Rp 40.000<br>
+                            Karena HJ > HB, maka Ahmad <strong>UNTUNG</strong>.<br>
+                            Besar Untung = 40.000 - 30.000 = <strong>Rp 10.000</strong>
+                        </div>
+                    </div>
+
+                    <div class="element-card" style="border-left: 4px solid #c62828;">
+                        <h3 style="margin-top: 0;">Kasus 2: Roti Tawar</h3>
+                        <p>Ahmad kulakan roti tawar seharga <strong>Rp 15.000</strong> per bungkus. Karena sebentar lagi kedaluwarsa, Ahmad menurunkan harganya menjadi <strong>Rp 12.000</strong> agar cepat laku.</p>
+                        <p><strong>Berapa kerugian Ahmad untuk 1 bungkus roti?</strong></p>
+                        
+                        <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-size: 0.9rem;">
+                            <em>Jawab:</em><br>
+                            Modal (HB) = Rp 15.000<br>
+                            Harga Jual (HJ) = Rp 12.000<br>
+                            Karena HJ < HB, maka Ahmad <strong>RUGI</strong>.<br>
+                            Besar Rugi = 15.000 - 12.000 = <strong>Rp 3.000</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>4. Kuis Evaluasi Pertemuan 1</h2>
+                <div id="quiz-container-p1">
+                    <div class="quiz-question">
+                        <strong>1. Sebuah kondisi di mana Harga Beli (Modal) lebih kecil daripada Harga Jual (HB < HJ) disebut dengan...</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p1q1" value="wrong"> Kerugian</label>
+                            <label><input type="radio" name="p1q1" value="correct"> Keuntungan</label>
+                            <label><input type="radio" name="p1q1" value="wrong"> Impas</label>
+                        </div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <strong>2. Yusuf membeli sebuah Peci Miki Hat seharga Rp 45.000. Karena kekecilan, Yusuf menjualnya kembali kepada temannya seharga Rp 40.000. Pernyataan yang benar adalah...</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p1q2" value="wrong"> Yusuf Untung Rp 5.000</label>
+                            <label><input type="radio" name="p1q2" value="wrong"> Yusuf Rugi Rp 40.000</label>
+                            <label><input type="radio" name="p1q2" value="correct"> Yusuf Rugi Rp 5.000</label>
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="checkQuizP1()">Periksa Jawaban</button>
+                    <div id="quiz-result-p1" style="margin-top: 1rem; font-weight: bold; padding: 1rem; border-radius: 8px; display: none;"></div>
+                </div>
+            </div>
+
+            <script>
+                // FUNGSI UNTUK PINDAH TAB PERTEMUAN (Bisa dipakai di semua tab)
+                function openMeeting(evt, meetingId) {
+                    var i, meetingcontent, tablinks;
+                    
+                    meetingcontent = document.getElementsByClassName("meeting-content");
+                    for (i = 0; i < meetingcontent.length; i++) {
+                        meetingcontent[i].classList.remove("active-content");
+                    }
+
+                    tablinks = document.getElementsByClassName("tab-item");
+                    for (i = 0; i < tablinks.length; i++) {
+                        tablinks[i].classList.remove("active-tab");
+                    }
+
+                    document.getElementById(meetingId).classList.add("active-content");
+                    evt.currentTarget.classList.add("active-tab");
+                    window.scrollTo(0, 0);
+                }
+
+                // FUNGSI TOGGLE PENJELASAN
+                function showInfo(type, btnElement) {
+                    document.querySelectorAll('.info-box').forEach(box => box.classList.remove('active'));
+                    document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+                    document.getElementById('info-' + type).classList.add('active');
+                    btnElement.classList.add('active');
+                }
+
+                // FUNGSI CEK KUIS P1
+                function checkQuizP1() {
+                    let score = 0;
+                    const q1 = document.querySelector('input[name="p1q1"]:checked');
+                    const q2 = document.querySelector('input[name="p1q2"]:checked');
+                    
+                    if(!q1 || !q2) {
+                        alert("Pilih jawaban untuk semua pertanyaan Pertemuan 1 terlebih dahulu!");
+                        return;
+                    }
+
+                    if (q1.value === "correct") score++;
+                    if (q2.value === "correct") score++;
+
+                    const resultDiv = document.getElementById('quiz-result-p1');
+                    resultDiv.style.display = 'block';
+
+                    if (score === 2) {
+                        resultDiv.innerHTML = "Masya Allah, jawabanmu benar semua! Kamu sudah siap membantu mengelola koperasi asrama. 🛒📊";
+                        resultDiv.style.backgroundColor = "#c8e6c9";
+                        resultDiv.style.color = "#2e7d32";
+                    } else {
+                        resultDiv.innerHTML = "Kamu menjawab benar " + score + " dari 2 soal. Mari cek ulang rumusnya, jangan sampai tertukar antara Untung dan Rugi! 📖";
+                        resultDiv.style.backgroundColor = "#ffecb3";
+                        resultDiv.style.color = "#f57f17";
+                    }
+                }
+            </script>
+        </div>
+
+        <div id="p2" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. Menghitung Jumlah Keuntungan & Kerugian</h2>
+                <p>Pada pertemuan sebelumnya, kita sudah tahu kapan sebuah perdagangan disebut untung atau rugi. Sekarang, mari kita pelajari cara menghitung <strong>berapa jumlah uangnya (nominal)</strong> secara tepat.</p>
+                
+                <div class="grid-elements">
+                    <div class="element-card" style="border-left: 4px solid #2e7d32; background-color: #f1f8e9;">
+                        <h3 style="margin-top:0; color: #1b5e20;">Mencari Besar Keuntungan</h3>
+                        <p>Jika Harga Jual (HJ) lebih besar dari Modal/Harga Beli (HB).</p>
+                        <div style="font-weight: bold; text-align: center; font-size: 1.1rem; padding: 10px; background: white; border-radius: 5px; color: #2e7d32; border: 1px solid #c8e6c9;">
+                            Untung = Harga Jual - Modal
+                        </div>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid #c62828; background-color: #ffebee;">
+                        <h3 style="margin-top:0; color: #b71c1c;">Mencari Besar Kerugian</h3>
+                        <p>Jika Modal/Harga Beli (HB) lebih besar dari Harga Jual (HJ).</p>
+                        <div style="font-weight: bold; text-align: center; font-size: 1.1rem; padding: 10px; background: white; border-radius: 5px; color: #c62828; border: 1px solid #ffcdd2;">
+                            Rugi = Modal - Harga Jual
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>2. Studi Kasus: Catatan Pedagang Kurma</h2>
+                <p>Mari kita bantu <strong>Paman Umar</strong>, seorang pedagang kurma di pasar, untuk merekap hasil penjualannya hari ini.</p>
+                
+                <div class="example-box" style="background-color: #fff3e0; border-color: #ff9800;">
+                    <p><strong>Kasus:</strong> Paman Umar membeli 10 kotak Kurma Sukari dengan total modal <strong>Rp 600.000</strong>.</p>
+                    <p>Pagi harinya, pasar sangat ramai. Paman Umar berhasil menjual 7 kotak dengan harga Rp 80.000 per kotaknya. Namun saat siang, pasar sepi dan mulai turun hujan. Agar kurmanya cepat habis, 3 kotak sisanya ia jual murah dengan harga Rp 50.000 per kotak.</p>
+                    <p><strong>Pertanyaan:</strong> Di penghujung hari, apakah Paman Umar mendapatkan keuntungan atau kerugian? Berapa jumlahnya?</p>
+                </div>
+
+                <div class="toggle-container">
+                    <button class="toggle-btn" onclick="showInfo('solusi-kurma', this)" style="background-color: #e3f2fd; color: #1565c0;">📊 Lihat Cara Menghitungnya</button>
+                </div>
+
+                <div id="info-solusi-kurma" class="info-box">
+                    <h3 style="color: #0d47a1;">Penyelesaian:</h3>
+                    <ul>
+                        <li><strong>Modal Awal:</strong> Rp 600.000</li>
+                        <li><strong>Penjualan Pagi (7 kotak):</strong> 7 x Rp 80.000 = Rp 560.000</li>
+                        <li><strong>Penjualan Siang (3 kotak):</strong> 3 x Rp 50.000 = Rp 150.000</li>
+                        <li><strong>Total Uang Masuk (Harga Jual Total):</strong> Rp 560.000 + Rp 150.000 = <strong>Rp 710.000</strong></li>
+                    </ul>
+                    <p>Karena Total Harga Jual (Rp 710.000) > Modal (Rp 600.000), maka Paman Umar mengalami <strong>KEUNTUNGAN</strong>.</p>
+                    <p><strong>Besar Keuntungan:</strong> Rp 710.000 - Rp 600.000 = <strong>Rp 110.000</strong>.</p>
+                </div>
+            </div>
+
+            <div class="card" style="background-color: #e8f5e9;">
+                <h2>3. Sikap Hati: Qana'ah dalam Berdagang</h2>
+                <p>Dalam dunia bisnis, perhitungan matematika bisa saja meleset. Terkadang untung besar, terkadang hanya balik modal, dan tidak jarang kita harus menelan kerugian. Di sinilah seorang muslim harus memiliki sifat <strong>Qana'ah</strong>.</p>
+                
+                <div class="quote-box" style="border-color: #388e3c; color: #1b5e20;">
+                    <strong>Qana'ah</strong> adalah sikap rela menerima dan merasa cukup dengan rezeki yang telah Allah ﷻ karuniakan, setelah kita berusaha dengan maksimal.
+                </div>
+
+                <p><strong>Bagaimana menerapkan Qana'ah dalam jual beli?</strong></p>
+                <ul>
+                    <li><strong>Saat untung sedikit:</strong> Bersyukur dan tidak mengeluh. Uang yang sedikit tapi berkah jauh lebih baik daripada uang banyak tapi dari jalan curang.</li>
+                    <li><strong>Saat merugi:</strong> Bersabar, mengevaluasi kesalahan bisnis tanpa menyalahkan takdir, dan yakin bahwa Allah akan menggantinya di waktu yang lain. Rezeki sudah tertakar, tidak akan tertukar.</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>4. Kuis Evaluasi Pertemuan 2</h2>
+                <div id="quiz-container-p2">
+                    <div class="quiz-question">
+                        <strong>1. Jika modal untuk membuat kerajinan asrama adalah Rp 150.000, lalu hasil penjualan kerajinan tersebut adalah Rp 135.000, berapakah nominal ruginya?</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p2q1" value="wrong"> Rp 25.000</label>
+                            <label><input type="radio" name="p2q1" value="correct"> Rp 15.000</label>
+                            <label><input type="radio" name="p2q1" value="wrong"> Rp 5.000</label>
+                        </div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <strong>2. Sikap merasa cukup, rela menerima hasil keuntungan yang didapat setelah berusaha berdagang seharian dengan jujur disebut dengan sifat...</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p2q2" value="wrong"> Tawadhu' (Rendah Hati)</label>
+                            <label><input type="radio" name="p2q2" value="wrong"> Taswif (Menunda-nunda)</label>
+                            <label><input type="radio" name="p2q2" value="correct"> Qana'ah (Merasa Cukup)</label>
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="checkQuizP2()">Periksa Jawaban</button>
+                    <div id="quiz-result-p2" style="margin-top: 1rem; font-weight: bold; padding: 1rem; border-radius: 8px; display: none;"></div>
+                </div>
+            </div>
+
+            <script>
+                function checkQuizP2() {
+                    let score = 0;
+                    const q1 = document.querySelector('input[name="p2q1"]:checked');
+                    const q2 = document.querySelector('input[name="p2q2"]:checked');
+                    
+                    if(!q1 || !q2) {
+                        alert("Pilih jawaban untuk semua pertanyaan Pertemuan 2 terlebih dahulu!");
+                        return;
+                    }
+
+                    if (q1.value === "correct") score++;
+                    if (q2.value === "correct") score++;
+
+                    const resultDiv = document.getElementById('quiz-result-p2');
+                    resultDiv.style.display = 'block';
+
+                    if (score === 2) {
+                        resultDiv.innerHTML = "Alhamdulillah, benar semua! Kamu tidak hanya pandai berhitung, tapi juga memahami makna keberkahan dalam rezeki. 📊✨";
+                        resultDiv.style.backgroundColor = "#c8e6c9";
+                        resultDiv.style.color = "#2e7d32";
+                    } else {
+                        resultDiv.innerHTML = "Kamu menjawab benar " + score + " dari 2 soal. Ayo periksa lagi hitungan pengurangan nominalnya! 📖";
+                        resultDiv.style.backgroundColor = "#ffecb3";
+                        resultDiv.style.color = "#f57f17";
+                    }
+                }
+            </script>
+        </div>
+        <div id="p3" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. Apa itu Persen (%)?</h2>
+                <p>Dalam perdagangan, kita sering melihat simbol <strong>%</strong>. Persen sebenarnya adalah singkatan dari <em>"persentum"</em> yang artinya <strong>per seratus</strong>. Ini adalah cara membagi sebuah nilai menjadi 100 bagian yang sama besar.</p>
+                
+                <div class="example-box" style="background-color: #e3f2fd; border-color: #1565c0;">
+                    <p style="text-align: center; font-size: 1.2rem; margin: 0;">
+                        <strong>10%</strong> artinya 10 dari 100 atau <strong>10/100</strong> <br>
+                        <strong>50%</strong> artinya 50 dari 100 atau <strong>setengahnya</strong>
+                    </p>
+                </div>
+                <p><strong>Diskon</strong> adalah potongan harga yang diberikan penjual kepada pembeli. Dengan adanya diskon, harga yang kita bayar menjadi lebih murah dari harga aslinya.</p>
+            </div>
+
+            <div class="card">
+                <h2>2. Trik Hitung Cepat Diskon (Tanpa Kalkulator)</h2>
+                <p>Sebagai santri yang cerdas, kita harus bisa menghitung diskon dengan cepat di luar kepala. Gunakan trik berikut:</p>
+                
+                <div class="grid-elements">
+                    <div class="element-card" style="border-left: 4px solid #f57c00;">
+                        <h3 style="margin-top:0;">Trik 10% (Coret Nol)</h3>
+                        <p>Untuk mencari 10% dari suatu angka, cukup <strong>buang satu angka nol</strong> di belakangnya atau geser koma ke kiri satu kali.</p>
+                        <p><em>Contoh: 10% dari Rp 50.000 adalah Rp 5.000.</em></p>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid #3949ab;">
+                        <h3 style="margin-top:0;">Trik 50% (Bagi Dua)</h3>
+                        <p>Mencari 50% sama dengan <strong>membagi harga asli dengan dua</strong>.</p>
+                        <p><em>Contoh: 50% dari Rp 100.000 adalah Rp 50.000.</em></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Studi Kasus: Belanja Baju Lebaran</h2>
+                <p>Menjelang Hari Raya, biasanya banyak toko yang memberikan potongan harga untuk mendukung syiar kegembiraan. Mari kita bantu santri menghitung anggaran mereka.</p>
+                
+                <div class="example-box" style="background-color: #f1f8e9; border-color: #2e7d32;">
+                    <p><strong>Kasus:</strong> Di sebuah toko pakaian di Asahan, sebuah <strong>Baju Koko</strong> dibandrol dengan harga <strong>Rp 120.000</strong>. Toko tersebut memberikan diskon sebesar <strong>20%</strong>.</p>
+                    <p><strong>Berapakah uang yang harus dibayarkan untuk membeli baju tersebut?</strong></p>
+                </div>
+
+                <div class="toggle-container">
+                    <button class="toggle-btn" onclick="showInfo('solusi-diskon', this)" style="background-color: #e8f5e9; color: #2e7d32;">📊 Lihat Cara Hitung</button>
+                </div>
+
+                <div id="info-solusi-diskon" class="info-box">
+                    <h3 style="color: #1b5e20;">Langkah Penyelesaian:</h3>
+                    <ol>
+                        <li><strong>Cari 10% dulu:</strong> 10% dari 120.000 adalah Rp 12.000.</li>
+                        <li><strong>Cari 20%:</strong> Karena 20% adalah dua kalinya 10%, maka 2 x Rp 12.000 = <strong>Rp 24.000</strong> (Inilah nilai diskonnya).</li>
+                        <li><strong>Hitung Harga Akhir:</strong> Harga Asli - Diskon <br>
+                            Rp 120.000 - Rp 24.000 = <strong>Rp 96.000</strong>.</li>
+                    </ol>
+                    <p>Jadi, harga yang harus dibayar adalah <strong>Rp 96.000</strong>.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>4. Kuis Evaluasi Pertemuan 3</h2>
+                <div id="quiz-container-p3">
+                    <div class="quiz-question">
+                        <strong>1. Sebuah Gamis seharga Rp 200.000 mendapatkan diskon 15%. Berapakah nominal potongan harganya (Diskonnya saja)?</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p3q1" value="wrong"> Rp 15.000</label>
+                            <label><input type="radio" name="p3q1" value="correct"> Rp 30.000</label>
+                            <label><input type="radio" name="p3q1" value="wrong"> Rp 45.000</label>
+                        </div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <strong>2. Toko Buku memberikan diskon 50% untuk semua Al-Qur'an. Jika harga awal Al-Qur'an adalah Rp 80.000, berapakah harga yang harus dibayar setelah diskon?</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p3q2" value="wrong"> Rp 50.000</label>
+                            <label><input type="radio" name="p3q2" value="wrong"> Rp 30.000</label>
+                            <label><input type="radio" name="p3q2" value="correct"> Rp 40.000</label>
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="checkQuizP3()">Periksa Jawaban</button>
+                    <div id="quiz-result-p3" style="margin-top: 1rem; font-weight: bold; padding: 1rem; border-radius: 8px; display: none;"></div>
+                </div>
+            </div>
+
+            <script>
+                function checkQuizP3() {
+                    let score = 0;
+                    const q1 = document.querySelector('input[name="p3q1"]:checked');
+                    const q2 = document.querySelector('input[name="p3q2"]:checked');
+                    
+                    if(!q1 || !q2) {
+                        alert("Pilih jawaban untuk semua pertanyaan Pertemuan 3 terlebih dahulu!");
+                        return;
+                    }
+
+                    if (q1.value === "correct") score++;
+                    if (q2.value === "correct") score++;
+
+                    const resultDiv = document.getElementById('quiz-result-p3');
+                    resultDiv.style.display = 'block';
+
+                    if (score === 2) {
+                        resultDiv.innerHTML = "Alhamdulillah, hebat! Kamu sudah ahli menghitung diskon. 🛍️📊";
+                        resultDiv.style.backgroundColor = "#c8e6c9";
+                        resultDiv.style.color = "#2e7d32";
+                    } else {
+                        resultDiv.innerHTML = "Kamu menjawab benar " + score + " dari 2 soal. Mari asah lagi teknik hitung cepat persentase! 📖";
+                        resultDiv.style.backgroundColor = "#ffecb3";
+                        resultDiv.style.color = "#f57f17";
+                    }
+                }
+            </script>
+        </div>
+        <div id="p4" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. Celakalah Bagi yang Curang (Timbangan)</h2>
+                <p>Dalam Islam, mengurangi timbangan atau takaran secara diam-diam untuk mendapatkan keuntungan lebih adalah dosa besar. Allah ﷻ secara khusus menurunkan satu surah yang membahas hal ini, yaitu <strong>Surah Al-Muthaffifin</strong>.</p>
+                
+                <div class="quote-box" style="border-color: #c62828; color: #b71c1c; background-color: #ffebee;">
+                    <em>"Celakalah bagi orang-orang yang curang (dalam menakar dan menimbang)! (Yaitu) orang-orang yang apabila menerima takaran dari orang lain mereka minta dipenuhi, dan apabila mereka menakar atau menimbang untuk orang lain, mereka mengurangi."</em> <br>
+                    <strong>(QS. Al-Muthaffifin: 1-3)</strong>
+                </div>
+
+                <p>Oleh karena itu, sangat penting bagi kita untuk memahami istilah berat barang dalam perdagangan, agar kita tidak menzalimi pembeli atau tertipu oleh penjual.</p>
+            </div>
+
+            <div class="card">
+                <h2>2. Mengenal Bruto, Tara, dan Netto</h2>
+                <p>Saat kita membeli barang kemasan, berat yang tertera di bungkusnya adalah berat isinya saja, bukan beserta bungkusnya. Mari pelajari tiga istilah penting ini:</p>
+                
+                <div class="toggle-container">
+                    <button class="toggle-btn active" onclick="showInfo('bruto', this)" style="background-color: #e3f2fd; color: #1565c0;">📦 Bruto (Berat Kotor)</button>
+                    <button class="toggle-btn" onclick="showInfo('tara', this)" style="background-color: #fff3e0; color: #e65100;">🗑️ Tara (Kemasan)</button>
+                    <button class="toggle-btn" onclick="showInfo('netto', this)" style="background-color: #e8f5e9; color: #2e7d32;">🍯 Netto (Berat Bersih)</button>
+                </div>
+
+                <div id="info-bruto" class="info-box active">
+                    <h3 style="color: #1565c0;">Bruto = Berat Total</h3>
+                    <p>Bruto adalah berat barang secara keseluruhan. Artinya, berat isi barang tersebut <strong>DITAMBAH</strong> dengan berat wadah atau kemasannya.</p>
+                    <div class="formula-box" style="border-color: #1565c0; background-color: #bbdefb;">
+                        <strong>Bruto = Netto + Tara</strong>
+                    </div>
+                </div>
+
+                <div id="info-tara" class="info-box">
+                    <h3 style="color: #e65100;">Tara = Berat Wadah / Kemasan</h3>
+                    <p>Tara adalah berat dari bungkus, kaleng, kardus, plastik, atau botol yang membungkus barang tersebut (tanpa isinya).</p>
+                    <div class="formula-box" style="border-color: #e65100; background-color: #ffe0b2;">
+                        <strong>Tara = Bruto - Netto</strong>
+                    </div>
+                </div>
+
+                <div id="info-netto" class="info-box">
+                    <h3 style="color: #2e7d32;">Netto = Berat Bersih (Isi)</h3>
+                    <p>Netto adalah berat asli dari barang yang kita butuhkan tanpa menghitung wadahnya. Harga suatu barang seharusnya dihitung berdasarkan Netto-nya.</p>
+                    <div class="formula-box" style="border-color: #2e7d32; background-color: #c8e6c9;">
+                        <strong>Netto = Bruto - Tara</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Studi Kasus Kehidupan Nyata</h2>
+                <div class="grid-elements">
+                    <div class="element-card" style="border-left: 4px solid #fbc02d;">
+                        <h3 style="margin-top:0;">Kasus 1: Madu Hutan</h3>
+                        <p>Ahmad membeli sebotol madu. Saat ditimbang beserta botol kacanya, beratnya adalah <strong>1.200 gram (Bruto)</strong>. Setelah madunya habis diminum, Ahmad menimbang botol kosong tersebut dan ternyata beratnya <strong>200 gram (Tara)</strong>.</p>
+                        <p><em>Berapakah berat madu yang diminum Ahmad (Netto)?</em></p>
+                        <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-size: 0.9rem;">
+                            Netto = Bruto - Tara <br>
+                            Netto = 1.200 gram - 200 gram = <strong>1.000 gram (1 kg)</strong>.
+                        </div>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid #3949ab;">
+                        <h3 style="margin-top:0;">Kasus 2: Beras Zakat</h3>
+                        <p>Panitia Zakat Fitrah menerima 1 karung beras. Di karung tersebut tertulis <strong>Netto: 50 kg</strong>. Jika berat karungnya sendiri (Tara) adalah <strong>1 kg</strong>, berapakah berat total saat ditimbang di atas timbangan besar?</p>
+                        <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-size: 0.9rem;">
+                            Bruto = Netto + Tara <br>
+                            Bruto = 50 kg + 1 kg = <strong>51 kg</strong>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>4. Kuis Evaluasi Pertemuan 4</h2>
+                <div id="quiz-container-p4">
+                    <div class="quiz-question">
+                        <strong>1. Istilah matematika untuk berat isi saja (tanpa menghitung berat plastik atau wadah pembungkusnya) adalah...</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p4q1" value="wrong"> Bruto</label>
+                            <label><input type="radio" name="p4q1" value="wrong"> Tara</label>
+                            <label><input type="radio" name="p4q1" value="correct"> Netto</label>
+                        </div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <strong>2. Sebuah kaleng biskuit memiliki berat total (Bruto) 600 gram. Jika berat kalengnya (Tara) adalah 150 gram, berapakah berat biskuitnya (Netto)?</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p4q2" value="wrong"> 750 gram</label>
+                            <label><input type="radio" name="p4q2" value="correct"> 450 gram</label>
+                            <label><input type="radio" name="p4q2" value="wrong"> 150 gram</label>
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="checkQuizP4()">Periksa Jawaban</button>
+                    <div id="quiz-result-p4" style="margin-top: 1rem; font-weight: bold; padding: 1rem; border-radius: 8px; display: none;"></div>
+                </div>
+            </div>
+
+            <script>
+                function checkQuizP4() {
+                    let score = 0;
+                    const q1 = document.querySelector('input[name="p4q1"]:checked');
+                    const q2 = document.querySelector('input[name="p4q2"]:checked');
+                    
+                    if(!q1 || !q2) {
+                        alert("Pilih jawaban untuk semua pertanyaan Pertemuan 4 terlebih dahulu!");
+                        return;
+                    }
+
+                    if (q1.value === "correct") score++;
+                    if (q2.value === "correct") score++;
+
+                    const resultDiv = document.getElementById('quiz-result-p4');
+                    resultDiv.style.display = 'block';
+
+                    if (score === 2) {
+                        resultDiv.innerHTML = "Sempurna! Kamu telah memahami konsep Bruto, Tara, dan Netto dengan baik. Terus jaga kejujuran ya! ⚖️📦";
+                        resultDiv.style.backgroundColor = "#c8e6c9";
+                        resultDiv.style.color = "#2e7d32";
+                    } else {
+                        resultDiv.innerHTML = "Kamu menjawab benar " + score + " dari 2 soal. Mari tinjau ulang rumus Netto (Bruto - Tara)! 📖";
+                        resultDiv.style.backgroundColor = "#ffecb3";
+                        resultDiv.style.color = "#f57f17";
+                    }
+                }
+            </script>
+        </div>
+        <div id="p5" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. Mengenal Bahasa Aljabar</h2>
+                <p>Aljabar adalah cabang matematika yang menggunakan simbol atau huruf untuk mewakili angka yang belum diketahui nilainya. Huruf ini biasanya disebut sebagai <strong>Variabel</strong>.</p>
+                
+                
+
+                <p>Mari kita bedah anatomi atau bagian-bagian dari bentuk aljabar <strong>5x + 10</strong>:</p>
+                
+                <div class="grid-elements">
+                    <div class="element-card" style="border-left: 4px solid #3949ab;">
+                        <h3 style="margin-top:0; color: #3949ab;">Variabel (Huruf)</h3>
+                        <p>Lambang pengganti angka yang belum diketahui nilainya. Biasanya menggunakan huruf kecil seperti <em>x, y, a, b, n</em>, dll.</p>
+                        <p><strong>Contoh:</strong> <em>x</em></p>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid #f57c00;">
+                        <h3 style="margin-top:0; color: #e65100;">Koefisien (Angka di depan huruf)</h3>
+                        <p>Angka yang berada tepat di depan variabel dan berfungsi sebagai pengali bagi variabel tersebut.</p>
+                        <p><strong>Contoh:</strong> angka <em>5</em> pada 5x.</p>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid #9e9e9e;">
+                        <h3 style="margin-top:0; color: #424242;">Konstanta (Angka sendirian)</h3>
+                        <p>Suku yang berupa angka tetap dan tidak mengandung variabel sama sekali.</p>
+                        <p><strong>Contoh:</strong> angka <em>10</em>.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>2. Kalimat Terbuka vs Kalimat Tertutup</h2>
+                <p>Sebelum masuk ke persamaan, kita harus bisa membedakan mana kalimat yang sudah pasti benar/salah, dan mana kalimat yang belum diketahui kebenarannya.</p>
+                
+                <div class="toggle-container">
+                    <button class="toggle-btn active" onclick="showInfo('kalimat-tertutup', this)" style="background-color: #e8f5e9; color: #2e7d32;">✅ Kalimat Tertutup</button>
+                    <button class="toggle-btn" onclick="showInfo('kalimat-terbuka', this)" style="background-color: #fff3e0; color: #e65100;">❓ Kalimat Terbuka</button>
+                </div>
+
+                <div id="info-kalimat-tertutup" class="info-box active">
+                    <h3 style="color: #2e7d32;">Kalimat Tertutup (Pernyataan)</h3>
+                    <p>Kalimat yang sudah bisa dipastikan nilai kebenarannya (Benar atau Salah saja).</p>
+                    <ul>
+                        <li><strong>Contoh Benar:</strong> "2 + 3 = 5" atau "Ibukota Indonesia adalah Jakarta."</li>
+                        <li><strong>Contoh Salah:</strong> "10 - 2 = 5" atau "Sapi berkaki dua."</li>
+                    </ul>
+                </div>
+
+                <div id="info-kalimat-terbuka" class="info-box">
+                    <h3 style="color: #e65100;">Kalimat Terbuka (Persamaan)</h3>
+                    <p>Kalimat yang <strong>belum bisa ditentukan</strong> benar atau salahnya karena masih mengandung variabel (lambang yang belum diketahui nilainya).</p>
+                    <ul>
+                        <li><strong>Contoh:</strong> "x + 5 = 12". (Kalimat ini jadi Benar jika x=7, tapi jadi Salah jika x=10).</li>
+                        <li><strong>Inilah yang kita sebut Persamaan Linear Satu Variabel (PLSV).</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Belajar Membuat Model Matematika</h2>
+                <p>Kemampuan terpenting dalam Aljabar adalah mengubah bahasa cerita sehari-hari menjadi "bahasa matematika". Mari kita coba!</p>
+                
+                <div class="example-box" style="background-color: #e8eaf6; border-color: #3949ab;">
+                    <p><strong>Kasus 1:</strong> "Jumlah santri di asrama adalah 50 orang. Jika hari ini datang <em>x</em> santri baru, maka total santri menjadi 58."</p>
+                    <p><strong>Model Matematika:</strong> <span style="font-family: 'Courier New', Courier, monospace; font-weight: bold; font-size: 1.2rem;">50 + x = 58</span></p>
+                </div>
+
+                <div class="example-box" style="background-color: #fff8e1; border-color: #fbc02d; margin-top: 15px;">
+                    <p><strong>Kasus 2:</strong> "Sebuah bilangan jika dikali 3 kemudian dikurangi 4 hasilnya adalah 11."</p>
+                    <p><strong>Model Matematika:</strong> <span style="font-family: 'Courier New', Courier, monospace; font-weight: bold; font-size: 1.2rem;">3n - 4 = 11</span></p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>4. Kuis Evaluasi Pertemuan 5</h2>
+                <div id="quiz-container-p5">
+                    <div class="quiz-question">
+                        <strong>1. Pada bentuk aljabar 7p - 5, manakah yang disebut sebagai Koefisien?</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p5q1" value="correct"> 7</label>
+                            <label><input type="radio" name="p5q1" value="wrong"> p</label>
+                            <label><input type="radio" name="p5q1" value="wrong"> -5</label>
+                        </div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <strong>2. Manakah di bawah ini yang merupakan contoh Kalimat Terbuka?</strong>
+                        <div class="options">
+                            <label><input type="radio" name="p5q2" value="wrong"> 10 + 2 = 12</label>
+                            <label><input type="radio" name="p5q2" value="correct"> 2a - 3 = 15</label>
+                            <label><input type="radio" name="p5q2" value="wrong"> Matahari terbit dari timur</label>
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="checkQuizP5()">Periksa Jawaban</button>
+                    <div id="quiz-result-p5" style="margin-top: 1rem; font-weight: bold; padding: 1rem; border-radius: 8px; display: none;"></div>
+                </div>
+            </div>
+
+            <script>
+                function checkQuizP5() {
+                    let score = 0;
+                    const q1 = document.querySelector('input[name="p5q1"]:checked');
+                    const q2 = document.querySelector('input[name="p5q2"]:checked');
+                    
+                    if(!q1 || !q2) {
+                        alert("Pilih jawaban untuk semua pertanyaan Pertemuan 5 terlebih dahulu!");
+                        return;
+                    }
+
+                    if (q1.value === "correct") score++;
+                    if (q2.value === "correct") score++;
+
+                    const resultDiv = document.getElementById('quiz-result-p5');
+                    resultDiv.style.display = 'block';
+
+                    if (score === 2) {
+                        resultDiv.innerHTML = "Masya Allah, hebat! Kamu sudah menguasai anatomi aljabar dan kalimat terbuka. 🔑📚";
+                        resultDiv.style.backgroundColor = "#c8e6c9";
+                        resultDiv.style.color = "#2e7d32";
+                    } else {
+                        resultDiv.innerHTML = "Kamu menjawab benar " + score + " dari 2 soal. Ayo ingat kembali bedanya angka tetap (konstanta) dan angka pengali (koefisien)! 📖";
+                        resultDiv.style.backgroundColor = "#ffecb3";
+                        resultDiv.style.color = "#f57f17";
+                    }
+                }
+            </script>
+        </div>
+        <div id="p6" class="meeting-content"><div class="empty-state"><h3>Pertemuan 6</h3><p>Menyelesaikan Persamaan Linear belum tersedia.</p></div></div>
+        <div id="p7" class="meeting-content"><div class="empty-state"><h3>Pertemuan 7</h3><p>Pertidaksamaan Linear Satu Variabel belum tersedia.</p></div></div>
+        <div id="p8" class="meeting-content"><div class="empty-state"><h3>Pertemuan 8</h3><p>Evaluasi Akhir (Aljabar & Aritmatika) belum tersedia.</p></div></div>
+
+    </div>
+</body>
+</html>
