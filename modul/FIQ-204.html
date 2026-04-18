@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modul FIQ-204: Fiqih Munakahat (Pernikahan & Keluarga Islam)</title>
+    <style>
+        /* ==========================================================================
+           1. CSS VARIABLES & THEME (Tema Biru Gelap & Emas Islami)
+           ========================================================================== */
+        :root {
+            --primary-color: #1565c0;     /* Biru Utama (Blue 800) */
+            --primary-dark: #0d47a1;      /* Biru Gelap (Blue 900) */
+            --primary-light: #e3f2fd;     /* Biru Terang (Blue 50) */
+            --accent-color: #ffb300;      /* Emas / Kuning (Amber 600) */
+            --accent-hover: #ff8f00;      /* Emas Gelap (Amber 800) */
+            --bg-body: #f5f7fa;           /* Latar Belakang Body */
+            --bg-card: #ffffff;           /* Latar Belakang Kartu */
+            --text-main: #333333;         /* Teks Utama */
+            --text-muted: #555555;        /* Teks Sekunder */
+            --border-color: #e0e0e0;      /* Warna Garis */
+            --danger: #c62828;            /* Merah (Peringatan/Salah) */
+            --success: #2e7d32;           /* Hijau (Sukses/Benar) */
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+            --shadow-md: 0 8px 25px rgba(0,0,0,0.08);
+            --transition: all 0.3s ease-in-out;
+        }
+
+        /* ==========================================================================
+           2. GLOBAL STYLES
+           ========================================================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* ==========================================================================
+           3. HEADER SECTION
+           ========================================================================== */
+        header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+            box-shadow: var(--shadow-md);
+            border-bottom: 6px solid var(--accent-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Ornamen background header */
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            left: -30px;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-shadow: 2px 3px 5px rgba(0,0,0,0.4);
+            position: relative;
+            z-index: 2;
+        }
+
+        header p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ==========================================================================
+           4. NAVIGATION MENU (TAB PERTEMUAN)
+           ========================================================================== */
+        .nav-container {
+            background-color: var(--bg-card);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+            overflow-x: auto;
+            white-space: nowrap;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Menyembunyikan scrollbar untuk tampilan yang lebih bersih */
+        .nav-container::-webkit-scrollbar { display: none; }
+        .nav-container { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .tab-menu {
+            display: flex;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0;
+            list-style: none;
+        }
+
+        .tab-item {
+            padding: 1.2rem 1.8rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 4px solid transparent;
+            transition: var(--transition);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-item:hover {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+        }
+
+        .tab-item.active-tab {
+            color: var(--primary-dark);
+            border-bottom: 4px solid var(--accent-color);
+            background-color: var(--primary-light);
+        }
+
+        /* ==========================================================================
+           5. MAIN CONTAINER & CARDS
+           ========================================================================== */
+        .container {
+            max-width: 1000px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            min-height: 70vh;
+        }
+
+        .meeting-content {
+            display: none;
+            animation: slideUp 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .meeting-content.active-content {
+            display: block;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--shadow-md);
+            border-top: 5px solid var(--primary-color);
+            position: relative;
+        }
+
+        .card.exercise-card {
+            border-top: none;
+            border: 2px dashed var(--primary-color);
+            background-color: #fafbfc;
+        }
+
+        h2 {
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 0.8rem;
+            margin-bottom: 1.8rem;
+            font-size: 1.9rem;
+            line-height: 1.3;
+        }
+
+        h3 {
+            color: var(--primary-color);
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        p {
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-bottom: 1.5rem;
+            margin-left: 2rem;
+        }
+
+        li {
+            margin-bottom: 0.6rem;
+        }
+
+        /* ==========================================================================
+           6. COMPONENTS (Quotes, Toggles, Grids, Alerts)
+           ========================================================================== */
+        .quote-box {
+            background-color: #fffdf5;
+            border-left: 6px solid var(--accent-color);
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            font-style: italic;
+            color: #5d4037;
+            font-size: 1.15rem;
+            line-height: 1.9;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .grid-elements {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .element-card {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .element-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-color);
+        }
+
+        /* Toggles */
+        .toggle-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            min-width: 180px;
+            padding: 1.2rem;
+            font-size: 1.05rem;
+            font-weight: bold;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            background-color: #edf2f7;
+            color: var(--primary-dark);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toggle-btn:hover {
+            background-color: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+        .toggle-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 6px 15px rgba(21, 101, 192, 0.4);
+        }
+
+        .info-box {
+            display: none;
+            padding: 2rem;
+            background-color: #f8fbff;
+            border-left: 6px solid var(--primary-color);
+            margin-top: 1rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            line-height: 1.8;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .info-box.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* ==========================================================================
+           7. QUIZ SECTION STYLES
+           ========================================================================== */
+        .quiz-question {
+            margin-bottom: 2.5rem;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .quiz-question strong {
+            display: block;
+            margin-bottom: 1.5rem;
+            font-size: 1.15rem;
+            color: var(--primary-dark);
+        }
+
+        .options label {
+            display: block;
+            background-color: #fafafa;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid #eeeeee;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.05rem;
+        }
+
+        .options label:hover {
+            background-color: var(--primary-light);
+            border-color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .submit-btn {
+            background-color: var(--accent-color);
+            color: var(--primary-dark);
+            border: none;
+            padding: 14px 30px;
+            font-size: 1.15rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 800;
+            transition: var(--transition);
+            display: inline-block;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 10px rgba(255, 179, 0, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--accent-hover);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(255, 143, 0, 0.4);
+        }
+
+        .quiz-result {
+            margin-top: 2rem;
+            font-weight: bold;
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            display: none;
+            font-size: 1.2rem;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* ==========================================================================
+           8. ANIMATIONS & UTILITIES
+           ========================================================================== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .highlight {
+            background-color: #fff3e0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #e65100;
+        }
+
+        /* Final Exam Styles */
+        #final-exam-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .exam-progress {
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>FIQ-204</h1>
+        <p>Fiqih Munakahat: Membangun Fondasi Sakinah, Mawaddah, dan Warahmah</p>
+    </header>
+
+    <nav class="nav-container">
+        <ul class="tab-menu">
+            <li class="tab-item active-tab" onclick="openMeeting(event, 'p1')">P1: Esensi Pernikahan</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p2')">P2: Kriteria & Khitbah</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p3')">P3: Rukun & Syarat</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p4')">P4: Mahar & Walimah</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p5')">P5: Hak & Kewajiban</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p6')">P6: Talak & Khulu'</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p7')">P7: Iddah & Rujuk</li>
+            <li class="tab-item" onclick="openMeeting(event, 'p8')">P8: Ujian & Evaluasi</li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        
+        <section id="p1" class="meeting-content active-content">
+            
+            <div class="card">
+                <h2>1. Hakikat Pernikahan dalam Islam</h2>
+                <p>Pernikahan (Nikah) secara bahasa berarti mengumpulkan atau menyatukan. Secara istilah *syara'*, nikah adalah suatu akad (perjanjian) yang menghalalkan pergaulan antara laki-laki dan perempuan yang bukan mahram, serta menimbulkan hak dan kewajiban di antara keduanya.</p>
+                <p>Berbeda dengan pandangan sekuler yang menganggap pernikahan murni sebagai kontrak sosial, Islam menempatkan pernikahan sebagai <strong>Ibadah terpanjang</strong> (Mitsaqan Ghalizha / Perjanjian yang Agung) dan penyempurna separuh agama.</p>
+                
+                <div class="quote-box">
+                    "Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu isteri-isteri dari jenismu sendiri, supaya kamu cenderung dan merasa tenteram (Sakinah) kepadanya, dan dijadikan-Nya diantaramu rasa kasih (Mawaddah) dan sayang (Warahmah)..." <br><strong>(QS. Ar-Rum: 21)</strong>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>2. Hukum Pernikahan (Sesuai Kondisi)</h2>
+                <p>Hukum asal pernikahan menurut mayoritas ulama adalah <strong>Sunnah Muakkadah</strong> (sunnah yang sangat dianjurkan). Namun, hukum ini bisa berubah menjadi lima keadaan tergantung pada kondisi fisik, mental, dan finansial seseorang:</p>
+                
+                <div class="grid-elements">
+                    <div class="element-card" style="border-top: 4px solid var(--primary-dark);">
+                        <h3 style="margin-top: 0;">1. Wajib</h3>
+                        <p>Bagi seseorang yang telah memiliki kemampuan (finansial dan fisik) untuk menikah, dan ia <strong>khawatir akan terjerumus ke dalam zina</strong> jika tidak segera menikah.</p>
+                    </div>
+                    <div class="element-card" style="border-top: 4px solid var(--success);">
+                        <h3 style="margin-top: 0;">2. Sunnah</h3>
+                        <p>Bagi seseorang yang sudah mampu secara lahir batin, dan ia memiliki hasrat, namun ia <strong>masih mampu menahan diri</strong> dari perbuatan zina.</p>
+                    </div>
+                    <div class="element-card" style="border-top: 4px solid #9e9e9e;">
+                        <h3 style="margin-top: 0;">3. Mubah (Boleh)</h3>
+                        <p>Bagi seseorang yang tidak memiliki pendorong kuat untuk menikah (tidak terlalu berhasrat), namun ia juga tidak khawatir terjerumus zina, dan ia memiliki kemampuan finansial.</p>
+                    </div>
+                    <div class="element-card" style="border-top: 4px solid var(--accent-hover);">
+                        <h3 style="margin-top: 0;">4. Makruh</h3>
+                        <p>Bagi seseorang yang memiliki hasrat, namun <strong>belum mampu memberikan nafkah</strong> (finansial/fisik) sehingga dikhawatirkan akan menelantarkan hak-hak pasangannya.</p>
+                    </div>
+                    <div class="element-card" style="border-top: 4px solid var(--danger);">
+                        <h3 style="margin-top: 0;">5. Haram</h3>
+                        <p>Bagi seseorang yang berniat menikah untuk <strong>menyakiti, menipu, atau menzalimi</strong> pasangannya, atau ia sama sekali tidak mampu menunaikan kewajiban dasar dan pasti akan membawa kemudaratan.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Ancaman Membujang (Selibat)</h2>
+                <p>Dalam sejarah, pernah datang tiga orang sahabat kepada istri-istri Nabi untuk menanyakan ibadah beliau. Merasa ibadah mereka kurang, salah satu dari mereka bersumpah: <em>"Aku tidak akan pernah menikah selamanya agar bisa fokus beribadah."</em></p>
+                <p>Mendengar hal itu, Rasulullah ﷺ marah dan bersabda: <strong>"Demi Allah, aku adalah orang yang paling takut kepada Allah di antara kalian, namun aku berpuasa dan berbuka, aku shalat malam dan tidur, dan aku menikahi wanita. Barangsiapa yang membenci sunnahku, maka ia bukan dari golonganku."</strong> (HR. Bukhari & Muslim).</p>
+                <p>Ini menegaskan bahwa Rahbaniyyah (kerahiban/selibat yang disengaja padahal mampu) sangat dilarang dalam Islam. Keluarga adalah unit terkecil untuk membangun peradaban dakwah yang kokoh.</p>
+            </div>
+
+            <div class="card exercise-card">
+                <h2>4. Latihan Soal Mandiri (Esai)</h2>
+                <p>Jawablah pertanyaan analisis di bawah ini untuk menguji pemahamanmu mengenai konsep dasar dan hukum pernikahan!</p>
+                
+                <ol>
+                    <li>Jelaskan perbedaan mendasar antara memandang pernikahan sebagai "kontrak sosial" semata dengan memandangnya sebagai "Ibadah (Mitsaqan Ghalizha)"!</li>
+                    <li>Sebutkan 3 pilar emosional yang Allah janjikan dalam QS. Ar-Rum ayat 21 dan jelaskan makna singkatnya!</li>
+                    <li><strong>(Studi Kasus)</strong> Zaid adalah pemuda yang sangat rajin beribadah. Ia memiliki penghasilan yang sangat cukup dan sehat secara fisik. Namun, ia tidak mau menikah karena merasa takut waktunya untuk menghafal Al-Qur'an dan menuntut ilmu akan berkurang. Bagaimana pandangan Fiqih Munakahat terhadap sikap Zaid ini?</li>
+                </ol>
+
+                <div class="toggle-container">
+                    <button class="toggle-btn" onclick="showInfo('kunci-esai-p1', this, 'p1')">🔑 Lihat Panduan Jawaban</button>
+                </div>
+                
+                <div id="info-kunci-esai-p1-p1" class="info-box">
+                    <h3>Panduan Jawaban:</h3>
+                    <ol style="font-size: 0.95rem;">
+                        <li>Kontrak sosial hanya mengikat urusan duniawi (hak sipil, harta gono-gini) dan mudah dibatalkan jika kesepakatan tidak tercapai. Sedangkan Ibadah berarti setiap perbuatan di dalam rumah tangga bernilai pahala (seperti tersenyum, memberi nafkah, bersabar), dan ikatan ini dipertanggungjawabkan langsung di hadapan Allah ﷻ.</li>
+                        <li><strong>Sakinah</strong>: Ketenangan batin/rasa aman saat bersama pasangan. <strong>Mawaddah</strong>: Rasa cinta yang diiringi gairah/fisik. <strong>Warahmah</strong>: Kasih sayang mendalam, empati, dan pengorbanan yang biasanya semakin menguat di saat usia menua.</li>
+                        <li>Sikap Zaid tidak dibenarkan (bahkan bisa masuk kategori Makruh hingga Haram jika disertai keyakinan menolak syariat). Rasulullah ﷺ secara tegas melarang membujang (Rahbaniyyah) demi fokus beribadah ritual. Pernikahan itu sendiri adalah ibadah, dan mencetak generasi penghafal Al-Qur'an melalui pernikahan adalah dakwah yang lebih besar.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>5. Kuis Evaluasi Pertemuan 1</h2>
+                <div class="quiz-question">
+                    <strong>1. Apa hukum pernikahan bagi seseorang yang sudah sangat mampu secara finansial, dan ia sangat khawatir/yakin akan terjerumus dalam perzinahan jika tidak segera menikah?</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p1q1" value="wrong"> Sunnah Muakkadah</label>
+                        <label><input type="radio" name="p1q1" value="correct"> Wajib</label>
+                        <label><input type="radio" name="p1q1" value="wrong"> Mubah</label>
+                    </div>
+                </div>
+
+                <div class="quiz-question">
+                    <strong>2. Dalam Al-Qur'an (Surah An-Nisa), ikatan janji suci pernikahan disebut dengan istilah yang sangat agung. Apakah istilah tersebut?</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p1q2" value="wrong"> Sakinah Mawaddah</label>
+                        <label><input type="radio" name="p1q2" value="wrong"> Baiti Jannati</label>
+                        <label><input type="radio" name="p1q2" value="correct"> Mitsaqan Ghalizha</label>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="checkQuiz('p1', 2)">Periksa Jawaban</button>
+                <div id="quiz-result-p1" class="quiz-result"></div>
+            </div>
+        </section>
+
+        <section id="p2" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. Kriteria Memilih Pasangan</h2>
+                <p>Pernikahan adalah pelayaran jarak jauh. Oleh karena itu, memilih nahkoda atau rekan pelayaran tidak boleh sembarangan. Rasulullah ﷺ telah memberikan panduan yang sangat komprehensif dalam sebuah hadits masyhur:</p>
+                
+                <div class="quote-box">
+                    "Wanita (pasangan) itu dinikahi karena empat hal: karena hartanya, karena keturunannya (nasab), karena kecantikannya, dan karena agamanya. <strong>Maka pilihlah yang memiliki agama, niscaya engkau akan beruntung.</strong>" (HR. Bukhari & Muslim)
+                </div>
+
+                <p>Mempertimbangkan fisik, kesiapan finansial, dan bibit-bebet keluarga adalah hal yang manusiawi dan diperbolehkan. Namun, ketiganya akan pudar seiring waktu. Oleh karena itu, agama (akhlak dan ketaatan) harus menjadi "filter utama" atau prioritas tertinggi.</p>
+            </div>
+
+            <div class="card">
+                <h2>2. Syariat Khitbah (Lamaran)</h2>
+                <p>Sebelum akad nikah dilangsungkan, Islam mensyariatkan adanya proses pendahuluan yang disebut <strong>Khitbah</strong>. Khitbah adalah permintaan (tawaran) dari seorang laki-laki kepada seorang perempuan (atau walinya) untuk dijadikan istri.</p>
+                
+                <div class="toggle-container">
+                    <button class="toggle-btn active" onclick="showInfo('hukum-khitbah', this, 'p2')">Status Hukum Khitbah</button>
+                    <button class="toggle-btn" onclick="showInfo('larangan-khitbah', this, 'p2')">Larangan Keras dalam Khitbah</button>
+                </div>
+
+                <div id="info-hukum-khitbah-p2" class="info-box active">
+                    <h3>Khitbah BUKAN Akad Nikah!</h3>
+                    <p>Sangat penting untuk dipahami bahwa wanita yang baru dilamar (dikhitbah) statusnya <strong>masih ajnabi (orang asing/bukan mahram)</strong>. Oleh karena itu, hukum berduaan (khalwat), bersentuhan, atau bepergian berdua tetap <strong>HARAM</strong> hingga akad nikah diucapkan secara sah.</p>
+                    <p>Masa khitbah (pertunangan) adalah masa persiapan, dan masing-masing pihak masih berhak membatalkannya jika ada uzur syar'i.</p>
+                </div>
+
+                <div id="info-larangan-khitbah-p2" class="info-box">
+                    <h3>Menjaga Kehormatan Saudara</h3>
+                    <p>Rasulullah ﷺ bersabda: <em>"Tidak boleh salah seorang dari kalian mengkhitbah wanita yang sedang dikhitbah saudaranya, sampai saudaranya itu menikahinya atau meninggalkannya (membatalkannya)."</em></p>
+                    <p>Menikung atau merebut wanita yang sudah menerima lamaran pria lain secara sah (dan belum dibatalkan) hukumnya adalah Haram dan berdosa besar, karena memicu permusuhan antar sesama muslim.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Syariat Nadzhar (Melihat Calon)</h2>
+                <p>Islam sangat realistis. Karena pernikahan membutuhkan ketertarikan fisik dan kenyamanan (kecocokan), syariat sangat menganjurkan seorang pelamar untuk melakukan <strong>Nadzhar</strong> (melihat) calon pasangannya secara langsung sebelum memutuskan.</p>
+                <p>Rasulullah ﷺ pernah memerintahkan seorang sahabat yang akan menikah dengan wanita Anshar: <em>"Pergilah dan lihatlah kepadanya, karena hal itu lebih dapat melanggengkan kasih sayang di antara kalian berdua."</em></p>
+                <ul>
+                    <li><strong>Batas Nadzhar:</strong> Mayoritas ulama (Jumhur) berpendapat bahwa yang boleh dilihat hanyalah <strong>wajah dan kedua telapak tangan</strong>. Wajah menunjukkan kecantikan/ketampanan, sedangkan telapak tangan bisa menjadi indikasi kesuburan/kondisi fisik.</li>
+                    <li><strong>Adab Nadzhar:</strong> Harus didampingi oleh mahram pihak wanita. Tidak boleh dilakukan berduaan di ruang tertutup.</li>
+                </ul>
+            </div>
+
+            <div class="card exercise-card">
+                <h2>4. Latihan Soal Mandiri (Studi Kasus Panti/Asrama)</h2>
+                <p>Gunakan ilmu yang baru didapat untuk menyelesaikan masalah di bawah ini.</p>
+                
+                <ol>
+                    <li>Sebutkan 4 kriteria yang disebutkan Nabi ﷺ dalam memilih pasangan, dan manakah yang harus menjadi prioritas mutlak?</li>
+                    <li>Jelaskan batasan interaksi antara dua orang yang sudah resmi melangsungkan acara lamaran (tukar cincin/khitbah)! Apakah mereka sudah halal untuk bepergian berdua mengurus persiapan resepsi?</li>
+                    <li><strong>(Studi Kasus)</strong> Di Yayasan Markaz Yatim Duafa Qurani, terdapat beberapa anak asuh perempuan yang sudah mulai memasuki usia dewasa. Suatu hari, datang seorang pemuda kaya raya, namun jarang shalat, ingin melamar salah satu anak asuh tersebut. Di sisi lain, ada seorang guru ngaji yang gajinya pas-pasan, namun akhlaknya sangat mulia, juga berniat mengkhitbah. Sebagai pimpinan atau pembina asrama, bagaimana Anda mengarahkan sang anak asuh berdasarkan hadits prioritas kriteria pasangan?</li>
+                </ol>
+
+                <div class="toggle-container">
+                    <button class="toggle-btn" onclick="showInfo('kunci-esai-p2', this, 'p2')">🔑 Lihat Panduan Jawaban</button>
+                </div>
+                
+                <div id="info-kunci-esai-p2-p2" class="info-box">
+                    <h3>Panduan Jawaban:</h3>
+                    <ol style="font-size: 0.95rem;">
+                        <li>Harta, Nasab, Fisik, dan Agama. Prioritas mutlak yang tidak boleh ditawar adalah <strong>Agama (Akhlak dan Ketaatan pada Allah)</strong>.</li>
+                        <li>Meskipun sudah bertukar cincin, status mereka <strong>masih haram (bukan mahram)</strong>. Mereka tidak boleh bepergian berdua, berboncengan, apalagi bersentuhan fisik. Jika perlu mengurus resepsi, harus ditemani mahram (ayah/kakak kandung) atau orang ketiga yang terpercaya agar tidak berkhalwat.</li>
+                        <li>Sebagai pembina yang mengemban amanah perlindungan anak yatim, arahkan anak tersebut untuk memprioritaskan "Agama" (Sang Guru Ngaji). Harta bisa dicari bersama karena Allah Maha Pemberi Rezeki. Namun, suami yang tidak shalat akan membawa kehancuran masa depan rumah tangga di dunia maupun di akhirat. Pembina wajib memberikan pandangan yang menyeluruh tanpa memaksa.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>5. Kuis Evaluasi Pertemuan 2</h2>
+                <div class="quiz-question">
+                    <strong>1. Apa hukum seorang laki-laki melamar seorang perempuan yang sudah secara resmi menerima lamaran dari laki-laki lain (dan belum dibatalkan)?</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p2q1" value="wrong"> Mubah, karena belum akad nikah.</label>
+                        <label><input type="radio" name="p2q1" value="correct"> Haram dan berdosa besar.</label>
+                        <label><input type="radio" name="p2q1" value="wrong"> Makruh, lebih baik dihindari saja.</label>
+                    </div>
+                </div>
+
+                <div class="quiz-question">
+                    <strong>2. Menurut jumhur ulama, bagian tubuh calon istri yang boleh diperhatikan saat proses Nadzhar (melihat calon pasangan) adalah...</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p2q2" value="wrong"> Wajah dan sebagian rambut</label>
+                        <label><input type="radio" name="p2q2" value="wrong"> Seluruh tubuh dengan pakaian ketat</label>
+                        <label><input type="radio" name="p2q2" value="correct"> Hanya wajah dan kedua telapak tangan</label>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="checkQuiz('p2', 2)">Periksa Jawaban</button>
+                <div id="quiz-result-p2" class="quiz-result"></div>
+            </div>
+        </section>
+
+        <section id="p3" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. Lima Pilar Penentu Keabsahan Pernikahan</h2>
+                <p>Dalam Fiqih, sebuah ibadah atau transaksi (akad) tidak akan dianggap sah jika Rukun-rukunnya tidak terpenuhi. Ada <strong>5 Rukun Nikah</strong> yang mutlak harus ada dalam sebuah prosesi pernikahan Islam. Jika hilang satu saja, maka nikahnya batal secara agama (tidak sah / zina).</p>
+                
+                <div class="grid-elements">
+                    <div class="element-card" style="border-left: 5px solid var(--primary-color);">
+                        <h3>1. Calon Suami</h3>
+                        <p>Syaratnya: Beragama Islam, laki-laki sejati, tidak sedang dalam paksaan, bukan mahram calon istri, dan identitasnya jelas (diketahui secara pasti).</p>
+                    </div>
+                    <div class="element-card" style="border-left: 5px solid var(--accent-color);">
+                        <h3>2. Calon Istri</h3>
+                        <p>Syaratnya: Beragama Islam (atau ahli kitab yang terjaga kehormatannya menurut sebagian mazhab), perempuan sejati, bukan mahram calon suami, tidak sedang bersuami, dan tidak sedang dalam masa *Iddah*.</p>
+                    </div>
+                    <div class="element-card" style="border-left: 5px solid var(--success);">
+                        <h3>3. Wali (Bagi Pihak Perempuan)</h3>
+                        <p><strong>"Tidak sah nikah tanpa wali"</strong> (HR. Abu Daud). Wali adalah laki-laki dari garis keturunan ayah (nasab) yang berhak menikahkan perempuan tersebut. Wali tidak diperlukan untuk pihak laki-laki.</p>
+                    </div>
+                    <div class="element-card" style="border-left: 5px solid #ab47bc;">
+                        <h3>4. Dua Orang Saksi</h3>
+                        <p>Pernikahan harus dipublikasikan/disaksikan. Syarat mutlak saksi: Minimal 2 orang, laki-laki, beragama Islam, baligh (dewasa), berakal sehat, dan memiliki sifat *Adil* (bukan pembuat maksiat yang terang-terangan).</p>
+                    </div>
+                    <div class="element-card" style="border-left: 5px solid #00acc1; grid-column: 1 / -1;">
+                        <h3>5. Sighat (Ijab dan Kabul)</h3>
+                        <p>Ijab adalah ucapan penyerahan dari pihak Wali (contoh: "Aku nikahkan engkau dengan putriku..."). Kabul adalah ucapan penerimaan dari pihak suami (contoh: "Saya terima nikahnya..."). Ucapan ini harus berurutan, bersambung, dan menggunakan kata turunan *Nikah* atau *Zawaj*.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>2. Urutan Hierarki Wali Nasab</h2>
+                <p>Wali bagi seorang perempuan tidak bisa ditunjuk sembarangan. Islam mengatur urutan kekuasaan perwalian berdasarkan kedekatan nasab dari garis bapak. Jika orang di urutan pertama tidak ada (meninggal/hilang/gila/bukan muslim), hak wali turun ke urutan berikutnya, dengan urutan:</p>
+                <ol style="font-size: 1.1rem; font-weight: 500; color: var(--primary-dark);">
+                    <li>Ayah Kandung</li>
+                    <li>Kakek dari pihak Ayah (Ayahnya Ayah)</li>
+                    <li>Saudara Laki-laki Kandung (Seayah-Seibu)</li>
+                    <li>Saudara Laki-laki Seayah (Beda Ibu)</li>
+                    <li>Paman (Saudara laki-laki Ayah) kandung atau seayah</li>
+                    <li>Anak laki-laki Paman (Sepupu dari pihak bapak)</li>
+                </ol>
+            </div>
+
+            <div class="card">
+                <h2>3. Kapan Wali Hakim Berperan?</h2>
+                <p>Wali Hakim adalah kepala negara atau pejabat yang ditunjuk (seperti Kepala KUA/Penghulu) untuk bertindak sebagai wali bagi seorang perempuan.</p>
+                <div class="quote-box">
+                    "Sultan (Pemimpin/Negara) adalah wali bagi perempuan yang tidak memiliki wali." (HR. Tirmidzi)
+                </div>
+                <p>Wali Hakim baru boleh bertindak menikahkan jika terjadi kondisi: <strong>Ketiadaan total wali nasab</strong> (semua garis bapak meninggal), wali nasab hilang tidak diketahui rimbanya, wali nasab tidak beragama Islam (berbeda agama), atau wali nasab bersikap *Adhal* (menolak menikahkan tanpa alasan syar'i yang jelas).</p>
+            </div>
+
+            <div class="card exercise-card">
+                <h2>4. Latihan Soal Mandiri (Studi Kasus Perwalian Panti Asuhan)</h2>
+                <p>Ini adalah materi yang sangat krusial di lapangan, terutama jika Anda mengelola panti asuhan yatim.</p>
+                
+                <ol>
+                    <li>Sebutkan 5 rukun nikah yang harus dipenuhi! Apa hukumnya menikah secara siri tanpa sepengetahuan/tanpa izin dari Wali Nasab?</li>
+                    <li>Siapakah yang berhak menjadi saksi sah dalam pernikahan? Bolehkan menggunakan 2 orang perempuan sebagai saksi akad?</li>
+                    <li><strong>(Studi Kasus)</strong> Di Yayasan Markaz Yatim Duafa Qurani, Khadijah (seorang anak asuh yang tidak memiliki hubungan darah dengan pengurus) akan melangsungkan pernikahan. Ayahnya telah meninggal dunia. Kakeknya juga telah wafat. Namun, ia memiliki seorang kakak laki-laki kandung (seayah seibu) yang tinggal di kota lain.
+                    <br><br><strong>Pertanyaan:</strong> Bolehkah Kepala Panti Asuhan (atau pengurus yayasan) bertindak sebagai Wali untuk menikahkan anak asuh tersebut? Jelaskan alur Fiqihnya!</li>
+                </ol>
+
+                <div class="toggle-container">
+                    <button class="toggle-btn" onclick="showInfo('kunci-esai-p3', this, 'p3')">🔑 Lihat Panduan Jawaban</button>
+                </div>
+                
+                <div id="info-kunci-esai-p3-p3" class="info-box">
+                    <h3>Panduan Jawaban & Analisis Hukum:</h3>
+                    <ol style="font-size: 0.95rem;">
+                        <li>Rukun nikah: Mempelai Pria, Mempelai Wanita, Wali, 2 Saksi, Ijab Kabul. Menikah tanpa wali (seperti kawin lari/siri yang disembunyikan dari ayah) hukumnya <strong>BATAL dan TIDAK SAH</strong>. Status hubungannya dianggap zina menurut mayoritas ulama.</li>
+                        <li>Saksi haruslah 2 orang LAKI-LAKI muslim yang baligh, berakal, dan adil. Tidak sah menggunakan saksi perempuan dalam akad nikah (kecuali madzhab Hanafi dengan syarat 1 pria + 2 wanita, namun jumhur melarang keras).</li>
+                        <li><strong>TIDAK BOLEH.</strong> Pengasuh/Kepala Panti tidak memiliki hak *Wali Nasab*. Karena ayah dan kakek telah wafat, hak wali jatuh secara mutlak kepada <strong>Kakak Laki-laki Kandungnya</strong>. Sang kakak harus didatangkan. Jika kakaknya tidak bisa hadir, sang kakak bisa membuat *Taukil Wali* (surat kuasa perwalian) kepada Kepala KUA. Pengurus panti hanya bertindak sebagai fasilitator/pengayom acara, BUKAN sebagai wali akad.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>5. Kuis Evaluasi Pertemuan 3</h2>
+                <div class="quiz-question">
+                    <strong>1. Jika seorang perempuan yatim (ayah wafat) akan menikah, dan ia memiliki kakek dari pihak ayah, paman dari pihak ayah, dan saudara laki-laki kandung. Siapakah yang berhak menempati urutan PERTAMA menjadi walinya?</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p3q1" value="wrong"> Saudara laki-laki kandung</label>
+                        <label><input type="radio" name="p3q1" value="correct"> Kakek dari pihak Ayah</label>
+                        <label><input type="radio" name="p3q1" value="wrong"> Paman dari pihak Ayah</label>
+                    </div>
+                </div>
+
+                <div class="quiz-question">
+                    <strong>2. Lafaz penyerahan dari pihak Wali ("Saya nikahkan engkau...") dan lafaz penerimaan dari mempelai pria ("Saya terima nikahnya...") di dalam rukun nikah disebut sebagai...</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p3q2" value="wrong"> Walimatul 'Ursy</label>
+                        <label><input type="radio" name="p3q2" value="wrong"> Khitbah dan Nadzhar</label>
+                        <label><input type="radio" name="p3q2" value="correct"> Sighat (Ijab dan Kabul)</label>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="checkQuiz('p3', 2)">Periksa Jawaban</button>
+                <div id="quiz-result-p3" class="quiz-result"></div>
+            </div>
+        </section>
+		
+		<section id="p4" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. Syariat Mahar (Mas Kawin)</h2>
+                <p>Mahar adalah harta yang wajib diberikan oleh pihak suami kepada istri sebagai bentuk pemuliaan, kesungguhan, dan simbol perpindahan tanggung jawab. Mahar <strong>bukanlah harga beli</strong> atas seorang wanita.</p>
+                <p>Dalam Islam, mahar adalah hak mutlak istri. Ayah, wali, atau keluarga tidak berhak mengambil atau menggunakan mahar tersebut tanpa kerelaan penuh dari sang istri.</p>
+                
+                <div class="grid-elements">
+                    <div class="element-card" style="border-top: 4px solid var(--primary-color);">
+                        <h3 style="margin-top: 0;">Bentuk & Kadar Mahar</h3>
+                        <p>Islam tidak menetapkan batas maksimal mahar, namun sangat menekankan agar mahar tidak memberatkan pihak laki-laki. Rasulullah ﷺ bersabda: <em>"Sebaik-baik wanita adalah yang paling murah (mudah) maharnya."</em> Mahar bisa berupa uang, emas, barang berharga, atau bahkan hafalan Al-Qur'an dan jasa (mengajarkan ilmu).</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>2. Walimatul 'Ursy (Resepsi Pernikahan)</h2>
+                <p>Setelah akad nikah, disyariatkan untuk mengadakan <strong>Walimatul 'Ursy</strong>. Tujuannya adalah sebagai bentuk *tahadduts bin ni'mah* (rasa syukur), memberi makan orang lain, dan yang paling penting: <strong>mengumumkan pernikahan (I'lan)</strong> kepada masyarakat luas agar tidak timbul fitnah jika keduanya terlihat berduaan.</p>
+                
+                <div class="quote-box">
+                    "Adakanlah walimah, walaupun hanya dengan menyembelih seekor kambing." (HR. Bukhari & Muslim)
+                </div>
+                
+                <p>Mengundang orang dan menghadiri undangan walimah memiliki aturan syar'i:</p>
+                <ul>
+                    <li>Hukum <strong>menghadiri undangan walimah adalah Wajib</strong> (Fardhu 'Ain) bagi yang diundang secara spesifik, selama tidak ada uzur syar'i atau kemaksiatan di dalamnya.</li>
+                    <li>Sangat dilarang (Haram) mengadakan walimah yang hanya mengundang orang-orang kaya dan pejabat, sementara fakir miskin di sekitarnya diabaikan.</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>3. Adab & Larangan dalam Resepsi</h2>
+                <p>Banyak penyimpangan yang sering terjadi dalam pesta pernikahan modern karena mengikuti gengsi dan budaya yang bertentangan dengan syariat Islam. Beberapa hal yang harus dihindari:</p>
+                
+                <div class="toggle-container">
+                    <button class="toggle-btn active" onclick="showInfo('ikhtilat', this, 'p4')">Ikhtilat (Campur Baur)</button>
+                    <button class="toggle-btn" onclick="showInfo('tabarruj', this, 'p4')">Tabarruj & Israf</button>
+                </div>
+
+                <div id="info-ikhtilat-p4" class="info-box active">
+                    <h3>Larangan Ikhtilat & Khalwat</h3>
+                    <p>Resepsi yang Islami harus meminimalisir campur baur antara tamu laki-laki dan perempuan yang bukan mahram. Dianjurkan memisahkan area makan/tamu pria dan wanita (Infishal). Hiburan yang disajikan juga tidak boleh mengundang syahwat atau menggunakan alat musik yang diharamkan.</p>
+                </div>
+
+                <div id="info-tabarruj-p4" class="info-box">
+                    <h3>Tabarruj & Bermegah-megahan</h3>
+                    <p>Mempelai wanita dilarang keras melakukan <em>Tabarruj</em> (berhias berlebihan dan memamerkan kecantikan kepada pria non-mahram). Sangat ironis jika di hari pertama ibadah rumah tangga, mempelai justru mempertontonkan auratnya. Selain itu, dilarang <em>Israf</em> (mubazir) menghambur-hamburkan uang negara atau hutang demi gengsi pesta satu hari.</p>
+                </div>
+            </div>
+
+            <div class="card exercise-card">
+                <h2>4. Latihan Soal Mandiri (Studi Kasus Asrama)</h2>
+                
+                <ol>
+                    <li>Jelaskan posisi mahar dalam pernikahan! Apakah mahar boleh digunakan oleh ayah mertua untuk membayar biaya resepsi?</li>
+                    <li>Mengapa mengumumkan pernikahan (I'lan) kepada tetangga dan kerabat sangat ditekankan dalam Islam?</li>
+                    <li><strong>(Studi Kasus)</strong> Jika kelak menyelenggarakan Walimatul 'Ursy untuk salah satu dari 14 anak asuh perempuan di Yayasan Markaz Yatim Duafa Qurani, bagaimana Anda dan Umi Sarah merancang sebuah resepsi yang sederhana, berkah, mengundang masyarakat sekitar Asahan tanpa terjebak pada gengsi atau <em>Ikhtilat</em>? Rancanglah 3 aturan utama resepsi tersebut!</li>
+                </ol>
+
+                <div class="toggle-container">
+                    <button class="toggle-btn" onclick="showInfo('kunci-esai-p4', this, 'p4')">🔑 Lihat Panduan Jawaban</button>
+                </div>
+                
+                <div id="info-kunci-esai-p4-p4" class="info-box">
+                    <h3>Panduan Jawaban:</h3>
+                    <ol style="font-size: 0.95rem;">
+                        <li>Mahar adalah hak mutlak milik istri. Ayah atau keluarga TIDAK BOLEH mengambil atau menggunakannya untuk biaya katering/resepsi, kecuali istri memberikannya secara sukarela dan tanpa paksaan.</li>
+                        <li>Agar masyarakat tahu bahwa pasangan tersebut telah halal. Hal ini mencegah munculnya fitnah, gunjingan (su'udzon), dan tuduhan perzinahan dari masyarakat sekitar.</li>
+                        <li>Rancangan resepsi syar'i: (1) Memisahkan tempat duduk atau ruang makan antara tamu laki-laki dan perempuan. (2) Memastikan gaun pengantin anak asuh tetap syar'i, menutup dada, longgar, dan tidak *Tabarruj* berlebihan. (3) Memprioritaskan undangan untuk fakir miskin dan tetangga di sekitar yayasan, bukan hanya untuk pejabat/donatur besar.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>5. Kuis Evaluasi Pertemuan 4</h2>
+                <div class="quiz-question">
+                    <strong>1. Apa hukum menghadiri undangan Walimatul 'Ursy jika kita diundang secara langsung dan di dalam acara tersebut tidak terdapat kemaksiatan?</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p4q1" value="wrong"> Sunnah Muakkadah</label>
+                        <label><input type="radio" name="p4q1" value="correct"> Wajib (Fardhu 'Ain)</label>
+                        <label><input type="radio" name="p4q1" value="wrong"> Mubah</label>
+                    </div>
+                </div>
+
+                <div class="quiz-question">
+                    <strong>2. Tindakan berhias secara berlebihan dan memamerkan kecantikan kepada tamu laki-laki yang bukan mahram saat resepsi pernikahan disebut dengan...</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p4q2" value="wrong"> Ikhtilat</label>
+                        <label><input type="radio" name="p4q2" value="wrong"> Israf</label>
+                        <label><input type="radio" name="p4q2" value="correct"> Tabarruj</label>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="checkQuiz('p4', 2)">Periksa Jawaban</button>
+                <div id="quiz-result-p4" class="quiz-result"></div>
+            </div>
+        </section>
+
+        <section id="p5" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. Keseimbangan Peran dalam Keluarga</h2>
+                <p>Rumah tangga Islami bukanlah medan kompetisi antara laki-laki dan perempuan, melainkan institusi yang dibangun di atas prinsip pembagian peran yang adil (proporsional). Suami diangkat sebagai *Qawwam* (pemimpin/penanggung jawab utama), sementara istri adalah *Rabbaitul Bait* (ratu/pengelola rumah dan pendidik anak).</p>
+            </div>
+
+            <div class="card">
+                <h2>2. Hak Istri atas Suami (Kewajiban Suami)</h2>
+                <p>Suami memikul beban tanggung jawab yang sangat berat di hadapan Allah. Beberapa kewajiban mutlak suami adalah:</p>
+                
+                <div class="grid-elements">
+                    <div class="element-card" style="border-top: 4px solid var(--accent-color);">
+                        <h3 style="margin-top: 0;">1. Nafkah Zahir & Batin</h3>
+                        <p>Wajib menyediakan sandang, pangan, dan papan (tempat tinggal yang layak dan aman privasinya). Suami juga wajib memenuhi kebutuhan batin (biologis dan kasih sayang) istri secara layak.</p>
+                    </div>
+                    <div class="element-card" style="border-top: 4px solid var(--primary-color);">
+                        <h3 style="margin-top: 0;">2. Pendidikan Agama</h3>
+                        <p>Tugas menyelamatkan keluarga dari api neraka ada di pundak suami (QS. At-Tahrim: 6). Suami wajib mendidik istri tentang ilmu tauhid, fikih ibadah dasar, dan akhlak, atau memfasilitasinya menuntut ilmu.</p>
+                    </div>
+                    <div class="element-card" style="border-top: 4px solid var(--success);">
+                        <h3 style="margin-top: 0;">3. Mu'asyarah bil Ma'ruf</h3>
+                        <p>Menggauli istri dengan cara yang baik. Bersabar atas kekurangannya, tidak melakukan KDRT (kekerasan fisik yang mencederai), dan menghargai pendapatnya dalam urusan rumah tangga.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Hak Suami atas Istri (Kewajiban Istri)</h2>
+                <p>Jika suami telah menunaikan hak-hak istrinya dengan baik, maka syariat menetapkan kewajiban istri yang akan menjadi jalan tol menuju surga baginya:</p>
+                <ul>
+                    <li><strong>Ketaatan Mutlak (selain maksiat):</strong> Istri wajib taat kepada suaminya. Ketaatan kepada suami bahkan lebih didahulukan daripada ketaatan kepada orang tua kandung istri setelah ia menikah. Namun, tidak ada ketaatan jika suami menyuruh berbuat maksiat kepada Allah.</li>
+                    <li><strong>Menjaga Kehormatan:</strong> Istri wajib menjaga kehormatan dirinya, harta suaminya, dan rahasia ranjang/keluarga. Ia tidak boleh mengizinkan orang yang dibenci suaminya masuk ke dalam rumah.</li>
+                    <li><strong>Memenuhi Panggilan Suami:</strong> Menjawab kebutuhan biologis suami merupakan ibadah yang sangat ditekankan, kecuali jika istri memiliki uzur syar'i (haid, nifas, sakit, atau puasa wajib).</li>
+                </ul>
+            </div>
+
+            <div class="card exercise-card">
+                <h2>4. Latihan Soal Mandiri</h2>
+                
+                <ol>
+                    <li>Jelaskan apa yang dimaksud dengan <em>Mu'asyarah bil Ma'ruf</em> dalam kehidupan berumah tangga!</li>
+                    <li>Apa batasan ketaatan seorang istri kepada suaminya? Berikan contoh situasi di mana istri wajib menolak perintah suami!</li>
+                    <li><strong>(Studi Kasus)</strong> Mahadi kelak akan membina keluarganya sendiri. Jika seorang suami memiliki gaji yang kecil (hanya cukup untuk makan sederhana dan kos-kosan petak), apakah ia dianggap telah gugur dari kewajiban memberi nafkah jika istrinya menuntut rumah mewah? Jelaskan berdasarkan kaidah fikih nafkah!</li>
+                </ol>
+
+                <div class="toggle-container">
+                    <button class="toggle-btn" onclick="showInfo('kunci-esai-p5', this, 'p5')">🔑 Lihat Panduan Jawaban</button>
+                </div>
+                
+                <div id="info-kunci-esai-p5-p5" class="info-box">
+                    <h3>Panduan Jawaban:</h3>
+                    <ol style="font-size: 0.95rem;">
+                        <li>Bergaul dengan cara yang makruf (baik). Meliputi tutur kata yang lembut, tidak mencela fisik atau keluarga pasangan, saling membantu pekerjaan rumah, dan memaafkan kesalahan kecil sehari-hari.</li>
+                        <li>Ketaatan dibatasi pada hal-hal mubah dan kebaikan. Jika suami menyuruh maksiat (misal: menyuruh istri melepas hijab saat bekerja, menyuruh berbohong, melarang shalat), istri WAJIB MENOLAK, sesuai kaidah "Tidak ada ketaatan kepada makhluk dalam bermaksiat kepada Khaliq".</li>
+                        <li>Standar nafkah dalam Islam diukur dari <strong>kemampuan suami</strong>, bukan dari tuntutan gaya hidup istri. Selama suami sudah bekerja keras dan mampu menyediakan kebutuhan dasar (makan, pakaian penutup aurat, tempat tinggal yang aman dari hujan/panas), maka kewajiban nafkahnya telah gugur. Istri dituntut untuk Qana'ah (merasa cukup), dan haram hukumnya menuntut hal di luar kesanggupan suami.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>5. Kuis Evaluasi Pertemuan 5</h2>
+                <div class="quiz-question">
+                    <strong>1. Setelah seorang wanita menikah, kepada siapakah hak ketaatan terbesarnya bergeser?</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p5q1" value="wrong"> Ayah kandungnya</label>
+                        <label><input type="radio" name="p5q1" value="wrong"> Pimpinan di tempat kerjanya</label>
+                        <label><input type="radio" name="p5q1" value="correct"> Suaminya</label>
+                    </div>
+                </div>
+
+                <div class="quiz-question">
+                    <strong>2. Memberikan makanan, pakaian, dan tempat tinggal bagi keluarga disebut dengan...</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p5q2" value="wrong"> Nafkah Batin</label>
+                        <label><input type="radio" name="p5q2" value="correct"> Nafkah Zahir</label>
+                        <label><input type="radio" name="p5q2" value="wrong"> Mahar</label>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="checkQuiz('p5', 2)">Periksa Jawaban</button>
+                <div id="quiz-result-p5" class="quiz-result"></div>
+            </div>
+        </section>
+
+        <section id="p6" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. Memahami Syariat Perceraian</h2>
+                <p>Berbeda dengan agama tertentu yang tidak mengenal konsep cerai sama sekali, Islam sangat realistis. Terkadang, jika sebuah rumah tangga dipenuhi kezaliman, KDRT, atau hilangnya tujuan pernikahan, memaksakan untuk terus bersama justru membawa kemudaratan (bahaya) fisik dan mental.</p>
+                <p>Oleh karena itu, syariat menyediakan "Pintu Darurat" bernama Perceraian. Meskipun dihalalkan, perbuatan ini sangat dibenci oleh Allah karena meruntuhkan bangunan keluarga.</p>
+            </div>
+
+            <div class="card">
+                <h2>2. Talak (Hak Cerai dari Suami)</h2>
+                <p>Talak adalah pelepasan ikatan perkawinan yang lafaznya (ucapannya) dipegang oleh pihak suami. Talak terbagi menjadi dua ranah utama:</p>
+                
+                <div class="toggle-container">
+                    <button class="toggle-btn active" onclick="showInfo('talak-raj', this, 'p6')">Talak Raj'i (Talak 1 & 2)</button>
+                    <button class="toggle-btn" onclick="showInfo('talak-bain', this, 'p6')">Talak Ba'in (Talak 3)</button>
+                </div>
+
+                <div id="info-talak-raj-p6" class="info-box active">
+                    <h3>Talak Raj'i (Bisa Rujuk)</h3>
+                    <p>Talak yang dijatuhkan suami untuk pertama (Talak 1) atau kedua kalinya (Talak 2). Pada fase ini, <strong>suami berhak merujuk (kembali) kepada istrinya kapan saja selama istri masih dalam masa Iddah</strong>, tanpa perlu melakukan akad nikah atau mahar baru.</p>
+                </div>
+
+                <div id="info-talak-bain-p6" class="info-box">
+                    <h3>Talak Ba'in Kubra (Talak 3)</h3>
+                    <p>Jika suami mengucapkan talak untuk yang KETIGA kalinya, maka jatuhlah Talak Ba'in. Pernikahan putus total secara permanen. Suami <strong>TIDAK BISA RUJUK</strong> dan tidak bisa menikahinya lagi, KECUALI mantan istrinya itu telah menikah dengan pria lain secara normal, lalu bercerai dengan suami barunya tersebut (bukan pernikahan rekayasa/Muhallil).</p>
+                </div>
+
+                <div class="quote-box">
+                    <strong>Peringatan Keras:</strong> Ada tiga hal yang jika diucapkan dengan main-main (bercanda), maka hukumnya tetap jatuh serius (sah): Nikah, Talak (cerai), dan Rujuk. Suami dilarang keras menggunakan kata "cerai" sebagai bahan candaan atau ancaman sehari-hari.
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Khulu' (Gugatan Cerai dari Istri)</h2>
+                <p>Islam sangat adil. Jika suami memegang hak Talak, maka istri diberikan hak <strong>Khulu'</strong>. Khulu' adalah perceraian yang terjadi atas permintaan istri karena alasan syar'i (misal: suami zalim, impoten, fasik, tidak menafkahi).</p>
+                <p>Syarat utama Khulu' adalah istri harus memberikan <strong>Iwadl (tebusan/kompensasi)</strong> kepada suaminya, biasanya dengan cara mengembalikan mahar yang pernah diterimanya dahulu. Jika suami menyetujui tebusan itu dan menceraikannya, maka jatuhlah Khulu' (yang berstatus Talak Ba'in Sughra, yakni tidak bisa rujuk kecuali dengan akad baru).</p>
+            </div>
+
+            <div class="card exercise-card">
+                <h2>4. Latihan Soal Mandiri</h2>
+                
+                <ol>
+                    <li>Mengapa hak menjatuhkan Talak berada di tangan suami, bukan istri?</li>
+                    <li>Sebutkan perbedaan antara Talak Raj'i (Talak 1 dan 2) dengan Talak Ba'in Kubra (Talak 3)!</li>
+                    <li><strong>(Studi Kasus Fikih)</strong> Seorang suami sedang bertengkar hebat dengan istrinya. Dalam keadaan marah besar namun masih sadar, suami itu berteriak: "Mulai hari ini, aku ceraikan kamu!". Pertanyaannya: Apakah jatuh hukum talaknya meskipun diucapkan dalam keadaan emosi?</li>
+                </ol>
+
+                <div class="toggle-container">
+                    <button class="toggle-btn" onclick="showInfo('kunci-esai-p6', this, 'p6')">🔑 Lihat Panduan Jawaban</button>
+                </div>
+                
+                <div id="info-kunci-esai-p6-p6" class="info-box">
+                    <h3>Panduan Jawaban:</h3>
+                    <ol style="font-size: 0.95rem;">
+                        <li>Secara psikologis, laki-laki lebih mengedepankan logika/rasio, sedangkan perempuan lebih dominan perasaan (emosi). Jika hak talak mutlak di tangan istri, dikhawatirkan kata "cerai" akan sangat mudah terucap saat istri sedang terbawa perasaan marah atau siklus hormonal bulanan. Selain itu, suami memegang beban finansial (mahar & nafkah).</li>
+                        <li>Talak Raj'i masih ada kesempatan memperbaiki diri (suami bisa rujuk kapan saja sebelum masa iddah habis tanpa akad baru). Talak 3 adalah batas akhir toleransi; suami istri haram rujuk/menikah kembali sampai sang mantan istri menikah dengan orang lain lalu bercerai wajar.</li>
+                        <li><strong>JATUH TALAK.</strong> Mayoritas ulama sepakat bahwa talak yang diucapkan secara *Sharih* (jelas) seperti "Aku ceraikan kamu", tetap sah dan jatuh hukumnya, baik diucapkan serius, bercanda, maupun dalam keadaan marah (selama marahnya tidak sampai tahap gila/hilang kesadaran total).</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>5. Kuis Evaluasi Pertemuan 6</h2>
+                <div class="quiz-question">
+                    <strong>1. Gugatan perceraian yang diajukan oleh pihak istri kepada pengadilan agama dengan menyerahkan tebusan (mengembalikan mahar) disebut dengan istilah...</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p6q1" value="wrong"> Rujuk</label>
+                        <label><input type="radio" name="p6q1" value="wrong"> Talak Ba'in</label>
+                        <label><input type="radio" name="p6q1" value="correct"> Khulu'</label>
+                    </div>
+                </div>
+
+                <div class="quiz-question">
+                    <strong>2. Jika seorang suami telah menjatuhkan Talak 3 (Tiga) kepada istrinya, apakah ia masih memiliki hak untuk merujuk istrinya di masa Iddah?</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p6q2" value="wrong"> Bisa, asalkan membayar denda (kifarat).</label>
+                        <label><input type="radio" name="p6q2" value="correct"> Tidak bisa sama sekali.</label>
+                        <label><input type="radio" name="p6q2" value="wrong"> Bisa, asalkan disetujui wali istri.</label>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="checkQuiz('p6', 2)">Periksa Jawaban</button>
+                <div id="quiz-result-p6" class="quiz-result"></div>
+            </div>
+        </section>
+
+        <section id="p7" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. Pengertian & Hikmah Iddah</h2>
+                <p><strong>Iddah</strong> adalah masa tunggu tertentu bagi seorang wanita yang telah diceraikan oleh suaminya (cerai hidup) atau ditinggal mati suaminya, di mana selama masa itu <strong>ia dilarang keras menerima lamaran atau menikah dengan laki-laki lain</strong>.</p>
+                <p>Hikmah syariat Iddah sangat agung:</p>
+                <ul>
+                    <li><strong>Bara'atur Rahim:</strong> Untuk memastikan bahwa rahim sang mantan istri benar-benar bersih (tidak sedang mengandung janin dari suami sebelumnya). Hal ini mencegah kekacauan nasab keturunan.</li>
+                    <li><strong>Masa Pendinginan:</strong> Memberikan ruang waktu bagi suami (pada talak raj'i) untuk menyesali perbuatannya dan berpikir jernih untuk melakukan *Rujuk* demi menyelamatkan keluarga.</li>
+                    <li><strong>Masa Berkabung (Ihdad):</strong> Khusus bagi wanita yang ditinggal mati, masa Iddah juga berfungsi sebagai wujud penghormatan (berkabung) atas suaminya.</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>2. Klasifikasi Waktu Iddah Wanita</h2>
+                <p>Lama masa tunggu (Iddah) seorang wanita berbeda-beda, tergantung pada kondisi fisiknya dan penyebab perceraiannya. Perhatikan tabel fikih berikut:</p>
+                
+                <div class="grid-elements">
+                    <div class="element-card" style="border-left: 4px solid var(--primary-color);">
+                        <h3 style="margin-top: 0; font-size: 1.1rem;">Wanita yang Haid (Cerai Hidup)</h3>
+                        <p>Masa iddahnya adalah <strong>3 kali Quru'</strong> (3 kali masa suci dari haid). Ini memakan waktu sekitar 3 bulan.</p>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid var(--accent-hover);">
+                        <h3 style="margin-top: 0; font-size: 1.1rem;">Wanita Menopause / Belum Haid</h3>
+                        <p>Jika dicerai dan ia tidak mengalami haid karena faktor usia/medis, masa iddahnya ditetapkan menggunakan kalender, yaitu <strong>3 Bulan masehi/hijriah</strong>.</p>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid #8e24aa;">
+                        <h3 style="margin-top: 0; font-size: 1.1rem;">Wanita Ditinggal Mati Suami</h3>
+                        <p>Baik ia pernah berhubungan badan atau belum, iddah cerai mati adalah <strong>4 Bulan 10 Hari</strong>.</p>
+                    </div>
+                    <div class="element-card" style="border-left: 4px solid var(--danger);">
+                        <h3 style="margin-top: 0; font-size: 1.1rem;">Wanita yang Sedang Hamil</h3>
+                        <p>Jika dicerai (hidup/mati) dalam keadaan mengandung, masa iddahnya adalah <strong>Sampai ia melahirkan bayinya</strong> (meskipun baru dicerai sehari, jika besoknya melahirkan, maka iddahnya habis).</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Hukum Rujuk</h2>
+                <p>Rujuk adalah tindakan suami mengembalikan ikatan pernikahan dengan istri yang telah diceraikannya, <strong>selama masih berada dalam masa Iddah Talak Raj'i</strong> (Talak 1 atau 2).</p>
+                <ul>
+                    <li>Rujuk tidak memerlukan wali baru, saksi baru (meski disunnahkan), ataupun mahar baru. Suami cukup mengucapkan: <em>"Aku merujukmu kembali."</em></li>
+                    <li>Syarat mutlak rujuk: Istri belum melewati batas masa Iddahnya. Jika masa Iddah (misal 3 kali suci) sudah lewat dan habis, maka status istrinya menjadi "Bukan Mahram" lagi. Mereka harus melakukan akad nikah dan mahar baru jika ingin bersatu kembali.</li>
+                </ul>
+            </div>
+
+            <div class="card exercise-card">
+                <h2>4. Latihan Soal Mandiri</h2>
+                
+                <ol>
+                    <li>Sebutkan 2 hikmah/tujuan utama mengapa Allah mensyariatkan masa Iddah bagi wanita yang dicerai!</li>
+                    <li>Berapakah lama masa Iddah bagi seorang istri yang suaminya meninggal dunia karena kecelakaan?</li>
+                    <li><strong>(Studi Kasus)</strong> Zaid menceraikan istrinya (Talak 1) yang saat itu sedang hamil 8 bulan. Satu bulan kemudian, istrinya melahirkan secara normal. Seminggu setelah istrinya melahirkan, Zaid menyesal dan berkata, "Aku merujukmu kembali." Apakah ucapan rujuk Zaid sah tanpa harus mengulang akad nikah? Jelaskan!</li>
+                </ol>
+
+                <div class="toggle-container">
+                    <button class="toggle-btn" onclick="showInfo('kunci-esai-p7', this, 'p7')">🔑 Lihat Panduan Jawaban</button>
+                </div>
+                
+                <div id="info-kunci-esai-p7-p7" class="info-box">
+                    <h3>Panduan Jawaban:</h3>
+                    <ol style="font-size: 0.95rem;">
+                        <li>(1) Membersihkan rahim (Bara'atur rahim) untuk menghindari tercampurnya nasab/genetik. (2) Memberi waktu bagi suami istri untuk berpikir ulang dan melakukan rujuk jika perceraian terjadi karena emosi sesaat.</li>
+                        <li><strong>4 Bulan 10 Hari.</strong> Selama masa ini wanita tersebut berada dalam masa berkabung (*Ihdad*) dan tidak boleh menerima lamaran (khitbah) secara terang-terangan.</li>
+                        <li><strong>TIDAK SAH.</strong> Masa iddah bagi wanita hamil berakhir seketika saat ia melahirkan janinnya. Karena mantan istri Zaid sudah melahirkan (1 bulan setelah talak), maka masa iddahnya sudah habis. Zaid tidak bisa asal rujuk, ia harus meminang ulang dan melangsungkan Akad Nikah baru beserta mahar baru.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>5. Kuis Evaluasi Pertemuan 7</h2>
+                <div class="quiz-question">
+                    <strong>1. Berapa lamakah masa iddah (masa tunggu) bagi wanita yang diceraikan hidup oleh suaminya dan wanita tersebut masih mengalami siklus haid normal?</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p7q1" value="wrong"> 4 bulan 10 hari</label>
+                        <label><input type="radio" name="p7q1" value="correct"> 3 kali masa suci (Quru')</label>
+                        <label><input type="radio" name="p7q1" value="wrong"> Sampai melahirkan</label>
+                    </div>
+                </div>
+
+                <div class="quiz-question">
+                    <strong>2. Untuk melakukan Rujuk pada saat Talak Raj'i (istri masih dalam masa Iddah), apakah sang suami diwajibkan untuk mengundang Wali dan membayar Mahar baru?</strong>
+                    <div class="options">
+                        <label><input type="radio" name="p7q2" value="wrong"> Ya, wajib ada akad nikah baru.</label>
+                        <label><input type="radio" name="p7q2" value="wrong"> Ya, tapi cukup membayar mahar saja.</label>
+                        <label><input type="radio" name="p7q2" value="correct"> Tidak perlu wali dan mahar baru.</label>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="checkQuiz('p7', 2)">Periksa Jawaban</button>
+                <div id="quiz-result-p7" class="quiz-result"></div>
+            </div>
+        </section>
+
+        <section id="p8" class="meeting-content">
+            
+            <div class="card">
+                <h2>1. Refleksi: Membangun Keluarga Dakwah</h2>
+                <p>Alhamdulillah, kita telah menuntaskan kajian Fiqih Munakahat. Perlu disadari bahwa hukum-hukum fikih (Rukun, Syarat, Talak) hanyalah pagar pembatas agar kita tidak terjerumus dalam kemaksiatan. Namun, untuk mengisi rumah tangga agar menjadi "Surga sebelum Surga", dibutuhkan Akhlakul Karimah, ketaqwaan, dan kesabaran.</p>
+                <p>Tujuan utama pernikahan bukanlah sekadar menyatukan dua insan, melainkan melahirkan generasi rabbani (anak-anak yang shalih/shalihah) yang akan memajukan agama dan bangsa, seperti yang kita perjuangkan dalam dunia pendidikan anak-anak asuh.</p>
+            </div>
+
+            <div class="card" style="background-color: #fafafa; border: 2px solid var(--accent-color);">
+                <h2 style="color: var(--accent-hover); border-bottom-color: var(--accent-color);">2. Ujian Akhir Semester (FIQ-204)</h2>
+                <p>Ujian ini terdiri dari 10 soal pilihan ganda yang menguji pemahaman komprehensif Anda dari Bab 1 (Hakikat Nikah) hingga Bab 7 (Talak & Iddah). Berdoalah sebelum mulai mengerjakan!</p>
+                
+                <div id="final-exam-container">
+                    <div class="exam-progress" id="exam-progress">Soal 1 dari 10</div>
+                    
+                    <div id="exam-question-text" style="font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: var(--primary-dark);">Memuat soal...</div>
+                    
+                    <div id="exam-options-container" class="options">
+                        </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                        <button id="btn-exam-prev" onclick="prevExamQuestion()" class="submit-btn" style="background-color: #90a4ae; display: none;">Sebelumnya</button>
+                        <button id="btn-exam-next" onclick="nextExamQuestion()" class="submit-btn" style="margin-left: auto;">Selanjutnya</button>
+                        <button id="btn-exam-submit" onclick="submitExam()" class="submit-btn" style="background-color: var(--danger); display: none;">Kumpulkan Ujian</button>
+                    </div>
+                </div>
+
+                <div id="exam-result-container" style="display: none; text-align: center; padding: 40px; background: var(--primary-light); border-radius: var(--radius-lg); margin-top: 20px;">
+                    <h1 style="color: var(--primary-dark); margin: 0; font-size: 4rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);" id="exam-final-score">0</h1>
+                    <h3 style="margin-top: 15px; color: var(--primary-color); font-size: 1.5rem;">Nilai Akhir (Skala 100)</h3>
+                    <p id="exam-final-message" style="font-size: 1.2rem; font-weight: 600; margin-top: 20px;"></p>
+                    <button onclick="resetExam()" class="submit-btn" style="margin-top: 25px; background-color: var(--primary-dark); color: white;">Ulangi Ujian</button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        // --- 1. TAB NAVIGATION LOGIC ---
+        function openMeeting(evt, meetingId) {
+            var i, meetingcontent, tablinks;
+            
+            // Sembunyikan semua konten section
+            meetingcontent = document.getElementsByClassName("meeting-content");
+            for (i = 0; i < meetingcontent.length; i++) {
+                meetingcontent[i].classList.remove("active-content");
+            }
+
+            // Hapus status aktif dari semua menu tab
+            tablinks = document.getElementsByClassName("tab-item");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active-tab");
+            }
+
+            // Tampilkan section yang dipilih dan set menu tab-nya aktif
+            document.getElementById(meetingId).classList.add("active-content");
+            evt.currentTarget.classList.add("active-tab");
+            
+            // Auto-scroll ke atas kontainer
+            window.scrollTo({
+                top: document.querySelector('.nav-container').offsetTop - 10,
+                behavior: 'smooth'
+            });
+        }
+
+        // --- 2. TOGGLE INFO LOGIC (Info Box & Jawaban Esai) ---
+        function showInfo(infoId, btnElement, section) {
+            const sectionEl = document.getElementById(section);
+            
+            // Sembunyikan box yang sedang aktif di section tersebut
+            sectionEl.querySelectorAll('.info-box').forEach(box => {
+                box.classList.remove('active');
+            });
+            
+            // Reset state tombol di container yang sama
+            const container = btnElement.parentElement;
+            container.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Tampilkan box tujuan
+            document.getElementById('info-' + infoId + '-' + section).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        // --- 3. LOGIKA KUIS EVALUASI PER PERTEMUAN ---
+        function checkQuiz(section, totalQuestions) {
+            let score = 0;
+            let answeredAll = true;
+
+            for(let i=1; i<=totalQuestions; i++) {
+                const q = document.querySelector('input[name="'+section+'q'+i+'"]:checked');
+                if(!q) { answeredAll = false; break; }
+                if(q.value === "correct") score++;
+            }
+
+            if(!answeredAll) {
+                alert("Pilih jawaban untuk semua pertanyaan evaluasi terlebih dahulu!");
+                return;
+            }
+
+            const resultDiv = document.getElementById('quiz-result-'+section);
+            resultDiv.style.display = 'block';
+
+            if (score === totalQuestions) {
+                resultDiv.innerHTML = "Sempurna! Kamu memahami materi ini dengan sangat tajam. Lanjutkan belajarmu! 🌟";
+                resultDiv.style.backgroundColor = "#e8f5e9";
+                resultDiv.style.color = "#2e7d32";
+                resultDiv.style.border = "1px solid #c8e6c9";
+            } else {
+                resultDiv.innerHTML = "Kamu menjawab benar " + score + " dari " + totalQuestions + " soal. Ayo baca ulang materinya dengan lebih teliti! 📖";
+                resultDiv.style.backgroundColor = "#fff3e0";
+                resultDiv.style.color = "#e65100";
+                resultDiv.style.border = "1px solid #ffe0b2";
+            }
+        }
+
+        // --- 4. LOGIKA UJIAN AKHIR SEMESTER (P8) ---
+        const examData = [
+            { q: "Hukum asal menikah bisa berubah menjadi WAJIB apabila seseorang telah mampu secara finansial dan ia...", opts: ["Didesak oleh orang tuanya", "Khawatir atau takut terjerumus dalam perbuatan zina", "Ingin mengejar status sosial"], ans: 1 },
+            { q: "Prioritas paling utama dalam memilih calon pasangan suami/istri berdasarkan hadits Nabi ﷺ adalah melihat dari sisi...", opts: ["Agamanya (Akhlak & Ketaatan)", "Harta kekayaannya", "Nasab keturunannya"], ans: 0 },
+            { q: "Berikut ini yang BUKAN merupakan bagian dari 5 Rukun Nikah adalah...", opts: ["Dua orang saksi laki-laki", "Sighat (Ijab dan Kabul)", "Resepsi (Walimatul 'Ursy)"], ans: 2 },
+            { q: "Jika seorang wanita yatim ingin menikah namun kakeknya juga telah tiada, siapakah yang menempati urutan nasab PERTAMA untuk menjadi Walinya?", opts: ["Saudara Laki-laki Kandung", "Paman (Saudara laki-laki Ayah)", "Penghulu KUA (Wali Hakim)"], ans: 0 },
+            { q: "Apa status hukum dari tindakan seorang pria yang melamar wanita yang sudah secara resmi menerima lamaran pria lain?", opts: ["Mubah (Boleh) selama belum akad", "Haram dan Berdosa", "Sunnah jika ia lebih kaya"], ans: 1 },
+            { q: "Batas aurat wanita yang boleh dilihat oleh pelamar saat proses Nadzhar (melihat calon istri) menurut mayoritas ulama adalah...", opts: ["Wajah dan Rambut", "Seluruh tubuh", "Hanya wajah dan kedua telapak tangan"], ans: 2 },
+            { q: "Nafkah Zahir (makanan, pakaian, tempat tinggal) dalam kehidupan berumah tangga merupakan...", opts: ["Kewajiban Istri", "Kewajiban Suami", "Tanggung jawab mertua"], ans: 1 },
+            { q: "Gugatan cerai yang diajukan oleh istri kepada suami dengan menyertakan Iwadl (tebusan/mengembalikan mahar) disebut dengan istilah...", opts: ["Khulu'", "Talak Raj'i", "Fasakh"], ans: 0 },
+            { q: "Berapa lamakah masa Iddah (masa tunggu) bagi seorang wanita yang ditinggal mati (wafat) oleh suaminya?", opts: ["3 kali suci (Quru')", "Sampai ia melahirkan", "4 Bulan 10 Hari"], ans: 2 },
+            { q: "Jika suami telah menjatuhkan Talak untuk yang ke-3 kalinya (Talak Ba'in Kubra), maka konsekuensinya adalah...", opts: ["Bisa rujuk kapan saja", "Haram rujuk/menikah lagi selamanya, kecuali mantan istrinya telah menikah dengan pria lain lalu bercerai wajar", "Bisa nikah lagi dengan syarat mahar digandakan"], ans: 1 }
+        ];
+
+        let currentExamQ = 0;
+        let examAnswers = new Array(10).fill(null);
+
+        function loadExamQuestion() {
+            document.getElementById('exam-progress').innerText = `Soal ${currentExamQ + 1} dari ${examData.length}`;
+            document.getElementById('exam-question-text').innerHTML = examData[currentExamQ].q;
+            
+            const optsContainer = document.getElementById('exam-options-container');
+            optsContainer.innerHTML = '';
+            
+            examData[currentExamQ].opts.forEach((opt, index) => {
+                const isChecked = examAnswers[currentExamQ] === index ? 'checked' : '';
+                optsContainer.innerHTML += `
+                    <label>
+                        <input type="radio" name="exam_opt" value="${index}" ${isChecked} onchange="saveExamAnswer(${index})">
+                        <span>${opt}</span>
+                    </label>
+                `;
+            });
+
+            // Visibilitas tombol navigasi Ujian
+            document.getElementById('btn-exam-prev').style.display = currentExamQ > 0 ? 'inline-block' : 'none';
+            
+            if (currentExamQ === examData.length - 1) {
+                document.getElementById('btn-exam-next').style.display = 'none';
+                document.getElementById('btn-exam-submit').style.display = 'inline-block';
+            } else {
+                document.getElementById('btn-exam-next').style.display = 'inline-block';
+                document.getElementById('btn-exam-submit').style.display = 'none';
+            }
+        }
+
+        function saveExamAnswer(index) {
+            examAnswers[currentExamQ] = index;
+        }
+
+        function nextExamQuestion() {
+            if (examAnswers[currentExamQ] === null) {
+                alert("Pilih jawaban Anda terlebih dahulu sebelum melangkah ke soal berikutnya!");
+                return;
+            }
+            if (currentExamQ < examData.length - 1) {
+                currentExamQ++;
+                loadExamQuestion();
+            }
+        }
+
+        function prevExamQuestion() {
+            if (currentExamQ > 0) {
+                currentExamQ--;
+                loadExamQuestion();
+            }
+        }
+
+        function submitExam() {
+            if (examAnswers[currentExamQ] === null) {
+                alert("Harap selesaikan soal terakhir terlebih dahulu!");
+                return;
+            }
+
+            // Hitung Skor (10 soal x 10 poin = 100)
+            let score = 0;
+            for (let i = 0; i < examData.length; i++) {
+                if (examAnswers[i] === examData[i].ans) score += 10;
+            }
+
+            // Sembunyikan panel kuis, tampilkan hasil
+            document.getElementById('final-exam-container').style.display = 'none';
+            const resultContainer = document.getElementById('exam-result-container');
+            resultContainer.style.display = 'block';
+            
+            // Animasi angka skor
+            let currentDisplay = 0;
+            const scoreElement = document.getElementById('exam-final-score');
+            const interval = setInterval(() => {
+                scoreElement.innerText = currentDisplay;
+                if (currentDisplay >= score) {
+                    clearInterval(interval);
+                    
+                    // Tampilkan pesan sesuai nilai akhir
+                    let msg = "";
+                    if (score >= 90) {
+                        msg = "Masya Allah, Mumtaz! Pemahaman Anda tentang Fiqih Munakahat sangat solid. Anda sudah memiliki fondasi ilmu yang mantap untuk membimbing keluarga asuh menuju sakinah! 🎓✨";
+                    } else if (score >= 70) {
+                        msg = "Jayyid! Anda telah memahami syariat pernikahan dengan baik. Tetap terus ulangi hafalan rukun nikah dan hukum talak agar tidak lupa. 📚";
+                    } else {
+                        msg = "Nilai belum mencapai target, namun proses belajar adalah yang utama. Mari baca kembali materi rukun nikah, wali, dan iddah secara perlahan. Jangan menyerah! 💡";
+                    }
+                    document.getElementById('exam-final-message').innerText = msg;
+                }
+                currentDisplay += 2; // Increment animasi
+            }, 20);
+        }
+
+        function resetExam() {
+            currentExamQ = 0;
+            examAnswers.fill(null);
+            document.getElementById('exam-result-container').style.display = 'none';
+            document.getElementById('final-exam-container').style.display = 'block';
+            loadExamQuestion();
+        }
+
+        // Inisiasi awal saat halaman dimuat
+        loadExamQuestion();
+
+    </script>
+</body>
+</html>
