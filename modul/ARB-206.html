@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARB-206: Al-Hiwar Interaktif Komprehensif</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .arabic { font-family: 'Amiri', serif; direction: rtl; font-size: 1.8rem; line-height: 3rem; }
+        .tab-active { border-bottom: 4px solid #2563eb; color: #1e40af; font-weight: 800; background-color: #eff6ff; }
+        .correct-answer { background-color: #d1fae5 !important; border-color: #10b981 !important; color: #065f46 !important; }
+        .wrong-answer { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+    <header class="bg-blue-900 text-white shadow-2xl sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h1 class="text-2xl md:text-4xl font-extrabold tracking-tighter">ARB-206: AL-HIWAR</h1>
+                    <p class="text-blue-300 text-sm md:text-base font-medium uppercase tracking-widest">Kurikulum Bahasa Arab Terpadu & Beradab</p>
+                </div>
+                <div class="hidden md:block text-right">
+                    <span class="bg-blue-700 px-4 py-2 rounded-full text-xs font-bold border border-blue-500">VERSI 2.0: FULL CONTENT</span>
+                </div>
+            </div>
+            
+            <nav class="flex overflow-x-auto space-x-2 no-scrollbar border-b border-blue-800">
+                <button onclick="switchTab('p1')" class="tab-btn px-6 py-3 whitespace-nowrap rounded-t-xl transition-all hover:bg-blue-800" id="btn-p1">P-1: Kota I</button>
+                <button onclick="switchTab('p2')" class="tab-btn px-6 py-3 whitespace-nowrap rounded-t-xl transition-all hover:bg-blue-800" id="btn-p2">P-2: Kota II</button>
+                <button onclick="switchTab('p3')" class="tab-btn px-6 py-3 whitespace-nowrap rounded-t-xl transition-all hover:bg-blue-800" id="btn-p3">P-3: Ilmu I</button>
+                <button onclick="switchTab('p4')" class="tab-btn px-6 py-3 whitespace-nowrap rounded-t-xl transition-all hover:bg-blue-800" id="btn-p4">P-4: Ilmu II</button>
+                <button onclick="switchTab('p5')" class="tab-btn px-6 py-3 whitespace-nowrap rounded-t-xl transition-all hover:bg-blue-800" id="btn-p5">P-5: Kerja I</button>
+                <button onclick="switchTab('p6')" class="tab-btn px-6 py-3 whitespace-nowrap rounded-t-xl transition-all hover:bg-blue-800" id="btn-p6">P-6: Kerja II</button>
+                <button onclick="switchTab('p7')" class="tab-btn px-6 py-3 whitespace-nowrap rounded-t-xl transition-all hover:bg-blue-800" id="btn-p7">P-7: Pemuda I</button>
+                <button onclick="switchTab('p8')" class="tab-btn px-6 py-3 whitespace-nowrap rounded-t-xl transition-all hover:bg-blue-800" id="btn-p8">P-8: Pemuda II</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        <div id="content-container">
+            <!-- Konten akan dimuat oleh JavaScript -->
+        </div>
+    </main>
+
+    <script>
+        const moduleData = {
+            p1: {
+                title: "Al-Hayatu fil Madinah I (Kehidupan Kota)",
+                a: "Santri diharapkan mampu: 1. Menguasai 15 kosakata inti terkait fasilitas umum di perkotaan. 2. Menggunakan kata tanya 'Ayna' (Dimana) dan 'Kayfa' (Bagaimana) dalam konteks menanyakan arah. 3. Membedakan penggunaan Isim Isyarah 'Huna' dan 'Hunaka' secara tepat. 4. Mendeskripsikan kesibukan kota menggunakan kosakata 'Muzdahim' dan 'Dhou-dhou' secara kontekstual.",
+                b: "Adab berada di fasilitas umum dan pusat keramaian. Menekankan bahwa seorang Muslim harus membawa kedamaian dimanapun ia berada. Dalil: HR. Muslim tentang Masjid sebagai tempat yang paling dicintai Allah, memberikan kesadaran bahwa pembangunan kota harus berpusat pada spiritualitas.",
+                c: [
+                    "Apersepsi (15'): Guru memperlihatkan gambar kota besar dan bertanya tentang perasaan santri saat berada di keramaian.",
+                    "Observasi Hiwar (25'): Mendengarkan rekaman hiwar antara orang asing dan penduduk lokal tentang pencarian alamat Masjid Jami'.",
+                    "Analisis Linguistik (20'): Bedah struktur kalimat 'Ayna yaqa'u...' dan penggunaan huruf jar dalam menunjukkan posisi.",
+                    "Aktivitas Kelompok (30'): Simulasi 'Tour Guide Kota' dimana santri menjelaskan fasilitas kota dalam bahasa Arab."
+                ],
+                quiz: [
+                    { q: "Apa bahasa Arab untuk 'Rumah Sakit'?", a: ["المستشفى", "المدرسة", "المكتبة", "المطعم"], c: 0 },
+                    { q: "Kata tanya yang digunakan untuk menanyakan 'Bagaimana'?", a: ["أين", "كيف", "متى", "من"], c: 1 },
+                    { q: "Lawan kata dari 'هادئ' (Tenang) adalah...", a: ["مزدحم", "كبير", "بعيد", "جميل"], c: 0 },
+                    { q: "Apa arti dari 'المطار'?", a: ["Stasiun", "Bandara", "Pelabuhan", "Terminal"], c: 1 },
+                    { q: "Pilihlah Isim Isyarah untuk 'Di sana'?", a: ["هنا", "هناك", "هذا", "هذه"], c: 1 },
+                    { q: "Tempat menukar uang adalah...", a: ["المصرف", "المسجد", "السوق", "الحديقة"], c: 0 },
+                    { q: "Arti dari 'شارع' adalah...", a: ["Gedung", "Rumah", "Jalan", "Taman"], c: 2 },
+                    { q: "'Ayna taskunu?' artinya...", a: ["Siapa namamu?", "Dimana rumahmu?", "Dimana kamu tinggal?", "Kapan kamu pergi?"], c: 2 },
+                    { q: "Fasilitas kota untuk rekreasi disebut...", a: ["الحديقة", "المصنع", "المستودع", "المكتب"], c: 0 },
+                    { q: "Apa bahasa Arab untuk 'Pusat Kota'?", a: ["وسط المدينة", "خارج المدينة", "جانب المدينة", "فوق المدينة"], c: 0 }
+                ]
+            },
+            p2: {
+                title: "Al-Hayatu fil Madinah II (Desa vs Kota)",
+                a: "Santri diharapkan mampu: 1. Melakukan perbandingan (Muqaranah) antara desa dan kota menggunakan Isim Tafdhil. 2. Menggunakan kosakata terkait polusi (Talammuth) dan kebersihan (Nadhofah). 3. Menjelaskan alasan perpindahan penduduk (Hijrah/Intiqal) dalam kalimat yang sempurna. 4. Memahami teks deskriptif tentang ketenangan desa.",
+                b: "Memilih lingkungan yang baik (Bi'ah Shalihah). Nilai Islam mengajarkan bahwa lingkungan mempengaruhi karakter seseorang. Dalil: Hadits tentang perumpamaan teman yang baik seperti penjual minyak wangi, diaplikasikan dalam memilih tempat tinggal.",
+                c: [
+                    "Diskusi Panel (20'): Santri dibagi menjadi tim 'Kota' dan tim 'Desa' untuk memaparkan kelebihan masing-masing.",
+                    "Telaah Teks (30'): Membaca artikel pendek tentang 'Mengapa saya pindah ke desa?'.",
+                    "Praktik Grammar (20'): Latihan merubah sifat menjadi Isim Tafdhil (contoh: Nadzif -> Andzof).",
+                    "Penugasan Kreatif (20'): Membuat paragraf pendek tentang rumah impian di lingkungan yang ideal."
+                ],
+                quiz: [
+                    { q: "Apa arti 'القرية'?", a: ["Kota", "Gunung", "Desa", "Pantai"], c: 2 },
+                    { q: "Isim Tafdhil dari 'نظيف' (Bersih) adalah...", a: ["أنظف", "أكبر", "أجمل", "أفضل"], c: 0 },
+                    { q: "Udara di desa biasanya...", a: ["هواء نقي", "هواء ملوث", "هواء حار", "هواء بارد"], c: 0 },
+                    { q: "'الانتقال' berarti...", a: ["Pindah", "Bekerja", "Diam", "Membeli"], c: 0 },
+                    { q: "Masalah utama di kota besar adalah...", a: ["الهدوء", "التلوث", "النظافة", "الأمن"], c: 1 },
+                    { q: "Bahasa Arab 'Lebih Luas' adalah...", a: ["أضيق", "أوسع", "أطول", "أقصر"], c: 1 },
+                    { q: "'Kenapa kamu meninggalkan kota?' bahasa Arabnya...", a: ["لماذا تركت المدينة؟", "أين المدينة؟", "كيف المدينة؟", "من في المدينة؟"], c: 0 },
+                    { q: "Di desa banyak terdapat...", a: ["المصانع", "المزارع", "المباني", "السيارات"], c: 1 },
+                    { q: "Karakteristik desa adalah 'هادئة', artinya...", a: ["Bising", "Tenang", "Kotor", "Ramai"], c: 1 },
+                    { q: "Perpindahan dari desa ke kota disebut...", a: ["الهجرة إلى المدينة", "السفر", "النوم", "الأكل"], c: 0 }
+                ]
+            },
+            p3: {
+                title: "Al-Ilmu wa At-Ta'allum I (Dunia Pendidikan)",
+                a: "Santri diharapkan mampu: 1. Mengenali jenis-jenis lembaga pendidikan (Ma'had, Madrosah, Jaami'ah). 2. Melakukan transaksi pembelian alat tulis di Maktabah. 3. Menggunakan struktur 'Li' (Kepunyaan) dalam percakapan. 4. Menyebutkan setidaknya 10 peralatan belajar dalam bahasa Arab.",
+                b: "Niat dalam menuntut ilmu (Ikhlasul lillah). Ilmu bukan sekadar wawasan, tapi sarana mengenal Allah. Dalil: Hadits 'Tholabul 'Ilmi Faridhoh', menekankan kewajiban belajar bagi setiap Muslim.",
+                c: [
+                    "Simulasi Belanja (25'): Santri berperan sebagai penjual dan pembeli di toko buku.",
+                    "Drill Kosa Kata (20'): Tebak benda yang ada di dalam tas sekolah menggunakan bahasa Arab.",
+                    "Hiwar Terpimpin (25'): Praktik dialog pendaftaran di sebuah Ma'had (Pondok).",
+                    "Refleksi (20'): Menuliskan satu target ilmu yang ingin dicapai bulan ini."
+                ],
+                quiz: [
+                    { q: "Apa arti 'المعهد'?", a: ["Pasar", "Pondok/Lembaga", "Kantor", "Rumah"], c: 1 },
+                    { q: "Tempat membeli buku disebut...", a: ["المكتبة", "المطعم", "المستشفى", "المطار"], c: 0 },
+                    { q: "Bahasa Arab dari 'Tas' adalah...", a: ["الحقيبة", "القلم", "الكتاب", "الدفتر"], c: 0 },
+                    { q: "'Li qolamun' artinya...", a: ["Saya punya pena", "Ini pena", "Dimana pena?", "Beli pena"], c: 0 },
+                    { q: "Peralatan untuk menggaris adalah...", a: ["المسطرة", "الممحاة", "المبراة", "الورقة"], c: 0 },
+                    { q: "Bahasa Arab 'Kertas' adalah...", a: ["ورقة", "سبورة", "مكتب", "كرسي"], c: 0 },
+                    { q: "Apa arti 'التسجيل'?", a: ["Belajar", "Ujian", "Pendaftaran", "Kelulusan"], c: 2 },
+                    { q: "Guru laki-laki disebut...", a: ["مدرس", "طالب", "مدير", "موظف"], c: 0 },
+                    { q: "Siswa disebut...", a: ["طالب", "أستاذ", "طبيب", "فلاح"], c: 0 },
+                    { q: "Alat untuk menghapus tulisan pensil...", a: ["الممحاة", "المسطرة", "القلم", "الحقيبة"], c: 0 }
+                ]
+            },
+            p4: {
+                title: "Al-Ilmu wa At-Ta'allum II (Perkuliahan)",
+                a: "Santri diharapkan mampu: 1. Menyebutkan nama-nama Fakultas (Kulliyyah) favorit. 2. Memahami jadwal pelajaran (Jadwal Dirosiyy) dan nama-nama hari. 3. Menggunakan Fi'il Mudhori' untuk menceritakan aktivitas kuliah. 4. Menjelaskan rencana studi masa depan.",
+                b: "Adab terhadap Guru dan Buku. Menghormati sumber ilmu adalah kunci keberkahan. Dalil: Atsar Salaf tentang pentingnya mempelajari Adab sebelum Ilmu.",
+                c: [
+                    "Presentasi Cita-cita (30'): Santri memaparkan fakultas mana yang akan dipilih dan alasannya.",
+                    "Analisis Jadwal (20'): Membaca jadwal perkuliahan dalam bahasa Arab dan menjawab pertanyaan terkait waktu.",
+                    "Roleplay Dosen-Mahasiswa (25'): Simulasi situasi di dalam ruang kelas universitas.",
+                    "Game Kosakata (15'): Menyusun huruf acak menjadi nama-nama jurusan kuliah."
+                ],
+                quiz: [
+                    { q: "Apa bahasa Arab 'Universitas'?", a: ["الجامعة", "المدرسة", "المعهد", "المكتب"], c: 0 },
+                    { q: "Fakultas Kedokteran adalah...", a: ["كلية الطب", "كلية الهندسة", "كلية الشريعة", "كلية التربية"], c: 0 },
+                    { q: "Jadwal pelajaran disebut...", a: ["الجدول الدراسي", "كتاب القراءة", "قلم الرصاص", "مكتبة المدرسة"], c: 0 },
+                    { q: "Apa arti 'الاختبار'?", a: ["Liburan", "Ujian", "Pendaftaran", "Belajar"], c: 1 },
+                    { q: "Bahasa Arab untuk 'Ijazah' adalah...", a: ["الشهادة", "الرسالة", "المجلة", "الجريدة"], c: 0 },
+                    { q: "'Kulliyyah al-Handasah' artinya fakultas...", a: ["Kedokteran", "Teknik", "Hukum", "Sains"], c: 1 },
+                    { q: "Mahasiswa belajar di...", a: ["الفصل", "المطبخ", "الملعب", "السوق"], c: 0 },
+                    { q: "Apa bahasa Arab 'Hari Senin'?", a: ["يوم الاثنين", "يوم الأحد", "يوم الثلاثاء", "يوم الخميس"], c: 0 },
+                    { q: "'Ana adrusu' artinya...", a: ["Saya belajar", "Saya mengajar", "Saya pergi", "Saya makan"], c: 0 },
+                    { q: "Liburan sekolah disebut...", a: ["العطلة", "الدراسة", "النجاح", "الفشل"], c: 0 }
+                ]
+            },
+            p5: {
+                title: "Al-Amal wal Hayah I (Profesi)",
+                a: "Santri diharapkan mampu: 1. Mengidentifikasi 20 jenis profesi dalam bahasa Arab. 2. Bertanya tentang pekerjaan seseorang menggunakan 'Madza ta'malu?'. 3. Menjelaskan tempat kerja setiap profesi (contoh: Dokter di RS). 4. Menggunakan dhomir muttasil dalam konteks pekerjaan keluarga.",
+                b: "Etos kerja dalam Islam. Bekerja adalah bagian dari jihad jika diniatkan untuk menafkahi keluarga. Dalil: Hadits 'Tangan di atas lebih baik daripada tangan di bawah'.",
+                c: [
+                    "Tebak Profesi (20'): Santri memeragakan gerakan pekerjaan, santri lain menebak dalam bahasa Arab.",
+                    "Matching Game (20'): Memasangkan nama profesi dengan alat kerjanya (Dokter - Stetoskop).",
+                    "Hiwar Keluarga (30'): Dialog tentang pekerjaan ayah, ibu, dan saudara.",
+                    "Penulisan Kreatif (20'): Membuat 'Kartu Nama' dalam bahasa Arab lengkap dengan jabatan."
+                ],
+                quiz: [
+                    { q: "Siapa yang bekerja di sawah?", a: ["الفلاح", "الطبيب", "المهندس", "الطيار"], c: 0 },
+                    { q: "Apa bahasa Arab 'Pilot'?", a: ["الطيار", "المدرس", "الموظف", "الممرض"], c: 0 },
+                    { q: "'Al-Muhandis' bekerja di...", a: ["الموقع/الشركة", "المستشفى", "المدرسة", "المطار"], c: 0 },
+                    { q: "Apa arti 'الممرضة'?", a: ["Dokter", "Perawat (Pr)", "Guru", "Sekretaris"], c: 1 },
+                    { q: "Pekerjaan mengajar dilakukan oleh...", a: ["المدرس", "الخياط", "الجزار", "الخباز"], c: 0 },
+                    { q: "Bahasa Arab 'Pedagang' adalah...", a: ["التاجر", "الشرطي", "الجندي", "القاضي"], c: 0 },
+                    { q: "'Madza ta'malu?' artinya...", a: ["Dimana kamu?", "Apa pekerjaanmu?", "Siapa kamu?", "Kapan kamu kerja?"], c: 1 },
+                    { q: "Siapa yang menjahit pakaian?", a: ["الخياط", "الحلاق", "البناء", "النجار"], c: 0 },
+                    { q: "Bahasa Arab 'Polisi' adalah...", a: ["الشرطي", "المحامي", "المحاسب", "المراسل"], c: 0 },
+                    { q: "Tempat kerja 'At-Thobib'...", a: ["المستشفى", "المكتبة", "المخبز", "المصنع"], c: 0 }
+                ]
+            },
+            p6: {
+                title: "Al-Amal wal Hayah II (Dunia Kerja)",
+                a: "Santri diharapkan mampu: 1. Melakukan simulasi wawancara kerja (Muqabalah). 2. Menyebutkan dokumen yang diperlukan untuk melamar kerja (Siroh Dzatiyyah, Syahadah). 3. Memahami jam kerja dan konsep gaji (Ratib). 4. Menggunakan ungkapan kesiapan bekerja.",
+                b: "Sifat Amanah dan Siddiq dalam bekerja. Menekankan bahwa setiap pekerjaan akan dimintai pertanggungjawaban. Dalil: Hadits tentang memberikan upah sebelum keringat buruh kering.",
+                c: [
+                    "Simulasi Interview (40'): Santri berpasangan menjadi HRD dan Pelamar kerja.",
+                    "Bedah Iklan Lowongan (20'): Membaca iklan kerja di koran bahasa Arab fiktif.",
+                    "Diskusi 'Kerja Ideal' (15'): Apa kriteria pekerjaan yang berkah menurut pandangan Islam.",
+                    "Evaluasi (15'): Menuliskan 3 keahlian yang dimiliki dalam bahasa Arab."
+                ],
+                quiz: [
+                    { q: "Apa arti 'المقابلة الشخصية'?", a: ["Wawancara kerja", "Rapat koordinasi", "Makan siang", "Perjalanan dinas"], c: 0 },
+                    { q: "Gaji dalam bahasa Arab adalah...", a: ["الراتب", "الهدية", "الزكاة", "الصدقة"], c: 0 },
+                    { q: "Dokter memeriksa...", a: ["المرضى", "الطلاب", "المباني", "السيارات"], c: 0 },
+                    { q: "'As-Siroh ad-Dzatiyyah' berarti...", a: ["Buku harian", "Daftar riwayat hidup (CV)", "Sejarah Nabi", "Kisah nyata"], c: 1 },
+                    { q: "Jam kerja disebut...", a: ["ساعات العمل", "وقت النوم", "زمن الدراسة", "يوم العطلة"], c: 0 },
+                    { q: "Apa bahasa Arab 'Perusahaan'?", a: ["الشركة", "المحل", "السوق", "البيت"], c: 0 },
+                    { q: "Orang yang melamar kerja disebut...", a: ["المتقدم للوظيفة", "المدير", "الموظف", "العامل"], c: 0 },
+                    { q: "'Uridu an a'mala' artinya...", a: ["Saya ingin bekerja", "Saya sedang bekerja", "Saya sudah bekerja", "Saya tidak bekerja"], c: 0 },
+                    { q: "Pengalaman kerja disebut...", a: ["الخبرة", "الفكرة", "الرحلة", "الدعوة"], c: 0 },
+                    { q: "Bahasa Arab 'Kantor' adalah...", a: ["المكتب", "المطبخ", "المسجد", "الملعب"], c: 0 }
+                ]
+            },
+            p7: {
+                title: "As-Syabab (Masalah Pemuda I)",
+                a: "Santri diharapkan mampu: 1. Mendiskusikan masalah waktu luang (Farogh) dan cara mengatasinya. 2. Mengidentifikasi tantangan kesehatan pemuda. 3. Menggunakan kalimat larangan (La Nahi) terkait kebiasaan buruk. 4. Mengutarakan hobi yang bermanfaat.",
+                b: "Menjaga masa muda sebelum masa tua. Pemuda adalah aset umat. Dalil: Hadits tentang 7 golongan yang dinaungi Allah, salah satunya pemuda yang tumbuh dalam ibadah.",
+                c: [
+                    "Brainstorming (20'): Menuliskan 5 masalah pemuda saat ini di papan tulis.",
+                    "Analisis Hiwar (30'): Membaca dialog antara pemuda yang malas dan temannya yang rajin.",
+                    "Penyusunan Jadwal (20'): Membuat 'Jadwal Harian Produktif' dari bangun tidur hingga tidur lagi.",
+                    "Storytelling (20'): Menceritakan tokoh pemuda Islam inspiratif (seperti Muhammad Al-Fatih)."
+                ],
+                quiz: [
+                    { q: "Apa arti 'الشباب'?", a: ["Anak-anak", "Pemuda", "Orang tua", "Bayi"], c: 1 },
+                    { q: "Masalah utama pemuda adalah 'الفراغ', artinya...", a: ["Uang", "Waktu luang", "Keluarga", "Sekolah"], c: 1 },
+                    { q: "Lawan kata 'Sehat' (صحيح) adalah...", a: ["مريض", "قوي", "نشيط", "طويل"], c: 0 },
+                    { q: "'La tudhoyyi' al-waqta' artinya...", a: ["Jangan buang waktu", "Gunakan waktu", "Waktu adalah uang", "Kapan waktunya?"], c: 0 },
+                    { q: "Olahraga dalam bahasa Arab adalah...", a: ["الرياضة", "القراءة", "النوم", "الأكل"], c: 0 },
+                    { q: "Bahasa Arab 'Hobi' adalah...", a: ["الهواية", "المهنة", "الدراسة", "الرحلة"], c: 0 },
+                    { q: "Pemuda harus memiliki 'نشاط', artinya...", a: ["Kemalasan", "Aktivitas/Semangat", "Kesedihan", "Kemarahan"], c: 1 },
+                    { q: "Apa arti 'المخدرات'?", a: ["Obat-obatan", "Narkoba", "Makanan", "Minuman"], c: 1 },
+                    { q: "Masa muda disebut...", a: ["مرحلة الشباب", "مرحلة الطفولة", "مرحلة الشيخوخة", "مرحلة الموت"], c: 0 },
+                    { q: "Bahasa Arab 'Masa Depan' adalah...", a: ["المستقبل", "الماضي", "الحاضر", "الآن"], c: 0 }
+                ]
+            },
+            p8: {
+                title: "As-Syabab (Masalah Pemuda II)",
+                a: "Santri diharapkan mampu: 1. Menganalisis pengaruh media sosial terhadap akhlak pemuda. 2. Mengemukakan pendapat (Ro'yi) tentang teknologi. 3. Memahami istilah 'Ghozul Fikri' (Perang Pemikiran). 4. Memberikan solusi Islami terhadap tren negatif.",
+                b: "Kewaspadaan terhadap pemikiran asing yang merusak. Pentingnya filter agama dalam berteknologi. Dalil: Hadits tentang 'Seseorang bersama siapa yang ia cintai', dikaitkan dengan pemilihan idola di media sosial.",
+                c: [
+                    "Debat Bahasa Arab (40'): Tema 'Media Sosial: Kawan atau Lawan?'.",
+                    "Analisis Konten (20'): Melihat contoh postingan (teks Arab) dan mengkritik isinya secara santun.",
+                    "Kampanye Digital (20'): Membuat poster ajakan kebaikan dalam bahasa Arab untuk diunggah di medsos fiktif.",
+                    "Closing (10'): Komitmen bersama untuk menjaga pandangan dan jempol di dunia maya."
+                ],
+                quiz: [
+                    { q: "Apa bahasa Arab 'Internet'?", a: ["الإنترنت", "الهاتف", "التلفاز", "الراديو"], c: 0 },
+                    { q: "'وسائل التواصل الاجتماعي' artinya...", a: ["Alat transportasi", "Media sosial", "Alat masak", "Peralatan sekolah"], c: 1 },
+                    { q: "Ghozul Fikri (غزو الفكر) berarti...", a: ["Perang fisik", "Perang pemikiran", "Perang ekonomi", "Perang bintang"], c: 1 },
+                    { q: "Pendapat dalam bahasa Arab adalah...", a: ["الرأي", "الاسم", "العمر", "البيت"], c: 0 },
+                    { q: "'Fi ro-yi' artinya...", a: ["Menurut pendapatku", "Menurut guruku", "Menurut ayahku", "Menurut temanku"], c: 0 },
+                    { q: "Apa arti 'الفتنة'?", a: ["Damai", "Fitnah/Ujian", "Kebaikan", "Kemajuan"], c: 1 },
+                    { q: "Kita harus menggunakan teknologi untuk...", a: ["الخير", "الشر", "اللعب", "النوم"], c: 0 },
+                    { q: "Bahasa Arab 'Telepon Genggam'...", a: ["الهاتف المحمول", "الحاسوب", "المذياع", "الساعة"], c: 0 },
+                    { q: "Berita bohong disebut...", a: ["خبر كاذب", "خبر صادق", "خبر طويل", "خبر قصير"], c: 0 },
+                    { q: "Tujuan belajar bahasa Arab adalah memahami...", a: ["القرآن", "المجلة", "الأغنية", "الفيلم"], c: 0 }
+                ]
+            }
+        };
+
+        function switchTab(id) {
+            const data = moduleData[id];
+            const container = document.getElementById('content-container');
+            
+            // UI State
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+            document.getElementById('btn-' + id).classList.add('tab-active');
+
+            // Render Content
+            container.innerHTML = `
+                <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-fadeIn">
+                    <div class="bg-blue-600 p-8 text-white">
+                        <h2 class="text-3xl font-black mb-2 uppercase italic">${data.title}</h2>
+                        <p class="text-blue-100 font-semibold opacity-90">Modul Pembelajaran Interaktif ARB-206</p>
+                    </div>
+                    
+                    <div class="p-6 md:p-10 space-y-12">
+                        <!-- Bagian A -->
+                        <section>
+                            <h3 class="flex items-center text-2xl font-bold text-blue-900 mb-4">
+                                <span class="bg-blue-100 text-blue-600 w-10 h-10 flex items-center justify-center rounded-full mr-3 text-lg">A</span>
+                                Tujuan Pembelajaran Spesifik
+                            </h3>
+                            <div class="bg-slate-50 p-6 rounded-2xl border-l-8 border-blue-500 shadow-sm">
+                                <p class="text-slate-700 leading-relaxed text-lg">${data.a}</p>
+                            </div>
+                        </section>
+
+                        <!-- Bagian B -->
+                        <section>
+                            <h3 class="flex items-center text-2xl font-bold text-emerald-900 mb-4">
+                                <span class="bg-emerald-100 text-emerald-600 w-10 h-10 flex items-center justify-center rounded-full mr-3 text-lg">B</span>
+                                Internalisasi Nilai Islam & Adab
+                            </h3>
+                            <div class="bg-emerald-50 p-6 rounded-2xl border-l-8 border-emerald-500 shadow-sm">
+                                <p class="text-emerald-900 font-medium leading-relaxed">${data.b}</p>
+                            </div>
+                        </section>
+
+                        <!-- Bagian C -->
+                        <section>
+                            <h3 class="flex items-center text-2xl font-bold text-orange-900 mb-4">
+                                <span class="bg-orange-100 text-orange-600 w-10 h-10 flex items-center justify-center rounded-full mr-3 text-lg">C</span>
+                                Skenario Pembelajaran (Alur 90 Menit)
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${data.c.map(step => `
+                                    <div class="flex items-start p-4 bg-orange-50 rounded-xl border border-orange-100">
+                                        <div class="bg-orange-500 text-white p-1 rounded mr-3 mt-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                        </div>
+                                        <p class="text-orange-900 font-semibold text-sm">${step}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </section>
+
+                        <!-- Quiz Section -->
+                        <section class="pt-10 border-t border-slate-100">
+                            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                                <h3 class="text-3xl font-black text-slate-800 tracking-tight">KUIS FORMATIF <span class="text-blue-600">10 SOAL</span></h3>
+                                <div id="score-badge-${id}" class="bg-blue-900 text-white px-6 py-2 rounded-full font-bold shadow-lg hidden">Skor: 0/10</div>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                ${data.quiz.map((q, idx) => `
+                                    <div class="p-6 bg-white rounded-2xl border-2 border-slate-100 hover:border-blue-200 transition-all">
+                                        <div class="flex items-center mb-4">
+                                            <span class="bg-slate-200 text-slate-700 px-3 py-1 rounded-md text-sm font-bold mr-3">${idx+1}</span>
+                                            <p class="font-bold text-slate-800 text-lg">${q.q}</p>
+                                        </div>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            ${q.a.map((opt, oidx) => `
+                                                <button onclick="handleAnswer(this, ${idx}, ${oidx}, '${id}')" 
+                                                        class="quiz-opt text-left p-4 rounded-xl border-2 border-slate-50 hover:bg-blue-50 hover:border-blue-300 transition-all font-medium text-slate-700">
+                                                    ${opt}
+                                                </button>
+                                            `).join('')}
+                                        </div>
+                                        <div id="msg-${id}-${idx}" class="mt-4 hidden animate-bounce"></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            `;
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        let totalScores = {};
+
+        function handleAnswer(btn, qidx, choice, pid) {
+            const data = moduleData[pid].quiz[qidx];
+            const msg = document.getElementById(`msg-${pid}-${qidx}`);
+            const parent = btn.parentElement;
+            
+            // Disable all options
+            parent.querySelectorAll('button').forEach(b => {
+                b.disabled = true;
+                b.classList.add('opacity-50');
+            });
+
+            btn.classList.remove('opacity-50');
+
+            if (choice === data.c) {
+                btn.classList.add('correct-answer');
+                msg.innerHTML = `<span class="text-green-600 font-bold flex items-center"><svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> Mumtaz! Jawaban Benar</span>`;
+                if(!totalScores[pid]) totalScores[pid] = 0;
+                totalScores[pid]++;
+            } else {
+                btn.classList.add('wrong-answer');
+                parent.querySelectorAll('button')[data.c].classList.add('correct-answer');
+                parent.querySelectorAll('button')[data.c].classList.remove('opacity-50');
+                msg.innerHTML = `<span class="text-red-600 font-bold flex items-center"><svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg> Afwan, belum tepat</span>`;
+            }
+            msg.classList.remove('hidden');
+
+            // Update badge
+            const badge = document.getElementById(`score-badge-${pid}`);
+            badge.innerText = `Skor: ${totalScores[pid] || 0}/10`;
+            badge.classList.remove('hidden');
+        }
+
+        window.onload = () => switchTab('p1');
+    </script>
+
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+    </style>
+
+</body>
+</html>
