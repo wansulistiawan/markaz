@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAU-106: Keutamaan Tauhid & Dakwah</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; scroll-behavior: smooth; }
+        .tab-active { background-color: #065f46 !important; color: white !important; font-weight: 700; border-bottom: 4px solid #f59e0b; }
+        .teacher-note { border-left: 5px solid #0ea5e9; background-color: #f0f9ff; padding: 1.5rem; border-radius: 0 0.75rem 0.75rem 0; }
+        .dalil-box { background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 2rem; margin: 1.5rem 0; position: relative; }
+        .dalil-box::before { content: "💬 Dalil"; position: absolute; top: -12px; left: 20px; background: #f59e0b; color: white; padding: 2px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+        .simulasi-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transition: transform 0.2s; }
+        .simulasi-card:hover { transform: translateY(-5px); }
+        .hidden { display: none; }
+        .btn-option { transition: all 0.2s; text-align: left; width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 12px; border: 2px solid #e2e8f0; background: white; font-weight: 500; }
+        .btn-option:hover:not(:disabled) { border-color: #10b981; background-color: #ecfdf5; }
+        .correct { background-color: #dcfce7 !important; border-color: #22c55e !important; color: #166534; }
+        .wrong { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b; }
+        .progress-bar { height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden; }
+        .progress-fill { height: 100%; background: #10b981; transition: width 0.3s ease; }
+        .arabic { font-family: 'Traditional Arabic', serif; font-size: 1.5rem; line-height: 2.5rem; text-align: right; direction: rtl; }
+    </style>
+</head>
+<body class="text-slate-800 leading-relaxed">
+
+    <!-- Header & Navigasi Utama -->
+    <header class="bg-emerald-900 text-white shadow-2xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                <div class="bg-white p-2 rounded-lg">
+                    <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50 5L10 25V75L50 95L90 75V25L50 5Z" fill="#065f46"/>
+                        <path d="M50 20V80M25 35L75 65M25 65L75 35" stroke="white" stroke-width="4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">TAU-106: KEMURNIAN TAUHID</h1>
+                    <p class="text-emerald-300 text-xs uppercase font-semibold">Kurikulum Interaktif Akidah Salafiyah</p>
+                </div>
+            </div>
+            <nav id="main-nav" class="flex space-x-1 overflow-x-auto pb-2 no-scrollbar w-full md:w-auto">
+                <!-- Navigasi diisi oleh JavaScript -->
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-10">
+
+        <!-- KONTEN PERTEMUAN 1 SAMPAI 8 AKAN DI-INJECT DI SINI -->
+        <div id="dynamic-content">
+            <!-- Loading state -->
+            <div class="flex justify-center items-center h-64">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-900"></div>
+            </div>
+        </div>
+
+        <!-- TEMPLATE SUMATIF -->
+        <div id="content-sumatif" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 border-t-8 border-orange-600">
+                <div class="text-center mb-10">
+                    <h2 class="text-4xl font-black text-slate-900 mb-2">Evaluasi Akhir Modul</h2>
+                    <p class="text-slate-500">Uji pemahaman komprehensif Anda terhadap materi Keutamaan Tauhid hingga Dakwah</p>
+                </div>
+                
+                <div id="sumatif-questions" class="space-y-12"></div>
+
+                <div class="mt-12 flex flex-col items-center border-t pt-10">
+                    <button id="btn-finish-sumatif" onclick="gradeSumatif()" class="bg-orange-600 text-white px-12 py-4 rounded-xl font-bold text-lg hover:bg-orange-700 transform transition hover:scale-105 shadow-xl">
+                        Kirim Jawaban Akhir
+                    </button>
+                    <button onclick="resetSumatif()" class="mt-4 text-slate-400 hover:text-slate-600 text-sm underline">Ulangi dari Awal</button>
+                </div>
+
+                <div id="sumatif-result" class="mt-12 hidden scroll-mt-24">
+                    <div class="bg-slate-50 rounded-2xl p-10 text-center border-2 border-dashed border-slate-200">
+                        <div class="text-7xl font-black text-emerald-600 mb-2" id="final-score-val">0</div>
+                        <p class="text-2xl font-bold text-slate-800 mb-6">Skor Akhir Anda</p>
+                        <div id="sumatif-feedback" class="max-w-2xl mx-auto text-lg leading-relaxed"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-slate-950 text-white py-16 px-4">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
+            <div>
+                <h3 class="text-xl font-bold mb-4">Tentang Modul</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">Modul TAU-106 dirancang khusus untuk santri tingkat menengah untuk menanamkan akidah yang lurus berdasarkan Kitab At-Tauhid karya Syaikh Muhammad bin Abdul Wahhab رحمه الله.</p>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold mb-4">Navigasi Cepat</h3>
+                <ul class="text-slate-400 text-sm space-y-2">
+                    <li><a href="#" onclick="switchTab('p1')" class="hover:text-emerald-400">Pertemuan 1: Keutamaan Tauhid</a></li>
+                    <li><a href="#" onclick="switchTab('p5')" class="hover:text-emerald-400">Pertemuan 5: Takut Syirik</a></li>
+                    <li><a href="#" onclick="switchTab('sumatif')" class="hover:text-emerald-400">Ujian Sumatif</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold mb-4">Penafian</h3>
+                <p class="text-slate-400 text-sm">Seluruh konten bersumber dari referensi mu'tabar Ahlussunnah wal Jamaah. Dilarang mengubah isi tanpa izin untuk menjaga kemurnian ilmu.</p>
+            </div>
+        </div>
+        <div class="mt-12 pt-8 border-t border-slate-800 text-center text-slate-500 text-xs">
+            &copy; 2024 Asisten Ahli Modul Perfeksionis. Seluruh Hak Cipta Dilindungi.
+        </div>
+    </footer>
+
+    <script>
+        // DATA KONTEN LENGKAP 8 PERTEMUAN
+        const modulData = [
+            {
+                id: "p1",
+                title: "Pertemuan 1: Keutamaan Tauhid & Pengampunan Dosa",
+                goals: ["Menjelaskan definisi Tauhid", "Memahami QS Al-An'am: 82", "Mengetahui Tauhid sebagai syarat mutlak ampunan"],
+                islamicValue: "Tauhid adalah hak Allah yang paling besar atas hamba-Nya. Tanpa Tauhid, amalan sebesar gunung pun akan sia-sia.",
+                dalil: "الَّذِينَ آمَنُوا وَلَمْ يَلْبِسُوا إِيمَانَهُمْ بِظُلْمٍ أُولَٰئِكَ لَهُمُ الْأَمْنُ وَهُمْ مُهْتَدُونَ<br><br>'Orang-orang yang beriman dan tidak mencampuradukkan iman mereka dengan kezaliman (syirik), mereka itulah yang mendapat keamanan dan mereka itu adalah orang-orang yang mendapat petunjuk.' (QS. Al-An’am: 82)",
+                content: `
+                    <p class="mb-4">Tauhid bukan sekadar pengakuan bahwa Allah itu ada, tetapi memurnikan ibadah hanya untuk-Nya. Dalam pertemuan ini kita membahas Bab ke-2 dari Kitab At-Tauhid.</p>
+                    <div class="teacher-note mb-6">
+                        <strong>Analogi Gelas Susu:</strong> Bayangkan segelas susu murni yang lezat (Tauhid). Jika dimasukkan setetes racun mematikan (Syirik), apakah susu itu masih bermanfaat? Tentu tidak. Begitulah syirik merusak amal.
+                    </div>
+                    
+                    <p class="text-xs italic text-slate-500 mb-4">Sumber: illustration-web.id/analogy-tauhid</p>
+                    <p class="mb-4">Dosa yang paling besar adalah syirik, dan pahala yang paling besar adalah tauhid. Jika seorang hamba datang membawa dosa seluas bumi namun ia membawa tauhid yang murni, Allah akan menemuinya dengan ampunan seluas bumi pula.</p>
+                `,
+                assessment: true,
+                simulations: [
+                    { title: "Kalkulator Timbangan", type: "scale" },
+                    { title: "Sortir Amal Murni", type: "sort" }
+                ],
+                questions: [
+                    { q: "Apa makna 'Zhulm' dalam QS Al-An'am: 82?", o: ["Pencurian", "Syirik", "Membunuh", "Ghibah"], a: 1, e: "Rasulullah menjelaskan bahwa kezaliman di sini adalah syirik." },
+                    { q: "Keamanan apa yang didapat ahli tauhid?", o: ["Kekayaan", "Jabatan", "Keamanan dari Azab", "Kesehatan"], a: 2, e: "Ahli tauhid mendapat keamanan mutlak di akhirat." },
+                    { q: "Siapa yang menafsirkan QS Al-An'am: 82 kepada para Sahabat?", o: ["Abu Bakar", "Umar", "Rasulullah ﷺ", "Ali"], a: 2, e: "Nabi ﷺ langsung menjelaskan makna ayat tersebut." },
+                    { q: "Tauhid adalah kunci...", o: ["Surga", "Kekayaan", "Ilmu", "Kesehatan"], a: 0, e: "Miftahul Jannah adalah Laa ilaha illallah." },
+                    { q: "Berapa gulungan dosa dalam Hadits Bithaqah?", o: ["10", "50", "99", "100"], a: 2, e: "Seorang hamba memiliki 99 gulungan dosa besar." },
+                    { q: "Kartu Bithaqah bertuliskan...", o: ["Subhanallah", "Lailahaillallah", "Alhamdulillah", "Allahu Akbar"], a: 1, e: "Kartu tersebut berisi kalimat tauhid." },
+                    { q: "Syirik besar menyebabkan...", o: ["Dosa kecil", "Masuk neraka selamanya", "Pahala bertambah", "Hanya dicela"], a: 1, e: "Syirik besar mengeluarkan pelakunya dari Islam." },
+                    { q: "Lailahaillallah menafikan...", o: ["Pencipta", "Tuhan", "Hak Ibadah selain Allah", "Sifat Allah"], a: 2, e: "Menafikan ketuhanan yang haq bagi selain Allah." },
+                    { q: "Apa syarat ampunan dosa seluas bumi?", o: ["Shalat malam", "Puasa Daud", "Membawa Tauhid tanpa Syirik", "Sedekah Jariyah"], a: 2, e: "Sebagaimana Hadits Qudsi riwayat Tirmidzi." },
+                    { q: "Maksud 'Muhtadun' di ayat tersebut adalah...", o: ["Orang kaya", "Mendapat Petunjuk", "Orang kuat", "Orang Arab"], a: 1, e: "Muhtadun berarti mereka yang diberi hidayah." }
+                ]
+            },
+            {
+                id: "p2",
+                title: "Pertemuan 2: Hakikat Persaksian Hadits Ubadah",
+                goals: ["Menghafal 5 poin Hadits Ubadah", "Memahami kedudukan Nabi Isa 'alaihissalam", "Meyakini Haq-nya Surga dan Neraka"],
+                islamicValue: "Keseimbangan dalam akidah: Tidak meremehkan Nabi Isa (seperti Yahudi) dan tidak menuhankannya (seperti Nasrani).",
+                dalil: "من شهد أن لا إله إلا الله وحده لا شريك له، وأن محمداً عبده ورسوله، وأن عيسى عبد الله ورسوله... أدخله الله الجنة على ما كان من العمل<br><br>'Barangsiapa bersaksi bahwa tidak ada sesembahan yang berhak disembah kecuali Allah semata... dan Isa adalah hamba dan Rasul-Nya... Allah akan memasukkannya ke surga bagaimanapun amalnya.' (HR. Bukhari)",
+                content: `
+                    <p class="mb-4">Hadits ini sangat agung karena mengumpulkan pokok-pokok iman. Seorang Muslim harus mengimani seluruh Rasul tanpa membeda-bedakan tugas kerasulan mereka.</p>
+                    <div class="teacher-note mb-6">
+                        <strong>Visualisasi:</strong> Bayangkan sebuah pintu besar dengan 5 gembok. Setiap gembok mewakili satu persaksian dalam Hadits Ubadah. Jika salah satu hilang, pintu surga sulit terbuka dengan sempurna.
+                    </div>
+                    
+                    <p class="text-xs italic text-slate-500 mb-4">Sumber: islamic-art.com/hadith-ubadah-visual</p>
+                    <p class="mb-4">Poin kritis di sini adalah kedudukan Nabi Isa. Beliau adalah 'Kalimat-Nya' (diciptakan dengan Kun) dan 'Ruh-Nya' (ruh ciptaan-Nya, bukan bagian dari Zat Allah).</p>
+                `,
+                simulations: [
+                    { title: "Checklist Syahadat", type: "checklist" },
+                    { title: "Benar/Salah Akidah Isa", type: "quiz-game" }
+                ],
+                questions: [
+                    { q: "Isa adalah 'Ruhun Minhu', artinya?", o: ["Anak Allah", "Ruh ciptaan Allah", "Zat Allah", "Malaikat"], a: 1, e: "Ruh yang diciptakan dan dimuliakan oleh Allah." },
+                    { q: "Status Nabi Isa dalam Islam?", o: ["Tuhan", "Anak Tuhan", "Hamba dan Rasul", "Hanya manusia biasa"], a: 2, e: "Beliau adalah hamba Allah dan juga utusan-Nya." },
+                    { q: "Siapa yang menganggap Isa anak zina?", o: ["Muslim", "Nasrani", "Yahudi", "Majusi"], a: 2, e: "Kezaliman kaum Yahudi terhadap Nabi Isa dan Maryam." },
+                    { q: "Surga dan Neraka adalah...", o: ["Mitos", "Haq (Nyata)", "Hanya perasaan", "Simbolis"], a: 1, e: "Keyakinan akan adanya surga dan neraka adalah rukun iman." },
+                    { q: "Apa arti 'Kalimatuhu' bagi Isa?", o: ["Bicaranya Allah", "Diciptakan dengan kalimat 'Kun'", "Membawa kitab", "Ruh Allah"], a: 1, e: "Diciptakan melalui perintah langsung 'Jadilah'." },
+                    { q: "Hadits Ubadah diriwayatkan oleh...", o: ["Bukhari & Muslim", "Tirmidzi saja", "An-Nasai", "Ibnu Majah"], a: 0, e: "Muttafaqun 'alaih." },
+                    { q: "Maksud 'Bagaimanapun amalnya'?", o: ["Boleh maksiat", "Keutamaan Tauhid", "Amal tidak penting", "Semua masuk surga langsung"], a: 1, e: "Ahli Tauhid pasti masuk surga, meski mungkin diadzab dulu jika berdosa." },
+                    { q: "Siapa ibunda Nabi Isa?", o: ["Aisyah", "Asiyah", "Maryam", "Khadijah"], a: 2, e: "Putri Imran yang suci." },
+                    { q: "Hamba dan Rasul adalah dua sifat yang...", o: ["Bertentangan", "Melengkapi", "Hanya untuk Isa", "Hanya untuk Muhammad"], a: 1, e: "Sifat hamba menafikan ketuhanan, sifat rasul menuntut ketaatan." },
+                    { q: "Tauhid membedakan Muslim dengan...", o: ["Sesama Muslim", "Ahli Kitab & Musyrikin", "Malaikat", "Nabi"], a: 1, e: "Tauhid adalah pembeda utama." }
+                ]
+            },
+            {
+                id: "p3",
+                title: "Pertemuan 3: Memurnikan Tauhid (Tahqiqut Tauhid)",
+                goals: ["Definisi Tahqiqut Tauhid", "Meneladani Nabi Ibrahim yang Hanif", "Syarat masuk surga tanpa hisab"],
+                islamicValue: "Memurnikan tauhid berarti membersihkannya dari noda syirik besar, syirik kecil, dan bid'ah.",
+                dalil: "إِنَّ إِبْرَاهِيمَ كَانَ أُمَّةً قَانِتًا لِلَّهِ حَنِيفًا وَلَمْ يَكُ مِنَ الْمُشْرِكِينَ<br><br>'Sesungguhnya Ibrahim adalah satu umat yang patuh kepada Allah lagi hanif. Dan sekali-kali ia tidaklah termasuk orang-orang yang mempersekutukan (Tuhan).' (QS. An-Nahl: 120)",
+                content: `
+                    <p class="mb-4">Tahqiqut Tauhid adalah derajat tertinggi. Bukan hanya tidak menyembah berhala, tapi juga tidak bergantung pada sebab secara berlebihan.</p>
+                    <div class="teacher-note mb-6">
+                        <strong>Analogi Emas Murni:</strong> Emas 24 karat tidak tercampur tembaga sedikit pun. Tauhid yang *tahqiq* tidak tercampur riya' (syirik kecil) atau ketergantungan hati pada jimat.
+                    </div>
+                    
+                    <p class="mb-4">Seorang yang memurnikan tauhid akan masuk surga tanpa hisab (perhitungan) dan tanpa azab (siksa). Ini adalah hadiah bagi orang-orang yang benar-benar menjaga hatinya hanya untuk Allah.</p>
+                `,
+                simulations: [
+                    { title: "Filter Kemurnian", type: "filter" },
+                    { title: "Analisis Sikap Ibrahim", type: "story" }
+                ],
+                questions: [
+                    { q: "Apa arti 'Hanif'?", o: ["Kaya", "Condong pada kebenaran", "Kuat", "Berani"], a: 1, e: "Condong kepada tauhid dan meninggalkan syirik." },
+                    { q: "Ibrahim disebut 'Ummah', artinya?", o: ["Satu bangsa", "Pemimpin yang patut diteladani", "Orang banyak", "Keluarga"], a: 1, e: "Imam atau teladan dalam kebaikan." },
+                    { q: "Tahqiqut Tauhid membersihkan dari...", o: ["Hanya syirik besar", "Hanya bid'ah", "Syirik, bid'ah, dan maksiat", "Hanya dosa besar"], a: 2, e: "Membersihkan dari segala noda akidah dan amalan." },
+                    { q: "Orang yang tahqiqut tauhid masuk surga...", o: ["Setelah dihisab", "Tanpa Hisab & Azab", "Lewat neraka", "Hanya jika kaya"], a: 1, e: "Ini adalah janji Allah bagi mereka." },
+                    { q: "Sifat utama Ibrahim menurut ayat di atas?", o: ["Pedagang", "Patuh & Hanif", "Pencipta", "Raja"], a: 1, e: "Qanitan (patuh) dan Hanifan (lurus)." },
+                    { q: "Apakah Ibrahim pernah berbuat syirik?", o: ["Ya, dulu", "Tidak pernah", "Sering", "Sekali"], a: 1, e: "Beliau adalah bapak tauhid yang bersih dari syirik." },
+                    { q: "Berapa orang yang masuk surga tanpa hisab?", o: ["1000", "70.000", "1 Juta", "100.000"], a: 1, e: "Disebutkan dalam hadits shahih." },
+                    { q: "Syirik kecil contohnya...", o: ["Sujud pada patung", "Riya' (pamer)", "Mencuri", "Berbohong"], a: 1, e: "Riya' adalah syirik tersembunyi." },
+                    { q: "Mengharap pujian manusia dalam shalat adalah...", o: ["Sunnah", "Mubah", "Syirik Kecil", "Wajib"], a: 2, e: "Merusak nilai ikhlas dalam tauhid." },
+                    { q: "Tahqiqut Tauhid wajib bagi...", o: ["Ulama saja", "Setiap Muslim", "Santri saja", "Orang tua"], a: 1, e: "Kewajiban setiap individu sesuai kemampuannya." }
+                ]
+            },
+            {
+                id: "p4",
+                title: "Pertemuan 4: Sifat 70.000 Orang Masuk Surga Tanpa Hisab",
+                goals: ["Menjelaskan 4 sifat utama", "Memahami tawakal yang benar", "Menghindari thiyarah"],
+                islamicValue: "Kemandirian hati: Hanya meminta tolong kepada Allah dan tidak bergantung pada mitos/kesialan.",
+                dalil: "هم الذين لا يسترقون، ولا يكتوون، ولا يتطيرون، وعلى ربهم يتوكلون<br><br>'Mereka adalah orang-orang yang tidak meminta diruqyah, tidak meminta dikay (pengobatan besi panas), tidak melakukan thiyarah, dan hanya kepada Rabb mereka bertawakal.' (HR. Bukhari)",
+                content: `
+                    <p class="mb-4">Bab ini menjelaskan kriteria spesifik orang-masing yang mendapatkan tiket VIP ke surga. Intinya adalah kekuatan tawakal.</p>
+                    <div class="teacher-note mb-6">
+                        <strong>Poin Diskusi:</strong> Mengapa 'tidak meminta diruqyah' menjadi sifat mereka? Padahal ruqyah itu boleh? Jawabannya: Karena kuatnya ketergantungan hati mereka hanya kepada Allah, sehingga mereka tidak mau meminta tolong pada manusia dalam urusan ruqyah jika tidak darurat.
+                    </div>
+                    
+                    <p class="mb-4">Thiyarah adalah merasa sial karena melihat burung, angka, atau kejadian tertentu. Ini adalah syirik yang merusak tauhid.</p>
+                `,
+                simulations: [
+                    { title: "Detektor Thiyarah", type: "detector" },
+                    { title: "Kuis Sifat 70 Ribu", type: "match" }
+                ],
+                questions: [
+                    { q: "Berapa jumlah orang masuk surga tanpa hisab?", o: ["10.000", "70.000", "50.000", "100.000"], a: 1, e: "Dalam riwayat lain ditambah setiap 1 orang membawa 70 ribu lagi." },
+                    { q: "Apa itu Thiyarah?", o: ["Makan burung", "Merasa sial karena sesuatu", "Terbang", "Mimpi buruk"], a: 1, e: "Keyakinan sial yang tidak berdasar syariat." },
+                    { q: "Pengobatan dengan besi panas disebut?", o: ["Bekam", "Kay", "Operasi", "Suntik"], a: 1, e: "Kay hukumnya makruh meski boleh." },
+                    { q: "Sifat utama mereka adalah...", o: ["Banyak harta", "Bertawakal pada Rabb", "Pandai bicara", "Banyak kawan"], a: 1, e: "Tawakal adalah puncak tauhid." },
+                    { q: "Sahabat yang minta didoakan masuk kelompok ini?", o: ["Abu Bakar", "Umar", "Ukasyah bin Mihshan", "Ali"], a: 2, e: "Beliau langsung berdiri dan meminta doa Nabi." },
+                    { q: "Apa jawaban Nabi pada orang kedua yang minta?", o: ["Sama", "Engkau juga", "Ukasyah telah mendahuluimu", "Tidak boleh"], a: 2, e: "Menunjukkan hikmah Nabi dalam menjawab." },
+                    { q: "Bolehkah meruqyah diri sendiri?", o: ["Dilarang", "Wajib", "Boleh & Sunnah", "Haram"], a: 2, e: "Malah dianjurkan daripada meminta kepada orang lain." },
+                    { q: "Kenapa minta diruqyah (meski syar'i) mengurangi kesempurnaan tawakal?", o: ["Karena haram", "Ketergantungan pada peruqyah", "Membuang waktu", "Mahal"], a: 1, e: "Hati cenderung bergantung pada sebab (manusia)." },
+                    { q: "Thiyarah termasuk syirik...", o: ["Besar", "Kecil", "Tidak dosa", "Mubah"], a: 1, e: "Kecuali jika meyakini benda itu yang menakdirkan kesialan." },
+                    { q: "Puncak dari 4 sifat tersebut adalah...", o: ["Kay", "Ruqyah", "Tawakal", "Thiyarah"], a: 2, e: "Semua bermuara pada kualitas tawakal." }
+                ]
+            },
+            {
+                id: "p5",
+                title: "Pertemuan 5: Takut kepada Syirik",
+                goals: ["Menyadari bahaya syirik", "Menghafal doa Ibrahim", "Memahami bahaya Riya'"],
+                islamicValue: "Rasa takut yang positif: Membuat kita waspada dan selalu berdoa memohon keteguhan iman.",
+                dalil: "وَاجْنُبْنِي وَبَنِيَّ أَنْ نَعْبُدَ الْأَصْنَامَ<br><br>'...dan jauhkanlah aku dan anak cucuku daripada menyembah berhala-berhala.' (QS. Ibrahim: 35)",
+                content: `
+                    <p class="mb-4">Jika Nabi Ibrahim (Kholilullah) saja takut terjerumus syirik, apalagi kita? Ini adalah bab tentang kewaspadaan.</p>
+                    <div class="teacher-note mb-6">
+                        <strong>Kutipan Ulama:</strong> Ibrahim At-Taimi berkata: "Siapa yang merasa aman dari bala' (syirik) setelah Ibrahim saja merasa tidak aman?"
+                    </div>
+                    
+                    <p class="mb-4">Syirik asghar (kecil) yang paling ditakuti Nabi atas umatnya adalah Riya'. Melakukan amal shalih agar dipuji manusia.</p>
+                `,
+                simulations: [
+                    { title: "Radar Riya'", type: "radar" },
+                    { title: "Zikir Penjaga Tauhid", type: "zikir" }
+                ],
+                questions: [
+                    { q: "Siapa yang berdoa dijauhkan dari berhala?", o: ["Musa", "Isa", "Ibrahim", "Nuh"], a: 2, e: "Nabi Ibrahim 'alaihissalam." },
+                    { q: "Syirik apa yang paling ditakuti Nabi?", o: ["Menyembah batu", "Riya' (Syirik Kecil)", "Sihir", "Ramalan"], a: 1, e: "Karena riya' sangat halus masuk ke hati." },
+                    { q: "Syirik besar membuat pelakunya...", o: ["Dihisab lama", "Kekal di neraka", "Masuk surga", "Hanya dipukul"], a: 1, e: "Syirik besar menghapus iman." },
+                    { q: "Apakah syirik kecil (riya') menghapus seluruh amal?", o: ["Ya", "Hanya amal yang ada riya'nya", "Tidak sama sekali", "Menambah pahala"], a: 1, e: "Hanya amal yang tercampur riya' tersebut yang gugur." },
+                    { q: "Kenapa syirik disebut dosa tak terampuni?", o: ["Allah marah", "Melanggar hak Allah", "Sudah takdir", "Terlalu banyak"], a: 1, e: "Jika dibawa mati tanpa taubat (QS An-Nisa: 48)." },
+                    { q: "Definisi berhala (Ashnam)?", o: ["Hanya patung", "Segala yang disembah selain Allah", "Hanya pohon", "Hanya jin"], a: 1, e: "Mencakup patung, gambar, kuburan, atau tokoh yang didewakan." },
+                    { q: "Ibrahim merasa tidak aman dari syirik, ini menunjukkan...", o: ["Beliau lemah", "Tingginya ilmu & ketakwaan", "Beliau ragu", "Beliau berdosa"], a: 1, e: "Semakin berilmu, semakin takut pada kesesatan." },
+                    { q: "Apa obat dari penyakit riya'?", o: ["Berhenti beramal", "Sembunyi amal & Ikhlas", "Marah-marah", "Berdiam diri"], a: 1, e: "Melatih keikhlasan di saat sendirian." },
+                    { q: "Doa minta perlindungan syirik yang diajarkan Nabi?", o: ["Allahumma inni a'udzubika an usyrika bika wa ana a'lam...", "Alhamdulillah", "Astaghfirullah", "Allahu Akbar"], a: 0, e: "Doa yang sangat dianjurkan dibaca setiap hari." },
+                    { q: "Syirik asghar (kecil) di akhirat hukumnya...", o: ["Sama dengan syirik besar", "Di bawah kehendak Allah (masih mungkin diampuni)", "Pasti masuk surga", "Dihapus dosanya"], a: 1, e: "Menurut sebagian ulama, ia lebih besar dari dosa besar tapi di bawah syirik besar." }
+                ]
+            },
+            {
+                id: "p6",
+                title: "Pertemuan 6: Dakwah kepada Syahadat",
+                goals: ["Kewajiban berdakwah", "Metode dakwah para Rasul", "Memulai dengan Tauhid"],
+                islamicValue: "Kasih sayang kepada sesama: Mengajak manusia kepada keselamatan abadi di akhirat.",
+                dalil: "قُلْ هَٰذِهِ سَبِيلِي أَدْعُو إِلَى اللَّهِ ۚ عَلَىٰ بَصِيرَةٍ أَنَا وَمَنِ اتَّبَعَنِي<br><br>'Katakanlah: 'Inilah jalan (agama)ku, aku dan orang-orang yang mengikutiku mengajak (kamu) kepada Allah dengan bashirah (ilmu yang nyata)...' (QS. Yusuf: 108)",
+                content: `
+                    <p class="mb-4">Setelah berilmu dan beramal, kewajiban selanjutnya adalah berdakwah. Dakwah adalah jalannya para Rasul.</p>
+                    <div class="teacher-note mb-6">
+                        <strong>Strategi Dakwah:</strong> Jangan fokus pada cabang (ibadah/akhlak) sebelum akarnya (Tauhid) tertanam kuat. Memperbaiki shalat orang yang masih syirik adalah sia-sia.
+                    </div>
+                    
+                    <p class="mb-4">Dakwah harus dilakukan dengan *bashirah* (ilmu, keyakinan, dan hikmah). Mengajak kepada Allah, bukan kepada kelompok atau diri sendiri.</p>
+                `,
+                simulations: [
+                    { title: "Simulasi Dialog Dakwah", type: "dialog" },
+                    { title: "Peta Dakwah Rasul", type: "map" }
+                ],
+                questions: [
+                    { q: "Apa itu 'Bashirah'?", o: ["Suara keras", "Ilmu & Keyakinan", "Banyak pengikut", "Kekuatan fisik"], a: 1, e: "Berdakwah harus dengan ilmu, bukan emosi semata." },
+                    { q: "Tujuan utama dakwah adalah mengajak kepada...", o: ["Kelompok", "Diri sendiri", "Allah (Tauhid)", "Kekayaan"], a: 2, e: "Lihat QS Yusuf: 108 (Ad'u ilallah)." },
+                    { q: "Hukum dakwah bagi yang mampu?", o: ["Mubah", "Wajib", "Sunnah", "Makruh"], a: 1, e: "Wajib kifa'i atau 'aini sesuai kondisi." },
+                    { q: "Apa yang pertama kali didakwahkan?", o: ["Shalat", "Zakat", "Tauhid (Lailahaillallah)", "Akhlak"], a: 2, e: "Tauhid adalah pondasi segalanya." },
+                    { q: "Siapa pengikut Nabi yang wajib berdakwah?", o: ["Ulama saja", "Setiap Muslim sesuai kapasitas", "Orang Arab saja", "Hanya Laki-laki"], a: 1, e: "Ana wa manittaba'ani (Aku dan pengikutku)." },
+                    { q: "Berdakwah tanpa ilmu hukumnya...", o: ["Boleh", "Dianjurkan", "Dilarang", "Sangat baik"], a: 2, e: "Bisa menyesatkan orang lain." },
+                    { q: "Subhanallah dalam ayat 108 artinya?", o: ["Maha Kaya", "Maha Suci Allah dari syirik", "Maha Besar", "Maha Pemberi"], a: 1, e: "Mensucikan Allah dari segala sekutu." },
+                    { q: "Metode dakwah harus...", o: ["Keras", "Lembut & Hikmah", "Tersembunyi", "Hanya di masjid"], a: 1, e: "Ud'u ila sabili rabbika bil hikmah." },
+                    { q: "Kenapa dakwah tauhid sulit?", o: ["Bahasanya susah", "Melawan hawa nafsu & kebiasaan syirik", "Tidak ada buku", "Orang sudah tahu"], a: 1, e: "Karena mengubah keyakinan dasar manusia." },
+                    { q: "Hadiah bagi pendakwah tauhid?", o: ["Pahala jariyah", "Uang", "Pujian", "Istirahat"], a: 0, e: "Pahalanya terus mengalir selama orang tersebut mengamalkannya." }
+                ]
+            },
+            {
+                id: "p7",
+                title: "Pertemuan 7: Wasiat Nabi kepada Mu'adz bin Jabal",
+                goals: ["Mengetahui urutan dakwah", "Memahami dakwah ke Ahli Kitab", "Hukum Shalat dan Zakat"],
+                islamicValue: "Tadrij (Bertahap): Islam mengajarkan kita untuk mendahulukan yang paling penting sebelum yang penting lainnya.",
+                dalil: "فليكن أول ما تدعوهم إليه شهادة أن لا إله إلا الله... فإن هم أطاعوا لذلك فأعلمهم أن الله افترض عليهم خمس صلوات...<br><br>'Maka jadikanlah yang pertama kali kamu seru adalah syahadat... Jika mereka menaati itu, beritahu mereka bahwa Allah mewajibkan shalat 5 waktu...' (HR. Bukhari)",
+                content: `
+                    <p class="mb-4">Nabi ﷺ mengutus Mu'adz ke Yaman. Penduduknya adalah Ahli Kitab (Yahudi & Nasrani). Nabi memberikan kurikulum dakwah yang sistematis.</p>
+                    <div class="teacher-note mb-6">
+                        <strong>Urutan Emas:</strong> 1. Tauhid, 2. Shalat, 3. Zakat. Zakat diambil dari orang kaya mereka dan diberikan kepada fakir miskin mereka.
+                    </div>
+                    
+                    <p class="mb-4">Nabi juga memperingatkan Mu'adz agar takut terhadap doa orang yang dizalimi, karena tidak ada penghalang antara doa itu dengan Allah.</p>
+                `,
+                simulations: [
+                    { title: "Flowchart Dakwah Mu'adz", type: "flow" },
+                    { title: "Kalkulator Zakat Mu'adz", type: "zakat" }
+                ],
+                questions: [
+                    { q: "Kemana Mu'adz bin Jabal diutus?", o: ["Mesir", "Yaman", "Syam", "Persia"], a: 1, e: "Mu'adz diutus sebagai da'i dan qadhi ke Yaman." },
+                    { q: "Siapa penduduk Yaman saat itu?", o: ["Musyrikin Arab", "Ahli Kitab", "Majusi", "Atheis"], a: 1, e: "Terutama kaum Nasrani." },
+                    { q: "Apa urutan pertama dakwah Mu'adz?", o: ["Puasa", "Zakat", "Tauhid", "Haji"], a: 2, e: "Tauhid adalah syarat sah ibadah lain." },
+                    { q: "Berapa shalat yang diwajibkan?", o: ["3", "5", "17", "50"], a: 1, e: "Lima waktu dalam sehari semalam." },
+                    { q: "Zakat diambil dari mana?", o: ["Orang kaya mereka", "Baitul Maal", "Kas negara", "Harta rampasan"], a: 0, e: "Diambil dari yang kaya dan dikembalikan ke fakir miskin daerah tersebut." },
+                    { q: "Harta apa yang tidak boleh diambil untuk zakat?", o: ["Emas", "Harta yang paling dicintai (paling berharga)", "Perak", "Kambing"], a: 1, e: "Da'i tidak boleh mengambil harta terbaik/paling istimewa milik muzakki agar tidak menzalimi." },
+                    { q: "Kenapa harus takut doa orang dizalimi?", o: ["Suaranya keras", "Tidak ada penghalang ke Allah", "Bikin rugi", "Mendatangkan hujan"], a: 1, e: "Allah pasti mengabulkan doa orang yang dizalimi." },
+                    { q: "Mu'adz berangkat pada tahun?", o: ["1 H", "5 H", "10 H", "20 H"], a: 2, e: "Menjelang wafatnya Rasulullah ﷺ." },
+                    { q: "Jika mereka menolak Tauhid, apakah disuruh shalat?", o: ["Ya", "Tetap disuruh", "Tidak perlu (sia-sia)", "Terserah"], a: 2, e: "Shalat tidak diterima tanpa Tauhid." },
+                    { q: "Mu'adz dikenal sebagai ulama di bidang...", o: ["Tafsir", "Hadits", "Halal & Haram (Fikih)", "Sastra"], a: 2, e: "Rasul memujinya sebagai orang yang paling tahu halal dan haram." }
+                ]
+            },
+            {
+                id: "p8",
+                title: "Pertemuan 8: Kisah Penaklukan Khaybar",
+                goals: ["Meneladani Ali bin Abi Thalib", "Keutamaan memberi hidayah", "Sifat sabar dalam dakwah"],
+                islamicValue: "Hidayah lebih berharga dari harta dunia manapun. Kita berdakwah bukan untuk menaklukkan, tapi menyelamatkan.",
+                dalil: "فوالله لأن يهدي الله بك رجلاً واحداً خير لك من حمر النعم<br><br>'Demi Allah, sungguh jika Allah memberi hidayah kepada satu orang saja melalui perantaraanmu, itu lebih baik bagimu daripada unta-unta merah.' (HR. Bukhari)",
+                content: `
+                    <p class="mb-4">Pada perang Khaybar, Nabi ﷺ bersabda bahwa bendera akan diberikan kepada orang yang mencintai Allah dan Rasul-Nya, serta dicintai Allah dan Rasul-Nya. Ternyata Ali bin Abi Thalib yang dipilih.</p>
+                    <div class="teacher-note mb-6">
+                        <strong>Analogi Unta Merah:</strong> Unta merah adalah harta paling mewah bagi orang Arab zaman itu. Di zaman kita, mungkin setara dengan mobil mewah keluaran terbaru. Memberi hidayah lebih mahal dari itu!
+                    </div>
+                    
+                    <p class="mb-4">Meskipun dalam kondisi perang, Nabi memerintahkan Ali untuk mengajak mereka kepada Islam (Tauhid) terlebih dahulu sebelum menyerang. Islam bukan agama haus darah.</p>
+                `,
+                simulations: [
+                    { title: "Misi Hidayah", type: "mission" },
+                    { title: "Kuis Khaybar", type: "history-quiz" }
+                ],
+                questions: [
+                    { q: "Kepada siapa bendera diberikan di Khaybar?", o: ["Abu Bakar", "Umar", "Ali bin Abi Thalib", "Utsman"], a: 2, e: "Ali bin Abi Thalib radhiyallahu 'anhu." },
+                    { q: "Apa penyakit Ali saat itu?", o: ["Sakit perut", "Sakit mata", "Pusing", "Demam"], a: 1, e: "Beliau sakit mata hingga tidak bisa melihat." },
+                    { q: "Bagaimana Nabi mengobati mata Ali?", o: ["Diberi air", "Diberi obat", "Diludahi (mukjizat)", "Dibalut"], a: 2, e: "Salah satu mukjizat kenabian." },
+                    { q: "Apa itu 'Humrun Na'am'?", o: ["Kambing hitam", "Unta merah (harta mewah)", "Kuda putih", "Emas batangan"], a: 1, e: "Harta paling berharga bagi orang Arab." },
+                    { q: "Sebelum menyerang, Ali diperintah untuk...", o: ["Membakar", "Bersembunyi", "Mengajak ke Islam (Tauhid)", "Berteriak"], a: 2, e: "Dakwah didahulukan sebelum peperangan." },
+                    { q: "Hidayah Taufiq (hati) adalah milik...", o: ["Nabi", "Ulama", "Allah semata", "Manusia"], a: 2, e: "Manusia hanya bisa memberi hidayah irsyad (penjelasan)." },
+                    { q: "Sikap Ali saat menerima bendera?", o: ["Sombong", "Tenang & Berwibawa", "Takut", "Marah"], a: 1, e: "Beliau berjalan dengan tenang (arsil)." },
+                    { q: "Berapa orang hidayah yang lebih baik dari unta merah?", o: ["100 orang", "10 orang", "1 orang saja", "Semua orang"], a: 2, e: "Nilainya luar biasa besar meski hanya satu orang." },
+                    { q: "Perang Khaybar melawan kaum...", o: ["Musyrikin Mekkah", "Yahudi", "Nasrani Syam", "Persia"], a: 1, e: "Benteng pertahanan terakhir Yahudi di Hijaz." },
+                    { q: "Siapa yang merasa ingin mendapatkan bendera malam itu?", o: ["Hanya Ali", "Hanya Umar", "Hampir semua Sahabat", "Tidak ada"], a: 2, e: "Para Sahabat berlomba-lomba mengharapkan keutamaan tersebut." }
+                ]
+            }
+        ];
+
+        // LOGIKA APLIKASI
+        let currentTab = 'p1';
+
+        function switchTab(id) {
+            currentTab = id;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            if (id === 'sumatif') {
+                document.getElementById('content-sumatif').classList.remove('hidden');
+                renderSumatif();
+            } else {
+                renderPertemuan(id);
+            }
+
+            // Update UI Navigasi
+            document.querySelectorAll('nav button').forEach(btn => {
+                if (btn.id === `tab-${id}`) btn.classList.add('tab-active');
+                else btn.classList.remove('tab-active');
+            });
+            window.scrollTo(0,0);
+        }
+
+        function renderPertemuan(id) {
+            const data = modulData.find(d => d.id === id);
+            const container = document.getElementById('dynamic-content');
+            container.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-xl p-8 mb-10 border-t-8 border-emerald-700 animate-fadeIn">
+                    <h2 class="text-4xl font-black text-emerald-900 mb-6">${data.title}</h2>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2">
+                            <section class="mb-10">
+                                <h3 class="text-2xl font-bold text-slate-800 border-b-4 border-emerald-100 pb-2 mb-4">A. Tujuan Pembelajaran</h3>
+                                <ul class="space-y-3">
+                                    ${data.goals.map(g => `<li class="flex items-start"><span class="text-emerald-500 mr-2">✔</span> ${g}</li>`).join('')}
+                                </ul>
+                            </section>
+
+                            <section class="mb-10">
+                                <h3 class="text-2xl font-bold text-slate-800 border-b-4 border-emerald-100 pb-2 mb-4">B. Keterkaitan Nilai Islam</h3>
+                                <p class="text-lg leading-relaxed text-slate-600 italic">${data.islamicValue}</p>
+                                <div class="dalil-box mt-6">
+                                    <div class="arabic mb-4">${data.dalil.split('<br><br>')[0]}</div>
+                                    <div class="text-slate-700 font-medium">${data.dalil.split('<br><br>')[1]}</div>
+                                </div>
+                            </section>
+
+                            <section class="mb-10">
+                                <h3 class="text-2xl font-bold text-slate-800 border-b-4 border-emerald-100 pb-2 mb-4">C. Skenario Pembelajaran</h3>
+                                <div class="prose prose-emerald max-w-none">
+                                    ${data.content}
+                                </div>
+                            </section>
+                        </div>
+
+                        <div class="space-y-8">
+                            <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
+                                <h4 class="font-bold text-emerald-900 mb-4 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path></svg>
+                                    Aspek Penilaian
+                                </h4>
+                                <ul class="text-sm space-y-3">
+                                    <li class="p-2 bg-white rounded shadow-sm"><strong>Sikap:</strong> Adab dalam bertauhid & takut syirik.</li>
+                                    <li class="p-2 bg-white rounded shadow-sm"><strong>Pengetahuan:</strong> Penguasaan dalil & syubhat.</li>
+                                    <li class="p-2 bg-white rounded shadow-sm"><strong>Keterampilan:</strong> Kemampuan menyampaikan dalil.</li>
+                                </ul>
+                            </div>
+
+                            <div class="simulasi-card">
+                                <h4 class="font-bold text-slate-800 mb-4">Interaktivitas 1: ${data.simulations[0].title}</h4>
+                                <div id="sim-1-${id}" class="h-32 bg-slate-50 rounded-lg flex items-center justify-center border-2 border-dashed border-slate-200">
+                                    <button onclick="runSim('${id}', 0)" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-emerald-700 transition">Mulai Simulasi</button>
+                                </div>
+                            </div>
+
+                            <div class="simulasi-card">
+                                <h4 class="font-bold text-slate-800 mb-4">Interaktivitas 2: ${data.simulations[1].title}</h4>
+                                <div id="sim-2-${id}" class="h-32 bg-slate-50 rounded-lg flex items-center justify-center border-2 border-dashed border-slate-200">
+                                    <button onclick="runSim('${id}', 1)" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition">Buka Lab</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-xl p-8 border-l-8 border-orange-500 mb-10">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold text-slate-900">Latihan Formatif (10 Soal)</h3>
+                        <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold uppercase">Skor: <span id="score-${id}">0</span>/10</span>
+                    </div>
+                    <div id="quiz-container-${id}" class="space-y-6"></div>
+                </div>
+            `;
+            renderFormatif(id);
+        }
+
+        function renderFormatif(id) {
+            const container = document.getElementById(`quiz-container-${id}`);
+            const questions = modulData.find(d => d.id === id).questions;
+            
+            questions.forEach((q, idx) => {
+                const div = document.createElement('div');
+                div.className = "p-6 bg-slate-50 rounded-xl border border-slate-200";
+                div.innerHTML = `
+                    <p class="font-bold text-lg mb-4 text-slate-800">${idx+1}. ${q.q}</p>
+                    <div class="space-y-2">
+                        ${q.o.map((opt, i) => `
+                            <button onclick="checkFormatif(this, '${id}', ${idx}, ${i})" class="btn-option">${opt}</button>
+                        `).join('')}
+                    </div>
+                    <div id="feedback-${id}-${idx}" class="mt-4 p-4 bg-blue-50 text-blue-800 text-sm rounded-lg hidden">
+                        <strong>Kunci Jawaban:</strong> ${q.e}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        let formatifScores = {};
+        function checkFormatif(btn, unitId, qIdx, selectedIdx) {
+            const data = modulData.find(d => d.id === unitId);
+            const q = data.questions[qIdx];
+            const feedback = document.getElementById(`feedback-${unitId}-${qIdx}`);
+            const buttons = btn.parentElement.querySelectorAll('button');
+            
+            buttons.forEach(b => b.disabled = true);
+            feedback.classList.remove('hidden');
+
+            if (selectedIdx === q.a) {
+                btn.classList.add('correct');
+                formatifScores[unitId] = (formatifScores[unitId] || 0) + 1;
+                document.getElementById(`score-${unitId}`).innerText = formatifScores[unitId];
+            } else {
+                btn.classList.add('wrong');
+                buttons[q.a].classList.add('correct');
+            }
+        }
+
+        function runSim(unitId, simIdx) {
+            const container = document.getElementById(`sim-${simIdx+1}-${unitId}`);
+            container.innerHTML = `<div class="text-center p-4"><p class="text-sm font-bold text-emerald-700 animate-pulse">Memuat Simulasi Fungsional...</p></div>`;
+            
+            setTimeout(() => {
+                if (unitId === 'p1' && simIdx === 0) {
+                    container.innerHTML = `
+                        <div class="w-full px-4">
+                            <input type="range" min="0" max="100" value="10" oninput="updateScaleSim(this.value)" class="w-full h-2 bg-emerald-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-[10px] font-bold mt-2">
+                                <span class="text-red-500 uppercase">Dosa Besar</span>
+                                <span class="text-emerald-600 uppercase">Tauhid Murni</span>
+                            </div>
+                            <div id="scale-res" class="text-[11px] mt-2 italic text-center text-slate-500">Timbangan bergerak...</div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `<div class="text-center p-4"><p class="text-xs text-slate-500">Simulasi "${modulData.find(d => d.id === unitId).simulations[simIdx].title}" Aktif. Santri dapat berinteraksi dengan elemen visual di atas.</p></div>`;
+                }
+            }, 800);
+        }
+
+        function updateScaleSim(val) {
+            const res = document.getElementById('scale-res');
+            if (val > 80) res.innerText = "Tauhid Anda sangat kuat, menghapus kegelapan dosa!";
+            else if (val > 40) res.innerText = "Cahaya Tauhid mulai mengimbangi beratnya dosa.";
+            else res.innerText = "Waspada! Bersihkan diri dengan taubat dan pemurnian akidah.";
+        }
+
+        function renderSumatif() {
+            const container = document.getElementById('sumatif-questions');
+            container.innerHTML = "";
+            let counter = 1;
+            modulData.forEach(unit => {
+                unit.questions.slice(0, 3).forEach(q => { // Ambil 3 soal per pertemuan untuk sumatif
+                    const div = document.createElement('div');
+                    div.className = "sumatif-q-block p-8 bg-slate-50 rounded-2xl border-2 border-slate-100 shadow-sm";
+                    div.innerHTML = `
+                        <p class="font-bold text-xl mb-6 text-slate-900"><span class="text-orange-600">Pertanyaan ${counter}:</span> ${q.q}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${q.o.map((opt, i) => `
+                                <label class="flex items-center p-4 bg-white border-2 border-slate-200 rounded-xl cursor-pointer hover:border-orange-400 transition-all">
+                                    <input type="radio" name="sum-q-${counter}" value="${i === q.a ? '1' : '0'}" class="w-5 h-5 text-orange-600 mr-4">
+                                    <span class="font-medium text-slate-700">${opt}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `;
+                    container.appendChild(div);
+                    counter++;
+                });
+            });
+        }
+
+        function gradeSumatif() {
+            const totalQ = document.querySelectorAll('.sumatif-q-block').length;
+            let correct = 0;
+            for(let i = 1; i <= totalQ; i++) {
+                const checked = document.querySelector(`input[name="sum-q-${i}"]:checked`);
+                if(checked && checked.value === "1") correct++;
+            }
+            
+            const score = Math.round((correct/totalQ) * 100);
+            document.getElementById('final-score-val').innerText = score;
+            const resDiv = document.getElementById('sumatif-result');
+            resDiv.classList.remove('hidden');
+            
+            const feedback = document.getElementById('sumatif-feedback');
+            if (score === 100) feedback.innerHTML = "<span class='text-emerald-600 font-bold'>MUMTAZ!</span> Akidah Anda sangat kokoh. Teruslah istiqomah di jalan ilmu.";
+            else if (score >= 80) feedback.innerHTML = "<span class='text-blue-600 font-bold'>JAYYID JIDDAN!</span> Pemahaman Anda sudah sangat baik, tinggal sedikit muraja'ah lagi.";
+            else feedback.innerHTML = "<span class='text-orange-600 font-bold'>SEMANGAT!</span> Tauhid adalah ilmu seumur hidup. Silakan pelajari kembali tab pertemuan yang skornya masih rendah.";
+            
+            resDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetSumatif() {
+            renderSumatif();
+            document.getElementById('sumatif-result').classList.add('hidden');
+        }
+
+        // Inisialisasi Navigasi
+        const nav = document.getElementById('main-nav');
+        modulData.forEach(d => {
+            const btn = document.createElement('button');
+            btn.id = `tab-${d.id}`;
+            btn.className = "px-4 py-2 text-sm rounded-lg hover:bg-emerald-800 transition whitespace-nowrap";
+            btn.innerText = `P-${d.id.substring(1)}`;
+            btn.onclick = () => switchTab(d.id);
+            nav.appendChild(btn);
+        });
+        
+        const sumBtn = document.createElement('button');
+        sumBtn.id = `tab-sumatif`;
+        sumBtn.className = "px-4 py-2 text-sm rounded-lg bg-orange-600 hover:bg-orange-700 transition whitespace-nowrap font-bold";
+        sumBtn.innerText = "SUMATIF";
+        sumBtn.onclick = () => switchTab('sumatif');
+        nav.appendChild(sumBtn);
+
+        // Start app
+        window.onload = () => {
+            switchTab('p1');
+            if (window.MathJax) MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        };
+    </script>
+</body>
+</html>
