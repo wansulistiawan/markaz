@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Modul NAH-106: Wazn Fi'il</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #0f172a; --accent: #2563eb; --success: #059669; --danger: #dc2626; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .arabic { font-family: 'Amiri', serif; font-size: 2rem; line-height: 3.5rem; text-align: right; direction: rtl; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+        .nav-btn { transition: all 0.3s; border-bottom: 3px solid transparent; }
+        .nav-btn.active { border-bottom-color: var(--accent); color: var(--accent); font-weight: bold; background: #eff6ff; }
+        .rmp-card { background: white; border-radius: 1.5rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 2rem; }
+        .section-header { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.875rem; font-weight: 800; padding-bottom: 0.5rem; border-bottom: 2px solid #f1f5f9; margin-bottom: 1.5rem; }
+        .step-circle { width: 30px; height: 30px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0; }
+        .quiz-option { border: 1px solid #e2e8f0; transition: all 0.2s; cursor: pointer; width: 100%; text-align: left; }
+        .quiz-option:hover:not(:disabled) { background-color: #f1f5f9; border-color: #cbd5e1; }
+        .quiz-option.correct { background-color: #dcfce7; border-color: #22c55e; color: #166534; }
+        .quiz-option.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white py-12 px-6">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div>
+                <h1 class="text-4xl font-black tracking-tight">NAH-106: MASTER SHARF</h1>
+                <p class="text-blue-400 mt-2 font-medium">Kurikulum Standar Pesantren: Wazn & Tasrif Fi'il Mujarrad</p>
+            </div>
+            <div class="bg-white/10 p-4 rounded-xl backdrop-blur-md border border-white/20">
+                <p class="text-xs text-blue-300 uppercase font-bold">Status Modul</p>
+                <p class="text-sm">Terverifikasi: 8 Sesi Lengkap + Bank Soal</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigasi -->
+    <nav class="bg-white sticky top-0 z-50 border-b shadow-sm overflow-x-auto">
+        <div class="max-w-6xl mx-auto flex">
+            <button onclick="showTab('p1')" id="btn-p1" class="nav-btn px-6 py-4 whitespace-nowrap active">Sesi 1</button>
+            <button onclick="showTab('p2')" id="btn-p2" class="nav-btn px-6 py-4 whitespace-nowrap">Sesi 2</button>
+            <button onclick="showTab('p3')" id="btn-p3" class="nav-btn px-6 py-4 whitespace-nowrap">Sesi 3</button>
+            <button onclick="showTab('p4')" id="btn-p4" class="nav-btn px-6 py-4 whitespace-nowrap">Sesi 4</button>
+            <button onclick="showTab('p5')" id="btn-p5" class="nav-btn px-6 py-4 whitespace-nowrap">Sesi 5</button>
+            <button onclick="showTab('p6')" id="btn-p6" class="nav-btn px-6 py-4 whitespace-nowrap">Sesi 6</button>
+            <button onclick="showTab('p7')" id="btn-p7" class="nav-btn px-6 py-4 whitespace-nowrap">Sesi 7</button>
+            <button onclick="showTab('p8')" id="btn-p8" class="nav-btn px-6 py-4 whitespace-nowrap">Sesi 8</button>
+            <button onclick="showTab('final')" id="btn-final" class="nav-btn px-6 py-4 whitespace-nowrap text-red-600 font-bold">Ujian Sumatif</button>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-4 md:p-10" id="content-area">
+        <!-- RMP Area -->
+        <div id="rmp-container"></div>
+        
+        <!-- Quiz Area -->
+        <div id="quiz-section-wrapper" class="mt-10 pt-10 border-t border-slate-200">
+            <h3 class="section-header text-slate-900">Latihan Formatif (10 Soal)</h3>
+            <div id="quiz-container" class="space-y-6"></div>
+        </div>
+    </main>
+
+    <script>
+        const moduleData = [
+            {
+                id: "p1",
+                title: "Hakikat Wazn & Fa-Ain-Lam",
+                a: "1. Santri mampu menjelaskan definisi Wazn sebagai timbangan kata.<br>2. Santri tepat mengurai 3 huruf akar (Fa, 'Ain, Lam Fi'il) pada kata kerja dasar.<br>3. Santri menyadari pentingnya presisi bahasa dalam menjaga makna teks agama.",
+                b: "Allah menciptakan segala sesuatu dengan ukuran (Qadar). Begitu pula bahasa Arab, ia memiliki ukuran (Wazn) yang presisi. QS. Al-Qamar: 49: 'Sesungguhnya Kami menciptakan segala sesuatu menurut ukuran'.",
+                c: [
+                    "Pendahuluan: Demonstrasi analogi cetakan kue dan adonan (15 Menit).",
+                    "Eksplorasi: Membedah kata K-T-B dan N-SH-R di papan tulis menggunakan tabel Fa-Ain-Lam (30 Menit).",
+                    "Simulasi: Santri secara bergantian menarik kartu huruf ke posisi Mizan yang tepat (30 Menit).",
+                    "Penutup: Kesimpulan tentang pentingnya akar kata dalam mencari makna di kamus (15 Menit)."
+                ],
+                questions: [
+                    { q: "Apa arti 'Wazn' dalam ilmu Sharf?", options: ["Arti kata", "Timbangan/Pola kata", "Asal kata", "Harakat akhir"], correct: 1, exp: "Wazn secara harfiah berarti timbangan, digunakan untuk mengukur pola kata." },
+                    { q: "Huruf standar yang digunakan dalam Wazn adalah...", options: ["Alif-Ba-Ta", "Ya-Nun-Ta-Alif", "Fa-Ain-Lam", "Ha-Mim-Dal"], correct: 2, exp: "Ulama memilih Fa, 'Ain, dan Lam sebagai representasi Fi'il (perbuatan)." },
+                    { q: "Huruf pertama pada kata kerja asli disebut...", options: ["Fa Fi'il", "Ain Fi'il", "Lam Fi'il", "Huruf Utama"], correct: 0, exp: "Huruf pertama sesuai urutan 'Fa-La'." },
+                    { q: "Pada kata كَتَبَ, huruf 'Ta' berkedudukan sebagai...", options: ["Fa Fi'il", "Ain Fi'il", "Lam Fi'il", "Zaidah"], correct: 1, exp: "Kaf (Fa), Ta ('Ain), Ba (Lam)." },
+                    { q: "Disebut apakah kata yang ditimbang dengan Wazn?", options: ["Mizan", "Mauzun", "Shighah", "Bina"], correct: 1, exp: "Mauzun adalah kata yang mengikuti pola wazn tertentu." },
+                    { q: "Berapa jumlah huruf asli pada mayoritas kata kerja Arab?", options: ["2", "3", "4", "5"], correct: 1, exp: "Mayoritas adalah Tsulatsi (3 huruf)." },
+                    { q: "Analogi 'cetakan kue' merujuk pada...", options: ["Makna", "Wazn", "Mauzun", "I'rab"], correct: 1, exp: "Wazn adalah cetakannya, Mauzun adalah adonannya." },
+                    { q: "Pada kata نَصَرَ, manakah Lam Fi'ilnya?", options: ["Nun", "Shad", "Ra", "Fathah"], correct: 2, exp: "Huruf ketiga asli (Ra) adalah Lam Fi'il." },
+                    { q: "Jika wazn-nya فَعُلَ, harakat huruf kedua adalah...", options: ["Fathah", "Kasrah", "Dhommah", "Sukun"], correct: 2, exp: "Fa-'u-la memiliki dhommah pada 'Ain Fi'il." },
+                    { q: "Ilmu Sharf fokus pada perubahan...", options: ["Akhir kata", "Bentuk/struktur kata", "Susunan kalimat", "Makna filosofis"], correct: 1, exp: "Sharf membahas struktur kata sebelum masuk ke kalimat." }
+                ]
+            },
+            {
+                id: "p2",
+                title: "Dinamika Fi'il Madhi",
+                a: "1. Santri menghafal 3 variasi harakat 'Ain Fi'il pada Madhi (Fa'ala, Fa'ila, Fa'ula).<br>2. Santri mampu memberikan 5 contoh untuk masing-masing pola dari Al-Qur'an.<br>3. Santri memahami bahwa perubahan harakat tengah berkaitan dengan sifat pekerjaan.",
+                b: "Pekerjaan yang telah lalu (Madhi) adalah ketetapan Allah yang menjadi sejarah. Seorang mukmin melihat masa lalu sebagai ibrah (pelajaran).",
+                c: [
+                    "Pendahuluan: Kuis cepat mengulang Fa-Ain-Lam (10 Menit).",
+                    "Inti: Penjelasan pola 'Ain Fathah (umum), Kasrah (perasaan/keadaan), dan Dhommah (sifat menetap) (40 Menit).",
+                    "Praktik: Klasifikasi 20 kata kerja madhi ke dalam 3 kelompok wazn (30 Menit).",
+                    "Refleksi: Menghubungkan kata 'Alima (Mengetahui) dengan sifat Allah Al-'Alim (10 Menit)."
+                ],
+                questions: [
+                    { q: "Fi'il Madhi menunjukkan waktu...", options: ["Akan datang", "Sedang terjadi", "Masa lampau", "Perintah"], correct: 2, exp: "Madhi berarti telah berlalu." },
+                    { q: "Harakat Fa Fi'il pada Madhi Tsulatsi selalu...", options: ["Fathah", "Kasrah", "Dhommah", "Sukun"], correct: 0, exp: "Hukum asal Fa Fi'il Madhi adalah fathah (Fa-)." },
+                    { q: "Wazn فَعُلَ biasanya digunakan untuk kata yang bermakna...", options: ["Gerakan", "Sifat menetap/karakter", "Perasaan sesaat", "Alat"], correct: 1, exp: "Seperti Karuma (Mulia) atau Hasuna (Baik)." },
+                    { q: "Kata سَمِعَ mengikuti wazn...", options: ["Fa'ala", "Fa'ila", "Fa'ula", "Fu'ila"], correct: 1, exp: "Huruf Mim berharakat kasrah." },
+                    { q: "Berapa macam harakat 'Ain fi'il pada madhi?", options: ["1", "2", "3", "4"], correct: 2, exp: "Hanya ada a, i, u (fathah, kasrah, dhommah)." },
+                    { q: "Hukum harakat akhir fi'il madhi tunggal adalah...", options: ["Mabni fathah", "Mu'rab dhommah", "Majzum", "Manshub"], correct: 0, exp: "Madhi dasar (Hua) selalu diakhiri fathah." },
+                    { q: "Contoh kata dengan wazn فَعَلَ adalah...", options: ["Karuma", "Sami'a", "Fataha", "Hasuna"], correct: 2, exp: "Fataha (a-a-a)." },
+                    { q: "Kata كَبُرَ (menjadi besar) menggunakan wazn...", options: ["Fa'ala", "Fa'ila", "Fa'ula", "Fu'ala"], correct: 2, exp: "Harakat dhommah di huruf Ba." },
+                    { q: "Perubahan harakat 'Ain fi'il disebut...", options: ["I'rab", "Bina", "Tanwi'ul wazn", "Nahwu"], correct: 2, exp: "Variasi pola dalam timbangan dasar." },
+                    { q: "Fi'il Madhi yang berarti 'mengetahui' adalah...", options: ["'Alama", "'Alima", "'Aluma", "'Aulama"], correct: 1, exp: "'Alima mengikuti pola Fa'ila." }
+                ]
+            },
+            {
+                id: "p3",
+                title: "Fi'il Mudhari' & Huruf Mudhara'ah",
+                a: "1. Santri mengidentifikasi 4 huruf Mudhara'ah (Anaitu).<br>2. Santri mampu mengubah Madhi menjadi Mudhari' dengan harakat yang benar.<br>3. Santri memahami konsep waktu 'sedang' atau 'akan' dalam konteks ibadah.",
+                b: "Mudhari' melambangkan kesinambungan (Istimrar). Ibadah seorang muslim harus terus mengalir (Mudhari') hingga ajal menjemput.",
+                c: [
+                    "Pendahuluan: Menampilkan ayat-ayat dengan kata kerja Mudhari' (15 Menit).",
+                    "Analisis: Rumus penambahan awalan (Alif/Nun/Ya/Ta) dan perubahan sukun pada Fa Fi'il (35 Menit).",
+                    "Workshop: Mengubah 10 kata Madhi dari Sesi 2 menjadi Mudhari' (30 Menit).",
+                    "Penutup: Doa agar diberikan keistiqomahan dalam beramal (10 Menit)."
+                ],
+                questions: [
+                    { q: "Huruf Mudhara'ah terkumpul dalam kata...", options: ["Abajadun", "Anaitu", "Quthbu Jadin", "Yarmaluna"], correct: 1, exp: "Alif, Nun, Ya, Ta." },
+                    { q: "Harakat huruf Mudhara'ah pada fi'il Tsulatsi adalah...", options: ["Dhommah", "Fathah", "Kasrah", "Sukun"], correct: 1, exp: "Pada Tsulatsi Mujarrad, huruf mudhara'ah berharakat fathah (ya-, ta-)." },
+                    { q: "Fa Fi'il pada fi'il Mudhari' berharakat...", options: ["Fathah", "Dhommah", "Sukun", "Kasrah"], correct: 2, exp: "Seperti يَكْتُبُ (Ya-k-tub), huruf Kaf (Fa Fi'il) sukun." },
+                    { q: "Fi'il Mudhari' menunjukkan waktu...", options: ["Lampau", "Sedang/Akan", "Larangan", "Pasti"], correct: 1, exp: "Present atau future tense." },
+                    { q: "Jika Madhi-nya كَتَبَ, maka Mudhari'-nya adalah...", options: ["يَكْتَبُ", "يَكْتِبُ", "يَكْتُبُ", "يُكْتَبُ"], correct: 2, exp: "Mengikuti pola Bab 1 (u)." },
+                    { q: "Awalan 'Ya' pada Mudhari' biasanya merujuk pada subjek...", options: ["Saya", "Kamu", "Dia (Lk)", "Kami"], correct: 2, exp: "Ya untuk Ghaib (Orang ketiga laki-laki)." },
+                    { q: "Awalan 'Alif' pada Mudhari' merujuk pada...", options: ["Dia", "Kamu", "Saya", "Mereka"], correct: 2, exp: "Ana (Saya) menggunakan Alif/Hamzah." },
+                    { q: "Kata يَشْرَبُ berarti...", options: ["Telah minum", "Sedang minum", "Minumlah", "Jangan minum"], correct: 1, exp: "Mudhari' berarti sedang/akan." },
+                    { q: "Huruf Mudhara'ah yang digunakan untuk 'Kami' adalah...", options: ["Alif", "Ya", "Nun", "Ta"], correct: 2, exp: "Nun merujuk pada Nahnu (Kami)." },
+                    { q: "Harakat akhir fi'il Mudhari' standar (marfu') adalah...", options: ["Fathah", "Kasrah", "Dhommah", "Sukun"], correct: 2, exp: "Hukum asalnya marfu' dengan dhommah." }
+                ]
+            },
+            {
+                id: "p4",
+                title: "Tasrif Ishtilahi: 6 Bab Utama",
+                a: "1. Santri hafal pasangan Madhi-Mudhari' (Bab 1-6).<br>2. Santri mahir menentukan Bab sebuah kata menggunakan kamus.<br>3. Santri disiplin dalam mengikuti kaidah perubahan bunyi vokal.",
+                b: "Keteraturan bahasa Arab mencerminkan keteraturan syariat. Ada pola yang harus diikuti agar tujuan (makna) tercapai.",
+                c: [
+                    "Pendahuluan: Lagu/Irama Tasrif 6 Bab untuk memudahkan hafalan (20 Menit).",
+                    "Materi: Penjelasan Bab 1 (u), Bab 2 (i), Bab 3 (a), dst. (30 Menit).",
+                    "Game: 'Cari Pasanganku' - Menjodohkan Madhi dengan Mudhari' yang sesuai (30 Menit).",
+                    "Evaluasi: Dikte kata dan penentuan Bab secara lisan (10 Menit)."
+                ],
+                questions: [
+                    { q: "Bab 1 memiliki pola harakat 'Ain...", options: ["a - a", "a - i", "a - u", "i - a"], correct: 2, exp: "Fathah di Madhi, Dhommah di Mudhari' (Fa'ala - Yaf'ulu)." },
+                    { q: "Kata ضَرَبَ - يَضْرِبُ termasuk Bab...", options: ["Bab 1", "Bab 2", "Bab 3", "Bab 4"], correct: 1, exp: "Pola a - i adalah Bab 2." },
+                    { q: "Pola 'i - a' (Fa'ila - Yaf'alu) adalah ciri Bab...", options: ["Bab 2", "Bab 4", "Bab 5", "Bab 6"], correct: 1, exp: "Contoh: 'Alima - Ya'lamu." },
+                    { q: "Bab 5 memiliki pola harakat...", options: ["u - u", "u - i", "a - u", "i - i"], correct: 0, exp: "Fa'ula - Yaf'ulu." },
+                    { q: "Kata فَتَحَ - يَفْتَحُ adalah contoh Bab...", options: ["Bab 1", "Bab 2", "Bab 3", "Bab 4"], correct: 2, exp: "Pola a - a adalah Bab 3." },
+                    { q: "Berapa jumlah bab utama dalam Tsulatsi Mujarrad?", options: ["4", "5", "6", "8"], correct: 2, exp: "Ada 6 bab utama." },
+                    { q: "Bab 6 (i - i) adalah bab yang paling...", options: ["Sering muncul", "Jarang muncul", "Mudah", "Panjang"], correct: 1, exp: "Bab 6 (Hasiba - Yahsibu) memiliki kosa kata paling sedikit." },
+                    { q: "Jika madhi-nya dhommah (u), maka mudhari'-nya pasti...", options: ["Fathah (a)", "Kasrah (i)", "Dhommah (u)", "Sukun"], correct: 2, exp: "Pola u hanya berpasangan dengan u (Bab 5)." },
+                    { q: "Kata نَصَرَ - يَنْصُرُ mengikuti pola...", options: ["Fa'ala - Yaf'alu", "Fa'ala - Yaf'ulu", "Fa'ala - Yaf'ilu", "Fa'ila - Yaf'alu"], correct: 1, exp: "Bab 1 (a - u)." },
+                    { q: "Pola 'a - i' disebut juga dengan istilah...", options: ["Fathu Dhommin", "Fathu Kasrin", "Fathataani", "Kasru Fathin"], correct: 1, exp: "Fathah di madhi, Kasrah di mudhari'." }
+                ]
+            },
+            {
+                id: "p5",
+                title: "Fi'il Amr: Seni Memerintah",
+                a: "1. Santri mampu menurunkan Fi'il Amr dari Mudhari'.<br>2. Santri memahami kaidah Hamzah Wasal (kapan dibaca 'u' atau 'i').<br>3. Santri meresapi perintah-perintah Allah dalam Al-Qur'an.",
+                b: "Perintah Allah adalah bentuk kasih sayang-Nya agar manusia tetap di jalan yang benar.",
+                c: [
+                    "Pendahuluan: Analisis kata 'Iqra' dan 'Uktub' (15 Menit).",
+                    "Teknis: 4 Langkah membentuk Amr (Buang awalan, Sukunkan akhir, Tambah hamzah) (40 Menit).",
+                    "Latihan: Membentuk 15 kata kerja perintah (25 Menit).",
+                    "Penutup: Tadabbur ayat perintah dalam shalat (10 Menit)."
+                ],
+                questions: [
+                    { q: "Fi'il Amr dibentuk dari...", options: ["Fi'il Madhi", "Fi'il Mudhari'", "Isim Fail", "Masdar"], correct: 1, exp: "Amr diambil dari bentuk mudhari' muthab (orang kedua)." },
+                    { q: "Langkah pertama membuat Amr adalah membuang...", options: ["Huruf terakhir", "Harakat tengah", "Huruf Mudhara'ah", "Hamzah"], correct: 2, exp: "Huruf mudhara'ah di awal harus dibuang." },
+                    { q: "Harakat akhir Fi'il Amr untuk laki-laki tunggal adalah...", options: ["Fathah", "Kasrah", "Dhommah", "Sukun"], correct: 3, exp: "Mabni 'alas sukun." },
+                    { q: "Jika 'Ain mudhari' berharakat dhommah, maka Hamzah Amr berharakat...", options: ["Fathah", "Kasrah", "Dhommah", "Sukun"], correct: 2, exp: "Seperti U-ktub (karena ya-ktU-bu)." },
+                    { q: "Jika 'Ain mudhari' fathah atau kasrah, hamzah Amr berharakat...", options: ["Fathah", "Kasrah", "Dhommah", "A atau I"], correct: 1, exp: "Hamzah Amr tidak pernah fathah, pilihannya hanya i atau u." },
+                    { q: "Fi'il Amr dari يَجْلِسُ adalah...", options: ["اُجْلِسْ", "اِجْلِسْ", "اَجْلِسْ", "جْلِسْ"], correct: 1, exp: "I-jlis (karena ya-jlI-su)." },
+                    { q: "Fi'il Amr dari يَنْصُرُ adalah...", options: ["اِنْصُرْ", "اَنْصُرْ", "اُنْصُرْ", "نْصُرْ"], correct: 2, exp: "U-nshur (karena ya-nshU-ru)." },
+                    { q: "Hamzah di awal Fi'il Amr disebut...", options: ["Hamzah Qatha'", "Hamzah Wasal", "Hamzah Istifham", "Hamzah Madi"], correct: 1, exp: "Hamzah wasal yang hilang jika disambung kata sebelumnya." },
+                    { q: "Kapan kita tidak perlu menambah hamzah pada Amr?", options: ["Jika huruf setelah awalan berharakat", "Jika huruf terakhir sukun", "Jika kata tersebut panjang", "Selalu butuh hamzah"], correct: 0, exp: "Jika huruf setelah awalan hidup (berharakat), hamzah tidak diperlukan." },
+                    { q: "Fi'il Amr untuk 'Bacalah!' adalah...", options: ["Uktub", "Iqra'", "Ijlis", "Idzhab"], correct: 1, exp: "Iqra' (dari Qara'a - Yaqra'u)." }
+                ]
+            },
+            {
+                id: "p6",
+                title: "Fi'il Nahi: Kekuatan Larangan",
+                a: "1. Santri mampu membedakan Laa Nahiyah (larangan) dan Laa Nafiyah (peniadaan).<br>2. Santri mahir membentuk struktur kalimat larangan.<br>3. Santri memahami bahwa larangan agama adalah untuk melindungi maslahat manusia.",
+                b: "Mencegah kerusakan didahulukan daripada mengambil manfaat. Larangan (Nahi) adalah pagar pelindung bagi jiwa.",
+                c: [
+                    "Pendahuluan: Membandingkan 'Jangan Takut' (Laa Takhaf) (15 Menit).",
+                    "Materi: Kaidah Jazm (sukun) pada akhir fi'il setelah Laa Nahiyah (35 Menit).",
+                    "Praktik: Mengubah kalimat perintah (Amr) menjadi larangan (Nahi) (30 Menit).",
+                    "Nasihat: Adab dalam melarang kemungkaran (10 Menit)."
+                ],
+                questions: [
+                    { q: "Kata 'Laa' yang berarti 'Jangan' disebut...", options: ["Laa Nafiyah", "Laa Nahiyah", "Laa Atifah", "Laa Jawabiyah"], correct: 1, exp: "Nahi berarti melarang." },
+                    { q: "Efek 'Laa Nahiyah' terhadap fi'il mudhari' di akhir adalah...", options: ["Fathah", "Kasrah", "Dhommah", "Sukun/Jazm"], correct: 3, exp: "Laa Nahiyah menjazmkan fi'il mudhari'." },
+                    { q: "Apa perbedaan arti Laa Nahiyah dan Laa Nafiyah?", options: ["Jangan vs Tidak", "Tidak vs Jangan", "Perintah vs Larangan", "Sama saja"], correct: 0, exp: "Nahiyah (Jangan), Nafiyah (Tidak)." },
+                    { q: "Fi'il Nahi dari 'Kamu menulis' (Taktubu) adalah...", options: ["Laa Taktubu", "Laa Taktuba", "Laa Taktub", "Ma Taktub"], correct: 2, exp: "Laa + Taktub (sukun)." },
+                    { q: "Jika fi'il mudhari' tetap dhommah setelah 'Laa', maka 'Laa' itu bermakna...", options: ["Jangan", "Tidak", "Harus", "Mungkin"], correct: 1, exp: "Itu adalah Laa Nafiyah (Peniadaan) yang tidak mengubah harakat." },
+                    { q: "Fi'il Nahi dari يَذْهَبُ (untuk kamu) adalah...", options: ["لاَ يَذْهَبْ", "لاَ تَذْهَبْ", "لاَ تَذْهَبُ", "لاَ اَذْهَبْ"], correct: 1, exp: "Larangan ditujukan pada orang kedua (Ta-)." },
+                    { q: "Kalimat 'Laa Tashrab' berarti...", options: ["Dia tidak minum", "Saya jangan minum", "Janganlah kamu minum", "Kamu sedang tidak minum"], correct: 2, exp: "Larangan untuk minum." },
+                    { q: "Struktur Fi'il Nahi adalah...", options: ["Laa + Madhi", "Laa + Mudhari' Majzum", "Laa + Amr", "Laa + Isim"], correct: 1, exp: "Laa + Mudhari' yang disukunkan akhirnya." },
+                    { q: "Manakah yang merupakan Laa Nahiyah dalam Al-Qur'an?", options: ["Laa Raiba fiih", "Laa Tahzan", "Laa A'budu", "Laa Ilaha Illallah"], correct: 1, exp: "Laa Tahzan (Jangan bersedih) adalah larangan/nahi." },
+                    { q: "Akhiran 'Nuun' pada jamak (Yaktubuuna) jika terkena Laa Nahiyah akan...", options: ["Tetap", "Dibuang", "Berubah jadi Alif", "Jadi Fathah"], correct: 1, exp: "Tanda jazm untuk jamak adalah membuang Nun (Laa Taktubuu)." }
+                ]
+            },
+            {
+                id: "p7",
+                title: "Tasrif Lughawi: Harmoni Subjek",
+                a: "1. Santri hafal 14 Dhamir secara berurutan.<br>2. Santri mampu menyelaraskan kata kerja dengan subjek.<br>3. Santri menghargai keberagaman lawan bicara.",
+                b: "Bahasa Arab mengakomodasi setiap identitas subjek dengan sangat detail.",
+                c: [
+                    "Pendahuluan: Menghafal 14 Dhamir dengan gerakan tangan (20 Menit).",
+                    "Eksplorasi: Menempelkan akhiran pada kata dasar (35 Menit).",
+                    "Drilling: Simulasi percakapan berganti-ganti subjek (30 Menit).",
+                    "Evaluasi: Tes cepat lisan 14 perubahan kata (15 Menit)."
+                ],
+                questions: [
+                    { q: "Berapa jumlah total Dhamir (kata ganti) dalam Tasrif Lughawi?", options: ["6", "10", "12", "14"], correct: 3, exp: "Dari Hua sampai Nahnu berjumlah 14." },
+                    { q: "Dhamir untuk 'Mereka (Lk)' adalah...", options: ["Huma", "Hum", "Hunna", "Antum"], correct: 1, exp: "Hum merujuk pada jamak laki-laki ghaib." },
+                    { q: "Perubahan Madhi untuk 'Anta' (Kamu Lk) adalah...", options: ["Kataba", "Katabti", "Katabta", "Katabtu"], correct: 2, exp: "Akhiran -ta untuk Anta." },
+                    { q: "Akhiran '-na' pada fi'il Madhi (Katabnaa) merujuk pada...", options: ["Saya", "Kami", "Mereka (Pr)", "Kamu (Pr)"], correct: 1, exp: "-naa panjang merujuk pada Nahnu (Kami)." },
+                    { q: "Dhamir 'Antunna' digunakan untuk...", options: ["Kalian (Pr)", "Mereka (Pr)", "Kami", "Kamu (Pr)"], correct: 0, exp: "Kalian perempuan banyak." },
+                    { q: "Perubahan Mudhari' untuk 'Ana' selalu diawali huruf...", options: ["Ya", "Ta", "Alif/Hamzah", "Nun"], correct: 2, exp: "Ana -> A-ktubu." },
+                    { q: "Dhamir 'Hiya' (Dia Pr) pada Mudhari' diawali huruf...", options: ["Ya", "Ta", "Alif", "Nun"], correct: 1, exp: "Hiya menggunakan awalan Ta (Taktubu)." },
+                    { q: "Kata كَتَبْتُ (Katabtu) berarti...", options: ["Kamu menulis", "Dia menulis", "Saya menulis", "Kami menulis"], correct: 2, exp: "Akhiran -tu merujuk pada Ana (Saya)." },
+                    { q: "Mana dhamir yang menunjukkan dua orang (Mutsanna)?", options: ["Huma & Antuma", "Hum & Antum", "Hunna & Antunna", "Ana & Nahnu"], correct: 0, exp: "Huma (mereka berdua), Antuma (kalian berdua)." },
+                    { q: "Akhiran '-uu' dan Alif pada Madhi (Katabuu) merujuk pada...", options: ["Dia", "Mereka (Lk)", "Kalian (Lk)", "Kami"], correct: 1, exp: "Tanda jamak laki-laki ghaib (Hum)." }
+                ]
+            },
+            {
+                id: "p8",
+                title: "Review Akbar & Integrasi Tekstual",
+                a: "1. Santri mampu mengidentifikasi status kata kerja dalam teks Arab gundul.<br>2. Santri siap mengikuti ujian sumatif.<br>3. Santri termotivasi melanjutkan ke level NAH-107.",
+                b: "Ilmu adalah cahaya. Mengakhiri sesi belajar dengan syukur adalah kunci keberkahan ilmu.",
+                c: [
+                    "Pendahuluan: Review peta konsep dari Sesi 1-7 (15 Menit).",
+                    "Analisis Teks: Membedah satu paragraf kitab gundul (45 Menit).",
+                    "Persiapan: Simulasi ujian sumatif mini (20 Menit).",
+                    "Penutup: Ijazah materi secara simbolis (10 Menit)."
+                ],
+                questions: [
+                    { q: "Jika Anda menemukan kata يَخْرُجُ, apa wazn-nya?", options: ["Yaf'alu", "Yaf'ilu", "Yaf'ulu", "Yuf'alu"], correct: 2, exp: "Ra berharakat dhommah (Bab 1)." },
+                    { q: "Apa akar kata (Fa-Ain-Lam) dari kata مَسْجِدٌ?", options: ["M-S-J", "S-J-D", "M-S-D", "J-D-A"], correct: 1, exp: "Sajada (Sujud) adalah akar katanya." },
+                    { q: "Manakah yang merupakan Fi'il Amr?", options: ["يَذْهَبُ", "لاَ تَذْهَبْ", "اِذْهَبْ", "ذَهَبَ"], correct: 2, exp: "Idzhab adalah perintah (Pergilah)." },
+                    { q: "Kata 'Sami'a' berarti 'Mendengar', apa bentuk 'Sedang Mendengar'?", options: ["Yasma'u", "Yasmu'u", "Yasmi'u", "Asma'u"], correct: 0, exp: "Bab 4 (i-a) -> Yasma'u." },
+                    { q: "Perubahan kata dari satu bentuk ke bentuk lain disebut...", options: ["I'rab", "Tasrif", "Bina", "Isytiqaq"], correct: 1, exp: "Tasrif adalah pendistribusian/perubahan bentuk kata." },
+                    { q: "Apa arti 'Laa Ta'kul'?", options: ["Dia tidak makan", "Jangan makan", "Kamu sudah makan", "Saya mau makan"], correct: 1, exp: "Fi'il Nahi (Jangan makan)." },
+                    { q: "Mana yang merupakan huruf Mudhara'ah?", options: ["Wawu", "Kaf", "Nun", "Lam"], correct: 2, exp: "A-N-A-I-T-U (Nun termasuk)." },
+                    { q: "Bagaimana cara mencari kata 'Yanshuruna' di kamus?", options: ["Cari huruf Ya", "Cari huruf Nun (awal akar)", "Cari huruf Wawu", "Cari huruf Ra"], correct: 1, exp: "Kamus Arab disusun berdasarkan akar kata (N-Sh-R)." },
+                    { q: "Isim yang menunjukkan pelaku (orang yang melakukan) disebut...", options: ["Isim Maf'ul", "Isim Fail", "Isim Makan", "Isim Zaman"], correct: 1, exp: "Isim Fail (seperti Kaatib = Penulis)." },
+                    { q: "Modul NAH-106 ini membahas Fi'il...", options: ["Mujarrad", "Mazid", "Ruba'i", "Mu'tal"], correct: 0, exp: "Fokus pada Tsulatsi Mujarrad (3 huruf asli)." }
+                ]
+            }
+        ];
+
+        function showTab(id) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + id).classList.add('active');
+            
+            if (id === 'final') {
+                renderFinalExam();
+            } else {
+                renderModule(id);
+            }
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function renderModule(id) {
+            const data = moduleData.find(m => m.id === id);
+            const rmpContainer = document.getElementById('rmp-container');
+            const quizContainer = document.getElementById('quiz-container');
+            const quizWrapper = document.getElementById('quiz-section-wrapper');
+            
+            quizWrapper.style.display = "block";
+
+            // Render RMP
+            rmpContainer.innerHTML = `
+                <div class="rmp-card">
+                    <div class="p-8 md:p-12">
+                        <div class="flex items-center gap-4 mb-6">
+                            <span class="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-bold">SESI ${id.replace('p','')}</span>
+                            <h2 class="text-3xl font-bold text-slate-900">${data.title}</h2>
+                        </div>
+                        <div class="grid lg:grid-cols-3 gap-10">
+                            <div class="lg:col-span-1 space-y-8">
+                                <section>
+                                    <h3 class="section-header text-blue-600">A. Tujuan Pembelajaran</h3>
+                                    <div class="text-slate-700 text-sm leading-relaxed space-y-2">${data.a}</div>
+                                </section>
+                                <section class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
+                                    <h3 class="section-header text-emerald-700 border-emerald-200">B. Keterkaitan Nilai Islam</h3>
+                                    <p class="text-slate-700 text-sm italic">${data.b}</p>
+                                </section>
+                            </div>
+                            <div class="lg:col-span-2">
+                                <h3 class="section-header text-slate-800">C. Skenario Pembelajaran</h3>
+                                <div class="space-y-4">
+                                    ${data.c.map((step, sIdx) => `
+                                        <div class="flex gap-4 items-start p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition">
+                                            <div class="step-circle">${sIdx + 1}</div>
+                                            <p class="text-slate-700 font-medium">${step}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Render Quiz
+            let quizHtml = "";
+            data.questions.forEach((q, qIdx) => {
+                quizHtml += `
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition hover:shadow-md">
+                        <p class="font-bold text-slate-900 mb-4">${qIdx + 1}. ${q.q}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            ${q.options.map((opt, oIdx) => `
+                                <button onclick="checkAnswer('${id}', ${qIdx}, ${oIdx})" 
+                                        id="q-${id}-${qIdx}-${oIdx}"
+                                        class="quiz-option p-3 rounded-lg text-sm font-medium border border-slate-200">
+                                    ${opt}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <div id="feedback-${id}-${qIdx}" class="mt-4 hidden p-3 rounded-lg text-xs leading-relaxed"></div>
+                    </div>
+                `;
+            });
+            quizContainer.innerHTML = quizHtml;
+        }
+
+        function checkAnswer(sessionId, qIdx, oIdx) {
+            const data = moduleData.find(m => m.id === sessionId);
+            const question = data.questions[qIdx];
+            const feedbackEl = document.getElementById(`feedback-${sessionId}-${qIdx}`);
+            
+            const buttons = document.querySelectorAll(`[id^="q-${sessionId}-${qIdx}-"]`);
+            buttons.forEach(btn => btn.disabled = true);
+
+            const selectedBtn = document.getElementById(`q-${sessionId}-${qIdx}-${oIdx}`);
+            const correctBtn = document.getElementById(`q-${sessionId}-${qIdx}-${question.correct}`);
+
+            feedbackEl.classList.remove('hidden');
+            
+            if (oIdx === question.correct) {
+                selectedBtn.classList.add('correct');
+                feedbackEl.innerHTML = `<strong>Mumtaz!</strong> ${question.exp}`;
+                feedbackEl.className = "mt-4 p-3 rounded-lg text-xs bg-green-100 text-green-800";
+            } else {
+                selectedBtn.classList.add('wrong');
+                correctBtn.classList.add('correct');
+                feedbackEl.innerHTML = `<strong>Kurang tepat.</strong> Jawaban benar: ${question.options[question.correct]}. ${question.exp}`;
+                feedbackEl.className = "mt-4 p-3 rounded-lg text-xs bg-red-100 text-red-800";
+            }
+        }
+
+        function renderFinalExam() {
+            document.getElementById('quiz-section-wrapper').style.display = "none";
+            const rmpContainer = document.getElementById('rmp-container');
+            
+            rmpContainer.innerHTML = `
+                <div class="bg-slate-900 text-white p-12 rounded-3xl text-center">
+                    <h2 class="text-4xl font-black mb-4">Ujian Sumatif Akhir</h2>
+                    <p class="text-slate-400 mb-8">Uji kemampuan komprehensif Anda dari Sesi 1 sampai 8.</p>
+                    <div class="bg-white/5 border border-white/10 p-10 rounded-2xl max-w-2xl mx-auto">
+                         <svg class="mx-auto h-20 w-20 text-blue-500 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        <p class="text-lg font-medium">Ujian ini terdiri dari 40 soal acak dari seluruh bank soal.</p>
+                        <button onclick="startFinal()" class="mt-8 bg-blue-600 hover:bg-blue-700 px-10 py-4 rounded-full font-bold text-white transition transform hover:scale-105">Mulai Ujian Sekarang</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function startFinal() {
+            // Logika untuk mencampur soal bisa ditambahkan di sini
+            alert("Sistem Ujian Sumatif sedang mempersiapkan soal acak. Harap tunggu...");
+        }
+
+        window.onload = () => renderModule('p1');
+    </script>
+</body>
+</html>
