@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAF-206: Tafsir & Tadabbur Surah Pilihan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e4d2b;
+            --secondary: #f3f4f6;
+            --accent: #d4af37;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; color: #1f2937; scroll-behavior: smooth; }
+        .arabic { font-family: 'Amiri', serif; font-size: 1.75rem; line-height: 2.8rem; text-align: right; direction: rtl; padding: 1rem; color: #1e4d2b; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .teacher-note { border-left: 5px solid var(--accent); background-color: #fffbeb; padding: 1.25rem; margin: 1.5rem 0; border-radius: 0.5rem; font-style: italic; }
+        .btn-nav { transition: all 0.2s ease; border-bottom: 3px solid transparent; }
+        .btn-nav.active { background-color: #064e3b; color: white; border-bottom: 3px solid var(--accent); }
+        .card { background: white; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); padding: 2rem; margin-bottom: 2.5rem; border: 1px solid #e5e7eb; }
+        .sim-box { min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f0fdf4; border: 2px dashed #bbf7d0; border-radius: 0.75rem; padding: 1.5rem; }
+        .option-btn { width: 100%; text-align: left; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; transition: background 0.2s; background: white; }
+        .option-btn:hover { background: #f9fafb; }
+        .correct { background-color: #d1fae5 !important; border-color: #10b981 !important; }
+        .wrong { background-color: #fee2e2 !important; border-color: #ef4444 !important; }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="bg-emerald-900 p-2.5 rounded-xl shadow-lg">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800">TAF-206: Tafsir & Tadabbur</h1>
+                    <p class="text-xs font-semibold text-emerald-700 tracking-wider uppercase">Manhaj Salaf Ahlussunnah wal Jama'ah</p>
+                </div>
+            </div>
+            <div class="hidden md:block w-48 bg-gray-200 rounded-full h-2">
+                <div id="main-progress" class="bg-emerald-600 h-2 rounded-full transition-all duration-500" style="width: 12.5%"></div>
+            </div>
+        </div>
+        <nav class="bg-emerald-900 text-white overflow-x-auto no-scrollbar">
+            <div class="max-w-7xl mx-auto flex">
+                <button onclick="switchTab(1)" id="nav-1" class="btn-nav px-5 py-4 text-sm font-medium whitespace-nowrap active">Sesi 1: Al-Fiil I</button>
+                <button onclick="switchTab(2)" id="nav-2" class="btn-nav px-5 py-4 text-sm font-medium whitespace-nowrap">Sesi 2: Al-Fiil II</button>
+                <button onclick="switchTab(3)" id="nav-3" class="btn-nav px-5 py-4 text-sm font-medium whitespace-nowrap">Sesi 3: Al-Kautsar I</button>
+                <button onclick="switchTab(4)" id="nav-4" class="btn-nav px-5 py-4 text-sm font-medium whitespace-nowrap">Sesi 4: Al-Kautsar II</button>
+                <button onclick="switchTab(5)" id="nav-5" class="btn-nav px-5 py-4 text-sm font-medium whitespace-nowrap">Sesi 5: An-Nashr I</button>
+                <button onclick="switchTab(6)" id="nav-6" class="btn-nav px-5 py-4 text-sm font-medium whitespace-nowrap">Sesi 6: An-Nashr II</button>
+                <button onclick="switchTab(7)" id="nav-7" class="btn-nav px-5 py-4 text-sm font-medium whitespace-nowrap">Sesi 7: Al-Insyirah I</button>
+                <button onclick="switchTab(8)" id="nav-8" class="btn-nav px-5 py-4 text-sm font-medium whitespace-nowrap">Sesi 8: Al-Insyirah II</button>
+                <button onclick="switchTab(9)" id="nav-9" class="btn-nav px-5 py-4 text-sm font-bold whitespace-nowrap bg-amber-600 hover:bg-amber-700">TES SUMATIF</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-10">
+        <!-- Tab 1 to 8 will be injected here by JavaScript to ensure completeness and prevent missing blocks -->
+        <div id="content-area"></div>
+    </main>
+
+    <footer class="bg-emerald-950 text-white py-12">
+        <div class="max-w-6xl mx-auto px-4 grid md:grid-cols-2 gap-8">
+            <div>
+                <h3 class="text-lg font-bold mb-4">Tentang Modul TAF-206</h3>
+                <p class="text-emerald-100 text-sm leading-relaxed">Modul ini disusun untuk memberikan pemahaman mendalam tentang tadabbur ayat-ayat Al-Qur'an berdasarkan kitab-kitab tafsir mu'tabar seperti Tafsir Ibnu Katsir, Tafsir At-Thabari, dan As-Sa'di dengan bimbingan manhaj Salafush Shalih.</p>
+            </div>
+            <div class="text-right">
+                <p class="text-emerald-300 text-sm italic">"Ilmu itu didatangi, bukan mendatangi."</p>
+                <p class="mt-4 text-xs">© 2024 Pendidikan Islam Terpadu. Seluruh hak cipta dilindungi.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL SCORE -->
+    <div id="score-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-center">
+            <h2 class="text-2xl font-bold mb-2">Hasil Latihan</h2>
+            <div id="modal-score-text" class="text-5xl font-black text-emerald-600 my-4">0</div>
+            <p id="modal-msg" class="text-gray-600 mb-6 italic text-sm"></p>
+            <button onclick="closeModal()" class="w-full bg-emerald-800 text-white py-3 rounded-xl font-bold">Tutup</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA MODUL ---
+        const moduleData = [
+            {
+                id: 1,
+                title: "Pertemuan 1: Kehancuran Pasukan Bergajah (Al-Fiil: 1-3)",
+                objectives: [
+                    "Santri memahami latar belakang sejarah invasi Abrahah.",
+                    "Santri mampu menghafal dan mengartikan ayat 1-3 Surah Al-Fiil.",
+                    "Santri memahami konsep perlindungan Allah terhadap Baitullah."
+                ],
+                islamicValue: "Tauhid Rububiyah: Allah adalah Penguasa mutlak alam semesta. Kekuatan fisik manusia sehebat apapun akan hancur di hadapan Allah.",
+                dalil: { arb: "أَلَمْ تَرَ كَيْفَ فَعَلَ رَبُّكَ بِأَصْحَابِ الْفِيلِ", trans: "Tidakkah engkau (Muhammad) perhatikan bagaimana Tuhanmu telah bertindak terhadap pasukan bergajah?" },
+                content: `
+                    <h4 class="font-bold text-emerald-800 italic">1. Konteks Sejarah (20 Menit)</h4>
+                    <p class="mb-4">Abrahah Al-Asyram, gubernur Yaman, membangun gereja megah bernama 'Al-Qullais' untuk memalingkan haji orang Arab dari Ka'bah. Karena usahanya gagal, ia bersumpah akan menghancurkan Ka'bah dengan pasukan gajah yang besar.</p>
+                                       <h4 class="font-bold text-emerald-800 italic">2. Tadabbur Ayat 1-3 (40 Menit)</h4>
+                    <p><b>Ayat 1:</b> Pertanyaan retoris yang menunjukkan kepastian peristiwa. <b>Ayat 2:</b> 'Kaidahum' (Tipu daya mereka) disia-siakan oleh Allah. Abrahah berencana menghancurkan Ka'bah, tapi Allah justru menghancurkan Abrahah. <b>Ayat 3:</b> Allah mengirim burung-burung yang berbondong-bondong (Ababil).</p>
+                    <div class="teacher-note"><b>Poin Diskusi Guru:</b> Jelaskan kepada santri bahwa gajah adalah hewan yang tidak umum di Arab, sehingga peristiwa ini menjadi sangat ajaib dan menjadi bukti kekuasaan Allah.</div>
+                `,
+                assessment: true,
+                sim1: { title: "Peta Invasi", desc: "Urutkan rute Abrahah dari Yaman ke Makkah.", type: "sort" },
+                sim2: { title: "Mufradat Match", desc: "Hubungkan kata Al-Fiil dengan artinya.", type: "match" }
+            },
+            {
+                id: 2,
+                title: "Pertemuan 2: Sijjil dan Daun yang Dimakan Ulat (Al-Fiil: 4-5)",
+                objectives: [
+                    "Santri memahami proses kehancuran pasukan Abrahah melalui media burung.",
+                    "Santri memahami makna 'Sijjil' dan 'Ashfin Ma'kul'.",
+                    "Santri dapat mengambil pelajaran bahwa kesombongan membawa kehinaan."
+                ],
+                islamicValue: "Keadilan Allah: Allah membalas kesombongan dengan kehancuran yang sangat rendah.",
+                dalil: { arb: "فَجَعَلَهُمْ كَعَصْفٍ مَّأْكُولٍ", trans: "Lalu Dia menjadikan mereka seperti daun yang dimakan (ulat)." },
+                content: `
+                    <h4 class="font-bold text-emerald-800 italic">1. Mukjizat Burung Ababil (30 Menit)</h4>
+                    <p>Burung-burung tersebut membawa tiga buah batu kecil (satu di paruh, dua di kaki). Batu itu disebut <i>Sijjil</i> (tanah yang terbakar/mengeras). Meskipun kecil, batu ini menembus tubuh pasukan gajah seperti peluru.</p>
+                    <svg viewBox="0 0 200 100" class="w-full h-32 text-emerald-800"><circle cx="100" cy="50" r="40" fill="#fef3c7" stroke="#d97706" /><path d="M80 50 L120 50 M100 30 L100 70" stroke="#d97706" /></svg>
+                    <p class="text-xs italic text-gray-500 mb-6">Ilustrasi: Kerikil Sijjil yang menghancurkan gajah.</p>
+                    
+                    <h4 class="font-bold text-emerald-800 italic">2. Tadabbur Ayat 4-5 (30 Menit)</h4>
+                    <p><b>Ayat 5:</b> 'Ashfin Ma'kul'. Bayangkan daun yang sudah berlubang-lubang dan hancur karena ulat. Begitulah tubuh pasukan Abrahah hancur total. Pelajarannya: Allah bisa memakai makhluk paling kecil (burung/kerikil) untuk mengalahkan makhluk paling besar (gajah).</p>
+                    <div class="teacher-note"><b>Poin Diskusi Guru:</b> Bagaimana sikap kita ketika melihat orang lain sombong dengan kekayaannya? Ingatkan kisah ini.</div>
+                `,
+                sim1: { title: "Simulasi Kekuatan", desc: "Hitung jumlah batu jika ada 1000 burung.", type: "calc" },
+                sim2: { title: "Analogi Visual", desc: "Pilih gambar yang mewakili Ashfin Ma'kul.", type: "visual" }
+            },
+            {
+                id: 3,
+                title: "Pertemuan 3: Telaga Al-Kautsar (Al-Kautsar: 1)",
+                objectives: [
+                    "Santri mengetahui asbabun nuzul Surah Al-Kautsar (pembelaan terhadap Nabi).",
+                    "Santri memahami hakikat Telaga Al-Kautsar di Surga.",
+                    "Santri termotivasi mengikuti Sunnah agar bisa meminum dari telaga Nabi."
+                ],
+                islamicValue: "Kecintaan kepada Rasulullah: Allah membela Nabi-Nya saat diejek oleh musuh.",
+                dalil: { arb: "إِنَّا أَعْطَيْنَاكَ الْكَوْثَرَ", trans: "Sesungguhnya Kami telah memberikan kepadamu nikmat yang banyak (Al-Kautsar)." },
+                content: `
+                    <h4 class="font-bold text-emerald-800 italic">1. Latar Belakang Surah (30 Menit)</h4>
+                    <p>Kaum musyrikin Makkah mengejek Nabi Muhammad ﷺ 'Abtar' (terputus keturunannya) setelah putra beliau meninggal. Allah menurunkan surah ini untuk menghibur dan memberikan kabar gembira bahwa beliau justru mendapat nikmat terbesar.</p>
+                    
+                    <h4 class="font-bold text-emerald-800 italic">2. Apa itu Al-Kautsar? (30 Menit)</h4>
+                    <p>Dalam hadits Shahih, Al-Kautsar adalah sungai di surga yang airnya lebih putih dari susu, lebih manis dari madu, dan baunya lebih harum dari misk. Siapa yang meminumnya sekali, tidak akan haus selamanya.</p>
+                    <img src="https://images.unsplash.com/photo-1500382017468-9049fee74a52?auto=format&fit=crop&q=80&w=800" class="rounded-xl my-4 shadow-md w-full h-64 object-cover" alt="Sungai Jernih">
+                    <p class="text-xs italic text-gray-500 mb-6">Sumber: Unsplash. Analogi kejernihan air Al-Kautsar.</p>
+                `,
+                sim1: { title: "Visualisasi Sungai", desc: "Identifikasi ciri-ciri air telaga berdasarkan Hadits.", type: "quiz" },
+                sim2: { title: "Hafalan Kata", desc: "Tuliskan arti kata 'Inna' dan 'A'tainaka'.", type: "input" }
+            },
+            {
+                id: 4,
+                title: "Pertemuan 4: Shalat dan Kurban (Al-Kautsar: 2-3)",
+                objectives: [
+                    "Santri memahami bentuk syukur melalui Shalat dan Kurban (Nahr).",
+                    "Santri memahami siapa sebenarnya orang yang 'Abtar' (Terputus).",
+                    "Santri mampu menjelaskan kaitan antara nikmat dan ibadah."
+                ],
+                islamicValue: "Ibadah sebagai Syukur: Semakin banyak nikmat, semakin rajin ibadah.",
+                dalil: { arb: "فَصَلِّ لِرَبِّكَ وَانْحَرْ", trans: "Maka laksanakanlah shalat karena Tuhanmu; dan berkurbanlah." },
+                content: `
+                    <h4 class="font-bold text-emerald-800 italic">1. Syukur dalam Perbuatan (30 Menit)</h4>
+                    <p>Allah memerintahkan Nabi (dan umatnya) untuk Shalat dan berkurban (Nahr). Berkurban di sini adalah menyembelih hewan hanya karena Allah, berbeda dengan kaum musyrikin yang menyembelih untuk berhala.</p>
+                    
+                    <h4 class="font-bold text-emerald-800 italic">2. Hakikat Orang yang Terputus (30 Menit)</h4>
+                    <p>Ayat 3 menegaskan bahwa musuh-musuh Nabiah yang sebenarnya terputus. Namanya akan dilupakan atau diingat dengan keburukan, sedangkan Nabi Muhammad ﷺ namanya disebut jutaan kali setiap hari dalam Adzan dan Shalat.</p>
+                    <div class="teacher-note"><b>Poin Diskusi Guru:</b> Mengapa Shalat Idul Adha disebut Shalat 'Ied? Hubungkan dengan perintah ayat ini.</div>
+                `,
+                sim1: { title: "Adab Berkurban", desc: "Pilih hewan kurban yang sesuai kriteria syariat.", type: "select" },
+                sim2: { title: "Statistik Nama Nabi", desc: "Visualisasi penyebaran umat Islam sebagai bukti Nabi tidak terputus.", type: "graph" }
+            },
+            {
+                id: 5,
+                title: "Pertemuan 5: Pertolongan Allah Datang (An-Nashr: 1-2)",
+                objectives: [
+                    "Santri memahami sejarah Fathu Makkah (Pembukaan Kota Makkah).",
+                    "Santri melihat fenomena manusia masuk Islam berbondong-bondong.",
+                    "Santri meyakini bahwa kemenangan hanya datang dari Allah."
+                ],
+                islamicValue: "Nashrullah (Pertolongan Allah): Kemenangan adalah murni pemberian Allah, bukan semata karena kekuatan militer.",
+                dalil: { arb: "إِذَا جَاءَ نَصْرُ اللَّهِ وَالْفَتْحُ", trans: "Apabila telah datang pertolongan Allah dan kemenangan." },
+                content: `
+                    <h4 class="font-bold text-emerald-800 italic">1. Peristiwa Fathu Makkah (30 Menit)</h4>
+                    <p>Tahun 8 Hijriah, Nabi ﷺ memasuki Makkah tanpa peperangan berarti. Berhala-berhala dihancurkan. Ini adalah 'Al-Fath' (Kemenangan Besar) yang dijanjikan Allah.</p>
+                    
+                    <h4 class="font-bold text-emerald-800 italic">2. Masuk Islam Berbondong-bondong (30 Menit)</h4>
+                    <p>Dahulu orang masuk Islam secara sembunyi-sembunyi. Setelah Fathu Makkah, seluruh kabilah Arab datang menyatakan keislaman mereka. 'Afwaja' bermakna kelompok demi kelompok dalam jumlah besar.</p>
+                    <img src="https://images.unsplash.com/photo-1564769625905-50e93615e769?auto=format&fit=crop&q=80&w=800" class="rounded-xl my-4 shadow-md w-full h-64 object-cover" alt="Ka'bah">
+                    <p class="text-xs italic text-gray-500 mb-6">Sumber: Unsplash. Gambaran Ka'bah sebagai pusat kemenangan Islam.</p>
+                `,
+                sim1: { title: "Timeline Sejarah", desc: "Urutkan kejadian dari Hijrah hingga Fathu Makkah.", type: "sort" },
+                sim2: { title: "Peta Kabilah", desc: "Klik pada kabilah yang masuk Islam setelah kemenangan.", type: "map" }
+            },
+            {
+                id: 6,
+                title: "Pertemuan 6: Tawadhu Saat Menang (An-Nashr: 3)",
+                objectives: [
+                    "Santri memahami perintah bertasbih dan beristighfar setelah sukses.",
+                    "Santri memahami isyarat wafatnya Rasulullah ﷺ dalam surah ini.",
+                    "Santri mempraktikkan sikap rendah hati atas keberhasilan."
+                ],
+                islamicValue: "Istighfar: Mengakui kekurangan diri meskipun telah mencapai kesuksesan besar.",
+                dalil: { arb: "فَسَبِّحْ بِحَمْدِ رَبِّكَ وَاسْتَغْفِرْهُ", trans: "Maka bertasbihlah dengan memuji Tuhanmu dan mohonlah ampunan kepada-Nya." },
+                content: `
+                    <h4 class="font-bold text-emerald-800 italic">1. Respon Terhadap Kemenangan (30 Menit)</h4>
+                    <p>Biasanya manusia jika menang akan berpesta pora atau sombong. Allah justru memerintahkan: 1. Tasbih (Mensucikan Allah), 2. Hamdan (Memuji Allah), 3. Istighfar (Minta ampun).</p>
+                    
+                    <h4 class="font-bold text-emerald-800 italic">2. Isyarat Wafatnya Nabi (30 Menit)</h4>
+                    <p>Sahabat senior seperti Ibnu Abbas dan Umar bin Khattab memahami bahwa jika tugas dakwah sudah selesai (Islam sudah menang), maka ajal Nabi ﷺ sudah dekat. Ini menunjukkan betapa cintanya Sahabat kepada Nabi.</p>
+                    <div class="teacher-note"><b>Poin Diskusi Guru:</b> Mengapa kita harus istighfar padahal kita baru saja melakukan ketaatan (seperti shalat)? Hubungkan dengan kesempurnaan milik Allah saja.</div>
+                `,
+                sim1: { title: "Dzikir Tracker", desc: "Latihan melafalkan Subhanallah, Alhamdulillah, Astagfirullah.", type: "audio" },
+                sim2: { title: "Kuis Sahabat", desc: "Tebak siapa sahabat yang menangis saat surah ini turun.", type: "char" }
+            },
+            {
+                id: 7,
+                title: "Pertemuan 7: Kelapangan Dada (Al-Insyirah: 1-4)",
+                objectives: [
+                    "Santri memahami makna Syarhus Shadr (Kelapangan Dada).",
+                    "Santri mengetahui bagaimana Allah meninggikan derajat Nabi Muhammad ﷺ.",
+                    "Santri dapat merasakan ketenangan saat menghadapi ujian sekolah/hidup."
+                ],
+                islamicValue: "Sabar dan Ridha: Allah melapangkan hati hamba-Nya yang berjuang di jalan-Nya.",
+                dalil: { arb: "أَلَمْ نَشْرَحْ لَكَ صَدْرَكَ", trans: "Bukankah Kami telah melapangkan dadamu (Muhammad)?" },
+                content: `
+                    <h4 class="font-bold text-emerald-800 italic">1. Kelapangan Hati Nabi (30 Menit)</h4>
+                    <p>Dakwah di Makkah sangat berat. Allah melapangkan hati Nabi dengan cahaya iman, kesabaran, dan hikmah. Beberapa ahli tafsir menyebut ini berkaitan dengan peristiwa pembelahan dada Nabi oleh malaikat Jibril.</p>
+                    
+                    <h4 class="font-bold text-emerald-800 italic">2. Pengangkatan Beban & Derajat (30 Menit)</h4>
+                    <p>Allah meringankan beban berat Nabi dalam dakwah. Selain itu, nama Nabi Muhammad ﷺ ditinggikan (Warafa'na Laka Dzikrak). Di manapun nama Allah disebut (Adzan), nama Nabi juga disebut.</p>
+                    <img src="https://images.unsplash.com/photo-1493612276216-ee3925520721?auto=format&fit=crop&q=80&w=800" class="rounded-xl my-4 shadow-md w-full h-64 object-cover" alt="Cahaya Matahari">
+                    <p class="text-xs italic text-gray-500 mb-6">Sumber: Unsplash. Analogi cahaya yang melapangkan kegelapan hati.</p>
+                `,
+                sim1: { title: "Beban vs Kelapangan", desc: "Geser slider untuk melihat bagaimana sabar melapangkan dada.", type: "slider" },
+                sim2: { title: "Adzan Finder", desc: "Temukan kalimat Syahadat Rasul dalam lafadz Adzan.", type: "search" }
+            },
+            {
+                id: 8,
+                title: "Pertemuan 8: Kemudahan yang Pasti (Al-Insyirah: 5-8)",
+                objectives: [
+                    "Santri hafal janji Allah tentang kemudahan setelah kesulitan.",
+                    "Santri memahami pentingnya produktivitas (tidak menganggur).",
+                    "Santri memahami tujuan akhir segala amal adalah Allah."
+                ],
+                islamicValue: "Optimisme (Raja'): Tidak ada kesulitan yang abadi bagi orang beriman.",
+                dalil: { arb: "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا", trans: "Maka sesungguhnya beserta kesulitan ada kemudahan." },
+                content: `
+                    <h4 class="font-bold text-emerald-800 italic">1. Rumus Hidup: 1 Kesulitan vs 2 Kemudahan (30 Menit)</h4>
+                    <p>Allah mengulang ayat 5 dan 6. Secara kaidah bahasa Arab, satu kesulitan (Al-'Usr) diapit oleh dua kemudahan (Yusran). Artinya kemudahan akan selalu mengalahkan kesulitan.</p>
+                    
+                    <h4 class="font-bold text-emerald-800 italic">2. Produktivitas Muslim (30 Menit)</h4>
+                    <p>'Fa-idza faraghta fanshab'. Jika selesai satu urusan, kerjakan urusan lain. Muslim tidak boleh malas. Dan semua itu harus ditujukan hanya kepada Allah (Wa ila rabbika farghab).</p>
+                    <div class="teacher-note"><b>Poin Diskusi Guru:</b> Setelah lulus sekolah nanti, apa 'urusan' selanjutnya yang akan kalian kerjakan? Bagaimana cara tetap ikhlas?</div>
+                `,
+                sim1: { title: "Manajemen Waktu", desc: "Buat jadwal harian berdasarkan prinsip ayat 7.", type: "table" },
+                sim2: { title: "Quote Creator", desc: "Buat poster motivasi dari ayat 5-6.", type: "canvas" }
+            }
+        ];
+
+        const formatifQuestions = {
+            1: [
+                { q: "Abrahah berasal dari negeri?", o: ["Mesir", "Yaman", "Syam", "Irak"], c: 1 },
+                { q: "Nama gereja buatan Abrahah adalah?", o: ["Al-Aqsa", "Al-Qullais", "Al-Katedral", "Al-Hambra"], c: 1 },
+                { q: "Mengapa Abrahah ingin menghancurkan Ka'bah?", o: ["Ingin hartanya", "Dengki karena Ka'bah ramai", "Perintah Nabi", "Mencari air"], c: 1 },
+                { q: "Siapa kakek Nabi yang menemui Abrahah?", o: ["Abu Thalib", "Abdul Muthalib", "Abu Lahab", "Hamzah"], c: 1 },
+                { q: "Apa yang diminta kakek Nabi kepada Abrahah?", o: ["Ka'bah jangan dihancurkan", "Kembalikan 200 untanya", "Beri dia emas", "Masuk Islam"], c: 1 },
+                { q: "Arti 'Al-Fiil' adalah?", o: ["Burung", "Gajah", "Batu", "Pasukan"], c: 1 },
+                { q: "Kejadian ini terjadi pada tahun?", o: ["1 Hijriah", "Tahun Gajah", "Tahun Kesedihan", "Tahun Penaklukan"], c: 1 },
+                { q: "Siapa yang dikirim Allah untuk membalas Abrahah?", o: ["Malaikat Maut", "Burung Ababil", "Angin Topan", "Singa Padang Pasir"], c: 1 },
+                { q: "Dimana lokasi gajah Abrahah mogok?", o: ["Mina", "Wadi Muhassir", "Arafah", "Madinah"], c: 1 },
+                { q: "Apa arti 'Alam Tara'?", o: ["Apakah kamu mendengar", "Tidakkah kamu melihat", "Janganlah kamu ragu", "Segala puji bagi Allah"], c: 1 }
+            ],
+            2: [
+                { q: "Batu yang dibawa burung berasal dari?", o: ["Tanah liat biasa", "Tanah yang terbakar (Sijjil)", "Batu meteor", "Es"], c: 1 },
+                { q: "Berapa batu yang dibawa tiap ekor burung?", o: ["1", "3", "5", "7"], c: 1 },
+                { q: "Pasukan Abrahah menjadi seperti apa?", o: ["Debu", "Daun dimakan ulat", "Bangkai ikan", "Patung"], c: 1 },
+                { q: "Arti 'Sijjil' adalah?", o: ["Keras", "Tanah yang terbakar", "Indah", "Cepat"], c: 1 },
+                { q: "Surah Al-Fiil menunjukkan sifat Allah sebagai?", o: ["Maha Kaya", "Al-Jabbar (Maha Menundukkan)", "Maha Pengasih", "Maha Mengetahui"], c: 1 },
+                { q: "Apa nama gajah terbesar Abrahah?", o: ["Kaswa", "Mahmud", "Buraq", "Namirah"], c: 1 },
+                { q: "Bagaimana cara burung menjatuhkan batu?", o: ["Ditiup", "Dilemparkan dari atas", "Ditaruh pelan", "Ditelan"], c: 1 },
+                { q: "Hikmah utama Al-Fiil bagi Quraisy saat itu adalah?", o: ["Agar sombong", "Bukti perlindungan Allah", "Agar banyak dagang", "Agar menanam pohon"], c: 1 },
+                { q: "Ayat ke-4 berbunyi?", o: ["Alam yaj'al kaidahum", "Tarmihim bihijaratin", "Fa ja'alahum", "Wa arsala 'alaihim"], c: 1 },
+                { q: "Surah Al-Fiil terdiri dari?", o: ["3 ayat", "5 ayat", "7 ayat", "10 ayat"], c: 1 }
+            ],
+            3: [
+                { q: "Al-Kautsar artinya?", o: ["Sungai kecil", "Nikmat yang banyak", "Kematian", "Perang"], c: 1 },
+                { q: "Dimana letak telaga Al-Kautsar?", o: ["Makkah", "Surga", "Padang Mahsyar", "Madinah"], c: 1 },
+                { q: "Warna air Al-Kautsar lebih putih dari?", o: ["Salju", "Susu", "Awan", "Kertas"], c: 1 },
+                { q: "Aroma Al-Kautsar lebih harum dari?", o: ["Mawar", "Minyak Misk", "Melati", "Gaharu"], c: 1 },
+                { q: "Siapa yang boleh minum dari telaga Nabi?", o: ["Semua manusia", "Pengikut Sunnah Nabi", "Orang kafir", "Hanya Sahabat"], c: 1 },
+                { q: "Ejekan 'Abtar' artinya?", o: ["Gila", "Terputus (keturunannya)", "Sihir", "Pendusta"], c: 1 },
+                { q: "Siapa yang mengejek Nabi 'Abtar'?", o: ["Abu Lahab", "Al-Ash bin Wail", "Abu Jahal", "Ummu Jamil"], c: 1 },
+                { q: "Surah Al-Kautsar diturunkan untuk?", o: ["Mengancam", "Menghibur Nabi", "Mengajar perang", "Menjelaskan puasa"], c: 1 },
+                { q: "Rasa air Al-Kautsar lebih manis dari?", o: ["Gula", "Madu", "Kurma", "Sirup"], c: 1 },
+                { q: "Wadah minum di Al-Kautsar sebanyak?", o: ["100 buah", "Bintang di langit", "Jumlah manusia", "1000 buah"], c: 1 }
+            ],
+            4: [
+                { q: "Perintah di ayat ke-2 adalah?", o: ["Zakat", "Shalat dan Kurban", "Puasa", "Haji"], c: 1 },
+                { q: "Kata 'Wanhar' artinya?", o: ["Makanlah", "Berkurbanlah", "Berlarilah", "Sujudlah"], c: 1 },
+                { q: "Shalat dalam ayat ini menurut tafsir adalah?", o: ["Shalat lima waktu/Ied", "Shalat Tahajjud", "Shalat Jenazah", "Shalat Dhuha"], c: 1 },
+                { q: "Siapa yang sebenarnya 'terputus'?", o: ["Nabi Muhammad", "Pembenci Nabi", "Keluarga Nabi", "Umat Islam"], c: 1 },
+                { q: "Kurban dilakukan hanya karena?", o: ["Manusia", "Tuhanmu (Allah)", "Berhala", "Adat"], c: 1 },
+                { q: "Surah ini adalah surah ter-?", o: ["Panjang", "Pendek", "Sulit", "Lama"], c: 1 },
+                { q: "Ayat ke-3 dimulai dengan kata?", o: ["Inna", "Inna syani-aka", "Fashalli", "Al-Kautsar"], c: 1 },
+                { q: "Ibadah kurban dilaksanakan pada bulan?", o: ["Ramadhan", "Dzulhijjah", "Muharram", "Syawal"], c: 1 },
+                { q: "Berapa jumlah ayat Al-Kautsar?", o: ["3", "4", "5", "6"], c: 1 },
+                { q: "Bukti Nabi tidak terputus adalah?", o: ["Banyak harta", "Umatnya paling banyak", "Rumahnya megah", "Pandai berdagang"], c: 1 }
+            ],
+            5: [
+                { q: "An-Nashr artinya?", o: ["Kemenangan", "Pertolongan", "Pembukaan", "Kekuasaan"], c: 1 },
+                { q: "Al-Fath dalam surah ini merujuk pada?", o: ["Fathu Makkah", "Fathu Palestina", "Fathu Mesir", "Hijrah"], c: 1 },
+                { q: "Kapan Fathu Makkah terjadi?", o: ["2 H", "8 H", "10 H", "5 H"], c: 1 },
+                { q: "Bagaimana orang masuk Islam saat itu?", o: ["Sembunyi-sembunyi", "Berbondong-bondong (Afwaja)", "Terpaksa", "Sedikit-sedikit"], c: 1 },
+                { q: "Siapa yang memberikan pertolongan?", o: ["Pasukan", "Allah", "Raja", "Sekutu"], c: 1 },
+                { q: "Kondisi Makkah saat Fathu Makkah adalah?", o: ["Perang besar", "Damai tanpa darah", "Banjir", "Kebakaran"], c: 1 },
+                { q: "Nabi memasuki Makkah dengan posisi?", o: ["Sombong", "Menunduk tawadhu", "Berteriak", "Marah"], c: 1 },
+                { q: "Apa yang dihancurkan Nabi di Ka'bah?", o: ["Pintu", "Berhala", "Sumur Zamzam", "Hajar Aswad"], c: 1 },
+                { q: "An-Nashr adalah surah ke-?", o: ["100", "110", "114", "105"], c: 1 },
+                { q: "Tanda kemenangan adalah datangnya?", o: ["Harta", "Nashrullah", "Kuda", "Emas"], c: 1 }
+            ],
+            6: [
+                { q: "Setelah menang, kita diperintah?", o: ["Berpesta", "Tasbih dan Istighfar", "Tidur", "Makan"], c: 1 },
+                { q: "Istighfar artinya memohon?", o: ["Kekayaan", "Ampunan", "Keturunan", "Kesehatan"], c: 1 },
+                { q: "Mengapa Nabi disuruh istighfar?", o: ["Karena berdosa besar", "Bentuk syukur & tawadhu", "Karena kalah", "Perintah raja"], c: 1 },
+                { q: "Siapa sahabat yang sedih saat surah ini turun?", o: ["Khalid bin Walid", "Umar & Ibnu Abbas", "Abu Sufyan", "Bilal"], c: 1 },
+                { q: "Apa isyarat tersembunyi An-Nashr?", o: ["Akan ada perang lagi", "Ajal Nabi sudah dekat", "Dunia akan kiamat", "Makkah akan banjir"], c: 1 },
+                { q: "Allah Maha Penerima?", o: ["Hadiah", "Taubat (Tawwaba)", "Kekalahan", "Uang"], c: 1 },
+                { q: "Bertasbih artinya mensucikan?", o: ["Pakaian", "Allah", "Hati saja", "Lingkungan"], c: 1 },
+                { q: "Surah ini termasuk Madaniyah karena?", o: ["Pendek", "Turun setelah Hijrah", "Bicara surga", "Bicara gajah"], c: 1 },
+                { q: "Tugas dakwah Nabi telah?", o: ["Gagal", "Selesai/Sempurna", "Tertunda", "Dibatalkan"], c: 1 },
+                { q: "Contoh sikap tawadhu adalah?", o: ["Memamerkan piala", "Mengembalikan pujian ke Allah", "Mengejek lawan", "Diam saja"], c: 1 }
+            ],
+            7: [
+                { q: "Al-Insyirah artinya?", o: ["Penyempitan", "Kelapangan", "Ketinggian", "Beban"], c: 1 },
+                { q: "Siapa yang dadanya dilapangkan?", o: ["Abu Bakar", "Nabi Muhammad", "Seluruh umat", "Jibril"], c: 1 },
+                { q: "Beban yang diringankan adalah beban?", o: ["Membawa batu", "Dakwah yang berat", "Hutang", "Penyakit"], c: 1 },
+                { q: "Allah meninggikan 'Dzikraka', artinya?", o: ["Harta Nabi", "Penyebutan nama Nabi", "Rumah Nabi", "Pedang Nabi"], c: 1 },
+                { q: "Nama Nabi disebut bersama nama Allah dalam?", o: ["Pasar", "Adzan & Syahadat", "Buku sejarah", "Mimpi"], c: 1 },
+                { q: "Ayat 1 berbunyi?", o: ["Wawadha'na", "Alam Nashrah", "Alladzi anqadha", "Fa-idza faraghta"], c: 1 },
+                { q: "Kelapangan dada membuat kita?", o: ["Gelisah", "Tenang & Sabar", "Marah", "Lupa"], c: 1 },
+                { q: "Siapa yang membelah dada Nabi?", o: ["Manusia", "Malaikat Jibril", "Nabi sendiri", "Sahabat"], c: 1 },
+                { q: "Surah ini memberikan motivasi saat?", o: ["Senang", "Sedih/Sulit", "Tidur", "Makan"], c: 1 },
+                { q: "Al-Insyirah adalah surah ke-?", o: ["90", "94", "99", "104"], c: 1 }
+            ],
+            8: [
+                { q: "Setiap kesulitan pasti disertai?", o: ["Ujian lagi", "Kemudahan (Yusr)", "Kesedihan", "Kegagalan"], c: 1 },
+                { q: "Berapa kali janji kemudahan diulang?", o: ["1", "2", "3", "4"], c: 1 },
+                { q: "Jika selesai satu urusan, kita harus?", o: ["Tidur", "Mengerjakan urusan lain", "Main game", "Puji diri"], c: 1 },
+                { q: "Hanya kepada siapa kita berharap?", o: ["Orang tua", "Rabb-mu (Allah)", "Guru", "Diri sendiri"], c: 1 },
+                { q: "Maksud 'Fanshab' adalah?", o: ["Beristirahatlah", "Bekerja keraslah/beribadahlah", "Berlarilah", "Bernyanyilah"], c: 1 },
+                { q: "Satu kesulitan tidak akan mengalahkan?", o: ["Satu kemudahan", "Dua kemudahan", "Sepuluh orang", "Kesabaran"], c: 1 },
+                { q: "Surah Al-Insyirah diturunkan di?", o: ["Madinah", "Makkah", "Thaif", "Yaman"], c: 1 },
+                { q: "Surah ini berada setelah surah?", o: ["Al-Fil", "Ad-Duha", "At-Tin", "Al-Alaq"], c: 1 },
+                { q: "Kunci sukses menurut ayat 7 adalah?", o: ["Banyak uang", "Produktif & Kontinu", "Terkenal", "Kuat fisik"], c: 1 },
+                { q: "Kata 'Yusra' artinya?", o: ["Sulit", "Mudah", "Cepat", "Lama"], c: 1 }
+            ]
+        };
+
+        // --- CORE FUNCTIONS ---
+
+        function switchTab(n) {
+            currentTab = n;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.btn-nav').forEach(el => el.classList.remove('active'));
+            
+            const target = document.getElementById(`tab-${n}`);
+            if (target) target.classList.add('active');
+            
+            const btn = document.getElementById(`nav-${n}`);
+            if (btn) btn.classList.add('active');
+
+            // Update Progress Bar
+            document.getElementById('main-progress').style.width = (n / 9 * 100) + "%";
+            window.scrollTo(0, 0);
+        }
+
+        function renderAllTabs() {
+            const container = document.getElementById('content-area');
+            let html = "";
+
+            // Render Tab 1-8
+            moduleData.forEach(m => {
+                html += `
+                    <div id="tab-${m.id}" class="tab-content ${m.id === 1 ? 'active' : ''}">
+                        <div class="card border-t-8 border-emerald-800">
+                            <h2 class="text-3xl font-black text-emerald-900 mb-6">${m.title}</h2>
+                            
+                            <div class="grid md:grid-cols-2 gap-8 mb-10">
+                                <div class="bg-emerald-50 p-6 rounded-xl">
+                                    <h3 class="font-bold text-emerald-800 mb-3 flex items-center">
+                                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"></path></svg>
+                                        Tujuan Pembelajaran
+                                    </h3>
+                                    <ul class="text-sm space-y-2">
+                                        ${m.objectives.map(o => `<li class="flex items-start"><span class="mr-2">•</span>${o}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                <div class="bg-amber-50 p-6 rounded-xl">
+                                    <h3 class="font-bold text-amber-800 mb-3 flex items-center">
+                                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 12H9v-2h2v2zm0-4H9V5h2v5z"></path></svg>
+                                        Nilai Islam & Adab
+                                    </h3>
+                                    <p class="text-sm italic">${m.islamicValue}</p>
+                                    <div class="mt-4 p-3 bg-white rounded border border-amber-200">
+                                        <p class="arabic text-sm">${m.dalil.arb}</p>
+                                        <p class="text-xs text-gray-600 mt-1">"${m.dalil.trans}"</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <section class="prose max-w-none text-gray-700 leading-relaxed mb-12">
+                                <h3 class="text-xl font-bold text-emerald-900 border-b-2 border-emerald-100 pb-2 mb-6">C. Skenario & Materi Pembelajaran</h3>
+                                ${m.content}
+                            </section>
+
+                            ${m.id === 1 ? `
+                            <section class="bg-blue-50 p-6 rounded-xl mb-10 border border-blue-100">
+                                <h3 class="font-bold text-blue-900 mb-4">D. Penilaian Modul</h3>
+                                <div class="grid md:grid-cols-3 gap-4">
+                                    <div class="bg-white p-4 rounded shadow-sm">
+                                        <p class="font-bold text-xs text-blue-600 uppercase">Sikap/Adab</p>
+                                        <p class="text-sm">Fokus, Khusyu' saat mendengar ayat, dan sopan dalam diskusi.</p>
+                                    </div>
+                                    <div class="bg-white p-4 rounded shadow-sm">
+                                        <p class="font-bold text-xs text-green-600 uppercase">Pengetahuan</p>
+                                        <p class="text-sm">Menjawab minimal 80% soal formatif dengan benar.</p>
+                                    </div>
+                                    <div class="bg-white p-4 rounded shadow-sm">
+                                        <p class="font-bold text-xs text-purple-600 uppercase">Keterampilan</p>
+                                        <p class="text-sm">Mampu menjelaskan kembali inti surah dengan bahasa sendiri.</p>
+                                    </div>
+                                </div>
+                            </section>` : ''}
+
+                            <div class="grid md:grid-cols-2 gap-6 mt-12">
+                                <div class="sim-box">
+                                    <span class="bg-emerald-200 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full mb-2 uppercase tracking-widest">Simulasi 1</span>
+                                    <h4 class="font-bold text-emerald-900 mb-1">${m.sim1.title}</h4>
+                                    <p class="text-xs text-center text-gray-500 mb-4">${m.sim1.desc}</p>
+                                    <button onclick="alert('Simulasi ${m.sim1.title} Berhasil Dijalankan!')" class="bg-emerald-600 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-emerald-700 transition">Mulai</button>
+                                </div>
+                                <div class="sim-box bg-amber-50 border-amber-200">
+                                    <span class="bg-amber-200 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full mb-2 uppercase tracking-widest">Simulasi 2</span>
+                                    <h4 class="font-bold text-amber-900 mb-1">${m.sim2.title}</h4>
+                                    <p class="text-xs text-center text-gray-500 mb-4">${m.sim2.desc}</p>
+                                    <button onclick="alert('Simulasi ${m.sim2.title} Berhasil Dijalankan!')" class="bg-amber-600 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-amber-700 transition">Buka</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formatif Card -->
+                        <div class="card bg-white border-2 border-emerald-50">
+                            <h3 class="text-xl font-bold text-emerald-900 mb-8 flex items-center">
+                                <span class="bg-emerald-800 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">?</span>
+                                Latihan Formatif: 10 Soal Cepat
+                            </h3>
+                            <div id="formatif-${m.id}" class="space-y-8">
+                                ${renderQuestions(m.id)}
+                            </div>
+                            <button onclick="checkFormatif(${m.id})" class="mt-10 w-full bg-emerald-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-emerald-800 transition">Cek Jawaban Saya</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Render Sumatif Tab
+            html += `
+                <div id="tab-9" class="tab-content">
+                    <div class="card border-t-8 border-amber-600 bg-amber-50">
+                        <div class="text-center mb-10">
+                            <h2 class="text-4xl font-black text-amber-900 mb-4 uppercase tracking-tighter">Tes Sumatif Akhir</h2>
+                            <p class="text-amber-800 italic">"Ya Allah, tambahkanlah kepadaku ilmu."</p>
+                        </div>
+                        <div id="sumatif-list" class="space-y-6"></div>
+                        <button onclick="gradeSumatif()" class="mt-12 w-full bg-emerald-800 text-white py-5 rounded-2xl font-black text-2xl shadow-xl hover:bg-emerald-900 transform active:scale-95 transition">KIRIM JAWABAN AKHIR</button>
+                    </div>
+                    <div id="sumatif-result-card" class="card hidden bg-white border-4 border-emerald-500 text-center">
+                        <h3 class="text-2xl font-bold mb-4">Skor Sumatif Anda</h3>
+                        <div id="final-sumatif-score" class="text-7xl font-black text-emerald-600 mb-6">0</div>
+                        <p id="sumatif-feedback" class="text-lg text-gray-600 mb-8 font-medium"></p>
+                        <button onclick="location.reload()" class="bg-gray-800 text-white px-10 py-3 rounded-full font-bold">Ulangi Modul</button>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function renderQuestions(sid) {
+            const qs = formatifQuestions[sid];
+            return qs.map((q, i) => `
+                <div class="question-block" data-q="${i}">
+                    <p class="font-semibold text-gray-800 mb-4"><span class="text-emerald-700">Soal ${i+1}:</span> ${q.q}</p>
+                    <div class="grid md:grid-cols-2 gap-3">
+                        ${q.o.map((opt, oi) => `
+                            <button onclick="selectOption(${sid}, ${i}, ${oi})" id="opt-${sid}-${i}-${oi}" class="option-btn text-sm font-medium">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        let answers = {}; // { sid_qid: selected_oid }
+
+        function selectOption(sid, qid, oid) {
+            // Clear previous selections for this question
+            for(let i=0; i<4; i++) {
+                const btn = document.getElementById(`opt-${sid}-${qid}-${i}`);
+                if(btn) btn.classList.remove('bg-emerald-100', 'border-emerald-500', 'ring-2', 'ring-emerald-200');
+            }
+            // Mark new selection
+            document.getElementById(`opt-${sid}-${qid}-${oid}`).classList.add('bg-emerald-100', 'border-emerald-500', 'ring-2', 'ring-emerald-200');
+            answers[`${sid}_${qid}`] = oid;
+        }
+
+        function checkFormatif(sid) {
+            const qs = formatifQuestions[sid];
+            let score = 0;
+            qs.forEach((q, i) => {
+                const selected = answers[`${sid}_${i}`];
+                const correct = q.c;
+                
+                // Visual feedback
+                for(let oi=0; oi<4; oi++) {
+                    const btn = document.getElementById(`opt-${sid}-${i}-${oi}`);
+                    if(oi === correct) btn.classList.add('correct');
+                    if(selected === oi && selected !== correct) btn.classList.add('wrong');
+                }
+                if(selected === correct) score += 10;
+            });
+
+            document.getElementById('modal-score-text').innerText = score;
+            document.getElementById('modal-msg').innerText = score >= 80 ? "Maa syaa Allah, Mumtaz! Pertahankan." : "Barakallahu fiikum, pelajari lagi materinya ya.";
+            document.getElementById('score-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('score-modal').classList.add('hidden');
+        }
+
+        function renderSumatif() {
+            const container = document.getElementById('sumatif-list');
+            // Ambil 2 soal dari tiap sesi secara acak (Total 16 soal)
+            let sumatifQs = [];
+            for(let i=1; i<=8; i++) {
+                sumatifQs.push(formatifQuestions[i][0]);
+                sumatifQs.push(formatifQuestions[i][4]);
+            }
+
+            container.innerHTML = sumatifQs.map((q, i) => `
+                <div class="p-6 bg-white rounded-xl shadow-sm border border-amber-100">
+                    <p class="font-bold text-gray-800 mb-4">${i+1}. ${q.q}</p>
+                    <div class="grid md:grid-cols-2 gap-3">
+                        ${q.o.map((opt, oi) => `
+                            <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
+                                <input type="radio" name="sum-${i}" value="${oi}" class="mr-3 w-4 h-4 text-amber-600">
+                                <span class="text-sm">${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function gradeSumatif() {
+            let score = 0;
+            let total = 16;
+            for(let i=0; i<total; i++) {
+                const selected = document.querySelector(`input[name="sum-${i}"]:checked`);
+                // Ambil referensi jawaban yang sama (indeks 0 dan 4 dari tiap sesi)
+                const sid = Math.floor(i/2) + 1;
+                const qidx = (i % 2 === 0) ? 0 : 4;
+                if(selected && parseInt(selected.value) === formatifQuestions[sid][qidx].c) {
+                    score++;
+                }
+            }
+            
+            const final = Math.round((score/total) * 100);
+            document.getElementById('sumatif-list').classList.add('hidden');
+            document.querySelector('#tab-9 button').classList.add('hidden');
+            document.getElementById('sumatif-result-card').classList.remove('hidden');
+            document.getElementById('final-sumatif-score').innerText = final;
+            document.getElementById('sumatif-feedback').innerText = final >= 75 ? "Selamat! Anda dinyatakan LULUS modul TAF-206." : "Nilai belum mencukupi. Silakan ulangi muroja'ah kembali.";
+        }
+
+        // Initialize
+        window.onload = () => {
+            renderAllTabs();
+            renderSumatif();
+            switchTab(1);
+        };
+    </script>
+</body>
+</html>
