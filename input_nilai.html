@@ -14,9 +14,10 @@
 
     <div class="max-w-6xl mx-auto space-y-6">
         
+        <!-- Header Halaman -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">Manajemen Input Nilai Ujian Markaz</h1>
+                <h1 class="text-2xl font-bold text-slate-800">Manajemen Input Nilai Ujian</h1>
                 <p class="text-sm text-slate-500 mt-1">Sistem Input Nilai Ujian terintegrasi dengan bobot <span class="font-semibold text-blue-600">Nilai Adab (30%)</span> dan otomatisasi Remedial.</p>
             </div>
             <div id="loading-status" class="flex items-center gap-2 text-sm font-medium text-blue-600 bg-blue-50 px-4 py-2 rounded-full">
@@ -25,11 +26,13 @@
             </div>
         </div>
 
+        <!-- Mode Selector Tabs -->
         <div class="flex border-b border-slate-200">
             <button id="tab-single" class="px-6 py-3 border-b-2 border-blue-600 text-blue-600 font-semibold text-sm transition">Mode Tunggal (Satu Santri)</button>
             <button id="tab-bulk" class="px-6 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm transition">Mode Massal (Bulk List KRS)</button>
         </div>
 
+        <!-- Filter Utama -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label class="block text-sm font-medium text-slate-600 mb-2">Nama Guru Pengajar</label>
@@ -45,6 +48,7 @@
             </div>
         </div>
 
+        <!-- PANEL MODE TUNGGAL -->
         <div id="panel-single-mode" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
             <h2 class="text-base font-bold text-slate-800 border-b pb-2">Form Input Nilai Tunggal</h2>
             <form id="form-single" class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -64,6 +68,7 @@
                     </select>
                 </div>
                 
+                <!-- Input Nilai Ujian & Adab -->
                 <div class="grid grid-cols-2 gap-4 md:col-span-2">
                     <div>
                         <label class="block text-sm font-medium text-slate-600 mb-2">Nilai Ujian Murni (0 - 100)</label>
@@ -84,6 +89,7 @@
             </form>
         </div>
 
+        <!-- PANEL MODE MASSAL (BULK) -->
         <div id="panel-bulk-mode" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-6 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -113,7 +119,8 @@
                         </tr>
                     </thead>
                     <tbody id="tabel-bulk-body" class="divide-y divide-slate-200">
-                        </tbody>
+                        <!-- Render Otomatis -->
+                    </tbody>
                 </table>
             </div>
             <div class="p-6 bg-slate-50 border-t border-slate-200 flex justify-end">
@@ -121,11 +128,12 @@
             </div>
         </div>
 
+        <!-- PANEL REKAPITULASI NILAI KELAS (SELALU MUNCUL DI BAWAH) -->
         <div id="panel-rekap-nilai" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-8">
             <div class="p-6 bg-slate-800 text-white border-b border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
                     <h3 class="font-bold text-lg">Rekapitulasi Nilai Kelas (Monitor Keterisian)</h3>
-                    <p class="text-xs text-slate-300 mt-1">Skor yang ditampilkan di tabel ini adalah <span class="font-bold text-white">SKOR AKHIR</span>.</p>
+                    <p class="text-xs text-slate-300 mt-1">Skor yang ditampilkan di tabel ini adalah <span class="font-bold text-white">SKOR AKHIR</span> (sudah tergabung dengan bobot Adab jika diinput sebelumnya).</p>
                 </div>
             </div>
             <div class="overflow-x-auto">
@@ -141,13 +149,15 @@
                         </tr>
                     </thead>
                     <tbody id="tabel-rekap-body" class="divide-y divide-slate-200">
-                        </tbody>
+                        <!-- Render Otomatis Tabel Rekap -->
+                    </tbody>
                 </table>
             </div>
         </div>
 
     </div>
 
+    <!-- WINDOW POPUP MODAL VALIDASI DILENGKAPI PILIHAN REMEDIAL -->
     <div id="modal-remedial" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden">
             <div class="p-6 bg-amber-50 border-b border-amber-100 flex items-center gap-3">
@@ -198,27 +208,34 @@
         const selectMateri = document.getElementById('select-materi');
         const loadingStatus = document.getElementById('loading-status');
         
+        // Tab elements
         const tabSingle = document.getElementById('tab-single');
         const tabBulk = document.getElementById('tab-bulk');
         const panelSingleMode = document.getElementById('panel-single-mode');
         const panelBulkMode = document.getElementById('panel-bulk-mode');
         const panelRekapNilai = document.getElementById('panel-rekap-nilai');
 
+        // Form Single
         const formSingle = document.getElementById('form-single');
         const singleSantri = document.getElementById('single-santri');
         const singleJenis = document.getElementById('single-jenis');
         const singleSkor = document.getElementById('single-skor');
-        const singleAdab = document.getElementById('single-adab');
+        const singleAdab = document.getElementById('single-adab'); // New Adab Input
 
+        // Form Bulk
         const tabelBulkBody = document.getElementById('tabel-bulk-body');
         const bulkGlobalJenis = document.getElementById('bulk-global-jenis');
         const btnBulkSave = document.getElementById('btn-bulk-save');
+        
+        // Tabel Rekap
         const tabelRekapBody = document.getElementById('tabel-rekap-body');
 
+        // Modal
         const modalRemedial = document.getElementById('modal-remedial');
         const btnMdReset = document.getElementById('btn-md-reset');
         const btnMdRemedial = document.getElementById('btn-md-remedial');
 
+        // 1. Ambil Data Master Awal
         window.addEventListener('DOMContentLoaded', async () => {
             try {
                 const reqEmployees = fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getEmployeeList' }) }).then(r => r.json());
@@ -249,6 +266,7 @@
             }
         });
 
+        // 2. Tab Routing
         tabSingle.addEventListener('click', () => {
             tabSingle.className = "px-6 py-3 border-b-2 border-blue-600 text-blue-600 font-semibold text-sm transition";
             tabBulk.className = "px-6 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm transition";
@@ -260,10 +278,13 @@
             panelBulkMode.classList.remove('hidden'); panelSingleMode.classList.add('hidden');
         });
 
+        // 3. Filter Otomatis: GURU -> DAFTAR MATERI (Lebih Pintar Mendeteksi Nama Materi)
         function extractMapel(textRaw) {
             let text = textRaw.trim();
             let kode = text;
             let judul = text;
+            
+            // Deteksi pemisah ":" atau "-" agar judul/nama materi bisa tampil
             if (text.includes(':')) {
                 kode = text.split(':')[0].trim();
                 judul = text.split(':').slice(1).join(':').trim();
@@ -274,35 +295,42 @@
             return { kode, judul };
         }
 
-        selectGuru.addEventListener('change', () => {
+        function handleFilterChange() {
             const g = selectGuru.value;
             selectMateri.innerHTML = '<option value="">-- Pilih Materi --</option>';
             selectMateri.disabled = true; 
             resetLists();
+
             if (!g) return;
 
-            const uniqueMapels = new Map();
+            const uniqueMapels = new Map(); // Pakai Map agar terhindar dari duplikat kode
+
             Object.keys(state.roster).forEach(bulanKey => {
                 const jadwal = state.roster[bulanKey] || [];
                 jadwal.forEach(item => {
                     if (item.teacher && item.teacher.trim() === g && item.subject) {
                         const { kode, judul } = extractMapel(item.subject);
-                        if (!uniqueMapels.has(kode)) uniqueMapels.set(kode, judul);
+                        if (!uniqueMapels.has(kode)) {
+                            uniqueMapels.set(kode, judul);
+                        }
                     }
                 });
             });
 
+            // Tambahkan ke dropdown Roster
             uniqueMapels.forEach((judul, kode) => {
                 let opt = document.createElement('option'); 
                 opt.value = kode;
                 opt.setAttribute('data-judul', judul); 
-                opt.textContent = `${kode} - ${judul}`;
+                opt.textContent = `${kode} - ${judul}`; // Tampilkan beserta namanya
                 selectMateri.appendChild(opt);
             });
 
+            // Jika kosong, gunakan fallback dan deteksi nama dari Bank Soal
             if (uniqueMapels.size === 0 && state.allMateriFallback.length > 0) {
                 let optGroup = document.createElement('optgroup');
-                optGroup.label = "Semua Materi Sistem";
+                optGroup.label = "Semua Materi Sistem (Roster Kosong)";
+                
                 state.allMateriFallback.forEach(textRaw => {
                     const { kode, judul } = extractMapel(textRaw);
                     let opt = document.createElement('option'); 
@@ -314,8 +342,14 @@
                 selectMateri.appendChild(optGroup);
             }
 
-            if (selectMateri.options.length > 1) selectMateri.disabled = false;
-        });
+            if (selectMateri.options.length > 1) {
+                selectMateri.disabled = false;
+            } else {
+                selectMateri.innerHTML = '<option value="">-- Materi Tidak Ditemukan --</option>';
+            }
+        }
+        
+        selectGuru.addEventListener('change', handleFilterChange);
 
         selectMateri.addEventListener('change', async () => {
             resetLists();
@@ -326,10 +360,10 @@
             loadingStatus.classList.remove('hidden');
 
             try {
-                const [resKrs, resScores] = await Promise.all([
-                    fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getStudentsByClass', kodeMateri: kode }) }).then(r => r.json()),
-                    fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getScoresBySubject', kodeMateri: kode }) }).then(r => r.json())
-                ]);
+                const reqKrs = fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getStudentsByClass', kodeMateri: kode }) }).then(r => r.json());
+                const reqScores = fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getScoresBySubject', kodeMateri: kode }) }).then(r => r.json());
+
+                const [resKrs, resScores] = await Promise.all([reqKrs, reqScores]);
 
                 if (resScores.status === 'success') state.existingScores = resScores.scores || [];
                 if (resKrs.status === 'success') {
@@ -339,6 +373,8 @@
                     renderRekapTable(resKrs.students); 
                     panelRekapNilai.classList.remove('hidden'); 
                 }
+            } catch (e) {
+                console.error(e);
             } finally {
                 loadingStatus.classList.add('hidden');
             }
@@ -355,14 +391,33 @@
 
         function renderRekapTable(students) {
             tabelRekapBody.innerHTML = '';
-            const getSkorBadge = (username, j) => {
-                const match = state.existingScores.find(s => s.username === username && s.jenisUjian === j);
-                return match ? `<span class="px-2 py-1 text-sm font-bold rounded bg-green-100 text-green-700">${match.skorAkhir}</span>` : '<span class="text-slate-300 italic text-xs">Kosong</span>';
+            
+            if (!students || students.length === 0) {
+                tabelRekapBody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400 italic font-medium">Tidak ada santri KRS terdaftar untuk materi ini.</td></tr>';
+                return;
+            }
+
+            const getSkorBadge = (username, jenisUjian) => {
+                const match = state.existingScores.find(score => score.username === username && score.jenisUjian === jenisUjian);
+                if (match) {
+                    return `<span class="inline-flex items-center justify-center px-2 py-1 text-sm font-bold rounded bg-green-100 text-green-700">${match.skorAkhir}</span>`;
+                } else {
+                    return `<span class="text-slate-300 italic text-xs font-medium">Kosong</span>`;
+                }
             };
+
             students.forEach((s, idx) => {
                 const username = state.santriMap.get(s.trim().toLowerCase()) || '';
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td class="px-4 py-3 border text-center">${idx + 1}</td><td class="px-4 py-3 border font-semibold">${s}</td><td class="px-4 py-3 border text-center">${getSkorBadge(username, 'Bulanan')}</td><td class="px-4 py-3 border text-center">${getSkorBadge(username, 'UTS')}</td><td class="px-4 py-3 border text-center">${getSkorBadge(username, 'UAS')}</td><td class="px-4 py-3 border text-center">${getSkorBadge(username, 'Praktek')}</td>`;
+                tr.className = "hover:bg-slate-50 transition duration-150";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 border border-slate-200 text-center font-medium text-slate-500">${idx + 1}</td>
+                    <td class="px-4 py-3 border border-slate-200 font-semibold text-slate-800">${s}</td>
+                    <td class="px-4 py-3 border border-slate-200 text-center bg-slate-50">${getSkorBadge(username, 'Bulanan')}</td>
+                    <td class="px-4 py-3 border border-slate-200 text-center">${getSkorBadge(username, 'UTS')}</td>
+                    <td class="px-4 py-3 border border-slate-200 text-center bg-slate-50">${getSkorBadge(username, 'UAS')}</td>
+                    <td class="px-4 py-3 border border-slate-200 text-center">${getSkorBadge(username, 'Praktek')}</td>
+                `;
                 tabelRekapBody.appendChild(tr);
             });
         }
@@ -377,80 +432,201 @@
         function renderBulkTable(students) {
             tabelBulkBody.innerHTML = '';
             const currentJenis = bulkGlobalJenis.value;
+
             students.forEach((s, idx) => {
                 const username = state.santriMap.get(s.trim().toLowerCase()) || 'tidak_ditemukan';
-                const match = state.existingScores.find(score => score.username === username && score.jenisUjian === currentJenis);
-                const skorLama = match ? `${match.skorAkhir}` : '-';
+                const matchScore = state.existingScores.find(score => score.username === username && score.jenisUjian === currentJenis);
+                const skorLamaText = matchScore ? `${matchScore.skorAkhir}` : '-';
+                const textColor = matchScore ? 'text-amber-600 font-bold' : 'text-slate-400';
+
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td class="px-4 py-4 text-center">${idx+1}</td><td class="px-4 py-4"><div class="font-semibold">${s}</div><div class="text-xs text-slate-400">${username}</div></td><td class="px-4 py-4 text-center ${match?'text-amber-600 font-bold':''}">${skorLama}</td><td class="px-4 py-4 text-center"><input type="number" min="0" max="100" data-username="${username}" data-nama="${s}" class="input-bulk-skor w-20 border rounded px-2 py-1 text-center font-bold text-blue-600"></td><td class="px-4 py-4 text-center"><input type="number" min="0" max="100" class="input-bulk-adab w-20 border rounded px-2 py-1 text-center font-bold text-emerald-600"></td><td class="px-4 py-4 text-center cell-status text-xs">Belum diproses</td>`;
+                tr.className = "hover:bg-slate-50 border-b border-slate-200 transition";
+                tr.innerHTML = `
+                    <td class="px-4 py-4 text-center font-medium text-slate-400">${idx+1}</td>
+                    <td class="px-4 py-4">
+                        <div class="font-semibold text-slate-800">${s}</div>
+                        <div class="text-xs font-mono text-slate-400">${username}</div>
+                    </td>
+                    <td class="px-4 py-4 cell-current-score text-center ${textColor}">${skorLamaText}</td>
+                    <td class="px-4 py-4 text-center">
+                        <input type="number" min="0" max="100" placeholder="0-100" data-username="${username}" data-nama="${s}"
+                            class="input-bulk-skor w-full max-w-[80px] border border-slate-300 rounded px-2 py-1.5 font-bold text-center text-blue-600 outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500 transition mx-auto block">
+                    </td>
+                    <td class="px-4 py-4 text-center">
+                        <input type="number" min="0" max="100" placeholder="0-100" 
+                            class="input-bulk-adab w-full max-w-[80px] border border-slate-300 rounded px-2 py-1.5 font-bold text-center text-emerald-600 outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-500 transition mx-auto block">
+                    </td>
+                    <td class="px-4 py-4 text-center cell-status text-xs italic font-medium text-slate-400">Belum diproses</td>
+                `;
                 tabelBulkBody.appendChild(tr);
             });
         }
 
-        // FUNGSI PERHITUNGAN ADAB (Normalisasi: (90% + 30%) / 1.2 = 100%)
+        bulkGlobalJenis.addEventListener('change', () => {
+            renderBulkTable(state.currentSubjectStudents);
+        });
+
+        // 4. LOGIKA PERHITUNGAN ADAB & SIMPAN TUNGGAL
         function calculateSkorAkhir(skorUjian, skorAdab) {
-            let u = parseFloat(skorUjian) || 0;
-            let a = (skorAdab !== null && skorAdab !== '' && !isNaN(skorAdab)) ? parseFloat(skorAdab) : 0;
-            return Math.round(((u * 0.9) + (a * 0.3)) / 1.2);
+            if (skorAdab !== null && !isNaN(skorAdab) && skorAdab !== '') {
+                // Rumus: 90% Ujian + 30% Adab (Max 100)
+                let total = Math.round((skorUjian * 0.9) + (skorAdab * 0.3));
+                return Math.min(100, total); // Pastikan nilai maksimal tetap 100
+            }
+            // Jika kosong, murni 100% Ujian
+            return skorUjian;
         }
 
         formSingle.addEventListener('submit', (e) => {
             e.preventDefault();
+            const nama = singleSantri.value;
+            const jns = singleJenis.value;
+            const user = state.santriMap.get(nama.trim().toLowerCase()) || '';
+            const mOption = selectMateri.options[selectMateri.selectedIndex];
+
+            const skorUjian = parseInt(singleSkor.value);
+            const skorAdabVal = singleAdab.value.trim();
+            const finalSkorAkhir = calculateSkorAkhir(skorUjian, skorAdabVal !== '' ? parseInt(skorAdabVal) : null);
+
+            const match = state.existingScores.find(s => s.username === user && s.jenisUjian === jns);
+
             const payload = {
-                action: 'simpanNilaiUjian', username: state.santriMap.get(singleSantri.value.toLowerCase()), namaSantri: singleSantri.value,
-                kodeMateri: selectMateri.value, judulMateri: selectMateri.options[selectMateri.selectedIndex].getAttribute('data-judul'),
-                jenisUjian: singleJenis.value, skor: parseInt(singleSkor.value), 
-                skorAkhir: calculateSkorAkhir(singleSkor.value, singleAdab.value)
+                action: 'simpanNilaiUjian', username: user, namaSantri: nama,
+                kodeMateri: selectMateri.value, judulMateri: mOption.getAttribute('data-judul'),
+                jenisUjian: jns, skor: skorUjian, skorAkhir: finalSkorAkhir
             };
-            const match = state.existingScores.find(s => s.username === payload.username && s.jenisUjian === payload.jenisUjian);
+
             if (match) {
-                state.pendingSingleData = { payload, oldScore: parseInt(match.skorAkhir) };
-                document.getElementById('md-nama').textContent = payload.namaSantri;
-                document.getElementById('md-jenis').textContent = payload.jenisUjian;
+                state.pendingSingleData = { payload: payload, oldScore: parseInt(match.skorAkhir) };
+                document.getElementById('md-nama').textContent = nama;
+                document.getElementById('md-jenis').textContent = jns;
                 document.getElementById('md-nilai-lama').textContent = match.skorAkhir;
-                document.getElementById('md-nilai-baru').textContent = payload.skorAkhir;
+                document.getElementById('md-nilai-baru').textContent = finalSkorAkhir;
                 modalRemedial.classList.remove('hidden');
-            } else { executeSave(payload, () => formSingle.reset()); }
+            } else {
+                executeSave(payload, null);
+            }
         });
 
-        async function executeSave(payload, cb) {
+        btnMdReset.addEventListener('click', () => {
+            modalRemedial.classList.add('hidden');
+            formSingle.reset();
+            state.pendingSingleData = null;
+        });
+
+        btnMdRemedial.addEventListener('click', () => {
+            if (!state.pendingSingleData) return;
+            const { payload, oldScore } = state.pendingSingleData;
+            
+            // Pilih skor tertinggi antara riwayat lama vs nilai baru
+            payload.skorAkhir = Math.max(oldScore, payload.skorAkhir);
+            
+            modalRemedial.classList.add('hidden');
+            executeSave(payload, () => {
+                formSingle.reset();
+                state.pendingSingleData = null;
+            });
+        });
+
+        async function executeSave(payload, successCallback) {
+            loadingStatus.querySelector('span').textContent = "Menyimpan nilai...";
             loadingStatus.classList.remove('hidden');
             try {
                 const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) }).then(res => res.json());
-                alert(r.status === 'success' ? "Nilai disimpan!" : "Error: " + r.message);
-                selectMateri.dispatchEvent(new Event('change'));
-                if (cb) cb();
-            } finally { loadingStatus.classList.remove('hidden'); }
+                if (r.status === 'success') {
+                    alert(r.message || "Nilai berhasil disimpan!");
+                    selectMateri.dispatchEvent(new Event('change')); 
+                    if (successCallback) successCallback();
+                } else {
+                    alert("Error: " + r.message);
+                }
+            } catch (err) {
+                alert("Gagal menghubungi server Apps Script.");
+            } finally {
+                loadingStatus.classList.add('hidden');
+            }
         }
 
-        btnMdRemedial.addEventListener('click', () => {
-            const { payload, oldScore } = state.pendingSingleData;
-            payload.skorAkhir = Math.max(oldScore, payload.skorAkhir);
-            modalRemedial.classList.add('hidden');
-            executeSave(payload, () => { formSingle.reset(); state.pendingSingleData = null; });
-        });
-
+        // 5. LOGIKA PERHITUNGAN ADAB & SIMPAN BULK MASSAL
         btnBulkSave.addEventListener('click', async () => {
-            const rows = document.querySelectorAll('#tabel-bulk-body tr');
-            for (let tr of rows) {
-                const uSkor = tr.querySelector('.input-bulk-skor');
-                const uAdab = tr.querySelector('.input-bulk-adab');
-                const statusCell = tr.querySelector('.cell-status');
-                if (uSkor.value !== '') {
-                    const final = calculateSkorAkhir(uSkor.value, uAdab.value);
-                    const match = state.existingScores.find(s => s.username === uSkor.dataset.username && s.jenisUjian === bulkGlobalJenis.value);
-                    const payload = {
-                        action: 'simpanNilaiUjian', username: uSkor.dataset.username, namaSantri: uSkor.dataset.nama,
-                        kodeMateri: selectMateri.value, judulMateri: selectMateri.options[selectMateri.selectedIndex].getAttribute('data-judul'),
-                        jenisUjian: bulkGlobalJenis.value, skor: parseInt(uSkor.value), skorAkhir: match ? Math.max(parseInt(match.skorAkhir), final) : final
-                    };
-                    statusCell.textContent = "Menyimpan...";
-                    await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-                    statusCell.textContent = "Selesai ✓";
-                    statusCell.className = "text-green-600 font-bold text-center";
+            const inputRows = document.querySelectorAll('.input-bulk-skor');
+            const jns = bulkGlobalJenis.value;
+            const mOption = selectMateri.options[selectMateri.selectedIndex];
+            const kodeMateri = selectMateri.value;
+            const judulMateri = mOption.getAttribute('data-judul');
+
+            let queue = [];
+
+            inputRows.forEach(input => {
+                const valStr = input.value.trim();
+                if (valStr !== '') {
+                    const skorUjian = parseInt(valStr);
+                    const user = input.getAttribute('data-username');
+                    const nama = input.getAttribute('data-nama');
+                    const tr = input.closest('tr');
+                    const statusCell = tr.querySelector('.cell-status');
+                    
+                    // Ambil nilai adab dari input di baris yang sama
+                    const adabInput = tr.querySelector('.input-bulk-adab');
+                    const adabValStr = adabInput ? adabInput.value.trim() : '';
+                    const finalKalkulasi = calculateSkorAkhir(skorUjian, adabValStr !== '' ? parseInt(adabValStr) : null);
+
+                    const match = state.existingScores.find(s => s.username === user && s.jenisUjian === jns);
+                    let finalSkorAkhir = finalKalkulasi;
+                    let isRemedial = false;
+
+                    if (match) {
+                        isRemedial = true;
+                        finalSkorAkhir = Math.max(parseInt(match.skorAkhir), finalKalkulasi);
+                    }
+
+                    queue.push({
+                        statusElement: statusCell,
+                        isRemedial: isRemedial,
+                        payload: {
+                            action: 'simpanNilaiUjian', username: user, namaSantri: nama,
+                            kodeMateri: kodeMateri, judulMateri: judulMateri,
+                            jenisUjian: jns, skor: skorUjian, skorAkhir: finalSkorAkhir
+                        }
+                    });
+                }
+            });
+
+            if (queue.length === 0) {
+                alert("Isi setidaknya satu baris nilai ujian santri.");
+                return;
+            }
+
+            btnBulkSave.disabled = true;
+            btnBulkSave.textContent = "Sedang Memproses Bulk...";
+
+            let sukses = 0;
+            for (let i = 0; i < queue.length; i++) {
+                const item = queue[i];
+                item.statusElement.textContent = "Menyimpan...";
+                item.statusElement.className = "px-4 py-4 text-center cell-status text-xs font-semibold text-amber-500 animate-pulse";
+
+                try {
+                    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(item.payload) }).then(r => r.json());
+                    if (res.status === 'success') {
+                        item.statusElement.textContent = item.isRemedial ? "Tersimpan (Remedial)" : "Tersimpan ✓";
+                        item.statusElement.className = "px-4 py-4 text-center cell-status text-xs font-bold text-green-600 bg-green-50 rounded";
+                        sukses++;
+                    } else {
+                        item.statusElement.textContent = "Gagal Server";
+                        item.statusElement.className = "px-4 py-4 text-center cell-status text-xs font-bold text-red-600 bg-red-50 rounded";
+                    }
+                } catch (err) {
+                    item.statusElement.textContent = "Error Network";
+                    item.statusElement.className = "px-4 py-4 text-center cell-status text-xs font-bold text-red-600 bg-red-50 rounded";
                 }
             }
-            selectMateri.dispatchEvent(new Event('change'));
+
+            btnBulkSave.disabled = false;
+            btnBulkSave.textContent = "Kalkulasi & Simpan Seluruh Baris";
+            alert(`Proses Selesai! Berhasil memproses ${sukses} dari ${queue.length} baris nilai.`);
+            
+            selectMateri.dispatchEvent(new Event('change')); 
         });
     </script>
 </body>
