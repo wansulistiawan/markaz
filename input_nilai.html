@@ -210,7 +210,12 @@
                         selectGuru.appendChild(opt);
                     });
                 }
-                if (resRoster.status === 'success') state.roster = resRoster.schedules;
+                if (resRoster.status === 'success') {
+    // Gunakan fallback: jika 'schedules' kosong, coba cari 'data', jika kosong juga gunakan {}
+    state.roster = resRoster.schedules || resRoster.data || {};
+} else {
+    state.roster = {};
+}
                 if (resSantri.status === 'success') {
                     resSantri.santri.forEach(s => state.santriMap.set(s.profileName.trim().toLowerCase(), s.username));
                 }
@@ -241,7 +246,8 @@
             selectMateri.disabled = true; resetLists();
 
             if (!g || !b) return;
-            const jadwal = state.roster['bulan' + b] || [];
+            // Gunakan pengecekan aman (optional chaining) agar tidak error jika state.roster undefined
+const jadwal = (state.roster && state.roster['bulan' + b]) ? state.roster['bulan' + b] : [];
             const uniqueMapels = new Set();
 
             jadwal.forEach(item => {
