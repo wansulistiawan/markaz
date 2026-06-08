@@ -14,11 +14,10 @@
 
     <div class="max-w-6xl mx-auto space-y-6">
         
-        <!-- Header Halaman -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-800">Manajemen Input Nilai Ujian</h1>
-                <p class="text-sm text-slate-500 mt-1">Sistem Input Nilai Ujian terintegrasi dengan bobot <span class="font-semibold text-blue-600">Nilai Adab (30%)</span> dan otomatisasi Remedial.</p>
+                <p class="text-sm text-slate-500 mt-1">Sistem validasi riwayat nilai dengan penanganan otomatis untuk Ujian Remedial.</p>
             </div>
             <div id="loading-status" class="flex items-center gap-2 text-sm font-medium text-blue-600 bg-blue-50 px-4 py-2 rounded-full">
                 <svg class="animate-spin h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -26,13 +25,11 @@
             </div>
         </div>
 
-        <!-- Mode Selector Tabs -->
         <div class="flex border-b border-slate-200">
             <button id="tab-single" class="px-6 py-3 border-b-2 border-blue-600 text-blue-600 font-semibold text-sm transition">Mode Tunggal (Satu Santri)</button>
             <button id="tab-bulk" class="px-6 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm transition">Mode Massal (Bulk List KRS)</button>
         </div>
 
-        <!-- Filter Utama -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label class="block text-sm font-medium text-slate-600 mb-2">Nama Guru Pengajar</label>
@@ -48,7 +45,6 @@
             </div>
         </div>
 
-        <!-- PANEL MODE TUNGGAL -->
         <div id="panel-single-mode" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
             <h2 class="text-base font-bold text-slate-800 border-b pb-2">Form Input Nilai Tunggal</h2>
             <form id="form-single" class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -67,29 +63,16 @@
                         <option value="Praktek">Praktek</option>
                     </select>
                 </div>
-                
-                <!-- Input Nilai Ujian & Adab -->
-                <div class="grid grid-cols-2 gap-4 md:col-span-2">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-2">Nilai Ujian Murni (0 - 100)</label>
-                        <input type="number" id="single-skor" required min="0" max="100" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition font-bold text-blue-600" placeholder="Skor Murni">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-2">Nilai Adab / Sikap (Opsional)</label>
-                        <input type="number" id="single-adab" min="0" max="100" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500 transition font-bold text-emerald-600" placeholder="Kosongkan jika tidak ada">
-                    </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-slate-600 mb-2">Nilai / Skor Baru (0 - 100)</label>
+                    <input type="number" id="single-skor" required min="0" max="100" class="w-full md:w-1/2 px-4 py-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition font-bold text-blue-600" placeholder="Masukkan angka 0-100">
                 </div>
-                <p class="md:col-span-2 text-xs text-slate-500 italic mt-[-10px]">
-                    *Catatan: Jika Nilai Adab diisi, sistem otomatis menggunakan bobot: <strong>90% Ujian + 30% Adab</strong> (Maksimal 100) sebagai Skor Akhir.
-                </p>
-
                 <div class="md:col-span-2 pt-2">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow transition duration-200">Kalkulasi & Simpan Nilai</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow transition duration-200">Simpan Nilai Santri</button>
                 </div>
             </form>
         </div>
 
-        <!-- PANEL MODE MASSAL (BULK) -->
         <div id="panel-bulk-mode" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-6 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -110,31 +93,26 @@
                 <table class="w-full text-sm text-left text-slate-600">
                     <thead class="bg-slate-100 text-slate-700 uppercase font-semibold text-xs border-b border-slate-200">
                         <tr>
-                            <th class="px-4 py-4 text-center w-12">No</th>
-                            <th class="px-4 py-4">Nama Lengkap Santri</th>
-                            <th class="px-4 py-4 w-28 text-center">Skor Lama</th>
-                            <th class="px-4 py-4 w-32 text-center text-blue-700">Skor Ujian<br><span class="text-[10px] font-normal">(Wajib)</span></th>
-                            <th class="px-4 py-4 w-32 text-center text-emerald-700">Skor Adab<br><span class="text-[10px] font-normal">(Opsional)</span></th>
-                            <th class="px-4 py-4 text-center w-36">Status Progres</th>
+                            <th class="px-6 py-4 text-center w-16">No</th>
+                            <th class="px-6 py-4">Nama Lengkap Santri</th>
+                            <th class="px-6 py-4 w-40">Nilai Saat Ini</th>
+                            <th class="px-6 py-4 w-44">Input Nilai Baru</th>
+                            <th class="px-6 py-4 text-center w-40">Status Progres</th>
                         </tr>
                     </thead>
                     <tbody id="tabel-bulk-body" class="divide-y divide-slate-200">
-                        <!-- Render Otomatis -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
             <div class="p-6 bg-slate-50 border-t border-slate-200 flex justify-end">
-                <button id="btn-bulk-save" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow transition duration-200">Kalkulasi & Simpan Seluruh Baris</button>
+                <button id="btn-bulk-save" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow transition duration-200">Simpan Seluruh Baris Nilai</button>
             </div>
         </div>
 
-        <!-- PANEL REKAPITULASI NILAI KELAS (SELALU MUNCUL DI BAWAH) -->
         <div id="panel-rekap-nilai" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-8">
-            <div class="p-6 bg-slate-800 text-white border-b border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div>
-                    <h3 class="font-bold text-lg">Rekapitulasi Nilai Kelas (Monitor Keterisian)</h3>
-                    <p class="text-xs text-slate-300 mt-1">Skor yang ditampilkan di tabel ini adalah <span class="font-bold text-white">SKOR AKHIR</span> (sudah tergabung dengan bobot Adab jika diinput sebelumnya).</p>
-                </div>
+            <div class="p-6 bg-slate-800 text-white border-b border-slate-700">
+                <h3 class="font-bold text-lg">Rekapitulasi Nilai Kelas (Monitor Keterisian)</h3>
+                <p class="text-xs text-slate-300 mt-1">Daftar ini memudahkan guru melihat siapa saja santri yang belum memiliki nilai untuk materi ini.</p>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left text-slate-600 border-collapse">
@@ -149,15 +127,13 @@
                         </tr>
                     </thead>
                     <tbody id="tabel-rekap-body" class="divide-y divide-slate-200">
-                        <!-- Render Otomatis Tabel Rekap -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </div>
 
     </div>
 
-    <!-- WINDOW POPUP MODAL VALIDASI DILENGKAPI PILIHAN REMEDIAL -->
     <div id="modal-remedial" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden">
             <div class="p-6 bg-amber-50 border-b border-amber-100 flex items-center gap-3">
@@ -173,7 +149,7 @@
                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-1">
                     <p><strong>Santri:</strong> <span id="md-nama">-</span></p>
                     <p><strong>Ujian:</strong> <span id="md-jenis">-</span></p>
-                    <p class="pt-2 text-slate-500">Perbandingan Skor Akhir (Gabungan):</p>
+                    <p class="pt-2 text-slate-500">Perbandingan Nilai:</p>
                     <div class="flex items-center gap-4 text-base font-semibold pt-1">
                         <div class="text-red-600">Lama: <span id="md-nilai-lama">0</span></div>
                         <div class="text-slate-400">➔</div>
@@ -213,14 +189,13 @@
         const tabBulk = document.getElementById('tab-bulk');
         const panelSingleMode = document.getElementById('panel-single-mode');
         const panelBulkMode = document.getElementById('panel-bulk-mode');
-        const panelRekapNilai = document.getElementById('panel-rekap-nilai');
+        const panelRekapNilai = document.getElementById('panel-rekap-nilai'); // Referensi panel baru
 
         // Form Single
         const formSingle = document.getElementById('form-single');
         const singleSantri = document.getElementById('single-santri');
         const singleJenis = document.getElementById('single-jenis');
         const singleSkor = document.getElementById('single-skor');
-        const singleAdab = document.getElementById('single-adab'); // New Adab Input
 
         // Form Bulk
         const tabelBulkBody = document.getElementById('tabel-bulk-body');
@@ -251,10 +226,13 @@
                         selectGuru.appendChild(opt);
                     });
                 }
+                
                 if (resRoster.status === 'success') state.roster = resRoster.schedules || {};
+                
                 if (resSantri.status === 'success') {
                     resSantri.santri.forEach(s => state.santriMap.set(s.profileName.trim().toLowerCase(), s.username));
                 }
+
                 if (resMateri.status === 'success') {
                     state.allMateriFallback = resMateri.codes || [];
                 }
@@ -278,23 +256,7 @@
             panelBulkMode.classList.remove('hidden'); panelSingleMode.classList.add('hidden');
         });
 
-        // 3. Filter Otomatis: GURU -> DAFTAR MATERI (Lebih Pintar Mendeteksi Nama Materi)
-        function extractMapel(textRaw) {
-            let text = textRaw.trim();
-            let kode = text;
-            let judul = text;
-            
-            // Deteksi pemisah ":" atau "-" agar judul/nama materi bisa tampil
-            if (text.includes(':')) {
-                kode = text.split(':')[0].trim();
-                judul = text.split(':').slice(1).join(':').trim();
-            } else if (text.includes('-')) {
-                kode = text.split('-')[0].trim();
-                judul = text.split('-').slice(1).join('-').trim();
-            }
-            return { kode, judul };
-        }
-
+        // 3. Filter Otomatis: GURU -> DAFTAR MATERI
         function handleFilterChange() {
             const g = selectGuru.value;
             selectMateri.innerHTML = '<option value="">-- Pilih Materi --</option>';
@@ -303,40 +265,36 @@
 
             if (!g) return;
 
-            const uniqueMapels = new Map(); // Pakai Map agar terhindar dari duplikat kode
+            const uniqueMapels = new Set();
 
             Object.keys(state.roster).forEach(bulanKey => {
                 const jadwal = state.roster[bulanKey] || [];
                 jadwal.forEach(item => {
                     if (item.teacher && item.teacher.trim() === g && item.subject) {
-                        const { kode, judul } = extractMapel(item.subject);
-                        if (!uniqueMapels.has(kode)) {
-                            uniqueMapels.set(kode, judul);
+                        let text = item.subject.trim();
+                        let kode = text.includes(':') ? text.split(':')[0].trim() : text;
+                        let judul = text.includes(':') ? text.split(':').slice(1).join(':').trim() : text;
+                        
+                        const uniqueKey = kode + '|' + judul;
+                        if (!uniqueMapels.has(uniqueKey)) {
+                            uniqueMapels.add(uniqueKey);
+                            let opt = document.createElement('option'); opt.value = kode;
+                            opt.setAttribute('data-judul', judul); opt.textContent = `${kode} - ${judul}`;
+                            selectMateri.appendChild(opt);
                         }
                     }
                 });
             });
 
-            // Tambahkan ke dropdown Roster
-            uniqueMapels.forEach((judul, kode) => {
-                let opt = document.createElement('option'); 
-                opt.value = kode;
-                opt.setAttribute('data-judul', judul); 
-                opt.textContent = `${kode} - ${judul}`; // Tampilkan beserta namanya
-                selectMateri.appendChild(opt);
-            });
-
-            // Jika kosong, gunakan fallback dan deteksi nama dari Bank Soal
             if (uniqueMapels.size === 0 && state.allMateriFallback.length > 0) {
                 let optGroup = document.createElement('optgroup');
-                optGroup.label = "Semua Materi Sistem (Roster Kosong)";
+                optGroup.label = "Data Roster Kosong - Menampilkan Seluruh Materi Sekolah";
                 
-                state.allMateriFallback.forEach(textRaw => {
-                    const { kode, judul } = extractMapel(textRaw);
+                state.allMateriFallback.forEach(kode => {
                     let opt = document.createElement('option'); 
                     opt.value = kode;
-                    opt.setAttribute('data-judul', judul); 
-                    opt.textContent = `${kode} - ${judul}`;
+                    opt.setAttribute('data-judul', kode); 
+                    opt.textContent = kode;
                     optGroup.appendChild(opt);
                 });
                 selectMateri.appendChild(optGroup);
@@ -370,8 +328,8 @@
                     state.currentSubjectStudents = resKrs.students;
                     renderSingleDropdown(resKrs.students);
                     renderBulkTable(resKrs.students);
-                    renderRekapTable(resKrs.students); 
-                    panelRekapNilai.classList.remove('hidden'); 
+                    renderRekapTable(resKrs.students); // <-- Render Tabel Rekap
+                    panelRekapNilai.classList.remove('hidden'); // <-- Tampilkan Tabel Rekap
                 }
             } catch (e) {
                 console.error(e);
@@ -383,12 +341,15 @@
         function resetLists() {
             singleSantri.innerHTML = '<option value="">-- Pilih Santri --</option>';
             tabelBulkBody.innerHTML = '';
-            tabelRekapBody.innerHTML = ''; 
-            panelRekapNilai.classList.add('hidden'); 
+            tabelRekapBody.innerHTML = ''; // Kosongkan rekap
+            panelRekapNilai.classList.add('hidden'); // Sembunyikan panel rekap
             state.currentSubjectStudents = [];
             state.existingScores = [];
         }
 
+        // ============================================
+        // FUNGSI RENDER TABEL REKAPITULASI (BARU)
+        // ============================================
         function renderRekapTable(students) {
             tabelRekapBody.innerHTML = '';
             
@@ -397,6 +358,7 @@
                 return;
             }
 
+            // Helper untuk mengambil nilai dan merender status teks
             const getSkorBadge = (username, jenisUjian) => {
                 const match = state.existingScores.find(score => score.username === username && score.jenisUjian === jenisUjian);
                 if (match) {
@@ -408,6 +370,7 @@
 
             students.forEach((s, idx) => {
                 const username = state.santriMap.get(s.trim().toLowerCase()) || '';
+                
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition duration-150";
                 tr.innerHTML = `
@@ -442,21 +405,17 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 border-b border-slate-200 transition";
                 tr.innerHTML = `
-                    <td class="px-4 py-4 text-center font-medium text-slate-400">${idx+1}</td>
-                    <td class="px-4 py-4">
+                    <td class="px-6 py-4 text-center font-medium text-slate-400">${idx+1}</td>
+                    <td class="px-6 py-4">
                         <div class="font-semibold text-slate-800">${s}</div>
                         <div class="text-xs font-mono text-slate-400">${username}</div>
                     </td>
-                    <td class="px-4 py-4 cell-current-score text-center ${textColor}">${skorLamaText}</td>
-                    <td class="px-4 py-4 text-center">
-                        <input type="number" min="0" max="100" placeholder="0-100" data-username="${username}" data-nama="${s}"
-                            class="input-bulk-skor w-full max-w-[80px] border border-slate-300 rounded px-2 py-1.5 font-bold text-center text-blue-600 outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500 transition mx-auto block">
+                    <td class="px-6 py-4 cell-current-score ${textColor}">${skorLamaText}</td>
+                    <td class="px-6 py-4">
+                        <input type="number" min="0" max="100" placeholder="Belum isi" data-username="${username}" data-nama="${s}"
+                            class="input-bulk-skor w-full max-w-[120px] border border-slate-300 rounded px-3 py-1.5 font-bold text-center text-blue-600 outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500 transition">
                     </td>
-                    <td class="px-4 py-4 text-center">
-                        <input type="number" min="0" max="100" placeholder="0-100" 
-                            class="input-bulk-adab w-full max-w-[80px] border border-slate-300 rounded px-2 py-1.5 font-bold text-center text-emerald-600 outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-500 transition mx-auto block">
-                    </td>
-                    <td class="px-4 py-4 text-center cell-status text-xs italic font-medium text-slate-400">Belum diproses</td>
+                    <td class="px-6 py-4 text-center cell-status text-xs italic font-medium text-slate-400">Belum diproses</td>
                 `;
                 tabelBulkBody.appendChild(tr);
             });
@@ -466,34 +425,21 @@
             renderBulkTable(state.currentSubjectStudents);
         });
 
-        // 4. LOGIKA PERHITUNGAN ADAB & SIMPAN TUNGGAL
-        function calculateSkorAkhir(skorUjian, skorAdab) {
-            if (skorAdab !== null && !isNaN(skorAdab) && skorAdab !== '') {
-                // Rumus: 90% Ujian + 30% Adab (Max 100)
-                let total = Math.round((skorUjian * 0.9) + (skorAdab * 0.3));
-                return Math.min(100, total); // Pastikan nilai maksimal tetap 100
-            }
-            // Jika kosong, murni 100% Ujian
-            return skorUjian;
-        }
-
+        // 4. Logika Interseptor Simpan Mode Tunggal
         formSingle.addEventListener('submit', (e) => {
             e.preventDefault();
             const nama = singleSantri.value;
             const jns = singleJenis.value;
+            const skor = parseInt(singleSkor.value);
             const user = state.santriMap.get(nama.trim().toLowerCase()) || '';
             const mOption = selectMateri.options[selectMateri.selectedIndex];
-
-            const skorUjian = parseInt(singleSkor.value);
-            const skorAdabVal = singleAdab.value.trim();
-            const finalSkorAkhir = calculateSkorAkhir(skorUjian, skorAdabVal !== '' ? parseInt(skorAdabVal) : null);
 
             const match = state.existingScores.find(s => s.username === user && s.jenisUjian === jns);
 
             const payload = {
                 action: 'simpanNilaiUjian', username: user, namaSantri: nama,
                 kodeMateri: selectMateri.value, judulMateri: mOption.getAttribute('data-judul'),
-                jenisUjian: jns, skor: skorUjian, skorAkhir: finalSkorAkhir
+                jenisUjian: jns, skor: skor, skorAkhir: skor
             };
 
             if (match) {
@@ -501,13 +447,14 @@
                 document.getElementById('md-nama').textContent = nama;
                 document.getElementById('md-jenis').textContent = jns;
                 document.getElementById('md-nilai-lama').textContent = match.skorAkhir;
-                document.getElementById('md-nilai-baru').textContent = finalSkorAkhir;
+                document.getElementById('md-nilai-baru').textContent = skor;
                 modalRemedial.classList.remove('hidden');
             } else {
                 executeSave(payload, null);
             }
         });
 
+        // Button Aksi Modal
         btnMdReset.addEventListener('click', () => {
             modalRemedial.classList.add('hidden');
             formSingle.reset();
@@ -518,8 +465,7 @@
             if (!state.pendingSingleData) return;
             const { payload, oldScore } = state.pendingSingleData;
             
-            // Pilih skor tertinggi antara riwayat lama vs nilai baru
-            payload.skorAkhir = Math.max(oldScore, payload.skorAkhir);
+            payload.skorAkhir = Math.max(oldScore, payload.skor);
             
             modalRemedial.classList.add('hidden');
             executeSave(payload, () => {
@@ -535,7 +481,7 @@
                 const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) }).then(res => res.json());
                 if (r.status === 'success') {
                     alert(r.message || "Nilai berhasil disimpan!");
-                    selectMateri.dispatchEvent(new Event('change')); 
+                    selectMateri.dispatchEvent(new Event('change')); // Memicu auto-refresh tabel bulk dan rekap
                     if (successCallback) successCallback();
                 } else {
                     alert("Error: " + r.message);
@@ -547,7 +493,7 @@
             }
         }
 
-        // 5. LOGIKA PERHITUNGAN ADAB & SIMPAN BULK MASSAL
+        // 5. Eksekusi Simpan Bulk Mode dengan Deteksi Remedial Otomatis
         btnBulkSave.addEventListener('click', async () => {
             const inputRows = document.querySelectorAll('.input-bulk-skor');
             const jns = bulkGlobalJenis.value;
@@ -560,24 +506,19 @@
             inputRows.forEach(input => {
                 const valStr = input.value.trim();
                 if (valStr !== '') {
-                    const skorUjian = parseInt(valStr);
+                    const skor = parseInt(valStr);
                     const user = input.getAttribute('data-username');
                     const nama = input.getAttribute('data-nama');
                     const tr = input.closest('tr');
                     const statusCell = tr.querySelector('.cell-status');
-                    
-                    // Ambil nilai adab dari input di baris yang sama
-                    const adabInput = tr.querySelector('.input-bulk-adab');
-                    const adabValStr = adabInput ? adabInput.value.trim() : '';
-                    const finalKalkulasi = calculateSkorAkhir(skorUjian, adabValStr !== '' ? parseInt(adabValStr) : null);
 
                     const match = state.existingScores.find(s => s.username === user && s.jenisUjian === jns);
-                    let finalSkorAkhir = finalKalkulasi;
+                    let finalSkorAkhir = skor;
                     let isRemedial = false;
 
                     if (match) {
                         isRemedial = true;
-                        finalSkorAkhir = Math.max(parseInt(match.skorAkhir), finalKalkulasi);
+                        finalSkorAkhir = Math.max(parseInt(match.skorAkhir), skor);
                     }
 
                     queue.push({
@@ -586,14 +527,14 @@
                         payload: {
                             action: 'simpanNilaiUjian', username: user, namaSantri: nama,
                             kodeMateri: kodeMateri, judulMateri: judulMateri,
-                            jenisUjian: jns, skor: skorUjian, skorAkhir: finalSkorAkhir
+                            jenisUjian: jns, skor: skor, skorAkhir: finalSkorAkhir
                         }
                     });
                 }
             });
 
             if (queue.length === 0) {
-                alert("Isi setidaknya satu baris nilai ujian santri.");
+                alert("Isi setidaknya satu baris nilai santri.");
                 return;
             }
 
@@ -604,29 +545,29 @@
             for (let i = 0; i < queue.length; i++) {
                 const item = queue[i];
                 item.statusElement.textContent = "Menyimpan...";
-                item.statusElement.className = "px-4 py-4 text-center cell-status text-xs font-semibold text-amber-500 animate-pulse";
+                item.statusElement.className = "px-6 py-4 text-center cell-status text-xs font-semibold text-amber-500 animate-pulse";
 
                 try {
                     const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(item.payload) }).then(r => r.json());
                     if (res.status === 'success') {
                         item.statusElement.textContent = item.isRemedial ? "Tersimpan (Remedial)" : "Tersimpan ✓";
-                        item.statusElement.className = "px-4 py-4 text-center cell-status text-xs font-bold text-green-600 bg-green-50 rounded";
+                        item.statusElement.className = "px-6 py-4 text-center cell-status text-xs font-bold text-green-600 bg-green-50 rounded";
                         sukses++;
                     } else {
                         item.statusElement.textContent = "Gagal Server";
-                        item.statusElement.className = "px-4 py-4 text-center cell-status text-xs font-bold text-red-600 bg-red-50 rounded";
+                        item.statusElement.className = "px-6 py-4 text-center cell-status text-xs font-bold text-red-600 bg-red-50 rounded";
                     }
                 } catch (err) {
                     item.statusElement.textContent = "Error Network";
-                    item.statusElement.className = "px-4 py-4 text-center cell-status text-xs font-bold text-red-600 bg-red-50 rounded";
+                    item.statusElement.className = "px-6 py-4 text-center cell-status text-xs font-bold text-red-600 bg-red-50 rounded";
                 }
             }
 
             btnBulkSave.disabled = false;
-            btnBulkSave.textContent = "Kalkulasi & Simpan Seluruh Baris";
-            alert(`Proses Selesai! Berhasil memproses ${sukses} dari ${queue.length} baris nilai.`);
+            btnBulkSave.textContent = "Simpan Seluruh Baris Nilai";
+            alert(`Proses Bulk Selesai! Berhasil memproses ${sukses} dari ${queue.length} baris.`);
             
-            selectMateri.dispatchEvent(new Event('change')); 
+            selectMateri.dispatchEvent(new Event('change')); // Memicu auto-refresh seluruh tampilan data
         });
     </script>
 </body>
