@@ -109,6 +109,29 @@
             </div>
         </div>
 
+        <div id="panel-rekap-nilai" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-8">
+            <div class="p-6 bg-slate-800 text-white border-b border-slate-700">
+                <h3 class="font-bold text-lg">Rekapitulasi Nilai Kelas (Monitor Keterisian)</h3>
+                <p class="text-xs text-slate-300 mt-1">Daftar ini memudahkan guru melihat siapa saja santri yang belum memiliki nilai untuk materi ini.</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-slate-600 border-collapse">
+                    <thead class="bg-slate-100 text-slate-700 uppercase font-semibold text-xs border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3 border border-slate-200 text-center w-12">No</th>
+                            <th class="px-4 py-3 border border-slate-200">Nama Santri</th>
+                            <th class="px-4 py-3 border border-slate-200 text-center w-28">Bulanan</th>
+                            <th class="px-4 py-3 border border-slate-200 text-center w-28">UTS</th>
+                            <th class="px-4 py-3 border border-slate-200 text-center w-28">UAS</th>
+                            <th class="px-4 py-3 border border-slate-200 text-center w-28">Praktek</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabel-rekap-body" class="divide-y divide-slate-200">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
     <div id="modal-remedial" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -145,7 +168,7 @@
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxcwa24mmkgbdHUHQvjAnj_drADmr6Hb1EQyA6q4vK-vjdu-44F4U__19W4st54Skoqww/exec';
 
-        // State Manajemen Aplikasi dengan Penambahan Fallback Materi
+        // State Manajemen Aplikasi
         let state = {
             employees: [],
             roster: {},
@@ -153,7 +176,7 @@
             currentSubjectStudents: [],
             existingScores: [], 
             pendingSingleData: null,
-            allMateriFallback: [] // Cadangan jika Roster gagal dimuat
+            allMateriFallback: [] 
         };
 
         // DOM Referensi
@@ -166,6 +189,7 @@
         const tabBulk = document.getElementById('tab-bulk');
         const panelSingleMode = document.getElementById('panel-single-mode');
         const panelBulkMode = document.getElementById('panel-bulk-mode');
+        const panelRekapNilai = document.getElementById('panel-rekap-nilai'); // Referensi panel baru
 
         // Form Single
         const formSingle = document.getElementById('form-single');
@@ -177,19 +201,21 @@
         const tabelBulkBody = document.getElementById('tabel-bulk-body');
         const bulkGlobalJenis = document.getElementById('bulk-global-jenis');
         const btnBulkSave = document.getElementById('btn-bulk-save');
+        
+        // Tabel Rekap
+        const tabelRekapBody = document.getElementById('tabel-rekap-body');
 
         // Modal
         const modalRemedial = document.getElementById('modal-remedial');
         const btnMdReset = document.getElementById('btn-md-reset');
         const btnMdRemedial = document.getElementById('btn-md-remedial');
 
-        // 1. Ambil Data Master Awal (Ditambah Data Seluruh Materi Sekolah)
+        // 1. Ambil Data Master Awal
         window.addEventListener('DOMContentLoaded', async () => {
             try {
                 const reqEmployees = fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getEmployeeList' }) }).then(r => r.json());
                 const reqRoster = fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getRosterData' }) }).then(r => r.json());
                 const reqSantri = fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getSantriListWithUsernames' }) }).then(r => r.json());
-                // Data Cadangan: Ambil semua materi untuk berjaga-jaga jika Roster kosong
                 const reqAllMateri = fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllMateriCodes' }) }).then(r => r.json());
 
                 const [resEmployees, resRoster, resSantri, resMateri] = await Promise.all([reqEmployees, reqRoster, reqSantri, reqAllMateri]);
@@ -230,7 +256,7 @@
             panelBulkMode.classList.remove('hidden'); panelSingleMode.classList.add('hidden');
         });
 
-        // 3. Filter Otomatis: GURU -> DAFTAR MATERI (Tanpa Perlu Bulan)
+        // 3. Filter Otomatis: GURU -> DAFTAR MATERI
         function handleFilterChange() {
             const g = selectGuru.value;
             selectMateri.innerHTML = '<option value="">-- Pilih Materi --</option>';
@@ -241,7 +267,6 @@
 
             const uniqueMapels = new Set();
 
-            // Loop ke semua jadwal bulan yang ada di state roster
             Object.keys(state.roster).forEach(bulanKey => {
                 const jadwal = state.roster[bulanKey] || [];
                 jadwal.forEach(item => {
@@ -261,8 +286,6 @@
                 });
             });
 
-            // FALLBACK PENYELAMAT: Jika roster kosong/gagal karena bug format di Google Sheet
-            // Kita tampilkan SEMUA materi yang ada di sekolah menggunakan data cadangan
             if (uniqueMapels.size === 0 && state.allMateriFallback.length > 0) {
                 let optGroup = document.createElement('optgroup');
                 optGroup.label = "Data Roster Kosong - Menampilkan Seluruh Materi Sekolah";
@@ -284,7 +307,6 @@
             }
         }
         
-        // Cukup tempel event listener ke pemilihan Guru saja
         selectGuru.addEventListener('change', handleFilterChange);
 
         selectMateri.addEventListener('change', async () => {
@@ -296,7 +318,6 @@
             loadingStatus.classList.remove('hidden');
 
             try {
-                // Tarik data Santri KRS dan Riwayat Nilai secara bersamaan
                 const reqKrs = fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getStudentsByClass', kodeMateri: kode }) }).then(r => r.json());
                 const reqScores = fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getScoresBySubject', kodeMateri: kode }) }).then(r => r.json());
 
@@ -307,6 +328,8 @@
                     state.currentSubjectStudents = resKrs.students;
                     renderSingleDropdown(resKrs.students);
                     renderBulkTable(resKrs.students);
+                    renderRekapTable(resKrs.students); // <-- Render Tabel Rekap
+                    panelRekapNilai.classList.remove('hidden'); // <-- Tampilkan Tabel Rekap
                 }
             } catch (e) {
                 console.error(e);
@@ -318,8 +341,48 @@
         function resetLists() {
             singleSantri.innerHTML = '<option value="">-- Pilih Santri --</option>';
             tabelBulkBody.innerHTML = '';
+            tabelRekapBody.innerHTML = ''; // Kosongkan rekap
+            panelRekapNilai.classList.add('hidden'); // Sembunyikan panel rekap
             state.currentSubjectStudents = [];
             state.existingScores = [];
+        }
+
+        // ============================================
+        // FUNGSI RENDER TABEL REKAPITULASI (BARU)
+        // ============================================
+        function renderRekapTable(students) {
+            tabelRekapBody.innerHTML = '';
+            
+            if (!students || students.length === 0) {
+                tabelRekapBody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400 italic font-medium">Tidak ada santri KRS terdaftar untuk materi ini.</td></tr>';
+                return;
+            }
+
+            // Helper untuk mengambil nilai dan merender status teks
+            const getSkorBadge = (username, jenisUjian) => {
+                const match = state.existingScores.find(score => score.username === username && score.jenisUjian === jenisUjian);
+                if (match) {
+                    return `<span class="inline-flex items-center justify-center px-2 py-1 text-sm font-bold rounded bg-green-100 text-green-700">${match.skorAkhir}</span>`;
+                } else {
+                    return `<span class="text-slate-300 italic text-xs font-medium">Kosong</span>`;
+                }
+            };
+
+            students.forEach((s, idx) => {
+                const username = state.santriMap.get(s.trim().toLowerCase()) || '';
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition duration-150";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 border border-slate-200 text-center font-medium text-slate-500">${idx + 1}</td>
+                    <td class="px-4 py-3 border border-slate-200 font-semibold text-slate-800">${s}</td>
+                    <td class="px-4 py-3 border border-slate-200 text-center bg-slate-50">${getSkorBadge(username, 'Bulanan')}</td>
+                    <td class="px-4 py-3 border border-slate-200 text-center">${getSkorBadge(username, 'UTS')}</td>
+                    <td class="px-4 py-3 border border-slate-200 text-center bg-slate-50">${getSkorBadge(username, 'UAS')}</td>
+                    <td class="px-4 py-3 border border-slate-200 text-center">${getSkorBadge(username, 'Praktek')}</td>
+                `;
+                tabelRekapBody.appendChild(tr);
+            });
         }
 
         function renderSingleDropdown(students) {
@@ -335,7 +398,6 @@
 
             students.forEach((s, idx) => {
                 const username = state.santriMap.get(s.trim().toLowerCase()) || 'tidak_ditemukan';
-                // Cek riwayat nilai eksis untuk indikator visual awal
                 const matchScore = state.existingScores.find(score => score.username === username && score.jenisUjian === currentJenis);
                 const skorLamaText = matchScore ? `${matchScore.skorAkhir}` : '-';
                 const textColor = matchScore ? 'text-amber-600 font-bold' : 'text-slate-400';
@@ -372,7 +434,6 @@
             const user = state.santriMap.get(nama.trim().toLowerCase()) || '';
             const mOption = selectMateri.options[selectMateri.selectedIndex];
 
-            // Cek Duplikasi Nilai di Database Cache
             const match = state.existingScores.find(s => s.username === user && s.jenisUjian === jns);
 
             const payload = {
@@ -404,7 +465,6 @@
             if (!state.pendingSingleData) return;
             const { payload, oldScore } = state.pendingSingleData;
             
-            // Logika Evaluasi Remedial: Ambil skor tertinggi untuk disimpan di SkorAkhir
             payload.skorAkhir = Math.max(oldScore, payload.skor);
             
             modalRemedial.classList.add('hidden');
@@ -421,7 +481,7 @@
                 const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) }).then(res => res.json());
                 if (r.status === 'success') {
                     alert(r.message || "Nilai berhasil disimpan!");
-                    selectMateri.dispatchEvent(new Event('change'));
+                    selectMateri.dispatchEvent(new Event('change')); // Memicu auto-refresh tabel bulk dan rekap
                     if (successCallback) successCallback();
                 } else {
                     alert("Error: " + r.message);
@@ -507,7 +567,7 @@
             btnBulkSave.textContent = "Simpan Seluruh Baris Nilai";
             alert(`Proses Bulk Selesai! Berhasil memproses ${sukses} dari ${queue.length} baris.`);
             
-            selectMateri.dispatchEvent(new Event('change'));
+            selectMateri.dispatchEvent(new Event('change')); // Memicu auto-refresh seluruh tampilan data
         });
     </script>
 </body>
